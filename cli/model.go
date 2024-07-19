@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config
 type AssetConfig struct {
 	Assets map[AssetId]AssetEntry `yaml:"assets"`
 }
@@ -83,3 +84,6 @@ type OraclePricesMessage struct {
 	TraceID string                           `json:"trace_id"`
 	Data    map[string]AggregatedSignedPrice `json:"data"`
 }
+
+// Internal types
+type InternalEncodedAssetId [32]byte
