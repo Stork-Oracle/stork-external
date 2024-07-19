@@ -22,16 +22,15 @@ func init() {
 	evmpushCmd.Flags().StringP("contract-address", "x", "", "Contract address")
 	evmpushCmd.Flags().StringP("asset-config-file", "f", "", "Asset config file")
 	evmpushCmd.Flags().StringP("mnemonic-file", "m", "", "Mnemonic file")
-	evmpushCmd.Flags().StringP("network", "n", "mainnet", "Network (mainnet/testnet)")
-	evmpushCmd.Flags().IntP("gas-price", "g", 0, "Gas price")
-	evmpushCmd.Flags().IntP("pushing-frequency", "d", 10, "Pushing frequency (seconds)")
-	evmpushCmd.Flags().IntP("polling-frequency", "o", 5, "Polling frequency (seconds)")
+	evmpushCmd.Flags().IntP("batching-window", "b", 10, "Pushing frequency (seconds)")
+	evmpushCmd.Flags().IntP("polling-frequency", "p", 5, "Asset Polling frequency (seconds)")
 
 	evmpushCmd.MarkFlagRequired("stork-ws-endpoint")
 	evmpushCmd.MarkFlagRequired("stork-auth-credentials")
 	evmpushCmd.MarkFlagRequired("chain-rpc-url")
 	evmpushCmd.MarkFlagRequired("contract-address")
 	evmpushCmd.MarkFlagRequired("asset-config-file")
+	evmpushCmd.MarkFlagRequired("mnemonic-file")
 }
 
 func runEvmPush(cmd *cobra.Command, args []string) {
@@ -43,9 +42,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	contractAddress, _ := cmd.Flags().GetString("contract-address")
 	assetConfigFile, _ := cmd.Flags().GetString("asset-config-file")
 	mnemonicFile, _ := cmd.Flags().GetString("mnemonic-file")
-	// network, _ := cmd.Flags().GetString("network")
-	gasPrice, _ := cmd.Flags().GetInt("gas-price")
-	pushingFrequency, _ := cmd.Flags().GetInt("pushing-frequency")
+	batchingWindow, _ := cmd.Flags().GetInt("pushing-frequency")
 	pollingFrequency, _ := cmd.Flags().GetInt("polling-frequency")
 
 	priceConfig, err := LoadConfig(assetConfigFile)
@@ -68,14 +65,14 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	storkWs := NewStorkAggregatorWebsocketClient(storkWsEndpoint, storkAuth, assetIds, log.With().Str("component", "stork-ws").Logger())
 	go storkWs.Run(storkWsCh)
 
-	storkContractInterfacer := NewStorkContractInterfacer(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, big.NewInt(int64(gasPrice)))
+	storkContractInterfacer := NewStorkContractInterfacer(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency)
 	go storkContractInterfacer.ListenContractEvents(contractCh)
 	go storkContractInterfacer.Poll(encodedAssetIds, contractCh)
 
 	updates := make(map[[32]byte]AggregatedSignedPrice)
 	latestValueMap := make(map[[32]byte]StorkStructsTemporalNumericValue)
 
-	ticker := time.NewTicker(time.Duration(pushingFrequency) * time.Second)
+	ticker := time.NewTicker(time.Duration(batchingWindow) * time.Second)
 	defer ticker.Stop()
 
 	for {

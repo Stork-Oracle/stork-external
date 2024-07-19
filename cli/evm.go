@@ -31,10 +31,9 @@ type StorkContractInterfacer struct {
 	chainID    *big.Int
 
 	pollingFrequencySec int
-	gasLimit            *big.Int
 }
 
-func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int, gasLimit *big.Int) *StorkContractInterfacer {
+func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int) *StorkContractInterfacer {
 	logger := log.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
@@ -66,7 +65,6 @@ func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, polli
 		chainID:    chainID,
 
 		pollingFrequencySec: pollingFreqSec,
-		gasLimit:            gasLimit,
 	}
 }
 
@@ -182,7 +180,8 @@ func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[[32]byt
 		return err
 	}
 
-	auth.GasPrice = sci.gasLimit // TODO - use a gas station to calculate this
+	// let the library auto-estimate the gas price
+	auth.GasLimit = 0
 	auth.Value = fee
 
 	tx, err := sci.contract.UpdateTemporalNumericValuesV1(auth, updates)
