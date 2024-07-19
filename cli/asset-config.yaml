@@ -3,7 +3,9 @@ assets:
     asset_id: BTCUSD
     fallback_period_sec: 60
     threshold: 0.1
+    encoded_asset_id: 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de
   ETHUSD:
     asset_id: ETHUSD
     fallback_period_sec: 60
     threshold: 0.1
+    encoded_asset_id: 0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160
