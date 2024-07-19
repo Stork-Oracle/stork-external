@@ -1,5 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-gas-reporter"
+
 require("@openzeppelin/hardhat-upgrades");
 
 import './tasks/deploy';
