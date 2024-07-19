@@ -42,8 +42,6 @@ func init() {
 }
 
 func runEvmPush(cmd *cobra.Command, args []string) {
-	logger := log.With().Str("component", "evm-push").Logger()
-
 	storkWsEndpoint, _ := cmd.Flags().GetString(StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(ChainRpcUrlFlag)
@@ -52,6 +50,8 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
 	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+
+	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
 
 	priceConfig, err := LoadConfig(assetConfigFile)
 	if err != nil {
@@ -74,15 +74,25 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	storkWsCh := make(chan AggregatedSignedPrice)
 	contractCh := make(chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 
-	storkWs := NewStorkAggregatorWebsocketClient(storkWsEndpoint, storkAuth, assetIds, log.With().Str("component", "stork-ws").Logger())
+	storkWs := NewStorkAggregatorWebsocketClient(storkWsEndpoint, storkAuth, assetIds, logger)
 	go storkWs.Run(storkWsCh)
 
-	storkContractInterfacer := NewStorkContractInterfacer(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency)
+	storkContractInterfacer := NewStorkContractInterfacer(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, logger)
+
+	initialValues, err := storkContractInterfacer.PullValues(encodedAssetIds)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
+	}
+	latestValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
+	for encodedAssetId, value := range initialValues {
+		latestValueMap[encodedAssetId] = value
+	}
+	logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
+
 	go storkContractInterfacer.ListenContractEvents(contractCh)
 	go storkContractInterfacer.Poll(encodedAssetIds, contractCh)
 
 	updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
-	latestValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 
 	ticker := time.NewTicker(time.Duration(batchingWindow) * time.Second)
 	defer ticker.Stop()
@@ -109,7 +119,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 			} else {
 				logger.Debug().Msg("No updates to push")
 			}
-		// Handle the price updates from the stork websocket server
+		// Handle updates from the stork websocket server
 		case valueUpdate := <-storkWsCh:
 			logger.Debug().Msgf("Received price update: %+v", valueUpdate)
 			encoded, err := stringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
@@ -145,7 +155,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 					updates[encoded] = valueUpdate
 				}
 			}
-		// // Handle the contract events
+		// Handle contract updates
 		case chainUpdate := <-contractCh:
 			for encodedAssetId, storkStructsTemporalNumericValue := range chainUpdate {
 				latestValueMap[encodedAssetId] = storkStructsTemporalNumericValue
