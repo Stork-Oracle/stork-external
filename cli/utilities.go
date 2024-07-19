@@ -38,8 +38,8 @@ func stringToByte32(input string) ([32]byte, error) {
 	return result, nil
 }
 
+// For simplicity, this function assumes the mnemonic file contains the private key directly
 func loadPrivateKey(mnemonicFile string) (*ecdsa.PrivateKey, error) {
-	// For simplicity, this example assumes the mnemonic file contains the private key directly
 	data, err := os.ReadFile(mnemonicFile)
 	if err != nil {
 		return nil, err
