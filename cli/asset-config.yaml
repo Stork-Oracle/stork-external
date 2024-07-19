@@ -1,0 +1,9 @@
+assets:
+  BTCUSD:
+    asset_id: BTCUSD
+    fallback_period_sec: 60
+    threshold: 0.1
+  ETHUSD:
+    asset_id: ETHUSD
+    fallback_period_sec: 60
+    threshold: 0.1
