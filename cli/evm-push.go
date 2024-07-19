@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -15,35 +14,44 @@ var evmpushCmd = &cobra.Command{
 	Run:   runEvmPush,
 }
 
-func init() {
-	evmpushCmd.Flags().StringP("stork-ws-endpoint", "w", "", "Stork WebSocket endpoint")
-	evmpushCmd.Flags().StringP("stork-auth-credentials", "a", "", "Stork auth credentials")
-	evmpushCmd.Flags().StringP("chain-rpc-url", "c", "", "Chain RPC URL")
-	evmpushCmd.Flags().StringP("contract-address", "x", "", "Contract address")
-	evmpushCmd.Flags().StringP("asset-config-file", "f", "", "Asset config file")
-	evmpushCmd.Flags().StringP("mnemonic-file", "m", "", "Mnemonic file")
-	evmpushCmd.Flags().IntP("batching-window", "b", 10, "Pushing frequency (seconds)")
-	evmpushCmd.Flags().IntP("polling-frequency", "p", 5, "Asset Polling frequency (seconds)")
+const StorkWebsocketEndpointFlag = "stork-ws-endpoint"
+const StorkAuthCredentialsFlag = "stork-auth-credentials"
+const ChainRpcUrlFlag = "chain-rpc-url"
+const ContractAddressFlag = "contract-address"
+const AssetConfigFileFlag = "asset-config-file"
+const MnemonicFileFlag = "mnemonic-file"
+const BatchingWindowFlag = "batching-window"
+const PollingFrequencyFlag = "polling-frequency"
 
-	evmpushCmd.MarkFlagRequired("stork-ws-endpoint")
-	evmpushCmd.MarkFlagRequired("stork-auth-credentials")
-	evmpushCmd.MarkFlagRequired("chain-rpc-url")
-	evmpushCmd.MarkFlagRequired("contract-address")
-	evmpushCmd.MarkFlagRequired("asset-config-file")
-	evmpushCmd.MarkFlagRequired("mnemonic-file")
+func init() {
+	evmpushCmd.Flags().StringP(StorkWebsocketEndpointFlag, "w", "", "Stork WebSocket endpoint")
+	evmpushCmd.Flags().StringP(StorkAuthCredentialsFlag, "a", "", "Stork auth credentials")
+	evmpushCmd.Flags().StringP(ChainRpcUrlFlag, "c", "", "Chain RPC URL")
+	evmpushCmd.Flags().StringP(ContractAddressFlag, "x", "", "Contract address")
+	evmpushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", "Asset config file")
+	evmpushCmd.Flags().StringP(MnemonicFileFlag, "m", "", "Mnemonic file")
+	evmpushCmd.Flags().IntP(BatchingWindowFlag, "b", 10, "Pushing frequency (seconds)")
+	evmpushCmd.Flags().IntP(PollingFrequencyFlag, "p", 5, "Asset Polling frequency (seconds)")
+
+	evmpushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
+	evmpushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
+	evmpushCmd.MarkFlagRequired(ChainRpcUrlFlag)
+	evmpushCmd.MarkFlagRequired(ContractAddressFlag)
+	evmpushCmd.MarkFlagRequired(AssetConfigFileFlag)
+	evmpushCmd.MarkFlagRequired(MnemonicFileFlag)
 }
 
 func runEvmPush(cmd *cobra.Command, args []string) {
 	logger := log.With().Str("component", "evm-push").Logger()
 
-	storkAuth, _ := cmd.Flags().GetString("stork-auth-credentials")
-	storkWsEndpoint, _ := cmd.Flags().GetString("stork-ws-endpoint")
-	chainRpcUrl, _ := cmd.Flags().GetString("chain-rpc-url")
-	contractAddress, _ := cmd.Flags().GetString("contract-address")
-	assetConfigFile, _ := cmd.Flags().GetString("asset-config-file")
-	mnemonicFile, _ := cmd.Flags().GetString("mnemonic-file")
-	batchingWindow, _ := cmd.Flags().GetInt("pushing-frequency")
-	pollingFrequency, _ := cmd.Flags().GetInt("polling-frequency")
+	storkWsEndpoint, _ := cmd.Flags().GetString(StorkWebsocketEndpointFlag)
+	storkAuth, _ := cmd.Flags().GetString(StorkAuthCredentialsFlag)
+	chainRpcUrl, _ := cmd.Flags().GetString(ChainRpcUrlFlag)
+	contractAddress, _ := cmd.Flags().GetString(ContractAddressFlag)
+	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
+	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
+	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
+	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
 
 	priceConfig, err := LoadConfig(assetConfigFile)
 	if err != nil {
@@ -55,7 +63,11 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	i := 0
 	for _, entry := range priceConfig.Assets {
 		assetIds[i] = entry.AssetId
-		encodedAssetIds[i] = InternalEncodedAssetId(crypto.Keccak256([]byte(entry.AssetId)))
+		encoded, err := stringToByte32(string(entry.EncodedAssetId))
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to convert asset ID")
+		}
+		encodedAssetIds[i] = encoded
 		i++
 	}
 
