@@ -33,8 +33,8 @@ type StorkContractInterfacer struct {
 	pollingFrequencySec int
 }
 
-func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int) *StorkContractInterfacer {
-	logger := log.With().Str("component", "stork-contract-interfacer").Logger()
+func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int, logger zerolog.Logger) *StorkContractInterfacer {
+	logger.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
 	if err != nil {
@@ -96,24 +96,34 @@ func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[InternalEnc
 }
 
 func (sci *StorkContractInterfacer) Poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue) {
+	sci.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
 	for _ = range time.Tick(time.Duration(sci.pollingFrequencySec) * time.Second) {
-		polledVals := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
-		for _, encodedAssetId := range encodedAssetIds {
-			storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
-			if err != nil {
-				if strings.Contains(err.Error(), "NotFound()") {
-					sci.logger.Debug().Bytes("assetId", encodedAssetId[:]).Msg("Asset not found")
-				} else {
-					sci.logger.Error().Err(err).Bytes("assetId", encodedAssetId[:]).Msg("Failed to get latest value")
-				}
-				continue
-			}
-			polledVals[encodedAssetId] = storkStructsTemporalNumericValue
+		polledVals, err := sci.PullValues(encodedAssetIds)
+		if err != nil {
+			sci.logger.Error().Err(err).Msg("Failed to poll contract")
+			continue
 		}
 		if len(polledVals) > 0 {
 			ch <- polledVals
 		}
 	}
+}
+
+func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]StorkStructsTemporalNumericValue, error) {
+	polledVals := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
+	for _, encodedAssetId := range encodedAssetIds {
+		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
+		if err != nil {
+			if strings.Contains(err.Error(), "NotFound()") {
+				sci.logger.Debug().Bytes("assetId", encodedAssetId[:]).Msg("Asset not found")
+			} else {
+				sci.logger.Error().Err(err).Bytes("assetId", encodedAssetId[:]).Msg("Failed to get latest value")
+			}
+			continue
+		}
+		polledVals[encodedAssetId] = storkStructsTemporalNumericValue
+	}
+	return polledVals, nil
 }
 
 func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
@@ -189,6 +199,10 @@ func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[Interna
 		return err
 	}
 
-	sci.logger.Info().Str("txHash", tx.Hash().Hex()).Msg("Pushed new values to contract")
+	sci.logger.Info().
+		Str("txHash", tx.Hash().Hex()).
+		Int("numUpdates", len(updates)).
+		Uint64("gasPrice", tx.GasPrice().Uint64()).
+		Msg("Pushed new values to contract")
 	return nil
 }

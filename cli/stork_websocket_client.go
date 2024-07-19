@@ -28,7 +28,7 @@ type StorkAggregatorWebsocketClient struct {
 
 func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIds []AssetId, logger zerolog.Logger) StorkAggregatorWebsocketClient {
 	return StorkAggregatorWebsocketClient{
-		logger:       logger,
+		logger:       logger.With().Str("component", "stork-ws").Logger(),
 		baseEndpoint: baseEndpoint,
 		authToken:    authToken,
 		assetIds:     assetIds,
