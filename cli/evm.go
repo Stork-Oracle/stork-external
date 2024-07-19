@@ -68,7 +68,7 @@ func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, polli
 	}
 }
 
-func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[[32]byte]StorkStructsTemporalNumericValue) {
+func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue) {
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
 	}
@@ -90,14 +90,14 @@ func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[[32]byte]St
 				QuantizedValue: vLog.QuantizedValue,
 				TimestampNs:    vLog.TimestampNs,
 			}
-			ch <- map[[32]byte]StorkStructsTemporalNumericValue{vLog.Id: tv}
+			ch <- map[InternalEncodedAssetId]StorkStructsTemporalNumericValue{vLog.Id: tv}
 		}
 	}
 }
 
-func (sci *StorkContractInterfacer) Poll(encodedAssetIds [][32]byte, ch chan map[[32]byte]StorkStructsTemporalNumericValue) {
+func (sci *StorkContractInterfacer) Poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue) {
 	for _ = range time.Tick(time.Duration(sci.pollingFrequencySec) * time.Second) {
-		polledVals := make(map[[32]byte]StorkStructsTemporalNumericValue)
+		polledVals := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 		for _, encodedAssetId := range encodedAssetIds {
 			storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
 			if err != nil {
@@ -116,7 +116,7 @@ func (sci *StorkContractInterfacer) Poll(encodedAssetIds [][32]byte, ch chan map
 	}
 }
 
-func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[[32]byte]AggregatedSignedPrice) error {
+func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	updates := make([]StorkStructsTemporalNumericValueInput, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {

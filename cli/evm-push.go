@@ -51,16 +51,16 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	}
 
 	assetIds := make([]AssetId, len(priceConfig.Assets))
-	encodedAssetIds := make([][32]byte, len(priceConfig.Assets))
+	encodedAssetIds := make([]InternalEncodedAssetId, len(priceConfig.Assets))
 	i := 0
 	for _, entry := range priceConfig.Assets {
 		assetIds[i] = entry.AssetId
-		encodedAssetIds[i] = [32]byte(crypto.Keccak256([]byte(entry.AssetId)))
+		encodedAssetIds[i] = InternalEncodedAssetId(crypto.Keccak256([]byte(entry.AssetId)))
 		i++
 	}
 
 	storkWsCh := make(chan AggregatedSignedPrice)
-	contractCh := make(chan map[[32]byte]StorkStructsTemporalNumericValue)
+	contractCh := make(chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 
 	storkWs := NewStorkAggregatorWebsocketClient(storkWsEndpoint, storkAuth, assetIds, log.With().Str("component", "stork-ws").Logger())
 	go storkWs.Run(storkWsCh)
@@ -69,8 +69,8 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	go storkContractInterfacer.ListenContractEvents(contractCh)
 	go storkContractInterfacer.Poll(encodedAssetIds, contractCh)
 
-	updates := make(map[[32]byte]AggregatedSignedPrice)
-	latestValueMap := make(map[[32]byte]StorkStructsTemporalNumericValue)
+	updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+	latestValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 
 	ticker := time.NewTicker(time.Duration(batchingWindow) * time.Second)
 	defer ticker.Stop()
@@ -93,13 +93,13 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 						QuantizedValue: quantizedValInt,
 					}
 				}
-				updates = make(map[[32]byte]AggregatedSignedPrice)
+				updates = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			} else {
 				logger.Debug().Msg("No updates to push")
 			}
 		// Handle the price updates from the stork websocket server
 		case valueUpdate := <-storkWsCh:
-			logger.Debug().Msgf("Received price update:", valueUpdate)
+			logger.Debug().Msgf("Received price update: %+v", valueUpdate)
 			encoded, err := stringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to convert asset ID")
