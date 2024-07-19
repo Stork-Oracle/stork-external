@@ -146,8 +146,11 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 				// Calculate the ratio
 				ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
 
+				// Multiply by 100 to get the percentage
+				percentChange := new(big.Float).Mul(ratio, big.NewFloat(100))
+
 				threshold := big.NewFloat(priceConfig.Assets[valueUpdate.AssetId].Threshold)
-				if ratio.Cmp(threshold) > 0 {
+				if percentChange.Cmp(threshold) > 0 {
 					logger.Debug().Msgf("Percentage difference for asset %s is greater than %f", valueUpdate.StorkSignedPrice.EncodedAssetId, priceConfig.Assets[valueUpdate.AssetId].Threshold)
 					updates[encoded] = valueUpdate
 				} else if uint64(valueUpdate.Timestamp)-currentValue.TimestampNs > uint64(priceConfig.Assets[valueUpdate.AssetId].FallbackPeriodSecs)*1000000000 {
