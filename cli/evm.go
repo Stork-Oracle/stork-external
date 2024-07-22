@@ -118,6 +118,7 @@ func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncoded
 				sci.logger.Debug().Bytes("assetId", encodedAssetId[:]).Msg("Asset not found")
 			} else {
 				sci.logger.Error().Err(err).Bytes("assetId", encodedAssetId[:]).Msg("Failed to get latest value")
+				return nil, err
 			}
 			continue
 		}

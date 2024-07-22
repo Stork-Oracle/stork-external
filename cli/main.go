@@ -14,7 +14,7 @@ var verbose bool
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "storkcli",
+		Use:   "stork",
 		Short: "Stork CLI tool for EVM contract updates based on WebSocket prices",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
