@@ -83,9 +83,9 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
 	}
-	latestValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
+	latestContractValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 	for encodedAssetId, value := range initialValues {
-		latestValueMap[encodedAssetId] = value
+		latestContractValueMap[encodedAssetId] = value
 	}
 	logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
@@ -106,15 +106,6 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 				if err != nil {
 					logger.Error().Err(err).Msg("Failed to push batch to contract")
 				}
-				for encodedAssetId, update := range updates {
-					quantizedValInt := new(big.Int)
-					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
-
-					latestValueMap[encodedAssetId] = StorkStructsTemporalNumericValue{
-						TimestampNs:    uint64(update.Timestamp),
-						QuantizedValue: quantizedValInt,
-					}
-				}
 				updates = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			} else {
 				logger.Debug().Msg("No updates to push")
@@ -127,7 +118,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 				logger.Error().Err(err).Msg("Failed to convert asset ID")
 				continue
 			}
-			currentValue, ok := latestValueMap[encoded]
+			currentValue, ok := latestContractValueMap[encoded]
 
 			if !ok {
 				logger.Debug().Msgf("No current value for asset %s", valueUpdate.StorkSignedPrice.EncodedAssetId)
@@ -161,7 +152,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 		// Handle contract updates
 		case chainUpdate := <-contractCh:
 			for encodedAssetId, storkStructsTemporalNumericValue := range chainUpdate {
-				latestValueMap[encodedAssetId] = storkStructsTemporalNumericValue
+				latestContractValueMap[encodedAssetId] = storkStructsTemporalNumericValue
 			}
 		}
 	}
