@@ -1,3 +1,3 @@
 # stork-external
 
-abigen --abi ../../../p_code/solidity-playground/stork.abi --pkg main --type StorkContract --out stork_contract.go
+abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go

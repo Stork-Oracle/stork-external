@@ -35,7 +35,7 @@ func main() {
 			zerolog.SetGlobalLevel(logLevel)
 		},
 	}
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
 	rootCmd.AddCommand(evmpushCmd)
 

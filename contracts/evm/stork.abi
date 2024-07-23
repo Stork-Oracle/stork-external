@@ -521,13 +521,37 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32[]",
+        "name": "leaves",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "root",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyMerkleRoot",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
-        "name": "oracle_pubkey",
+        "name": "oraclePubKey",
         "type": "address"
       },
       {
         "internalType": "string",
-        "name": "asset_pair_id",
+        "name": "assetPairId",
         "type": "string"
       },
       {
@@ -570,8 +594,69 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "pubKey",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "assetPairId",
+            "type": "string"
+          },
+          {
+            "internalType": "uint64",
+            "name": "timestamp",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantizedValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct StorkStructs.PublisherSignature[]",
+        "name": "signatures",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyPublisherSignaturesV1",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
-        "name": "stork_pubkey",
+        "name": "storkPubKey",
         "type": "address"
       },
       {
@@ -581,7 +666,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "recv_time",
+        "name": "recvTime",
         "type": "uint256"
       },
       {
