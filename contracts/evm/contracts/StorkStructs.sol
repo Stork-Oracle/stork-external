@@ -21,4 +21,14 @@ contract StorkStructs {
         bytes32 s;
         uint8 v;
     }
+
+    struct PublisherSignature {
+        address pubKey;
+        string assetPairId;
+        uint64 timestamp; // 8 bytes
+        uint256 quantizedValue; // 8 bytes
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+    }
 }
