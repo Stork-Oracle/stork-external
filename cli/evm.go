@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -113,7 +115,7 @@ func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncoded
 			if strings.Contains(err.Error(), "NotFound()") {
 				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
 			} else {
-				sci.logger.Error().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
+				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
 			}
 			continue
 		}
@@ -178,11 +180,24 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 	return updates, nil
 }
 
-func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([][]StorkStructsPublisherSignature, error) {
-	payloads := make([][]StorkStructsPublisherSignature, len(priceUpdates))
+type VerifyPayload struct {
+	pubSigs    []StorkStructsPublisherSignature
+	merkleRoot [32]byte
+}
+
+func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]VerifyPayload, error) {
+	payloads := make([]VerifyPayload, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
-		payloads[i] = make([]StorkStructsPublisherSignature, len(priceUpdate.SignedPrices))
+		merkleRootBytes, err := stringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+		if err != nil {
+			return nil, err
+		}
+
+		payloads[i] = VerifyPayload{
+			pubSigs:    make([]StorkStructsPublisherSignature, len(priceUpdate.SignedPrices)),
+			merkleRoot: merkleRootBytes,
+		}
 		j := 0
 		for _, signedPrice := range priceUpdate.SignedPrices {
 			pubKeyBytes, err := stringToByte20(string(signedPrice.PublisherKey))
@@ -208,7 +223,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 				return nil, err
 			}
 
-			payloads[i][j] = StorkStructsPublisherSignature{
+			payloads[i].pubSigs[j] = StorkStructsPublisherSignature{
 				PubKey:         pubKeyBytes,
 				AssetPairId:    signedPrice.ExternalAssetId,
 				Timestamp:      uint64(signedPrice.TimestampedSignature.Timestamp) / 1000000000,
@@ -237,7 +252,7 @@ func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[Interna
 			return err
 		}
 		for i, _ := range updatePayload {
-			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i], updatePayload[i].PublisherMerkleRoot)
+			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
 			if err != nil {
 				return err
 			}
