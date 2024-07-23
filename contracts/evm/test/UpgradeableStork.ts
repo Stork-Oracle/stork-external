@@ -213,7 +213,17 @@ describe("UpgradeableStork", function() {
   });
 
   describe('verifyMerkleRoot', function () {
-    it("Should work with few values", async function () {
+    it.only("Should work with one value", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const hashes = [
+        "0xa3330b2fc8da019adc16cfe62cfba5a2494e1e0d82a3410ca8395774565c8f61",
+      ];
+
+      expect(await deployed.verifyMerkleRoot(hashes, "0xa3330b2fc8da019adc16cfe62cfba5a2494e1e0d82a3410ca8395774565c8f61")).to.eq(true);
+    });
+
+    it("Should work with two values", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
       const hashes = [
