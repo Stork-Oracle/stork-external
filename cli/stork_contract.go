@@ -29,6 +29,17 @@ var (
 	_ = abi.ConvertType
 )
 
+// StorkStructsPublisherSignature is an auto generated low-level Go binding around an user-defined struct.
+type StorkStructsPublisherSignature struct {
+	PubKey         common.Address
+	AssetPairId    string
+	Timestamp      uint64
+	QuantizedValue *big.Int
+	R              [32]byte
+	S              [32]byte
+	V              uint8
+}
+
 // StorkStructsTemporalNumericValue is an auto generated low-level Go binding around an user-defined struct.
 type StorkStructsTemporalNumericValue struct {
 	TimestampNs    uint64
@@ -48,7 +59,7 @@ type StorkStructsTemporalNumericValueInput struct {
 
 // StorkContractMetaData contains all meta data concerning the StorkContract contract.
 var StorkContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"StaleValue\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"getUpdateFeeV1\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFeeInWei\",\"type\":\"uint256\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"singleUpdateFeeInWei\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"storkPublicKey\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxStorkPerBlock\",\"type\":\"uint256\"}],\"name\":\"updateSingleUpdateFeeInWei\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"}],\"name\":\"updateStorkPublicKey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"updateTemporalNumericValuesV1\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"}],\"name\":\"updateValidTimePeriodSeconds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validTimePeriodSeconds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oracle_pubkey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"asset_pair_id\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"stork_pubkey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"recv_time\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"quantizedValue\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyStorkSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"StaleValue\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"getUpdateFeeV1\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFeeInWei\",\"type\":\"uint256\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"singleUpdateFeeInWei\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"storkPublicKey\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxStorkPerBlock\",\"type\":\"uint256\"}],\"name\":\"updateSingleUpdateFeeInWei\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"}],\"name\":\"updateStorkPublicKey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"updateTemporalNumericValuesV1\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"}],\"name\":\"updateValidTimePeriodSeconds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validTimePeriodSeconds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"leaves\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"verifyMerkleRoot\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"timestamp\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"quantizedValue\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.PublisherSignature[]\",\"name\":\"signatures\",\"type\":\"tuple[]\"},{\"internalType\":\"bytes32\",\"name\":\"merkleRoot\",\"type\":\"bytes32\"}],\"name\":\"verifyPublisherSignaturesV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"recvTime\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"quantizedValue\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyStorkSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // StorkContractABI is the input ABI used to generate the binding from.
@@ -445,12 +456,43 @@ func (_StorkContract *StorkContractCallerSession) ValidTimePeriodSeconds() (*big
 	return _StorkContract.Contract.ValidTimePeriodSeconds(&_StorkContract.CallOpts)
 }
 
+// VerifyMerkleRoot is a free data retrieval call binding the contract method 0x44ecc82c.
+//
+// Solidity: function verifyMerkleRoot(bytes32[] leaves, bytes32 root) pure returns(bool)
+func (_StorkContract *StorkContractCaller) VerifyMerkleRoot(opts *bind.CallOpts, leaves [][32]byte, root [32]byte) (bool, error) {
+	var out []interface{}
+	err := _StorkContract.contract.Call(opts, &out, "verifyMerkleRoot", leaves, root)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// VerifyMerkleRoot is a free data retrieval call binding the contract method 0x44ecc82c.
+//
+// Solidity: function verifyMerkleRoot(bytes32[] leaves, bytes32 root) pure returns(bool)
+func (_StorkContract *StorkContractSession) VerifyMerkleRoot(leaves [][32]byte, root [32]byte) (bool, error) {
+	return _StorkContract.Contract.VerifyMerkleRoot(&_StorkContract.CallOpts, leaves, root)
+}
+
+// VerifyMerkleRoot is a free data retrieval call binding the contract method 0x44ecc82c.
+//
+// Solidity: function verifyMerkleRoot(bytes32[] leaves, bytes32 root) pure returns(bool)
+func (_StorkContract *StorkContractCallerSession) VerifyMerkleRoot(leaves [][32]byte, root [32]byte) (bool, error) {
+	return _StorkContract.Contract.VerifyMerkleRoot(&_StorkContract.CallOpts, leaves, root)
+}
+
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0xd83cfe2c.
 //
-// Solidity: function verifyPublisherSignatureV1(address oracle_pubkey, string asset_pair_id, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractCaller) VerifyPublisherSignatureV1(opts *bind.CallOpts, oracle_pubkey common.Address, asset_pair_id string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+// Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractCaller) VerifyPublisherSignatureV1(opts *bind.CallOpts, oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
 	var out []interface{}
-	err := _StorkContract.contract.Call(opts, &out, "verifyPublisherSignatureV1", oracle_pubkey, asset_pair_id, timestamp, value, r, s, v)
+	err := _StorkContract.contract.Call(opts, &out, "verifyPublisherSignatureV1", oraclePubKey, assetPairId, timestamp, value, r, s, v)
 
 	if err != nil {
 		return *new(bool), err
@@ -464,24 +506,55 @@ func (_StorkContract *StorkContractCaller) VerifyPublisherSignatureV1(opts *bind
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0xd83cfe2c.
 //
-// Solidity: function verifyPublisherSignatureV1(address oracle_pubkey, string asset_pair_id, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractSession) VerifyPublisherSignatureV1(oracle_pubkey common.Address, asset_pair_id string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _StorkContract.Contract.VerifyPublisherSignatureV1(&_StorkContract.CallOpts, oracle_pubkey, asset_pair_id, timestamp, value, r, s, v)
+// Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _StorkContract.Contract.VerifyPublisherSignatureV1(&_StorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
 }
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0xd83cfe2c.
 //
-// Solidity: function verifyPublisherSignatureV1(address oracle_pubkey, string asset_pair_id, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractCallerSession) VerifyPublisherSignatureV1(oracle_pubkey common.Address, asset_pair_id string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _StorkContract.Contract.VerifyPublisherSignatureV1(&_StorkContract.CallOpts, oracle_pubkey, asset_pair_id, timestamp, value, r, s, v)
+// Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractCallerSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _StorkContract.Contract.VerifyPublisherSignatureV1(&_StorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
+}
+
+// VerifyPublisherSignaturesV1 is a free data retrieval call binding the contract method 0x1519e36c.
+//
+// Solidity: function verifyPublisherSignaturesV1((address,string,uint64,uint256,bytes32,bytes32,uint8)[] signatures, bytes32 merkleRoot) pure returns(bool)
+func (_StorkContract *StorkContractCaller) VerifyPublisherSignaturesV1(opts *bind.CallOpts, signatures []StorkStructsPublisherSignature, merkleRoot [32]byte) (bool, error) {
+	var out []interface{}
+	err := _StorkContract.contract.Call(opts, &out, "verifyPublisherSignaturesV1", signatures, merkleRoot)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// VerifyPublisherSignaturesV1 is a free data retrieval call binding the contract method 0x1519e36c.
+//
+// Solidity: function verifyPublisherSignaturesV1((address,string,uint64,uint256,bytes32,bytes32,uint8)[] signatures, bytes32 merkleRoot) pure returns(bool)
+func (_StorkContract *StorkContractSession) VerifyPublisherSignaturesV1(signatures []StorkStructsPublisherSignature, merkleRoot [32]byte) (bool, error) {
+	return _StorkContract.Contract.VerifyPublisherSignaturesV1(&_StorkContract.CallOpts, signatures, merkleRoot)
+}
+
+// VerifyPublisherSignaturesV1 is a free data retrieval call binding the contract method 0x1519e36c.
+//
+// Solidity: function verifyPublisherSignaturesV1((address,string,uint64,uint256,bytes32,bytes32,uint8)[] signatures, bytes32 merkleRoot) pure returns(bool)
+func (_StorkContract *StorkContractCallerSession) VerifyPublisherSignaturesV1(signatures []StorkStructsPublisherSignature, merkleRoot [32]byte) (bool, error) {
+	return _StorkContract.Contract.VerifyPublisherSignaturesV1(&_StorkContract.CallOpts, signatures, merkleRoot)
 }
 
 // VerifyStorkSignatureV1 is a free data retrieval call binding the contract method 0x2a6cd210.
 //
-// Solidity: function verifyStorkSignatureV1(address stork_pubkey, bytes32 id, uint256 recv_time, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractCaller) VerifyStorkSignatureV1(opts *bind.CallOpts, stork_pubkey common.Address, id [32]byte, recv_time *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
+// Solidity: function verifyStorkSignatureV1(address storkPubKey, bytes32 id, uint256 recvTime, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractCaller) VerifyStorkSignatureV1(opts *bind.CallOpts, storkPubKey common.Address, id [32]byte, recvTime *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
 	var out []interface{}
-	err := _StorkContract.contract.Call(opts, &out, "verifyStorkSignatureV1", stork_pubkey, id, recv_time, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
+	err := _StorkContract.contract.Call(opts, &out, "verifyStorkSignatureV1", storkPubKey, id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
 
 	if err != nil {
 		return *new(bool), err
@@ -495,16 +568,16 @@ func (_StorkContract *StorkContractCaller) VerifyStorkSignatureV1(opts *bind.Cal
 
 // VerifyStorkSignatureV1 is a free data retrieval call binding the contract method 0x2a6cd210.
 //
-// Solidity: function verifyStorkSignatureV1(address stork_pubkey, bytes32 id, uint256 recv_time, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractSession) VerifyStorkSignatureV1(stork_pubkey common.Address, id [32]byte, recv_time *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _StorkContract.Contract.VerifyStorkSignatureV1(&_StorkContract.CallOpts, stork_pubkey, id, recv_time, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
+// Solidity: function verifyStorkSignatureV1(address storkPubKey, bytes32 id, uint256 recvTime, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractSession) VerifyStorkSignatureV1(storkPubKey common.Address, id [32]byte, recvTime *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _StorkContract.Contract.VerifyStorkSignatureV1(&_StorkContract.CallOpts, storkPubKey, id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
 }
 
 // VerifyStorkSignatureV1 is a free data retrieval call binding the contract method 0x2a6cd210.
 //
-// Solidity: function verifyStorkSignatureV1(address stork_pubkey, bytes32 id, uint256 recv_time, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_StorkContract *StorkContractCallerSession) VerifyStorkSignatureV1(stork_pubkey common.Address, id [32]byte, recv_time *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _StorkContract.Contract.VerifyStorkSignatureV1(&_StorkContract.CallOpts, stork_pubkey, id, recv_time, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
+// Solidity: function verifyStorkSignatureV1(address storkPubKey, bytes32 id, uint256 recvTime, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
+func (_StorkContract *StorkContractCallerSession) VerifyStorkSignatureV1(storkPubKey common.Address, id [32]byte, recvTime *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _StorkContract.Contract.VerifyStorkSignatureV1(&_StorkContract.CallOpts, storkPubKey, id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
