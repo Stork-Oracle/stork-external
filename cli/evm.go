@@ -71,7 +71,8 @@ func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[InternalEnc
 	eventCh := make(chan *StorkContractValueUpdate)
 	sub, err := sci.contract.WatchValueUpdate(watchOpts, eventCh, nil)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to watch contract events")
+		log.Error().Err(err).Msg("Failed to watch contract events. Is the RPC URL a WebSocket endpoint?")
+		return
 	}
 
 	sci.logger.Info().Msg("Listening for contract events")
@@ -113,7 +114,6 @@ func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncoded
 				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
 			} else {
 				sci.logger.Error().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
-				return nil, err
 			}
 			continue
 		}
