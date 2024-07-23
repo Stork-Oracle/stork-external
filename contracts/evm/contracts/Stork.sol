@@ -67,6 +67,33 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
         return numericValue;
     }
 
+    function verifyPublisherSignaturesV1(
+        StorkStructs.PublisherSignature[] calldata signatures,
+        bytes32 merkleRoot
+    ) public pure returns (bool) {
+        bytes32[] memory hashes = new bytes32[](signatures.length);
+
+        for (uint i = 0; i < signatures.length; i++) {
+            if(!verifyPublisherSignatureV1(
+                signatures[i].pubKey,
+                signatures[i].assetPairId,
+                signatures[i].timestamp,
+                signatures[i].quantizedValue,
+                signatures[i].r,
+                signatures[i].s,
+                signatures[i].v
+            )) return false;
+            bytes32 computed = getPublisherMessageHash(
+                signatures[i].pubKey,
+                signatures[i].assetPairId,
+                signatures[i].timestamp,
+                signatures[i].quantizedValue
+            );
+            hashes[i] = computed;
+        }
+        return verifyMerkleRoot(hashes, merkleRoot);
+    }
+
     function version() public pure returns (string memory) {
         return "1.0.0";
     }
