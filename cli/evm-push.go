@@ -106,6 +106,16 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 				if err != nil {
 					logger.Error().Err(err).Msg("Failed to push batch to contract")
 				}
+				// include this to prevent race conditions
+				for encodedAssetId, update := range updates {
+					quantizedValInt := new(big.Int)
+					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
+
+					latestContractValueMap[encodedAssetId] = StorkStructsTemporalNumericValue{
+						TimestampNs:    uint64(update.Timestamp),
+						QuantizedValue: quantizedValInt,
+					}
+				}
 				updates = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			} else {
 				logger.Debug().Msg("No updates to push")
