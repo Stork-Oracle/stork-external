@@ -12,10 +12,10 @@ type AssetConfig struct {
 }
 
 type AssetEntry struct {
-	AssetId            AssetId        `yaml:"asset_id"`
-	EncodedAssetId     EncodedAssetId `yaml:"encoded_asset_id"`
-	Threshold          float64        `yaml:"threshold"`
-	FallbackPeriodSecs int32          `yaml:"fallback_period_sec"`
+	AssetId                AssetId        `yaml:"asset_id"`
+	EncodedAssetId         EncodedAssetId `yaml:"encoded_asset_id"`
+	PercentChangeThreshold float64        `yaml:"percent_change_threshold"`
+	FallbackPeriodSecs     uint64         `yaml:"fallback_period_sec"`
 }
 
 func LoadConfig(filename string) (*AssetConfig, error) {
