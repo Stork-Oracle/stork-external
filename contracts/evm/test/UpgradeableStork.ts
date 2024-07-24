@@ -234,6 +234,17 @@ describe("UpgradeableStork", function() {
       expect(await deployed.verifyMerkleRoot(hashes, "0xa856b2ea34e72a9024cb0e70df0ff6e642f73c8db6ee506b4770796977e9497f")).to.eq(true);
     });
 
+    it("Should work with two values reversed", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const hashes = [
+        "0x1fd10d34dcb1ef1ea4965bb60c494bf0782a6f0a7ad3354d1f1f3dc61fb65b21",
+        "0xa3330b2fc8da019adc16cfe62cfba5a2494e1e0d82a3410ca8395774565c8f61",
+      ];
+
+      expect(await deployed.verifyMerkleRoot(hashes, "0x6c9a6f99ea9fa21d9029392c5fc9674e918f3e20dcf29c5fb04a43560e620d5b")).to.eq(true);
+    });
+
     it("Should compute the merkle root for even number of values", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
