@@ -213,7 +213,7 @@ describe("UpgradeableStork", function() {
   });
 
   describe('verifyMerkleRoot', function () {
-    it.only("Should work with one value", async function () {
+    it("Should work with one value", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
       const hashes = [
