@@ -12,6 +12,7 @@ import './tasks/print-abi';
 import { vars } from "hardhat/config";
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
+const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -29,7 +30,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      arbitrumSepolia: "699SIXV2HNIBBNP3QJMBERP3R5QYRTS47X",
+      arbitrumSepolia: ARBISCAN_API_KEY,
     },
     customChains: [
       {
