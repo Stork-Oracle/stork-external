@@ -35,8 +35,8 @@ func init() {
 	evmpushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", "Asset config file")
 	evmpushCmd.Flags().StringP(MnemonicFileFlag, "m", "", "Mnemonic file")
 	evmpushCmd.Flags().BoolP(VerifyPublishersFlag, "v", false, "Verify the contract")
-	evmpushCmd.Flags().IntP(BatchingWindowFlag, "b", 10, "Batching window (seconds)")
-	evmpushCmd.Flags().IntP(PollingFrequencyFlag, "p", 5, "Asset Polling frequency (seconds)")
+	evmpushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, "Batching window (seconds)")
+	evmpushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, "Asset Polling frequency (seconds)")
 
 	evmpushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
 	evmpushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
@@ -85,11 +85,13 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	storkContractInterfacer := NewStorkContractInterfacer(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, verifyPublishers, logger)
 
+	latestContractValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
+	latestStorkValueMap := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+
 	initialValues, err := storkContractInterfacer.PullValues(encodedAssetIds)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
 	}
-	latestContractValueMap := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
 	for encodedAssetId, value := range initialValues {
 		latestContractValueMap[encodedAssetId] = value
 	}
@@ -98,15 +100,29 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	go storkContractInterfacer.ListenContractEvents(contractCh)
 	go storkContractInterfacer.Poll(encodedAssetIds, contractCh)
 
-	updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
-
 	ticker := time.NewTicker(time.Duration(batchingWindow) * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
-		// Push the batch to the contract after waiting the pushing frequency
+		// Determine updates after the batching window has passed and push them to the contract
 		case <-ticker.C:
+			updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+			for encodedAssetId, latestStorkPrice := range latestStorkValueMap {
+				latestValue, ok := latestContractValueMap[encodedAssetId]
+				if !ok {
+					logger.Debug().Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetId)
+					updates[encodedAssetId] = latestStorkPrice
+				} else if shouldUpdate(
+					latestValue,
+					latestStorkPrice,
+					priceConfig.Assets[latestStorkPrice.AssetId].FallbackPeriodSecs,
+					priceConfig.Assets[latestStorkPrice.AssetId].PercentChangeThreshold,
+				) {
+					updates[encodedAssetId] = latestStorkPrice
+				}
+			}
+
 			if len(updates) > 0 {
 				err := storkContractInterfacer.BatchPushToContract(updates)
 				if err != nil {
@@ -122,49 +138,17 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 						QuantizedValue: quantizedValInt,
 					}
 				}
-				updates = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			} else {
 				logger.Debug().Msg("No updates to push")
 			}
-		// Handle updates from the stork websocket server
+		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
-			logger.Debug().Msgf("Received price update: %+v", valueUpdate)
 			encoded, err := stringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to convert asset ID")
 				continue
 			}
-			currentValue, ok := latestContractValueMap[encoded]
-
-			if !ok {
-				logger.Debug().Msgf("No current value for asset %s", valueUpdate.StorkSignedPrice.EncodedAssetId)
-				updates[encoded] = valueUpdate
-			} else {
-				quantizedVal := new(big.Float)
-				quantizedVal.SetString(string(valueUpdate.StorkSignedPrice.QuantizedPrice))
-
-				quantizedCurrVal := new(big.Float)
-				quantizedCurrVal.SetInt(currentValue.QuantizedValue)
-
-				// Calculate the absolute difference
-				difference := new(big.Float).Sub(quantizedVal, quantizedCurrVal)
-				absDifference := new(big.Float).Abs(difference)
-
-				// Calculate the ratio
-				ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
-
-				// Multiply by 100 to get the percentage
-				percentChange := new(big.Float).Mul(ratio, big.NewFloat(100))
-
-				threshold := big.NewFloat(priceConfig.Assets[valueUpdate.AssetId].Threshold)
-				if percentChange.Cmp(threshold) > 0 {
-					logger.Debug().Msgf("Percentage difference for asset %s is greater than %f", valueUpdate.StorkSignedPrice.EncodedAssetId, priceConfig.Assets[valueUpdate.AssetId].Threshold)
-					updates[encoded] = valueUpdate
-				} else if uint64(valueUpdate.Timestamp)-currentValue.TimestampNs > uint64(priceConfig.Assets[valueUpdate.AssetId].FallbackPeriodSecs)*1000000000 {
-					logger.Debug().Msgf("Fallback period for asset %s has passed", valueUpdate.StorkSignedPrice.EncodedAssetId)
-					updates[encoded] = valueUpdate
-				}
-			}
+			latestStorkValueMap[encoded] = valueUpdate
 		// Handle contract updates
 		case chainUpdate := <-contractCh:
 			for encodedAssetId, storkStructsTemporalNumericValue := range chainUpdate {
@@ -172,4 +156,29 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
+}
+
+func shouldUpdate(latestValue StorkStructsTemporalNumericValue, latestStorkPrice AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
+	if uint64(latestStorkPrice.Timestamp)-latestValue.TimestampNs > fallbackPeriodSecs*1000000000 {
+		return true
+	}
+
+	quantizedVal := new(big.Float)
+	quantizedVal.SetString(string(latestStorkPrice.StorkSignedPrice.QuantizedPrice))
+
+	quantizedCurrVal := new(big.Float)
+	quantizedCurrVal.SetInt(latestValue.QuantizedValue)
+
+	// Calculate the absolute difference
+	difference := new(big.Float).Sub(quantizedVal, quantizedCurrVal)
+	absDifference := new(big.Float).Abs(difference)
+
+	// Calculate the ratio
+	ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
+
+	// Multiply by 100 to get the percentage
+	percentChange := new(big.Float).Mul(ratio, big.NewFloat(100))
+
+	thresholdBig := big.NewFloat(changeThreshold)
+	return percentChange.Cmp(thresholdBig) > 0
 }

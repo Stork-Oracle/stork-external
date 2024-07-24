@@ -2,51 +2,51 @@ assets:
   BTCUSD:
     asset_id: BTCUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de
   BTCUSDT:
     asset_id: BTCUSDT
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0xcd423b16b64109a0492eab881d06ef1d6470d25f8e3d6f04f5acc111f176939c
   CIRCLEUSD:
     asset_id: CIRCLEUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0xadd5da8083ef32eb47f3f903af71fc1d5f930b29c771b6d41edd037d9ef5da24
   DEGENUSD:
     asset_id: DEGENUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x31e43b8ae0d55055fc739f7cdecd67f5b17c9f614024aa6f3694565b858b4e1a
   FRAXUSD:
     asset_id: FRAXUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x3e0cdce46ef114da5bdf552936977766dc59782b77fffe2e7833e08f443bae89
   LINKUSD:
     asset_id: LINKUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x694cad6038bcbefcc30e11862e412bb58f9c4ac3c9e0f9ed02d3e38b16829263
   MAKERUSD:
     asset_id: MAKERUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x5062824c39f88649af5240b7a673ad0ad5081d9aeec754c24d79b5494dfc36da
   SHIBUSD:
     asset_id: SHIBUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0xb39f98df3f03608241d2e0ef2b566f78d5c7d31b376f298cf7e115cbf006f92d
   USDCUSD:
     asset_id: USDCUSD
     fallback_period_sec: 60
-    threshold: 1
+    percent_change_threshold: 1
     encoded_asset_id: 0x7416a56f222e196d0487dce8a1a8003936862e7a15092a91898d69fa8bce290c
 
   # ETHUSD:
   #   asset_id: ETHUSD
   #   fallback_period_sec: 60
-  #   threshold: 1
+  #   percent_change_threshold: 1
   #   encoded_asset_id: 0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160
