@@ -1,4 +1,4 @@
-# stork-external
+# stork-cli
 
 ### Development
 
