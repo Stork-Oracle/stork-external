@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
-	"encoding/json"
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -241,17 +239,12 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 }
 
 func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-	updatePayload, err := getUpdatePayload(priceUpdates)
-	if err != nil {
-		return err
-	}
-
 	if sci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {
 			return err
 		}
-		for i, _ := range updatePayload {
+		for i, _ := range publisherVerifyPayloads {
 			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
 			if err != nil {
 				return err
@@ -261,6 +254,11 @@ func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[Interna
 				return nil
 			}
 		}
+	}
+
+	updatePayload, err := getUpdatePayload(priceUpdates)
+	if err != nil {
+		return err
 	}
 
 	fee, err := sci.contract.GetUpdateFeeV1(nil, updatePayload)
