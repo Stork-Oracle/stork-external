@@ -159,7 +159,7 @@ describe("UpgradeableStork", function() {
       )).to.eq(true);
     });
 
-    it ("Should verify the given BTC signature for arguments", async function () {
+    it("Should verify the given BTC signature for arguments", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
       const sig = {
@@ -181,6 +181,30 @@ describe("UpgradeableStork", function() {
         sig.s,
         sig.v
       )).to.eq(true);
+    });
+
+    it("Should return false if invalid signature", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const sig = {
+        pubKey: "0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b",
+        assetPairId: "ETHUSD",
+        timestamp: 1680210934,
+        quantizedValue: '1000000000000000000',
+        r: "0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555",
+        s: "0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f",
+        v: 0x1c // changed from 0x1b
+      };
+
+      expect(await deployed.verifyPublisherSignatureV1(
+        sig.pubKey,
+        sig.assetPairId,
+        sig.timestamp,
+        sig.quantizedValue,
+        sig.r,
+        sig.s,
+        sig.v
+      )).to.eq(false);
     });
   });
 
@@ -209,6 +233,32 @@ describe("UpgradeableStork", function() {
         S,
         V
       )).to.eq(true);
+    });
+
+    it("Should return false if invalid signature", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const STORK_PUBKEY = "0xC4A02e7D370402F4afC36032076B05e74FF81786" 
+      const ID = ethers.keccak256(ethers.toUtf8Bytes("BTCUSD"))
+      const TIMESTAMP = "1720722087644999936"
+      const VALUE = "60000000000000000000000"
+      const MERKLE_ROOT = ethers.encodeBytes32String("example data")
+      const VALUE_COMPUTE_ALG_HASH = ethers.encodeBytes32String("example data")
+      const R = "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b"
+      const S = "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879"
+      const V = "0x1b" // changed from 0x1c
+
+      expect(await deployed.verifyStorkSignatureV1(
+        STORK_PUBKEY,
+        ID,
+        TIMESTAMP,
+        VALUE,
+        MERKLE_ROOT,
+        VALUE_COMPUTE_ALG_HASH,
+        R,
+        S,
+        V
+      )).to.eq(false);
     });
   });
 
