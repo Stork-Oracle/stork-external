@@ -1,7 +1,17 @@
 import { task } from "hardhat/config";
 import { loadContractDeploymentAddress } from "./utils/helpers";
 
-const allowedCommands = ["version", "updateTemporalNumericValuesV1", "getTemporalNumericValueV1"] as const;
+const allowedCommands = [
+  "version",
+  "updateTemporalNumericValuesV1",
+  "getTemporalNumericValueV1",
+  "updateValidTimePeriodSeconds",
+  "validTimePeriodSeconds",
+  "updateSingleUpdateFeeInWei",
+  "singleUpdateFeeInWei",,
+  "updateStorkPublicKey",
+  "storkPublicKey",
+];
 
 type AllowedCommands = (typeof allowedCommands)[number];
 
@@ -13,9 +23,11 @@ async function main(command: AllowedCommands, args: any) {
 
   const contractAddress = await loadContractDeploymentAddress();
   if (!contractAddress) {
-    throw new Error("Contract address not found. Please deploy the contract first.");
+    throw new Error(
+      "Contract address not found. Please deploy the contract first."
+    );
   }
-  console.log(`Running script to interact with contract ${contractAddress}`);
+  console.log(`Contract: ${contractAddress}`);
 
   // @ts-expect-error ethers is loaded in hardhat/config
   const [deployer] = await ethers.getSigners();
@@ -31,24 +43,51 @@ async function main(command: AllowedCommands, args: any) {
     deployer // Interact with the contract on behalf of this wallet
   );
 
-  if (command === "version") {
-    const version = await contract.version();
-    console.log(`Contract version: ${version}`);
-    return;
-  } else if (command === "updateTemporalNumericValuesV1") {
-    const payload = JSON.parse(args);
-    const result = await contract.updateTemporalNumericValuesV1([payload], { value: 1 });
-    return;
-  } else if (command === "getTemporalNumericValueV1") {
-    // @ts-expect-error
-    const encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
-    const value = await contract.getTemporalNumericValueV1(encoded)
-    console.log(`Value for BTCUSD: ${value}`);
-    return;
+  let returnVal;
+  switch (command) {
+    case "version":
+      const version = await contract.version();
+      console.log(`Contract version: ${version}`);
+      break;
+    case "updateTemporalNumericValuesV1":
+      const payload = JSON.parse(args);
+      await contract.updateTemporalNumericValuesV1([payload], {
+        value: 1,
+      });
+      break;
+    case "getTemporalNumericValueV1":
+      // @ts-expect-error
+      const encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
+      returnVal = await contract.getTemporalNumericValueV1(encoded);
+      console.log(returnVal);
+      break;
+    case "updateValidTimePeriodSeconds":
+      returnVal = await contract.updateValidTimePeriodSeconds(parseInt(args));
+      break;
+    case "updateSingleUpdateFeeInWei":
+      returnVal = await contract.updateSingleUpdateFeeInWei(parseInt(args));
+      break;
+    case "updateStorkPublicKey":
+      returnVal = await contract.updateStorkPublicKey(args);
+      break;
+    case "validTimePeriodSeconds":
+    case "singleUpdateFeeInWei":
+    case "storkPublicKey":
+      returnVal = await contract[command]();
+      console.log(returnVal);
+      break;
+    default:
+      throw new Error(`Invalid command: ${command}`);
   }
 }
 
 task("interact", "A task to interact with the proxy contract")
   .addPositionalParam<AllowedCommands>("command", "The command to run")
-  .addPositionalParam<string>("args", "The arguments for the command", undefined, undefined, true)
+  .addPositionalParam<string>(
+    "args",
+    "The arguments for the command",
+    undefined,
+    undefined,
+    true
+  )
   .setAction(async (taskArgs) => await main(taskArgs.command, taskArgs.args));
