@@ -1,10 +1,16 @@
 import { task } from "hardhat/config";
+import { loadContractDeploymentAddress } from "./utils/helpers";
 
-async function main(contractAddress: string) {
+async function main() {
   // @ts-expect-error ethers is loaded in hardhat/config
   const UpgradeableStork = await ethers.getContractFactory(
     "UpgradeableStork"
   );
+
+  const contractAddress = await loadContractDeploymentAddress();
+  if (!contractAddress) {
+    throw new Error("Contract address not found. Please deploy the contract first.");
+  }
 
   // @ts-expect-error upgrades is loaded in hardhat/config
   // Upgrade the proxy to the new implementation
@@ -17,5 +23,4 @@ async function main(contractAddress: string) {
 }
 
 task("upgrade", "A task to upgrade the proxy contract")
-    .addParam("proxyAddress", "The address of the proxy contract")
-    .setAction(async (taskArgs) => await main(taskArgs.proxyAddress));
+    .setAction(async () => await main());

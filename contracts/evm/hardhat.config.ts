@@ -27,10 +27,16 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 421614,
     },
+    berachainTestnet: {
+      url: "https://bartio.rpc.berachain.com/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80084,
+    },
   },
   etherscan: {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
+      berachainTestnet: 'fake',
     },
     customChains: [
       {
@@ -41,6 +47,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://sepolia.arbiscan.io/",
         },
       },
+      {
+        network: "berachainTestnet",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
+          browserURL: "https://bartio.beratrail.io"
+        }
+      }
     ],
   },
 };
