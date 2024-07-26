@@ -1,4 +1,5 @@
 import { task } from "hardhat/config";
+import { CONTRACT_DEPLOYMENT, createFileIfNotExists, getDeployedAddressesPath } from "./utils/helpers";
 
 const STORK_PUBLIC_KEY = "0x3db9E960ECfCcb11969509FAB000c0c96DC51830"
 const VALID_TIMEOUT_SECONDS = 60;
@@ -24,6 +25,10 @@ async function main() {
   );
 
   await upgradeableStork.deploymentTransaction().wait();
+
+  // write file to store the address at deployments/chain-<chainid>/deployed_addresses.json
+  const deployedAddressPath = await getDeployedAddressesPath();
+  createFileIfNotExists(deployedAddressPath, JSON.stringify({ [CONTRACT_DEPLOYMENT]: upgradeableStork.target }, null, 2));
 
   console.log("UpgradeableStork deployed to:", upgradeableStork.target);
 }

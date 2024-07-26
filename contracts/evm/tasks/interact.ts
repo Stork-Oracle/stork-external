@@ -1,7 +1,20 @@
 import { task } from "hardhat/config";
+import { loadContractDeploymentAddress } from "./utils/helpers";
+
+const allowedCommands = ["version", "updateTemporalNumericValuesV1", "getTemporalNumericValueV1"] as const;
+
+type AllowedCommands = (typeof allowedCommands)[number];
 
 // An example of a script to interact with the contract
-async function main(contractAddress: string) {
+async function main(command: AllowedCommands, args: any) {
+  if (!allowedCommands.includes(command)) {
+    throw new Error(`Invalid command: ${command}`);
+  }
+
+  const contractAddress = await loadContractDeploymentAddress();
+  if (!contractAddress) {
+    throw new Error("Contract address not found. Please deploy the contract first.");
+  }
   console.log(`Running script to interact with contract ${contractAddress}`);
 
   // @ts-expect-error ethers is loaded in hardhat/config
@@ -18,35 +31,24 @@ async function main(contractAddress: string) {
     deployer // Interact with the contract on behalf of this wallet
   );
 
-  const version = await contract.version();
-  console.log(`Contract version: ${version}`);
-
-  const result = await contract.updateTemporalNumericValuesV1([
-    {
-      temporalNumericValue: {
-        timestampNs: "3",
-        quantizedValue: "60000000000000000000000",
-      },
-      // @ts-expect-error
-      id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
-      // @ts-expect-error
-      publisherMerkleRoot: ethers.encodeBytes32String("example data"),
-      // @ts-expect-error
-      valueComputeAlgHash: ethers.encodeBytes32String("example data"),
-      r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
-      s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
-      v: "0x1c"
-    }
-  ], { value: 1 });
-
-  console.log(`Contract version: ${result}`);
-
-  // @ts-expect-error
-  const value = await contract.getTemporalNumericValueV1(ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")))
-
-  console.log(`Value for BTCUSD: ${value}`);
+  if (command === "version") {
+    const version = await contract.version();
+    console.log(`Contract version: ${version}`);
+    return;
+  } else if (command === "updateTemporalNumericValuesV1") {
+    const payload = JSON.parse(args);
+    const result = await contract.updateTemporalNumericValuesV1([payload], { value: 1 });
+    return;
+  } else if (command === "getTemporalNumericValueV1") {
+    // @ts-expect-error
+    const encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
+    const value = await contract.getTemporalNumericValueV1(encoded)
+    console.log(`Value for BTCUSD: ${value}`);
+    return;
+  }
 }
 
 task("interact", "A task to interact with the proxy contract")
-  .addParam("proxyAddress", "The address of the proxy contract")
-  .setAction(async (taskArgs) => await main(taskArgs.proxyAddress));
+  .addPositionalParam<AllowedCommands>("command", "The command to run")
+  .addPositionalParam<string>("args", "The arguments for the command", undefined, undefined, true)
+  .setAction(async (taskArgs) => await main(taskArgs.command, taskArgs.args));
