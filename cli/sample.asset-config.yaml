@@ -44,9 +44,8 @@ assets:
     fallback_period_sec: 60
     percent_change_threshold: 1
     encoded_asset_id: 0x7416a56f222e196d0487dce8a1a8003936862e7a15092a91898d69fa8bce290c
-
-  # ETHUSD:
-  #   asset_id: ETHUSD
-  #   fallback_period_sec: 60
-  #   percent_change_threshold: 1
-  #   encoded_asset_id: 0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160
+  ETHUSD:
+    asset_id: ETHUSD
+    fallback_period_sec: 60
+    percent_change_threshold: 1
+    encoded_asset_id: 0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160
