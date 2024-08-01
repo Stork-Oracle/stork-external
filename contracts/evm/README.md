@@ -46,6 +46,12 @@ npx hardhat compile
 npx hardhat --network inMemoryNode upgrade
 ```
 
+#### Verify
+
+```
+npx hardhat verify --network <network> <proxy-contract-address>
+```
+
 #### Interact
 
 See `tasks/interact.ts` for available methods.
