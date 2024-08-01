@@ -26,6 +26,13 @@ sudo yum install amazon-cloudwatch-agent -y
                                                 "log_group_name": "/aws/ec2/dev-apps-evm-pusher",
                                                 "log_stream_name": "berachain-testnet-[{instance_id}]",
                                                 "retention_in_days": -1
+                                        },
+                                        {
+                                               "file_path": "/var/log/volmex-testnet.log",
+                                                "log_group_class": "STANDARD",
+                                                "log_group_name": "/aws/ec2/dev-apps-evm-pusher",
+                                                "log_stream_name": "volmex-testnet-[{instance_id}]",
+                                                "retention_in_days": -1
                                         }
                                 ]
                         }
@@ -93,7 +100,12 @@ Group=ec2-user
 WantedBy=multi-user.target
 ```
 
-8. Restart systemctl
+8. Create log file
+```
+sudo touch /var/log/berachain-testnet.log
+```
+
+9. Restart systemctl
 
 ```
 sudo systemctl daemon-reload
@@ -101,7 +113,7 @@ sudo systemctl enable berachain-testnet.service
 sudo systemctl restart berachain-testnet.service
 ```
 
-9. (If necessary) restart amazon-cloudwatch-agent
+10. (If necessary) restart amazon-cloudwatch-agent
 
 ```
 sudo systemctl daemon-reload
