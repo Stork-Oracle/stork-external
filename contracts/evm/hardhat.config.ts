@@ -31,11 +31,17 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    volmexTestnet: {
+      url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
+      accounts: [PRIVATE_KEY],
+      chainId: 5633311,
+    },
   },
   etherscan: {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
+      volmexTestnet: 'fake'
     },
     customChains: [
       {
@@ -52,6 +58,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
           browserURL: "https://bartio.beratrail.io"
+        }
+      },
+      {
+        network: "volmexTestnet",
+        chainId: 5633311,
+        urls: {
+          apiURL: "https://volmex-testnet-custom-gas-0.explorer.caldera.xyz/api",
+          browserURL: "https://volmex-testnet-custom-gas-0.explorer.caldera.xyz"
         }
       }
     ],
