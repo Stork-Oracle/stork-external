@@ -12,6 +12,7 @@ import { vars } from "hardhat/config";
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
 const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
+const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -31,6 +32,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    polygonAmoy: {
+      url: "https://rpc-amoy.polygon.technology/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80002,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -41,6 +47,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
+      polygonAmoy: POLYGON_API_KEY,
       volmexTestnet: 'fake'
     },
     customChains: [
