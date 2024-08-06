@@ -89,7 +89,7 @@ Description=Stork Berachain Pusher Service
 After=network.target
 
 [Service]
-ExecStart=stork evm-push -w wss://api.dev.jp.stork-oracle.network -a fake -c https://bartio.rpc.berachain.com -x 0xacC0a0cF13571d30B4b8637996F5D6D774d4fd62 -f /home/ec2-user/berachain.asset-config.yaml -m /home/ec2-user/berachain-testnet.secret -b 60 -v
+ExecStart=stork evm-push -w wss://api.jp.stork-oracle.network -a fake -c https://bartio.rpc.berachain.com -x 0xacC0a0cF13571d30B4b8637996F5D6D774d4fd62 -f /home/ec2-user/berachain.asset-config.yaml -m /home/ec2-user/berachain-testnet.secret -b 60 -v
 Restart=always
 StandardOutput=append:/var/log/berachain-testnet.log
 StandardError=append:/var/log/berachain-testnet.log
