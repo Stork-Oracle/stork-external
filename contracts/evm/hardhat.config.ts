@@ -13,6 +13,7 @@ import { vars } from "hardhat/config";
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
 const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
 const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
+const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -32,6 +33,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    holesky: {
+      url: "https://rpc.holesky.ethpandaops.io/",
+      accounts: [PRIVATE_KEY],
+      chainId: 17000
+    },
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -47,6 +53,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
+      holesky: ETHERSCAN_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       volmexTestnet: 'fake'
     },
