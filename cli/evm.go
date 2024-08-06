@@ -247,6 +247,7 @@ func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[Interna
 		for i, _ := range publisherVerifyPayloads {
 			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
 			if err != nil {
+				sci.logger.Error().Err(err).Msg("Failed to verify publisher signatures")
 				return err
 			}
 			if !verified {

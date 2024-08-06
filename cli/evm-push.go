@@ -34,7 +34,7 @@ func init() {
 	evmpushCmd.Flags().StringP(ContractAddressFlag, "x", "", "Contract address")
 	evmpushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", "Asset config file")
 	evmpushCmd.Flags().StringP(MnemonicFileFlag, "m", "", "Mnemonic file")
-	evmpushCmd.Flags().BoolP(VerifyPublishersFlag, "v", false, "Verify the contract")
+	evmpushCmd.Flags().BoolP(VerifyPublishersFlag, "v", false, "Verify the publisher signed prices before pushing stork signed value to contract")
 	evmpushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, "Batching window (seconds)")
 	evmpushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, "Asset Polling frequency (seconds)")
 
