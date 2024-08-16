@@ -29,7 +29,7 @@ const PollingFrequencyFlag = "polling-frequency"
 
 func init() {
 	evmpushCmd.Flags().StringP(StorkWebsocketEndpointFlag, "w", "", "Stork WebSocket endpoint")
-	evmpushCmd.Flags().StringP(StorkAuthCredentialsFlag, "a", "", "Stork auth credentials")
+	evmpushCmd.Flags().StringP(StorkAuthCredentialsFlag, "a", "", "Stork auth credentials - base64(username:password)")
 	evmpushCmd.Flags().StringP(ChainRpcUrlFlag, "c", "", "Chain RPC URL")
 	evmpushCmd.Flags().StringP(ContractAddressFlag, "x", "", "Contract address")
 	evmpushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", "Asset config file")
