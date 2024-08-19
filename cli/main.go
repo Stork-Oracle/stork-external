@@ -38,6 +38,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
 	rootCmd.AddCommand(evmpushCmd)
+	rootCmd.AddCommand(publisherAgentCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

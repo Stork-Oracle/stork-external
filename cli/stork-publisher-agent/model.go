@@ -1,4 +1,4 @@
-package main
+package stork_publisher_agent
 
 type MessageType string
 
@@ -22,8 +22,8 @@ type ErrorMessage struct {
 type (
 	OracleId       string
 	AssetId        string
-	EncodedAssetId string
 	PublisherKey   string
+	PrivateKey     string
 	SignatureType  string
 	QuantizedPrice string
 )

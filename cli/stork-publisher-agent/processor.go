@@ -1,4 +1,4 @@
-package main
+package stork_publisher_agent
 
 import (
 	"math"
@@ -61,7 +61,7 @@ func (p *PriceUpdateProcessor[T]) ClockUpdate() *PriceUpdatesWithTrigger {
 func (p *PriceUpdateProcessor[T]) SignBatch(updates PriceUpdatesWithTrigger) SignedPriceUpdateBatch[T] {
 	signedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
 	for asset, priceUpdate := range updates.updates {
-		signedPriceUpdateBatch[asset] = p.signer.Sign(priceUpdate, updates.TriggerType)
+		signedPriceUpdateBatch[asset] = p.signer.GetSignedPriceUpdate(priceUpdate, updates.TriggerType)
 	}
 	return signedPriceUpdateBatch
 }

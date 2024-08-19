@@ -1,4 +1,4 @@
-package main
+package stork_publisher_agent
 
 import (
 	"encoding/json"
@@ -74,8 +74,11 @@ type IncomingWebsocketConnection struct {
 	logger zerolog.Logger
 }
 
-func NewIncomingWebsocketConnection() *IncomingWebsocketConnection {
-	return &IncomingWebsocketConnection{}
+func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Logger) *IncomingWebsocketConnection {
+	return &IncomingWebsocketConnection{
+		WebsocketConnection: conn,
+		logger:              logger,
+	}
 }
 
 func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
@@ -126,14 +129,19 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 
 type OutgoingWebsocketConnection[T Signature] struct {
 	WebsocketConnection
-	logger              zerolog.Logger
-	outgoingResponsesCh chan any
-	subscriptionTracker SubscriptionTracker
+	logger                   zerolog.Logger
+	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
+	outgoingResponsesCh      chan any
+	subscriptionTracker      *SubscriptionTracker
 }
 
-func NewOutgoingWebsocketConnection[T Signature]() *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T Signature](conn WebsocketConnection, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
-		outgoingResponsesCh: make(chan any, 4096),
+		WebsocketConnection:      conn,
+		subscriptionTracker:      NewSubscriptionTracker(),
+		outgoingResponsesCh:      make(chan any, 4096),
+		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
+		logger:                   logger,
 	}
 }
 
@@ -146,7 +154,7 @@ func (owc *OutgoingWebsocketConnection[T]) SendResponseAsync(response any) {
 	}
 }
 
-func (owc *OutgoingWebsocketConnection[T]) Writer(signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]) {
+func (owc *OutgoingWebsocketConnection[T]) Writer() {
 	logger := owc.logger.With().Str("op", "writer").Logger()
 
 	// log fatal errors
@@ -180,7 +188,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer(signedPriceUpdateBatchCh chan 
 			}
 
 			// send out a price update
-		case signedPriceUpdateBatch := <-signedPriceUpdateBatchCh:
+		case signedPriceUpdateBatch := <-owc.signedPriceUpdateBatchCh:
 			if owc.IsClosed() {
 				logger.Warn().Msg("attempted to send message on closed websocket")
 				return
@@ -384,5 +392,17 @@ func upgradeAndEnforceCompression(resp http.ResponseWriter, req *http.Request, e
 		ws.EnableWriteCompression(true)
 		_ = ws.SetCompressionLevel(6)
 		return ws, nil
+	}
+}
+
+func GetWsUpgrader() websocket.Upgrader {
+	return websocket.Upgrader{
+		HandshakeTimeout:  time.Second * 10,
+		ReadBufferSize:    1048576,
+		WriteBufferSize:   1048576,
+		EnableCompression: true,
+		Error: func(resp http.ResponseWriter, req *http.Request, status int, reason error) {
+			http.Error(resp, fmt.Sprintf(`{"type":"handshake","error":"%s"}`, reason), status)
+		},
 	}
 }

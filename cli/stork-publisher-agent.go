@@ -1,0 +1,143 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	storkpublisheragent "github.com/Stork-Oracle/stork_external/stork-publisher-agent"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
+	"github.com/spf13/cobra"
+	"net/http"
+	"regexp"
+	"time"
+)
+
+var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]{1,64}$`)
+
+var publisherAgentCmd = &cobra.Command{
+	Use:   "publisher-agent",
+	Short: "Start a process to sign price updates and make them available to Stork",
+	RunE:  runPublisherAgent,
+}
+
+// required
+const SignatureTypeFlag = "signature-type"
+const OracleIdFlag = "oracle-id"
+const PrivateKeyFlag = "private-key"
+
+// optional
+const ClockUpdatePeriodFlag = "clock-update-period"
+const DeltaUpdatePeriodFlag = "delta-update-period"
+const ChangeThresholdPercentFlag = "change-threshold-percent"
+const IncomingWsPortFlag = "incoming-ws-port"
+const OutgoingWsPortFlag = "outgoing-ws-port"
+const EnforceCompressionFlag = "enforce-compression"
+
+func init() {
+	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
+	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
+	publisherAgentCmd.Flags().StringP(PrivateKeyFlag, "p", "", "Your private key for signing updates")
+
+	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
+	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
+	publisherAgentCmd.Flags().Float64P(ChangeThresholdPercentFlag, "t", 0.1, "Report prices immediately if they've changed by more than this percentage (1 means 1%)")
+	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 5215, "The port which you'll report prices to")
+	publisherAgentCmd.Flags().IntP(OutgoingWsPortFlag, "w", 5216, "The port which will send prices to Stork")
+	publisherAgentCmd.Flags().BoolP(EnforceCompressionFlag, "e", true, "True to send compressed messages to Stork")
+
+	publisherAgentCmd.MarkFlagRequired(SignatureTypeFlag)
+	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
+	publisherAgentCmd.MarkFlagRequired(PrivateKeyFlag)
+
+}
+
+func runPublisherAgent(cmd *cobra.Command, args []string) error {
+	signatureTypeStr, _ := cmd.Flags().GetString(SignatureTypeFlag)
+	oracleId, _ := cmd.Flags().GetString(OracleIdFlag)
+	privateKey, _ := cmd.Flags().GetString(PrivateKeyFlag)
+	clockUpdatePeriodStr, _ := cmd.Flags().GetString(ClockUpdatePeriodFlag)
+	deltaUpdatePeriodStr, _ := cmd.Flags().GetString(DeltaUpdatePeriodFlag)
+	changeThresholdPercent, _ := cmd.Flags().GetFloat64(ChangeThresholdPercentFlag)
+	incomingWsPort, _ := cmd.Flags().GetInt(IncomingWsPortFlag)
+	outgoingWsPort, _ := cmd.Flags().GetInt(OutgoingWsPortFlag)
+	enforceCompression, _ := cmd.Flags().GetBool(EnforceCompressionFlag)
+
+	// validate cli options
+	signatureType := storkpublisheragent.SignatureType(signatureTypeStr)
+	if !(signatureType == storkpublisheragent.EvmSignatureType || signatureType == storkpublisheragent.StarkSignatureType) {
+		return fmt.Errorf("invalid signature type: %s", signatureType)
+	}
+
+	if len(oracleId) != 5 {
+		return errors.New("oracle id length must be 5")
+	}
+
+	if Hex32Regex.MatchString(privateKey) {
+		return errors.New("private key must start with 0x and consist entirely of hex characters")
+	}
+
+	clockUpdatePeriod, err := time.ParseDuration(clockUpdatePeriodStr)
+	if err != nil {
+		return fmt.Errorf("invalid clock update period: %s", clockUpdatePeriodStr)
+	}
+	if clockUpdatePeriod.Nanoseconds() == 0 {
+		return errors.New("clock update period must be positive")
+	}
+
+	deltaUpdatePeriod, err := time.ParseDuration(deltaUpdatePeriodStr)
+	if err != nil {
+		return fmt.Errorf("invalid delta update period: %s", deltaUpdatePeriodStr)
+	}
+	if deltaUpdatePeriod.Nanoseconds() == 0 {
+		return errors.New("delta update period must be positive")
+	}
+
+	if changeThresholdPercent <= 0 {
+		return errors.New("change threshold percent must be positive")
+	}
+
+	if incomingWsPort <= 0 || outgoingWsPort <= 0 || incomingWsPort > 65535 || outgoingWsPort > 65535 {
+		return errors.New("incoming ws port must be between 0 and 65535")
+	}
+
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	zerolog.DurationFieldUnit = time.Nanosecond
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+	mainLogger := storkpublisheragent.MainLogger()
+
+	mainLogger.Info().Msg("initializing")
+
+	config := storkpublisheragent.NewStorkPublisherAgentConfig(
+		signatureType,
+		storkpublisheragent.PrivateKey(privateKey),
+		clockUpdatePeriod,
+		deltaUpdatePeriod,
+		changeThresholdPercent,
+		storkpublisheragent.OracleId(oracleId),
+		enforceCompression,
+	)
+
+	switch config.SignatureType {
+	case storkpublisheragent.EvmSignatureType:
+		runner := *storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, mainLogger)
+		go runner.Run()
+
+		go func() {
+			http.HandleFunc("/evm/publish", runner.HandleNewPublisherConnection)
+
+			mainLogger.Warn().Msg("starting incoming http server")
+			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
+			mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
+		}()
+
+		http.HandleFunc("/evm/subscribe", runner.HandleNewSubscriberConnection)
+
+		mainLogger.Warn().Msg("starting outgoing http server")
+		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", outgoingWsPort), nil)
+		mainLogger.Fatal().Err(err).Msg("outgoing http server failed, process exiting")
+
+	case storkpublisheragent.StarkSignatureType:
+	}
+	return nil
+}

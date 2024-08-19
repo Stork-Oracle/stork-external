@@ -1,4 +1,4 @@
-package main
+package stork_publisher_agent
 
 import (
 	"math/big"
