@@ -40,7 +40,7 @@ func NewPriceUpdateProcessor[T Signature](
 	}
 }
 
-func (p *PriceUpdateProcessor[T]) DeltaUpdate() *PriceUpdatesWithTrigger {
+func (p *PriceUpdateProcessor[T]) DeltaUpdate() PriceUpdatesWithTrigger {
 	significantUpdates := make(map[AssetId]PriceUpdate)
 	for asset, priceUpdate := range p.priceUpdates {
 		currentPrice := priceUpdate.Price
@@ -51,11 +51,17 @@ func (p *PriceUpdateProcessor[T]) DeltaUpdate() *PriceUpdatesWithTrigger {
 			}
 		}
 	}
-	return &PriceUpdatesWithTrigger{updates: significantUpdates, TriggerType: DeltaTriggerType}
+	return PriceUpdatesWithTrigger{updates: significantUpdates, TriggerType: DeltaTriggerType}
 }
 
-func (p *PriceUpdateProcessor[T]) ClockUpdate() *PriceUpdatesWithTrigger {
-	return &PriceUpdatesWithTrigger{updates: p.priceUpdates, TriggerType: ClockTriggerType}
+func (p *PriceUpdateProcessor[T]) ClockUpdate() PriceUpdatesWithTrigger {
+	updates := make(map[AssetId]PriceUpdate)
+	// make a copy of the
+	for asset, priceUpdate := range p.priceUpdates {
+		updates[asset] = priceUpdate
+	}
+
+	return PriceUpdatesWithTrigger{updates: updates, TriggerType: ClockTriggerType}
 }
 
 func (p *PriceUpdateProcessor[T]) SignBatch(updates PriceUpdatesWithTrigger) SignedPriceUpdateBatch[T] {
@@ -99,7 +105,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 	}(priceUpdatesToSignCh)
 
 	for val := range queue {
-		var updates *PriceUpdatesWithTrigger
+		var updates PriceUpdatesWithTrigger
 		switch msg := val.(type) {
 		case DeltaTick:
 			updates = p.DeltaUpdate()
@@ -109,8 +115,8 @@ func (p *PriceUpdateProcessor[T]) Run() {
 			p.priceUpdates[msg.Asset] = msg
 		}
 
-		if updates != nil && len(updates.updates) > 0 {
-			priceUpdatesToSignCh <- *updates
+		if len(updates.updates) > 0 {
+			priceUpdatesToSignCh <- updates
 
 			for asset, priceUpdate := range updates.updates {
 				p.lastReportedPrice[asset] = priceUpdate.Price

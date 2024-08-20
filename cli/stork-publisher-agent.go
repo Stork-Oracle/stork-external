@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]{1,64}$`)
+var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)
 
 var publisherAgentCmd = &cobra.Command{
 	Use:   "publisher-agent",
@@ -72,7 +72,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("oracle id length must be 5")
 	}
 
-	if Hex32Regex.MatchString(privateKey) {
+	if !Hex32Regex.MatchString(privateKey) {
 		return errors.New("private key must start with 0x and consist entirely of hex characters")
 	}
 
@@ -124,20 +124,26 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		go runner.Run()
 
 		go func() {
-			http.HandleFunc("/evm/publish", runner.HandleNewPublisherConnection)
+			internalMux := http.NewServeMux()
+			internalMux.HandleFunc("/evm/publish", runner.HandleNewPublisherConnection)
 
-			mainLogger.Warn().Msg("starting incoming http server")
-			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
+			mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
+			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), internalMux)
 			mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
 		}()
 
-		http.HandleFunc("/evm/subscribe", runner.HandleNewSubscriberConnection)
+		externalMux := http.NewServeMux()
+		externalMux.HandleFunc("/evm/subscribe", runner.HandleNewSubscriberConnection)
 
-		mainLogger.Warn().Msg("starting outgoing http server")
-		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", outgoingWsPort), nil)
+		mainLogger.Warn().Msgf("starting outgoing http server on port %d", outgoingWsPort)
+		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", outgoingWsPort), externalMux)
 		mainLogger.Fatal().Err(err).Msg("outgoing http server failed, process exiting")
 
-	case storkpublisheragent.StarkSignatureType:
+	default:
+		return fmt.Errorf("invalid signature type: %s", signatureType)
+
 	}
+
 	return nil
+
 }

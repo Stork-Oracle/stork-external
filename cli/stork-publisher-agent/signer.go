@@ -2,7 +2,6 @@ package stork_publisher_agent
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -39,20 +38,18 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig) (*Signer[T], error
 }
 
 func convertHexToECDSA(privateKey PrivateKey) (*ecdsa.PrivateKey, error) {
-	privateKeyStr := string(privateKey)
-	if strings.HasPrefix(privateKeyStr, "0x") {
-		privateKeyStr = strings.Replace(privateKeyStr, "0x", "", 1)
-	}
-	privateKeyBytes, err := hex.DecodeString(privateKeyStr)
+	privateKeyStr := strings.Replace(string(privateKey), "0x", "", 1)
+
+	//privateKeyBytes, err := hex.DecodeString(privateKeyStr)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	// Create a new ecdsa.PrivateKey object
+	evmPrivateKey, err := crypto.HexToECDSA(privateKeyStr)
 	if err != nil {
 		return nil, err
 	}
-
-	// Create a new ecdsa.PrivateKey object
-	evmPrivateKey := new(ecdsa.PrivateKey)
-	evmPrivateKey.D = new(big.Int).SetBytes(privateKeyBytes)
-	evmPrivateKey.PublicKey.Curve = elliptic.P256()
-	evmPrivateKey.PublicKey.X, evmPrivateKey.PublicKey.Y = evmPrivateKey.PublicKey.Curve.ScalarBaseMult(privateKeyBytes)
 
 	return evmPrivateKey, nil
 }

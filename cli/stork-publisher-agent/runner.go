@@ -106,7 +106,7 @@ func (r *PublisherAgentRunner[T]) HandleNewSubscriberConnection(resp http.Respon
 }
 
 func (r *PublisherAgentRunner[T]) HandleNewPublisherConnection(resp http.ResponseWriter, req *http.Request) {
-	conn, err := upgradeAndEnforceCompression(resp, req, r.config.EnforceCompression, r.upgrader, r.logger, "")
+	conn, err := upgradeAndEnforceCompression(resp, req, false, r.upgrader, r.logger, "")
 	if err != nil {
 		// debug log because err could be rate limit violation
 		r.logger.Debug().Err(err).Object("request_headers", HttpHeaders(req.Header)).Msg("failed to complete publisher websocket handshake")
@@ -115,14 +115,14 @@ func (r *PublisherAgentRunner[T]) HandleNewPublisherConnection(resp http.Respons
 
 	connId := ConnectionId(uuid.New().String())
 
-	r.logger.Info().Str("conn_id", string(connId)).Msg("adding subscriber websocket")
+	r.logger.Info().Str("conn_id", string(connId)).Msg("adding publisher websocket")
 
 	websocketConn := *NewWebsocketConnection(
 		conn,
 		connId,
 		r.logger,
 		func() {
-			r.logger.Info().Str("conn_id", string(connId)).Msg("removing subscriber websocket")
+			r.logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
 			r.incomingConnectionsLock.Lock()
 			delete(r.incomingConnections, connId)
 			r.incomingConnectionsLock.Unlock()

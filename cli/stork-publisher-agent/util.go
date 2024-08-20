@@ -80,3 +80,13 @@ func (st *SubscriptionTracker) GetSortedAssets() []AssetId {
 	})
 	return assets
 }
+
+func (st *SubscriptionTracker) IsSubscribed(assetId AssetId) bool {
+	if st.allAssets {
+		return true
+	}
+	st.assetsLock.RLock()
+	defer st.assetsLock.RUnlock()
+	_, exists := st.assets[assetId]
+	return exists
+}

@@ -96,8 +96,8 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 
 	err := readLoop(iwc.conn, nil, logger, func(wsMsgReader io.Reader) error {
 		// parse the message
-		var priceUpdate PriceUpdate
-		err := json.NewDecoder(wsMsgReader).Decode(&priceUpdate)
+		var priceUpdateMsg WebsocketMessage[[]PriceUpdate]
+		err := json.NewDecoder(wsMsgReader).Decode(&priceUpdateMsg)
 		if err != nil {
 			iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
 			err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger)
@@ -105,12 +105,16 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 				iwc.logger.Error().Err(err).Msgf("Failed to send error message")
 			}
 		} else {
-			select {
-			case priceUpdateCh <- priceUpdate:
-			default:
-				if time.Since(lastDropLogTime) >= time.Second*10 {
-					logger.Warn().Msg("dropped incoming price update - too many updates")
-					lastDropLogTime = time.Now()
+			if priceUpdateMsg.Type == "prices" {
+				for _, priceUpdate := range priceUpdateMsg.Data {
+					select {
+					case priceUpdateCh <- priceUpdate:
+					default:
+						if time.Since(lastDropLogTime) >= time.Second*10 {
+							logger.Warn().Msg("dropped incoming price update - too many updates")
+							lastDropLogTime = time.Now()
+						}
+					}
 				}
 			}
 		}
@@ -193,8 +197,15 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 				logger.Warn().Msg("attempted to send message on closed websocket")
 				return
 			}
-
-			err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", signedPriceUpdateBatch, "", "", logger)
+			filteredSignedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
+			for assetId, priceUpdate := range signedPriceUpdateBatch {
+				if owc.subscriptionTracker.IsSubscribed(assetId) {
+					filteredSignedPriceUpdateBatch[assetId] = priceUpdate
+				}
+			}
+			if len(filteredSignedPriceUpdateBatch) > 0 {
+				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredSignedPriceUpdateBatch, "", "", logger)
+			}
 		case _ = <-owc.closed:
 			logger.Warn().Msg("Close() called, exiting write loop")
 			return
