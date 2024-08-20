@@ -38,6 +38,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 17000
     },
+    omniOmega: {
+      url: "https://omega.omni.network/",
+      accounts: [PRIVATE_KEY],
+      chainId: 164
+    },
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -54,6 +59,7 @@ const config: HardhatUserConfig = {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
+      omniOmega: 'fake',
       polygonAmoy: POLYGON_API_KEY,
       volmexTestnet: 'fake'
     },
@@ -72,6 +78,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
           browserURL: "https://bartio.beratrail.io"
+        }
+      },
+      {
+        network: "omniOmega",
+        chainId: 164,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
+          browserURL: "https://omega.omniscan.network"
         }
       },
       {
