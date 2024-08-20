@@ -43,6 +43,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 164
     },
+    polygon: {
+      url: "https://polygon.llamarpc.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 137,
+    },
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -60,6 +65,7 @@ const config: HardhatUserConfig = {
       berachainTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       omniOmega: 'fake',
+      polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       volmexTestnet: 'fake'
     },
