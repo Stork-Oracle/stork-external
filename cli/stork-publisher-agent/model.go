@@ -45,11 +45,6 @@ type TriggerType string
 const ClockTriggerType = TriggerType("clock")
 const DeltaTriggerType = TriggerType("delta")
 
-type PriceUpdateBatchWithTrigger struct {
-	updates     map[AssetId]PriceUpdate
-	TriggerType TriggerType
-}
-
 type PriceUpdateWithTrigger struct {
 	PriceUpdate PriceUpdate
 	TriggerType TriggerType
