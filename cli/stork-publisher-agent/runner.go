@@ -111,6 +111,8 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 			}
 		}
 
+		var lastDropLogTime time.Time
+
 		for {
 			_, messageBytes, err := incomingWsConn.ReadMessage()
 			if err != nil {
@@ -124,7 +126,14 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 				break
 			}
 			for _, priceUpdate := range message.Data {
-				r.priceUpdateCh <- priceUpdate
+				select {
+				case r.priceUpdateCh <- priceUpdate:
+				default:
+					if time.Since(lastDropLogTime) >= time.Second*10 {
+						r.logger.Error().Msg("dropped incoming price update - too many updates")
+						lastDropLogTime = time.Now()
+					}
+				}
 			}
 		}
 

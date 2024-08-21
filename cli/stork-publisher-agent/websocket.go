@@ -111,7 +111,7 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 					case priceUpdateCh <- priceUpdate:
 					default:
 						if time.Since(lastDropLogTime) >= time.Second*10 {
-							logger.Warn().Msg("dropped incoming price update - too many updates")
+							logger.Error().Msg("dropped incoming price update - too many updates")
 							lastDropLogTime = time.Now()
 						}
 					}

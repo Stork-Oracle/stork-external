@@ -3,6 +3,7 @@ package stork_publisher_agent
 import (
 	"github.com/rs/zerolog"
 	"math"
+	"runtime"
 	"time"
 )
 
@@ -10,7 +11,7 @@ type DeltaTick struct{}
 
 type ClockTick struct{}
 
-const SigningSpeedBatchSize = 100000
+const SignedMessageBatchPeriod = 5 * time.Millisecond
 
 type PriceUpdateProcessor[T Signature] struct {
 	priceUpdateCh             chan PriceUpdate
@@ -48,53 +49,46 @@ func NewPriceUpdateProcessor[T Signature](
 	}
 }
 
-func (p *PriceUpdateProcessor[T]) DeltaUpdate() PriceUpdatesWithTrigger {
-	significantUpdates := make(map[AssetId]PriceUpdate)
+func (p *PriceUpdateProcessor[T]) DeltaUpdate() []PriceUpdateWithTrigger {
+	significantUpdates := make([]PriceUpdateWithTrigger, 0)
 	for asset, priceUpdate := range p.priceUpdates {
 		currentPrice := priceUpdate.Price
 		lastReportedPrice, exists := p.lastReportedPrice[asset]
 		if exists {
 			if math.Abs((currentPrice-lastReportedPrice)/lastReportedPrice) > p.changeThresholdProportion {
-				significantUpdates[asset] = priceUpdate
+				significantUpdates = append(
+					significantUpdates,
+					PriceUpdateWithTrigger{
+						PriceUpdate: priceUpdate,
+						TriggerType: DeltaTriggerType,
+					},
+				)
 			}
 		}
 	}
-	return PriceUpdatesWithTrigger{updates: significantUpdates, TriggerType: DeltaTriggerType}
+	return significantUpdates
 }
 
-func (p *PriceUpdateProcessor[T]) ClockUpdate() PriceUpdatesWithTrigger {
-	updates := make(map[AssetId]PriceUpdate)
-	// make a copy of the
-	for asset, priceUpdate := range p.priceUpdates {
-		updates[asset] = priceUpdate
+func (p *PriceUpdateProcessor[T]) ClockUpdate() []PriceUpdateWithTrigger {
+	updates := make([]PriceUpdateWithTrigger, 0)
+
+	for _, priceUpdate := range p.priceUpdates {
+		updates = append(
+			updates,
+			PriceUpdateWithTrigger{
+				PriceUpdate: priceUpdate,
+				TriggerType: ClockTriggerType,
+			},
+		)
 	}
 
-	return PriceUpdatesWithTrigger{updates: updates, TriggerType: ClockTriggerType}
-}
-
-func (p *PriceUpdateProcessor[T]) SignBatch(updates PriceUpdatesWithTrigger) SignedPriceUpdateBatch[T] {
-	signedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
-	startTime := time.Now()
-	for asset, priceUpdate := range updates.updates {
-		signedPriceUpdateBatch[asset] = p.signer.GetSignedPriceUpdate(priceUpdate, updates.TriggerType)
-	}
-	elapsedNs := time.Since(startTime).Nanoseconds()
-	p.totalSigningNs += elapsedNs
-	p.totalSignatures += len(updates.updates)
-
-	if p.totalSignatures > SigningSpeedBatchSize {
-		nsPerSignature := float64(p.totalSigningNs) / float64(p.totalSignatures)
-		p.logger.Info().Msgf("Average signing speed for last %v signatures: %f ns/signature", p.totalSignatures, nsPerSignature)
-		p.totalSigningNs = 0
-		p.totalSignatures = 0
-	}
-
-	return signedPriceUpdateBatch
+	return updates
 }
 
 func (p *PriceUpdateProcessor[T]) Run() {
 	queue := make(chan any, 4096)
-	priceUpdatesToSignCh := make(chan PriceUpdatesWithTrigger, 4096)
+	priceUpdatesToSignCh := make(chan PriceUpdateWithTrigger, 4096)
+	signedPriceUpdateCh := make(chan SignedPriceUpdate[T], 4096)
 
 	// update price map thread
 	go func(q chan any) {
@@ -117,29 +111,51 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		}
 	}(queue)
 
-	// signing thread
-	go func(q chan PriceUpdatesWithTrigger) {
-		for update := range q {
-			p.signedPriceUpdateBatchCh <- p.SignBatch(update)
+	// start a signing thread for each CPU core
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func(updates chan PriceUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T]) {
+			for update := range updates {
+				signedUpdates <- p.signer.GetSignedPriceUpdate(update.PriceUpdate, update.TriggerType)
+			}
+		}(priceUpdatesToSignCh, signedPriceUpdateCh)
+	}
+
+	// batch the signed updates together into outgoing messages
+	go func(signedUpdates chan SignedPriceUpdate[T]) {
+		ticker := time.NewTicker(SignedMessageBatchPeriod)
+		signedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
+		for {
+			select {
+			// add incoming signed updates into a map
+			case signedUpdate := <-signedUpdates:
+				signedPriceUpdateBatch[signedUpdate.AssetId] = signedUpdate
+
+			case <-ticker.C:
+				{
+					if len(signedPriceUpdateBatch) > 0 {
+						p.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
+						signedPriceUpdateBatch = make(SignedPriceUpdateBatch[T])
+					}
+				}
+			}
 		}
-	}(priceUpdatesToSignCh)
+	}(signedPriceUpdateCh)
 
 	for val := range queue {
-		var updates PriceUpdatesWithTrigger
+		var priceUpdates []PriceUpdateWithTrigger
 		switch msg := val.(type) {
 		case DeltaTick:
-			updates = p.DeltaUpdate()
+			priceUpdates = p.DeltaUpdate()
 		case ClockTick:
-			updates = p.ClockUpdate()
+			priceUpdates = p.ClockUpdate()
 		case PriceUpdate:
 			p.priceUpdates[msg.Asset] = msg
 		}
 
-		if len(updates.updates) > 0 {
-			priceUpdatesToSignCh <- updates
-
-			for asset, priceUpdate := range updates.updates {
-				p.lastReportedPrice[asset] = priceUpdate.Price
+		if len(priceUpdates) > 0 {
+			for _, priceUpdate := range priceUpdates {
+				priceUpdatesToSignCh <- priceUpdate
+				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = priceUpdate.PriceUpdate.Price
 			}
 		}
 	}
