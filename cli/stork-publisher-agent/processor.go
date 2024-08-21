@@ -10,7 +10,7 @@ type DeltaTick struct{}
 
 type ClockTick struct{}
 
-const SigningSpeedBatchSize = 1000
+const SigningSpeedBatchSize = 100000
 
 type PriceUpdateProcessor[T Signature] struct {
 	priceUpdateCh             chan PriceUpdate
@@ -84,7 +84,7 @@ func (p *PriceUpdateProcessor[T]) SignBatch(updates PriceUpdatesWithTrigger) Sig
 
 	if p.totalSignatures > SigningSpeedBatchSize {
 		nsPerSignature := float64(p.totalSigningNs) / float64(p.totalSignatures)
-		p.logger.Debug().Msgf("Average signing speed for last %v signatures: %f ns/signature", p.totalSignatures, nsPerSignature)
+		p.logger.Info().Msgf("Average signing speed for last %v signatures: %f ns/signature", p.totalSignatures, nsPerSignature)
 		p.totalSigningNs = 0
 		p.totalSignatures = 0
 	}

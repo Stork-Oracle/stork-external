@@ -34,6 +34,11 @@ const IncomingWsPortFlag = "incoming-ws-port"
 const OutgoingWsPortFlag = "outgoing-ws-port"
 const EnforceCompressionFlag = "enforce-compression"
 
+const PullBasedWsUrl = "pull-based-ws-url"
+const PullBasedAuth = "pull-based-auth"
+const PullBasedSubscriptionRequest = "pull-based-subscription-request"
+const PullBasedReconnectDelay = "pull-based-reconnect-delay"
+
 func init() {
 	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
 	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
@@ -46,6 +51,11 @@ func init() {
 	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 5215, "The port which you'll report prices to")
 	publisherAgentCmd.Flags().IntP(OutgoingWsPortFlag, "w", 5216, "The port which will send prices to Stork")
 	publisherAgentCmd.Flags().BoolP(EnforceCompressionFlag, "e", true, "True to send compressed messages to Stork")
+
+	publisherAgentCmd.Flags().StringP(PullBasedWsUrl, "u", "", "A websocket URL to pull price updates from")
+	publisherAgentCmd.Flags().StringP(PullBasedAuth, "a", "", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequest, "x", "", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelay, "r", "5s", "A Basic auth token needed to connect to the pull websocket")
 
 	publisherAgentCmd.MarkFlagRequired(SignatureTypeFlag)
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
@@ -64,6 +74,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	incomingWsPort, _ := cmd.Flags().GetInt(IncomingWsPortFlag)
 	outgoingWsPort, _ := cmd.Flags().GetInt(OutgoingWsPortFlag)
 	enforceCompression, _ := cmd.Flags().GetBool(EnforceCompressionFlag)
+
+	pullBasedWsUrl, _ := cmd.Flags().GetString(PullBasedWsUrl)
+	pullBasedAuth, _ := cmd.Flags().GetString(PullBasedAuth)
+	pullBasedSubscriptionRequest, _ := cmd.Flags().GetString(PullBasedSubscriptionRequest)
+	pullBasedReconnectDelay, _ := cmd.Flags().GetString(PullBasedReconnectDelay)
 
 	// validate cli options
 	signatureType := storkpublisheragent.SignatureType(signatureTypeStr)
@@ -103,6 +118,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("incoming ws port must be between 0 and 65535")
 	}
 
+	pullBasedReconnectDuration, err := time.ParseDuration(pullBasedReconnectDelay)
+	if err != nil {
+		return fmt.Errorf("invalid pull-based websocket reconnect period: %s", pullBasedReconnectDuration)
+	}
+
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
@@ -120,6 +140,10 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		changeThresholdPercent,
 		storkpublisheragent.OracleId(oracleId),
 		enforceCompression,
+		pullBasedWsUrl,
+		pullBasedAuth,
+		pullBasedSubscriptionRequest,
+		pullBasedReconnectDuration,
 	)
 
 	switch config.SignatureType {
@@ -129,7 +153,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 
 		go func() {
 			internalMux := http.NewServeMux()
-			internalMux.HandleFunc("/evm/publish", runner.HandleNewPublisherConnection)
+			internalMux.HandleFunc("/evm/publish", runner.HandleNewIncomingWsConnection)
 
 			mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
 			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), internalMux)
@@ -137,12 +161,30 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		}()
 
 		externalMux := http.NewServeMux()
-		externalMux.HandleFunc("/evm/subscribe", runner.HandleNewSubscriberConnection)
+		externalMux.HandleFunc("/evm/subscribe", runner.HandleNewOutgoingConnection)
 
 		mainLogger.Warn().Msgf("starting outgoing http server on port %d", outgoingWsPort)
 		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", outgoingWsPort), externalMux)
 		mainLogger.Fatal().Err(err).Msg("outgoing http server failed, process exiting")
+	case storkpublisheragent.StarkSignatureType:
+		runner := *storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, mainLogger)
+		go runner.Run()
 
+		go func() {
+			internalMux := http.NewServeMux()
+			internalMux.HandleFunc("/stark/publish", runner.HandleNewIncomingWsConnection)
+
+			mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
+			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), internalMux)
+			mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
+		}()
+
+		externalMux := http.NewServeMux()
+		externalMux.HandleFunc("/stark/subscribe", runner.HandleNewOutgoingConnection)
+
+		mainLogger.Warn().Msgf("starting outgoing http server on port %d", outgoingWsPort)
+		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", outgoingWsPort), externalMux)
+		mainLogger.Fatal().Err(err).Msg("outgoing http server failed, process exiting")
 	default:
 		return fmt.Errorf("invalid signature type: %s", signatureType)
 

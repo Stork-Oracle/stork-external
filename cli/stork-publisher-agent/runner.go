@@ -1,11 +1,13 @@
 package stork_publisher_agent
 
 import (
+	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type PublisherAgentRunner[T Signature] struct {
@@ -65,11 +67,74 @@ func (r *PublisherAgentRunner[T]) Run() {
 		}
 	}(r.signedPriceBatchCh)
 
+	if len(r.config.PullBasedWsUrl) > 0 {
+		go r.RunPullBasedIncomingConnection(
+			r.config.PullBasedWsUrl,
+			r.config.PullBasedAuth,
+			r.config.PullBasedWsSubscriptionRequest,
+			r.config.PullBasedWsReconnectDelay,
+		)
+	}
+
 	processor.Run()
+}
+
+func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, auth string, subscriptionRequest string, reconnectDelay time.Duration) {
+	for {
+		r.logger.Info().Msgf("Connecting to pull-based WebSocket with url %s", url)
+
+		var headers http.Header
+		if len(auth) > 0 {
+			headers = http.Header{"Authorization": []string{"Basic " + auth}}
+		}
+
+		incomingWsConn, _, err := websocket.DefaultDialer.Dial(url, headers)
+		if err != nil {
+			r.logger.Error().Err(err).Msgf("Failed to connect to pull-based WebSocket: %v", err)
+			break
+		}
+
+		_, messageBytes, err := incomingWsConn.ReadMessage()
+		if err != nil {
+			r.logger.Error().Err(err).Msgf("Failed to read connection message from pull-based WebSocket: %v", err)
+		}
+		r.logger.Info().Msgf("Received connection message: %s", messageBytes)
+
+		if len(subscriptionRequest) > 0 {
+			r.logger.Info().Msgf("Sending subscription request: %s", subscriptionRequest)
+			err = incomingWsConn.WriteMessage(websocket.TextMessage, []byte(subscriptionRequest))
+			_, subscriptionResponse, err := incomingWsConn.ReadMessage()
+			r.logger.Info().Msgf("Received subscription response: %s", subscriptionResponse)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("Failed to send subscription request to pull-based WebSocket")
+				break
+			}
+		}
+
+		for {
+			_, messageBytes, err := incomingWsConn.ReadMessage()
+			if err != nil {
+				r.logger.Error().Err(err).Msg("Failed to read from pull-based WebSocket")
+				break
+			}
+			var message WebsocketMessage[[]PriceUpdate]
+			err = json.Unmarshal(messageBytes, &message)
+			if err != nil {
+				r.logger.Error().Err(err).Msgf("Failed to unmarshal message from pull-based WebSocket: %s", messageBytes)
+				break
+			}
+			for _, priceUpdate := range message.Data {
+				r.priceUpdateCh <- priceUpdate
+			}
+		}
+
+		r.logger.Info().Msgf("Waiting %s to reconnect to pull-based WebSocket", reconnectDelay)
+		time.Sleep(reconnectDelay)
+	}
 
 }
 
-func (r *PublisherAgentRunner[T]) HandleNewSubscriberConnection(resp http.ResponseWriter, req *http.Request) {
+func (r *PublisherAgentRunner[T]) HandleNewOutgoingConnection(resp http.ResponseWriter, req *http.Request) {
 	authToken := AuthToken("fake_auth")
 	// complete the websocket handshake
 	conn, err := upgradeAndEnforceCompression(resp, req, r.config.EnforceCompression, r.upgrader, r.logger, authToken)
@@ -106,7 +171,7 @@ func (r *PublisherAgentRunner[T]) HandleNewSubscriberConnection(resp http.Respon
 	go outgoingWebsocketConn.Writer()
 }
 
-func (r *PublisherAgentRunner[T]) HandleNewPublisherConnection(resp http.ResponseWriter, req *http.Request) {
+func (r *PublisherAgentRunner[T]) HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request) {
 	conn, err := upgradeAndEnforceCompression(resp, req, false, r.upgrader, r.logger, "")
 	if err != nil {
 		// debug log because err could be rate limit violation

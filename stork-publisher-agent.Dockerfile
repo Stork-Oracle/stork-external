@@ -8,7 +8,7 @@ RUN go mod download
 # Copy the source code from the cli directory into the container
 COPY cli/ .
 
-RUN GOOS=linux GOARCH=amd64 go build -o /stork .
+RUN GOOS=linux GOARCH=arm64 go build -o /stork .
 
 # Stage 2: Create a lightweight image with the Cobra CLI
 FROM alpine:3.18
