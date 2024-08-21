@@ -24,6 +24,7 @@ var publisherAgentCmd = &cobra.Command{
 const SignatureTypeFlag = "signature-type"
 const OracleIdFlag = "oracle-id"
 const PrivateKeyFlag = "private-key"
+const PublicKeyFlag = "public-key"
 
 // optional
 const ClockUpdatePeriodFlag = "clock-update-period"
@@ -37,6 +38,7 @@ func init() {
 	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
 	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
 	publisherAgentCmd.Flags().StringP(PrivateKeyFlag, "p", "", "Your private key for signing updates")
+	publisherAgentCmd.Flags().StringP(PublicKeyFlag, "k", "", "Your public key for signing updates")
 
 	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
 	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
@@ -48,13 +50,14 @@ func init() {
 	publisherAgentCmd.MarkFlagRequired(SignatureTypeFlag)
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
 	publisherAgentCmd.MarkFlagRequired(PrivateKeyFlag)
-
+	publisherAgentCmd.MarkFlagRequired(PublicKeyFlag)
 }
 
 func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	signatureTypeStr, _ := cmd.Flags().GetString(SignatureTypeFlag)
 	oracleId, _ := cmd.Flags().GetString(OracleIdFlag)
 	privateKey, _ := cmd.Flags().GetString(PrivateKeyFlag)
+	publicKey, _ := cmd.Flags().GetString(PublicKeyFlag)
 	clockUpdatePeriodStr, _ := cmd.Flags().GetString(ClockUpdatePeriodFlag)
 	deltaUpdatePeriodStr, _ := cmd.Flags().GetString(DeltaUpdatePeriodFlag)
 	changeThresholdPercent, _ := cmd.Flags().GetFloat64(ChangeThresholdPercentFlag)
@@ -111,6 +114,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	config := storkpublisheragent.NewStorkPublisherAgentConfig(
 		signatureType,
 		storkpublisheragent.PrivateKey(privateKey),
+		storkpublisheragent.PublisherKey(publicKey),
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
 		changeThresholdPercent,

@@ -1,18 +1,21 @@
 package stork_publisher_agent
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
 )
 
 func FloatToQuantizedPrice(f float64) QuantizedPrice {
-	bf := big.NewFloat(f)
-	multiplier := new(big.Float).SetFloat64(1e18)
-	bf.Mul(bf, multiplier)
-	bi := new(big.Int)
-	bf.Int(bi)
-	return StringifyQuantizedPrice(bi)
+	// convert to string first to avoid rounding error
+	strValue := fmt.Sprintf("%.18f", f)
+	bigFloatValue, _, _ := big.ParseFloat(strValue, 10, 0, big.ToZero)
+	multiplier := new(big.Float).SetInt64(1e18)
+	bigFloatValue.Mul(bigFloatValue, multiplier)
+	result := new(big.Int)
+	bigFloatValue.Int(result)
+	return StringifyQuantizedPrice(result)
 }
 
 func StringifyQuantizedPrice(price *big.Int) QuantizedPrice {
@@ -24,7 +27,6 @@ func StringifyQuantizedPrice(price *big.Int) QuantizedPrice {
 		valStr = valStr[:len(valStr)-6] + "000000"
 	}
 
-	// Insert the decimal point at the appropriate position (18 digits from the right)
 	return QuantizedPrice(valStr)
 }
 

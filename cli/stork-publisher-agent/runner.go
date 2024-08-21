@@ -51,6 +51,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 		r.config.ChangeThresholdProportion,
 		r.priceUpdateCh,
 		r.signedPriceBatchCh,
+		r.logger,
 	)
 
 	// fan out the signed update to all subscriber websockets

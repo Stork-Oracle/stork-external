@@ -1,6 +1,7 @@
 package stork_publisher_agent
 
 import (
+	"github.com/rs/zerolog"
 	"math"
 	"time"
 )
@@ -8,6 +9,8 @@ import (
 type DeltaTick struct{}
 
 type ClockTick struct{}
+
+const SigningSpeedBatchSize = 1000
 
 type PriceUpdateProcessor[T Signature] struct {
 	priceUpdateCh             chan PriceUpdate
@@ -18,6 +21,9 @@ type PriceUpdateProcessor[T Signature] struct {
 	clockPeriod               time.Duration
 	deltaCheckPeriod          time.Duration
 	changeThresholdProportion float64 // 0-1
+	logger                    zerolog.Logger
+	totalSignatures           int
+	totalSigningNs            int64
 }
 
 func NewPriceUpdateProcessor[T Signature](
@@ -27,6 +33,7 @@ func NewPriceUpdateProcessor[T Signature](
 	changeThresholdProportion float64,
 	priceUpdateCh chan PriceUpdate,
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T],
+	logger zerolog.Logger,
 ) *PriceUpdateProcessor[T] {
 	return &PriceUpdateProcessor[T]{
 		priceUpdateCh:             priceUpdateCh,
@@ -37,6 +44,7 @@ func NewPriceUpdateProcessor[T Signature](
 		clockPeriod:               clockPeriod,
 		deltaCheckPeriod:          deltaCheckPeriod,
 		changeThresholdProportion: changeThresholdProportion,
+		logger:                    logger,
 	}
 }
 
@@ -66,9 +74,21 @@ func (p *PriceUpdateProcessor[T]) ClockUpdate() PriceUpdatesWithTrigger {
 
 func (p *PriceUpdateProcessor[T]) SignBatch(updates PriceUpdatesWithTrigger) SignedPriceUpdateBatch[T] {
 	signedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
+	startTime := time.Now()
 	for asset, priceUpdate := range updates.updates {
 		signedPriceUpdateBatch[asset] = p.signer.GetSignedPriceUpdate(priceUpdate, updates.TriggerType)
 	}
+	elapsedNs := time.Since(startTime).Nanoseconds()
+	p.totalSigningNs += elapsedNs
+	p.totalSignatures += len(updates.updates)
+
+	if p.totalSignatures > SigningSpeedBatchSize {
+		nsPerSignature := float64(p.totalSigningNs) / float64(p.totalSignatures)
+		p.logger.Debug().Msgf("Average signing speed for last %v signatures: %f ns/signature", p.totalSignatures, nsPerSignature)
+		p.totalSigningNs = 0
+		p.totalSignatures = 0
+	}
+
 	return signedPriceUpdateBatch
 }
 
@@ -85,14 +105,14 @@ func (p *PriceUpdateProcessor[T]) Run() {
 
 	// clock thread
 	go func(q chan any) {
-		for _ = range time.Tick(p.clockPeriod) {
+		for range time.Tick(p.clockPeriod) {
 			q <- ClockTick{}
 		}
 	}(queue)
 
 	// delta check thread
 	go func(q chan any) {
-		for _ = range time.Tick(p.deltaCheckPeriod) {
+		for range time.Tick(p.deltaCheckPeriod) {
 			q <- DeltaTick{}
 		}
 	}(queue)
