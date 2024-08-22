@@ -17,6 +17,7 @@ type StorkPublisherAgentConfig struct {
 	PullBasedAuth                  string
 	PullBasedWsSubscriptionRequest string
 	PullBasedWsReconnectDelay      time.Duration
+	SignEveryUpdate                bool
 }
 
 func NewStorkPublisherAgentConfig(
@@ -32,6 +33,7 @@ func NewStorkPublisherAgentConfig(
 	pullBasedAuth string,
 	pullBasedWsSubscriptionRequest string,
 	pullBasedWsReconnectDelay time.Duration,
+	signEveryUpdate bool,
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
 		SignatureType:                  signatureType,
@@ -46,5 +48,6 @@ func NewStorkPublisherAgentConfig(
 		PullBasedAuth:                  pullBasedAuth,
 		PullBasedWsSubscriptionRequest: pullBasedWsSubscriptionRequest,
 		PullBasedWsReconnectDelay:      pullBasedWsReconnectDelay,
+		SignEveryUpdate:                signEveryUpdate,
 	}
 }

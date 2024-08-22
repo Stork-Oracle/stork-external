@@ -51,6 +51,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 		r.config.ClockPeriod,
 		r.config.DeltaCheckPeriod,
 		r.config.ChangeThresholdProportion,
+		r.config.SignEveryUpdate,
 		r.priceUpdateCh,
 		r.signedPriceBatchCh,
 		r.logger,

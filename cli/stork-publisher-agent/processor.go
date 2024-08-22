@@ -11,7 +11,7 @@ type DeltaTick struct{}
 
 type ClockTick struct{}
 
-const SignedMessageBatchPeriod = 5 * time.Millisecond
+const SignedMessageBatchPeriod = 1 * time.Millisecond
 
 type PriceUpdateProcessor[T Signature] struct {
 	priceUpdateCh             chan PriceUpdate
@@ -22,9 +22,11 @@ type PriceUpdateProcessor[T Signature] struct {
 	clockPeriod               time.Duration
 	deltaCheckPeriod          time.Duration
 	changeThresholdProportion float64 // 0-1
+	signEveryUpdate           bool
 	logger                    zerolog.Logger
 	totalSignatures           int
 	totalSigningNs            int64
+	signQueueSize             int
 }
 
 func NewPriceUpdateProcessor[T Signature](
@@ -32,6 +34,7 @@ func NewPriceUpdateProcessor[T Signature](
 	clockPeriod time.Duration,
 	deltaCheckPeriod time.Duration,
 	changeThresholdProportion float64,
+	signEveryUpdate bool,
 	priceUpdateCh chan PriceUpdate,
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T],
 	logger zerolog.Logger,
@@ -45,6 +48,7 @@ func NewPriceUpdateProcessor[T Signature](
 		clockPeriod:               clockPeriod,
 		deltaCheckPeriod:          deltaCheckPeriod,
 		changeThresholdProportion: changeThresholdProportion,
+		signEveryUpdate:           signEveryUpdate,
 		logger:                    logger,
 	}
 }
@@ -97,27 +101,35 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		}
 	}(queue)
 
-	// clock thread
-	go func(q chan any) {
-		for range time.Tick(p.clockPeriod) {
-			q <- ClockTick{}
-		}
-	}(queue)
-
-	// delta check thread
-	go func(q chan any) {
-		for range time.Tick(p.deltaCheckPeriod) {
-			q <- DeltaTick{}
-		}
-	}(queue)
-
-	// start a signing thread for each CPU core
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func(updates chan PriceUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T]) {
-			for update := range updates {
-				signedUpdates <- p.signer.GetSignedPriceUpdate(update.PriceUpdate, update.TriggerType)
+	if !p.signEveryUpdate {
+		// clock thread
+		go func(q chan any) {
+			for range time.Tick(p.clockPeriod) {
+				q <- ClockTick{}
 			}
-		}(priceUpdatesToSignCh, signedPriceUpdateCh)
+		}(queue)
+
+		// delta check thread
+		go func(q chan any) {
+			for range time.Tick(p.deltaCheckPeriod) {
+				q <- DeltaTick{}
+			}
+		}(queue)
+	}
+
+	numSignerThreads := runtime.NumCPU()
+	p.logger.Info().Msgf("Starting %v signer threads", numSignerThreads)
+	// start a signing thread for each CPU core
+	for i := 0; i < numSignerThreads; i++ {
+		go func(updates chan PriceUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T], threadNum int) {
+			for update := range updates {
+				start := time.Now()
+				signedUpdates <- p.signer.GetSignedPriceUpdate(update.PriceUpdate, update.TriggerType)
+				elapsed := time.Since(start).Microseconds()
+				p.signQueueSize -= 1
+				p.logger.Info().Msgf("Signing update on thread %v took %v microseconds (queue size: %v)", threadNum, elapsed, p.signQueueSize)
+			}
+		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)
 	}
 
 	// batch the signed updates together into outgoing messages
@@ -149,12 +161,18 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		case ClockTick:
 			priceUpdates = p.ClockUpdate()
 		case PriceUpdate:
-			p.priceUpdates[msg.Asset] = msg
+			if p.signEveryUpdate {
+				priceUpdatesToSignCh <- PriceUpdateWithTrigger{PriceUpdate: msg, TriggerType: DeltaTriggerType}
+				p.signQueueSize += 1
+			} else {
+				p.priceUpdates[msg.Asset] = msg
+			}
 		}
 
 		if len(priceUpdates) > 0 {
 			for _, priceUpdate := range priceUpdates {
 				priceUpdatesToSignCh <- priceUpdate
+				p.signQueueSize += 1
 				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = priceUpdate.PriceUpdate.Price
 			}
 		}

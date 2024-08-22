@@ -34,10 +34,12 @@ const IncomingWsPortFlag = "incoming-ws-port"
 const OutgoingWsPortFlag = "outgoing-ws-port"
 const EnforceCompressionFlag = "enforce-compression"
 
-const PullBasedWsUrl = "pull-based-ws-url"
-const PullBasedAuth = "pull-based-auth"
-const PullBasedSubscriptionRequest = "pull-based-subscription-request"
-const PullBasedReconnectDelay = "pull-based-reconnect-delay"
+const PullBasedWsUrlFlag = "pull-based-ws-url"
+const PullBasedAuthFlag = "pull-based-auth"
+const PullBasedSubscriptionRequestFlag = "pull-based-subscription-request"
+const PullBasedReconnectDelayFlag = "pull-based-reconnect-delay"
+
+const SignEveryUpdateFlag = "sign-every-update"
 
 func init() {
 	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
@@ -52,10 +54,12 @@ func init() {
 	publisherAgentCmd.Flags().IntP(OutgoingWsPortFlag, "w", 5216, "The port which will send prices to Stork")
 	publisherAgentCmd.Flags().BoolP(EnforceCompressionFlag, "e", true, "True to send compressed messages to Stork")
 
-	publisherAgentCmd.Flags().StringP(PullBasedWsUrl, "u", "", "A websocket URL to pull price updates from")
-	publisherAgentCmd.Flags().StringP(PullBasedAuth, "a", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequest, "x", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelay, "r", "5s", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedWsUrlFlag, "u", "", "A websocket URL to pull price updates from")
+	publisherAgentCmd.Flags().StringP(PullBasedAuthFlag, "a", "", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "A Basic auth token needed to connect to the pull websocket")
+
+	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any extra logic")
 
 	publisherAgentCmd.MarkFlagRequired(SignatureTypeFlag)
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
@@ -75,10 +79,12 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	outgoingWsPort, _ := cmd.Flags().GetInt(OutgoingWsPortFlag)
 	enforceCompression, _ := cmd.Flags().GetBool(EnforceCompressionFlag)
 
-	pullBasedWsUrl, _ := cmd.Flags().GetString(PullBasedWsUrl)
-	pullBasedAuth, _ := cmd.Flags().GetString(PullBasedAuth)
-	pullBasedSubscriptionRequest, _ := cmd.Flags().GetString(PullBasedSubscriptionRequest)
-	pullBasedReconnectDelay, _ := cmd.Flags().GetString(PullBasedReconnectDelay)
+	pullBasedWsUrl, _ := cmd.Flags().GetString(PullBasedWsUrlFlag)
+	pullBasedAuth, _ := cmd.Flags().GetString(PullBasedAuthFlag)
+	pullBasedSubscriptionRequest, _ := cmd.Flags().GetString(PullBasedSubscriptionRequestFlag)
+	pullBasedReconnectDelay, _ := cmd.Flags().GetString(PullBasedReconnectDelayFlag)
+
+	signEveryUpdate, _ := cmd.Flags().GetBool(SignEveryUpdateFlag)
 
 	// validate cli options
 	signatureType := storkpublisheragent.SignatureType(signatureTypeStr)
@@ -97,9 +103,6 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	clockUpdatePeriod, err := time.ParseDuration(clockUpdatePeriodStr)
 	if err != nil {
 		return fmt.Errorf("invalid clock update period: %s", clockUpdatePeriodStr)
-	}
-	if clockUpdatePeriod.Nanoseconds() == 0 {
-		return errors.New("clock update period must be positive")
 	}
 
 	deltaUpdatePeriod, err := time.ParseDuration(deltaUpdatePeriodStr)
@@ -144,6 +147,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		pullBasedAuth,
 		pullBasedSubscriptionRequest,
 		pullBasedReconnectDuration,
+		signEveryUpdate,
 	)
 
 	switch config.SignatureType {
