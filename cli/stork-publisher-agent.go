@@ -187,7 +187,6 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		mainLogger.Fatal().Err(err).Msg("outgoing http server failed, process exiting")
 	default:
 		return fmt.Errorf("invalid signature type: %s", signatureType)
-
 	}
 
 	return nil
