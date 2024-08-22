@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"math"
 	"runtime"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,7 +27,7 @@ type PriceUpdateProcessor[T Signature] struct {
 	logger                    zerolog.Logger
 	totalSignatures           int
 	totalSigningNs            int64
-	signQueueSize             int
+	signQueueSize             int32
 }
 
 func NewPriceUpdateProcessor[T Signature](
@@ -126,8 +127,9 @@ func (p *PriceUpdateProcessor[T]) Run() {
 				start := time.Now()
 				signedUpdates <- p.signer.GetSignedPriceUpdate(update.PriceUpdate, update.TriggerType)
 				elapsed := time.Since(start).Microseconds()
-				p.signQueueSize -= 1
-				p.logger.Info().Msgf("Signing update on thread %v took %v microseconds (queue size: %v)", threadNum, elapsed, p.signQueueSize)
+				atomic.AddInt32(&p.signQueueSize, -1)
+				ageMs := (time.Now().UnixNano() - update.PriceUpdate.PublishTimestamp) / 1_000_000
+				p.logger.Info().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, p.signQueueSize)
 			}
 		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)
 	}
@@ -163,7 +165,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		case PriceUpdate:
 			if p.signEveryUpdate {
 				priceUpdatesToSignCh <- PriceUpdateWithTrigger{PriceUpdate: msg, TriggerType: DeltaTriggerType}
-				p.signQueueSize += 1
+				atomic.AddInt32(&p.signQueueSize, 1)
 			} else {
 				p.priceUpdates[msg.Asset] = msg
 			}
@@ -172,7 +174,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		if len(priceUpdates) > 0 {
 			for _, priceUpdate := range priceUpdates {
 				priceUpdatesToSignCh <- priceUpdate
-				p.signQueueSize += 1
+				atomic.AddInt32(&p.signQueueSize, 1)
 				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = priceUpdate.PriceUpdate.Price
 			}
 		}
