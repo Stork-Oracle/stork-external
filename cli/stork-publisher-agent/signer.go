@@ -19,7 +19,6 @@ import (
 	"log"
 	"math/big"
 	"strings"
-	"time"
 	"unsafe"
 )
 
@@ -253,7 +252,6 @@ func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPri
 	sigRBuf := make([]byte, 32)
 	sigSBuf := make([]byte, 32)
 
-	hashAndSignStart := time.Now()
 	hashAndSignStatus := C.hash_and_sign(
 		createBufferFromBigInt(xInt),
 		createBufferFromBigInt(yInt),
@@ -262,7 +260,6 @@ func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPri
 		createBufferFromBytes(sigRBuf),
 		createBufferFromBytes(sigSBuf),
 	)
-	s.logger.Info().Msgf("hash and sign time: %v microseconds", time.Since(hashAndSignStart).Microseconds())
 	if hashAndSignStatus != 0 {
 		return nil, errors.New(fmt.Sprintf("failed to hash and sign - response code %v", hashAndSignStatus))
 	}
