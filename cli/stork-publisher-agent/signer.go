@@ -1,30 +1,38 @@
 package stork_publisher_agent
 
+/*
+#cgo LDFLAGS: -L/app/rust/stork/target/aarch64-unknown-linux-gnu/release -L../../rust/stork/target/release -lstork
+#cgo CFLAGS: -I/app/rust/stork/src -I../../rust/stork/src
+#include "signing.h"
+*/
+import "C"
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	junocrypto "github.com/NethermindEth/juno/core/crypto"
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/curve"
 	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"strings"
+	"time"
+	"unsafe"
 )
 
 type Signer[T Signature] struct {
-	config              StorkPublisherAgentConfig
-	evmPrivateKey       *ecdsa.PrivateKey
-	evmPublicAddress    common.Address
-	starkOracleNameInt  *big.Int
-	starkPrivateKeyFelt *felt.Felt
+	config             StorkPublisherAgentConfig
+	evmPrivateKey      *ecdsa.PrivateKey
+	evmPublicAddress   common.Address
+	starkOracleNameInt *big.Int
+	starkPkBytes       []byte
+	logger             zerolog.Logger
 }
 
-func NewSigner[T Signature](config StorkPublisherAgentConfig) (*Signer[T], error) {
+func NewSigner[T Signature](config StorkPublisherAgentConfig, logger zerolog.Logger) (*Signer[T], error) {
 	privateKey, err := convertHexToECDSA(config.PrivateKey)
 
 	switch config.SignatureType {
@@ -37,6 +45,7 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig) (*Signer[T], error
 			config:           config,
 			evmPrivateKey:    privateKey,
 			evmPublicAddress: publicAddress,
+			logger:           logger,
 		}
 		return &signer, nil
 	case StarkSignatureType:
@@ -47,19 +56,18 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig) (*Signer[T], error
 		if len(pkTrimmed)%2 != 0 {
 			pkTrimmed = "0" + pkTrimmed
 		}
-		pkBytes, err := hex.DecodeString(pkTrimmed)
+		pkDecoded, err := hex.DecodeString(pkTrimmed)
 		if err != nil {
 			return nil, fmt.Errorf("error decoding private key: %v", err)
 		}
-		pkFelt, err := bytesToFieldElement(pkBytes)
-		if err != nil {
-			return nil, fmt.Errorf("error converting pk to a field element: %v", err)
-		}
+		pkBytes := make([]byte, 32)
+		copy(pkBytes[32-len(pkDecoded):], pkDecoded)
 
 		signer := Signer[T]{
-			config:              config,
-			starkPrivateKeyFelt: pkFelt,
-			starkOracleNameInt:  oracleNameInt,
+			config:             config,
+			starkPkBytes:       pkBytes,
+			starkOracleNameInt: oracleNameInt,
+			logger:             logger,
 		}
 		return &signer, nil
 	default:
@@ -222,8 +230,17 @@ func add0x(str string) string {
 	return "0x" + str
 }
 
-func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
+func createBufferFromBytes(buf []byte) *C.uint8_t {
+	return (*C.uint8_t)(unsafe.Pointer(&buf[0]))
+}
 
+func createBufferFromBigInt(i *big.Int) *C.uint8_t {
+	bytes := make([]byte, 32)
+	i.FillBytes(bytes)
+	return (*C.uint8_t)(unsafe.Pointer(&bytes[0]))
+}
+
+func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
 	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
 
 	priceInt, _ := new(big.Int).SetString(string(quantizedPrice), 10)
@@ -232,31 +249,45 @@ func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPri
 	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.starkOracleNameInt)
 	yInt := new(big.Int).Add(shiftLeft(priceInt, 32), timestampInt)
 
-	xFE, err := bytesToFieldElement(xInt.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("error converting x to a field element: %v", err)
+	pedersonHashBuf := make([]byte, 32)
+	sigRBuf := make([]byte, 32)
+	sigSBuf := make([]byte, 32)
+
+	hashAndSignStart := time.Now()
+	hashAndSignStatus := C.hash_and_sign(
+		createBufferFromBigInt(xInt),
+		createBufferFromBigInt(yInt),
+		createBufferFromBytes(s.starkPkBytes),
+		createBufferFromBytes(pedersonHashBuf),
+		createBufferFromBytes(sigRBuf),
+		createBufferFromBytes(sigSBuf),
+	)
+	s.logger.Info().Msgf("hash and sign time: %v microseconds", time.Since(hashAndSignStart).Microseconds())
+	if hashAndSignStatus != 0 {
+		return nil, errors.New(fmt.Sprintf("failed to hash and sign - response code %v", hashAndSignStatus))
 	}
 
-	yFE, err := bytesToFieldElement(yInt.Bytes())
+	pedersenHashFelt, err := bytesToFieldElement(pedersonHashBuf)
 	if err != nil {
-		return nil, fmt.Errorf("error converting y to a field element: %v", err)
+		return nil, err
 	}
-
-	pedersenHash := junocrypto.Pedersen(xFE, yFE)
-
-	xFelt, yFelt, err := curve.Curve.SignFelt(pedersenHash, s.starkPrivateKeyFelt)
+	sigRFelt, err := bytesToFieldElement(sigRBuf)
 	if err != nil {
-		return nil, fmt.Errorf("error signing the pedersen hash: %v", err)
+		return nil, err
+	}
+	sigSFelt, err := bytesToFieldElement(sigSBuf)
+	if err != nil {
+		return nil, err
 	}
 
 	var starkSignature any
 	starkSignature = &StarkSignature{
-		R: add0x(trimLeadingZeros(xFelt.Text(16))),
-		S: add0x(trimLeadingZeros(yFelt.Text(16))),
+		R: "0" + trimLeadingZeros(sigRFelt.String()),
+		S: "0" + trimLeadingZeros(sigSFelt.String()),
 	}
 	signature := starkSignature.(T)
 	// trim leading 0s
-	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHash.String())))
+	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHashFelt.String())))
 	timestampedSignature := TimestampedSignature[T]{
 		Signature: signature,
 		Timestamp: timestampNs,

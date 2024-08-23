@@ -27,7 +27,7 @@ func NewPublisherAgentRunner[T Signature](
 	config StorkPublisherAgentConfig,
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
-	signer, err := NewSigner[T](config)
+	signer, err := NewSigner[T](config, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create signer")
 	}

@@ -1,6 +1,7 @@
 package stork_publisher_agent
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -16,8 +17,13 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 		0.0,
 		"faked",
 		false,
+		"",
+		"",
+		"",
+		time.Duration(0),
+		false,
 	)
-	signer, err := NewSigner[*EvmSignature](*config)
+	signer, err := NewSigner[*EvmSignature](*config, zerolog.Logger{})
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
@@ -61,9 +67,14 @@ func TestSigner_SignStark(t *testing.T) {
 		0.0,
 		"czowx",
 		false,
+		"",
+		"",
+		"",
+		time.Duration(0),
+		false,
 	)
 
-	signer, err := NewSigner[*StarkSignature](*config)
+	signer, err := NewSigner[*StarkSignature](*config, zerolog.Logger{})
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
@@ -106,8 +117,13 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 		0.0,
 		"faked",
 		false,
+		"",
+		"",
+		"",
+		time.Duration(0),
+		false,
 	)
-	signer, err := NewSigner[*EvmSignature](*config)
+	signer, err := NewSigner[*EvmSignature](*config, zerolog.Logger{})
 	if err != nil {
 		b.Fatalf("error creating signer: %v", err)
 	}
@@ -131,9 +147,14 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 		0.0,
 		"czowx",
 		false,
+		"",
+		"",
+		"",
+		time.Duration(0),
+		false,
 	)
 
-	signer, err := NewSigner[*StarkSignature](*config)
+	signer, err := NewSigner[*StarkSignature](*config, zerolog.Logger{})
 	if err != nil {
 		b.Fatalf("error creating signer: %v", err)
 	}
