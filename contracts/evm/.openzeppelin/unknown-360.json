@@ -1,0 +1,167 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xacC0a0cF13571d30B4b8637996F5D6D774d4fd62",
+      "txHash": "0xce4eccdfb28a4e3bd1fc5b235318de5c414daad549a92ca57bcdbc05ccfb0905",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "db46386acc746ba0e7ff562cad863f11151d7b07d1f61502f4bfabe28e740bda": {
+      "address": "0xF89CEf90CF229c564596cf105D19bc92e17b98C4",
+      "txHash": "0x8385ec6c5965f01a8b996b99d1a7a5ecb113ac517037dd9c94c31d4338c51ae4",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "_state",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_struct(State)1905_storage",
+            "contract": "StorkState",
+            "src": "contracts/StorkState.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)65_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_int192": {
+            "label": "int192",
+            "numberOfBytes": "24"
+          },
+          "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1917_storage)": {
+            "label": "mapping(bytes32 => struct StorkStructs.TemporalNumericValue)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(State)1905_storage": {
+            "label": "struct StorkStorage.State",
+            "members": [
+              {
+                "label": "storkPublicKey",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "singleUpdateFeeInWei",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "validTimePeriodSeconds",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "latestCanonicalTemporalNumericValues",
+                "type": "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1917_storage)",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(TemporalNumericValue)1917_storage": {
+            "label": "struct StorkStructs.TemporalNumericValue",
+            "members": [
+              {
+                "label": "timestampNs",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "quantizedValue",
+                "type": "t_int192",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
