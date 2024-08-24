@@ -68,6 +68,10 @@ func (r *PublisherAgentRunner[T]) Run() {
 		}
 	}(r.signedPriceBatchCh)
 
+	for outgoingWsUrl, outgoingWsAuth := range r.config.OutgoingWsUrlsAndAuths {
+		go r.RunOutgoingConnection(outgoingWsUrl, outgoingWsAuth)
+	}
+
 	if len(r.config.PullBasedWsUrl) > 0 {
 		go r.RunPullBasedIncomingConnection(
 			r.config.PullBasedWsUrl,
@@ -80,13 +84,13 @@ func (r *PublisherAgentRunner[T]) Run() {
 	processor.Run()
 }
 
-func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, auth string, subscriptionRequest string, reconnectDelay time.Duration) {
+func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, auth AuthToken, subscriptionRequest string, reconnectDelay time.Duration) {
 	for {
 		r.logger.Info().Msgf("Connecting to pull-based WebSocket with url %s", url)
 
 		var headers http.Header
 		if len(auth) > 0 {
-			headers = http.Header{"Authorization": []string{"Basic " + auth}}
+			headers = http.Header{"Authorization": []string{"Basic " + string(auth)}}
 		}
 
 		incomingWsConn, _, err := websocket.DefaultDialer.Dial(url, headers)
@@ -141,44 +145,50 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 		r.logger.Info().Msgf("Waiting %s to reconnect to pull-based WebSocket", reconnectDelay)
 		time.Sleep(reconnectDelay)
 	}
-
 }
 
-func (r *PublisherAgentRunner[T]) HandleNewOutgoingConnection(resp http.ResponseWriter, req *http.Request) {
-	authToken := AuthToken("fake_auth")
-	// complete the websocket handshake
-	conn, err := upgradeAndEnforceCompression(resp, req, r.config.EnforceCompression, r.upgrader, r.logger, authToken)
-	if err != nil {
-		// debug log because err could be rate limit violation
-		r.logger.Debug().Err(err).Object("request_headers", HttpHeaders(req.Header)).Msg("failed to complete subscriber websocket handshake")
-		return
+func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url string, authToken AuthToken) {
+	for {
+		r.logger.Info().Msgf("Connecting to outgoing WebSocket with url %s", url)
+
+		var headers http.Header
+		if len(authToken) > 0 {
+			headers = http.Header{"Authorization": []string{"Basic " + string(authToken)}}
+		}
+
+		conn, _, err := websocket.DefaultDialer.Dial(url, headers)
+		if err != nil {
+			r.logger.Error().Err(err).Msgf("Failed to connect to outgoing WebSocket: %v", err)
+			break
+		}
+
+		connId := ConnectionId(uuid.New().String())
+
+		r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("adding subscriber websocket")
+
+		websocketConn := *NewWebsocketConnection(
+			conn,
+			connId,
+			r.logger,
+			func() {
+				r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("removing subscriber websocket")
+				r.outgoingConnectionsLock.Lock()
+				delete(r.outgoingConnections, connId)
+				r.outgoingConnectionsLock.Unlock()
+			},
+		)
+		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, r.logger)
+
+		// add subscriber to list
+		r.outgoingConnectionsLock.Lock()
+		r.outgoingConnections[connId] = outgoingWebsocketConn
+		r.outgoingConnectionsLock.Unlock()
+
+		// read until a failure happens
+		outgoingWebsocketConn.Writer()
+		r.logger.Warn().Msg("Outgoing websocket writer thread failed - reconnecting in 5 seconds")
+		time.Sleep(5 * time.Second)
 	}
-
-	connId := ConnectionId(uuid.New().String())
-
-	r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("adding subscriber websocket")
-
-	websocketConn := *NewWebsocketConnection(
-		conn,
-		connId,
-		r.logger,
-		func() {
-			r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("removing subscriber websocket")
-			r.outgoingConnectionsLock.Lock()
-			delete(r.outgoingConnections, connId)
-			r.outgoingConnectionsLock.Unlock()
-		},
-	)
-	outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, r.logger)
-
-	// add subscriber to list
-	r.outgoingConnectionsLock.Lock()
-	r.outgoingConnections[connId] = outgoingWebsocketConn
-	r.outgoingConnectionsLock.Unlock()
-
-	// kick off the reader and writer threads for the subscriber
-	go outgoingWebsocketConn.Reader()
-	go outgoingWebsocketConn.Writer()
 }
 
 func (r *PublisherAgentRunner[T]) HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request) {

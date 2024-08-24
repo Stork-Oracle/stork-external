@@ -12,9 +12,9 @@ type StorkPublisherAgentConfig struct {
 	DeltaCheckPeriod               time.Duration
 	ChangeThresholdProportion      float64 // 0-1
 	OracleId                       OracleId
-	EnforceCompression             bool
+	OutgoingWsUrlsAndAuths         map[string]AuthToken
 	PullBasedWsUrl                 string
-	PullBasedAuth                  string
+	PullBasedAuth                  AuthToken
 	PullBasedWsSubscriptionRequest string
 	PullBasedWsReconnectDelay      time.Duration
 	SignEveryUpdate                bool
@@ -28,9 +28,9 @@ func NewStorkPublisherAgentConfig(
 	deltaPeriod time.Duration,
 	changeThresholdPercentage float64,
 	oracleId OracleId,
-	enforceCompression bool,
+	outgoingWsUrlsAndAuths map[string]AuthToken,
 	pullBasedWsUrl string,
-	pullBasedAuth string,
+	pullBasedAuth AuthToken,
 	pullBasedWsSubscriptionRequest string,
 	pullBasedWsReconnectDelay time.Duration,
 	signEveryUpdate bool,
@@ -43,7 +43,7 @@ func NewStorkPublisherAgentConfig(
 		DeltaCheckPeriod:               deltaPeriod,
 		ChangeThresholdProportion:      changeThresholdPercentage / 100.0,
 		OracleId:                       oracleId,
-		EnforceCompression:             enforceCompression,
+		OutgoingWsUrlsAndAuths:         outgoingWsUrlsAndAuths,
 		PullBasedWsUrl:                 pullBasedWsUrl,
 		PullBasedAuth:                  pullBasedAuth,
 		PullBasedWsSubscriptionRequest: pullBasedWsSubscriptionRequest,
