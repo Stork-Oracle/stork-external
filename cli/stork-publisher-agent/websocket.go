@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"io"
@@ -135,26 +134,13 @@ type OutgoingWebsocketConnection[T Signature] struct {
 	WebsocketConnection
 	logger                   zerolog.Logger
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
-	outgoingResponsesCh      chan any
-	subscriptionTracker      *SubscriptionTracker
 }
 
 func NewOutgoingWebsocketConnection[T Signature](conn WebsocketConnection, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
 		WebsocketConnection:      conn,
-		subscriptionTracker:      NewSubscriptionTracker(),
-		outgoingResponsesCh:      make(chan any, 4096),
 		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
 		logger:                   logger,
-	}
-}
-
-func (owc *OutgoingWebsocketConnection[T]) SendResponseAsync(response any) {
-	select {
-	case owc.outgoingResponsesCh <- response:
-	default:
-		// this should basically never happen, but just in case:
-		owc.logger.Error().Interface("response", response).Msg("dropping response, failed to enqueue")
 	}
 }
 
@@ -172,39 +158,17 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 	for {
 		var err error
 		select {
-		case msg := <-owc.outgoingResponsesCh:
-			if owc.IsClosed() {
-				logger.Warn().Msg("attempted to send message on closed websocket")
-				return
-			}
-
-			logger.Debug().Interface("response", msg).Msg("sending out a response")
-			switch response := msg.(type) {
-			case InvalidMessageResponse:
-				err = SendWebsocketMsg(owc.conn, "invalid_message", response, "", response.errMsg, logger)
-			case SubscribeResponse:
-				err = SendWebsocketMsg(owc.conn, "subscribe", response, response.traceId, "", logger)
-			case UnsubscribeResponse:
-				err = SendWebsocketMsg(owc.conn, "unsubscribe", response, response.traceId, "", logger)
-			default:
-				logger.Error().Type("response_msg_type", msg).Msg("invalid response message type")
-				return
-			}
-
-			// send out a price update
+		// send out a price update
 		case signedPriceUpdateBatch := <-owc.signedPriceUpdateBatchCh:
 			if owc.IsClosed() {
 				logger.Warn().Msg("attempted to send message on closed websocket")
 				return
 			}
-			filteredSignedPriceUpdateBatch := make(SignedPriceUpdateBatch[T])
-			for assetId, priceUpdate := range signedPriceUpdateBatch {
-				if owc.subscriptionTracker.IsSubscribed(assetId) {
-					filteredSignedPriceUpdateBatch[assetId] = priceUpdate
+			if len(signedPriceUpdateBatch) > 0 {
+				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", signedPriceUpdateBatch, "", "", logger)
+				if err != nil {
+					logger.Warn().Err(err).Msg("failed to send signed prices")
 				}
-			}
-			if len(filteredSignedPriceUpdateBatch) > 0 {
-				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredSignedPriceUpdateBatch, "", "", logger)
 			}
 		case _ = <-owc.closed:
 			logger.Warn().Msg("Close() called, exiting write loop")
@@ -217,50 +181,6 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 			return
 		}
 	}
-}
-
-func (owc *OutgoingWebsocketConnection[T]) Reader() {
-	logger := owc.logger.With().Str("op", "reader").Logger()
-
-	err := readLoop(owc.conn, nil, logger, func(wsMsgReader io.Reader) error {
-		var msg WebsocketMessage[SubscriptionRequest]
-		msg.connId = owc.connId
-
-		if err := json.NewDecoder(wsMsgReader).Decode(&msg); err != nil {
-			logger.Warn().Err(err).Msg("failed to parse websocket message")
-
-			owc.SendResponseAsync(InvalidMessageResponse{errMsg: "failed to parse into subscribe/unsubscribe message"})
-			return nil
-		}
-
-		// add a trace id if the user didn't include one
-		if msg.TraceId == "" {
-			msg.TraceId = uuid.New().String()
-		}
-
-		// update subscriptions
-		switch msg.Type {
-		case "subscribe":
-			owc.subscriptionTracker.Subscribe(msg.Data.Assets)
-			allAssets := owc.subscriptionTracker.GetSortedAssets()
-			owc.SendResponseAsync(SubscribeResponse{traceId: msg.TraceId, Subscriptions: allAssets})
-		case "unsubscribe":
-			owc.subscriptionTracker.Unsubscribe(msg.Data.Assets)
-			allAssets := owc.subscriptionTracker.GetSortedAssets()
-			owc.SendResponseAsync(UnsubscribeResponse{traceId: msg.TraceId, Subscriptions: allAssets})
-		default:
-			owc.SendResponseAsync(InvalidMessageResponse{errMsg: "invalid message type, expected 'subscribe' or 'unsubscribe'"})
-		}
-		return nil
-	})
-
-	if err := owc.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, err.Error()), time.Now().Add(time.Second)); err != nil {
-		if err.Error() != "websocket: close sent" {
-			logger.Warn().Err(err).Msg("failed to send close message")
-		}
-	}
-
-	owc.Close()
 }
 
 // readLoop is a generalized function for the use case of read looping a websocket connection while enforcing rate limits.
