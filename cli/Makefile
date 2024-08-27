@@ -21,7 +21,6 @@ build:
 	GOOS=windows GOARCH=arm64 go build -o $(OUTPUT_BIN)-windows-arm64.exe .
 	@echo "Build complete. Binaries are located in the $(OUTPUT_DIR) directory."
 
-
 # Clean the build directory
 clean:
 	rm -rf $(OUTPUT_DIR)

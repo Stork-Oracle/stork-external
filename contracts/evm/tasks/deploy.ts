@@ -2,7 +2,7 @@ import { task } from "hardhat/config";
 import { CONTRACT_DEPLOYMENT, createFileIfNotExists, getDeployedAddressesPath } from "./utils/helpers";
 
 const STORK_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44"
-const VALID_TIMEOUT_SECONDS = 60;
+const VALID_TIMEOUT_SECONDS = 3600;
 const UPDATE_FEE_IN_WEI = 1;
 
 async function main() {

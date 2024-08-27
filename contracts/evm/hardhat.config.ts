@@ -38,6 +38,21 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 17000
     },
+    molten: {
+      url: "https://molten.calderachain.xyz/http",
+      accounts: [PRIVATE_KEY],
+      chainId: 360
+    },
+    omniOmega: {
+      url: "https://omega.omni.network/",
+      accounts: [PRIVATE_KEY],
+      chainId: 164
+    },
+    polygon: {
+      url: "https://polygon.llamarpc.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 137,
+    },
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -54,6 +69,9 @@ const config: HardhatUserConfig = {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
+      molten: 'fake',
+      omniOmega: 'fake',
+      polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       volmexTestnet: 'fake'
     },
@@ -72,6 +90,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
           browserURL: "https://bartio.beratrail.io"
+        }
+      },
+      {
+        network: "molten",
+        chainId: 360,
+        urls: {
+          apiURL: "https://molten.calderaexplorer.xyz/api",
+          browserURL: "https://molten.calderaexplorer.xyz/"
+        }
+      },
+      {
+        network: "omniOmega",
+        chainId: 164,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
+          browserURL: "https://omega.omniscan.network"
         }
       },
       {
