@@ -14,21 +14,6 @@ import (
 	"time"
 )
 
-type InvalidMessageResponse struct {
-	traceId string
-	errMsg  string
-}
-
-type SubscribeResponse struct {
-	traceId       string
-	Subscriptions []AssetId `json:"assets"`
-}
-
-type UnsubscribeResponse struct {
-	traceId       string
-	Subscriptions []AssetId `json:"assets"`
-}
-
 type WebsocketConnection struct {
 	conn    *websocket.Conn
 	logger  zerolog.Logger
