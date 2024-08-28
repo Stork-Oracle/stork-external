@@ -25,6 +25,7 @@ const SignatureTypeFlag = "signature-type"
 const OracleIdFlag = "oracle-id"
 const PrivateKeyFlag = "private-key"
 const PublicKeyFlag = "public-key"
+const StorkAuthFlag = "stork-auth"
 
 // optional
 const ClockUpdatePeriodFlag = "clock-update-period"
@@ -32,7 +33,8 @@ const DeltaUpdatePeriodFlag = "delta-update-period"
 const ChangeThresholdPercentFlag = "change-threshold-percent"
 const IncomingWsPortFlag = "incoming-ws-port"
 const StorkRegistryBaseUrlFlag = "stork-registry-base-url"
-const StorkAuthFlag = "stork-auth"
+const StorkRegistryRefreshIntervalFlag = "stork-registry-refresh-interval"
+const BrokerReconnectDelayFlag = "broker-reconnect-delay"
 
 const PullBasedWsUrlFlag = "pull-based-ws-url"
 const PullBasedAuthFlag = "pull-based-auth"
@@ -48,18 +50,20 @@ func init() {
 	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
 	publisherAgentCmd.Flags().StringP(PrivateKeyFlag, "p", "", "Your private key for signing updates")
 	publisherAgentCmd.Flags().StringP(PublicKeyFlag, "k", "", "Your public key for signing updates")
+	publisherAgentCmd.Flags().StringP(StorkAuthFlag, "", "", "The auth token for Stork broker servers")
 
 	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
 	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
 	publisherAgentCmd.Flags().Float64P(ChangeThresholdPercentFlag, "t", 0.1, "Report prices immediately if they've changed by more than this percentage (1 means 1%)")
 	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 5215, "The port which you'll report prices to")
 	publisherAgentCmd.Flags().StringP(StorkRegistryBaseUrlFlag, "", ProdStorkRegistryBaseUrl, "The base URL for the Stork Registry (defaults to the production Stork Registry)")
-	publisherAgentCmd.Flags().StringP(StorkAuthFlag, "", "", "The auth token for Stork broker servers")
+	publisherAgentCmd.Flags().StringP(StorkRegistryRefreshIntervalFlag, "", "10m", "How frequently to refresh brokers from the Stork Registry")
+	publisherAgentCmd.Flags().StringP(BrokerReconnectDelayFlag, "", "5s", "The time to wait before reconnecting to a broker websocket after a failure")
 
 	publisherAgentCmd.Flags().StringP(PullBasedWsUrlFlag, "u", "", "A websocket URL to pull price updates from")
 	publisherAgentCmd.Flags().StringP(PullBasedAuthFlag, "a", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A subscription message for the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "The time to wait before reconnecting to the pull websocket after a failure")
 
 	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any extra logic")
 
@@ -81,6 +85,8 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	incomingWsPort, _ := cmd.Flags().GetInt(IncomingWsPortFlag)
 	storkAuth, _ := cmd.Flags().GetString(StorkAuthFlag)
 	storkRegistryBaseUrl, _ := cmd.Flags().GetString(StorkRegistryBaseUrlFlag)
+	storkRegistryRefreshIntervalStr, _ := cmd.Flags().GetString(StorkRegistryRefreshIntervalFlag)
+	brokerReconnectDelayStr, _ := cmd.Flags().GetString(BrokerReconnectDelayFlag)
 
 	pullBasedWsUrl, _ := cmd.Flags().GetString(PullBasedWsUrlFlag)
 	pullBasedAuth, _ := cmd.Flags().GetString(PullBasedAuthFlag)
@@ -116,6 +122,22 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("delta update period must be positive")
 	}
 
+	storkRegistryRefreshDuration, err := time.ParseDuration(storkRegistryRefreshIntervalStr)
+	if err != nil {
+		return fmt.Errorf("invalid stork registry refresh duration: %s", storkRegistryRefreshIntervalStr)
+	}
+	if storkRegistryRefreshDuration.Nanoseconds() == 0 {
+		return errors.New("stork registry refresh duration must be positive")
+	}
+
+	brokerReconnectDelayDuration, err := time.ParseDuration(brokerReconnectDelayStr)
+	if err != nil {
+		return fmt.Errorf("invalid broker reconnect duration: %s", brokerReconnectDelayStr)
+	}
+	if brokerReconnectDelayDuration.Nanoseconds() == 0 {
+		return errors.New("broker reconnect duration must be positive")
+	}
+
 	if changeThresholdPercent <= 0 {
 		return errors.New("change threshold percent must be positive")
 	}
@@ -146,6 +168,8 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		changeThresholdPercent,
 		storkpublisheragent.OracleId(oracleId),
 		storkRegistryBaseUrl,
+		storkRegistryRefreshDuration,
+		brokerReconnectDelayDuration,
 		storkpublisheragent.AuthToken(storkAuth),
 		pullBasedWsUrl,
 		storkpublisheragent.AuthToken(pullBasedAuth),

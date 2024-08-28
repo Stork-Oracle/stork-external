@@ -14,6 +14,8 @@ type StorkPublisherAgentConfig struct {
 	OracleId                       OracleId
 	StorkRegistryBaseUrl           string
 	StorkAuth                      AuthToken
+	StorkRegistryRefreshInterval   time.Duration
+	BrokerReconnectDelay           time.Duration
 	PullBasedWsUrl                 string
 	PullBasedAuth                  AuthToken
 	PullBasedWsSubscriptionRequest string
@@ -30,6 +32,8 @@ func NewStorkPublisherAgentConfig(
 	changeThresholdPercentage float64,
 	oracleId OracleId,
 	storkRegistryBaseUrl string,
+	storkRegistryRefreshInterval time.Duration,
+	brokerReconnectDelay time.Duration,
 	storkAuth AuthToken,
 	pullBasedWsUrl string,
 	pullBasedAuth AuthToken,
@@ -46,6 +50,8 @@ func NewStorkPublisherAgentConfig(
 		ChangeThresholdProportion:      changeThresholdPercentage / 100.0,
 		OracleId:                       oracleId,
 		StorkRegistryBaseUrl:           storkRegistryBaseUrl,
+		StorkRegistryRefreshInterval:   storkRegistryRefreshInterval,
+		BrokerReconnectDelay:           brokerReconnectDelay,
 		StorkAuth:                      storkAuth,
 		PullBasedWsUrl:                 pullBasedWsUrl,
 		PullBasedAuth:                  pullBasedAuth,

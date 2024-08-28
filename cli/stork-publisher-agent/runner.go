@@ -91,7 +91,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 	r.UpdateBrokerConnections()
-	for range time.Tick(10 * time.Minute) {
+	for range time.Tick(r.config.StorkRegistryRefreshInterval) {
 		r.UpdateBrokerConnections()
 	}
 }
@@ -240,8 +240,8 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			r.logger.Info().Msg("Outgoing websocket was removed - not reconnecting")
 			return
 		} else {
-			r.logger.Warn().Msg("Outgoing websocket writer thread failed - reconnecting in 5 seconds")
-			time.Sleep(5 * time.Second)
+			r.logger.Warn().Msgf("Outgoing websocket writer thread failed - reconnecting after %s", r.config.BrokerReconnectDelay)
+			time.Sleep(r.config.BrokerReconnectDelay)
 		}
 	}
 }
