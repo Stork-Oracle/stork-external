@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -117,16 +118,32 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 
 type OutgoingWebsocketConnection[T Signature] struct {
 	WebsocketConnection
+	assetIds                 map[AssetId]struct{}
+	assetIdsLock             sync.RWMutex
+	removed                  bool
 	logger                   zerolog.Logger
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T Signature](conn WebsocketConnection, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
 		WebsocketConnection:      conn,
+		assetIds:                 assetIds,
 		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
 		logger:                   logger,
 	}
+}
+
+func (owc *OutgoingWebsocketConnection[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
+	owc.assetIdsLock.Lock()
+	owc.assetIds = assetIds
+	owc.assetIdsLock.Unlock()
+}
+
+func (owc *OutgoingWebsocketConnection[T]) Remove() {
+	owc.logger.Warn().Msg("Removal requested for outgoing websocket connection")
+	owc.removed = true
+	owc.Close()
 }
 
 func (owc *OutgoingWebsocketConnection[T]) Writer() {
@@ -149,8 +166,19 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 				logger.Warn().Msg("attempted to send message on closed websocket")
 				return
 			}
+
+			filteredPriceUpdates := make(SignedPriceUpdateBatch[T])
+			owc.assetIdsLock.RLock()
+			for asset, signedPriceUpdate := range signedPriceUpdateBatch {
+				_, exists := owc.assetIds[asset]
+				if exists {
+					filteredPriceUpdates[asset] = signedPriceUpdate
+				}
+			}
+			owc.assetIdsLock.RUnlock()
+
 			if len(signedPriceUpdateBatch) > 0 {
-				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", signedPriceUpdateBatch, "", "", logger)
+				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredPriceUpdates, "", "", logger)
 				if err != nil {
 					logger.Warn().Err(err).Msg("failed to send signed prices")
 				}
