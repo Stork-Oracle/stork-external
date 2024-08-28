@@ -169,10 +169,15 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 
 			filteredPriceUpdates := make(SignedPriceUpdateBatch[T])
 			owc.assetIdsLock.RLock()
-			for asset, signedPriceUpdate := range signedPriceUpdateBatch {
-				_, exists := owc.assetIds[asset]
-				if exists {
-					filteredPriceUpdates[asset] = signedPriceUpdate
+			_, allAssets := owc.assetIds[WildcardSubscriptionAsset]
+			if allAssets {
+				filteredPriceUpdates = signedPriceUpdateBatch
+			} else {
+				for asset, signedPriceUpdate := range signedPriceUpdateBatch {
+					_, exists := owc.assetIds[asset]
+					if exists {
+						filteredPriceUpdates[asset] = signedPriceUpdate
+					}
 				}
 			}
 			owc.assetIdsLock.RUnlock()
