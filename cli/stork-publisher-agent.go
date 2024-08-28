@@ -25,14 +25,16 @@ const SignatureTypeFlag = "signature-type"
 const OracleIdFlag = "oracle-id"
 const PrivateKeyFlag = "private-key"
 const PublicKeyFlag = "public-key"
+const StorkAuthFlag = "stork-auth"
 
 // optional
 const ClockUpdatePeriodFlag = "clock-update-period"
 const DeltaUpdatePeriodFlag = "delta-update-period"
 const ChangeThresholdPercentFlag = "change-threshold-percent"
 const IncomingWsPortFlag = "incoming-ws-port"
-const OutgoingWsUrlFlag = "outgoing-ws-url"
-const OutgoingWsAuthFlag = "outgoing-ws-auth"
+const StorkRegistryBaseUrlFlag = "stork-registry-base-url"
+const StorkRegistryRefreshIntervalFlag = "stork-registry-refresh-interval"
+const BrokerReconnectDelayFlag = "broker-reconnect-delay"
 
 const PullBasedWsUrlFlag = "pull-based-ws-url"
 const PullBasedAuthFlag = "pull-based-auth"
@@ -41,23 +43,27 @@ const PullBasedReconnectDelayFlag = "pull-based-reconnect-delay"
 
 const SignEveryUpdateFlag = "sign-every-update"
 
+const ProdStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
+
 func init() {
 	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
 	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
 	publisherAgentCmd.Flags().StringP(PrivateKeyFlag, "p", "", "Your private key for signing updates")
 	publisherAgentCmd.Flags().StringP(PublicKeyFlag, "k", "", "Your public key for signing updates")
+	publisherAgentCmd.Flags().StringP(StorkAuthFlag, "", "", "The auth token for Stork broker servers")
 
 	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
 	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
 	publisherAgentCmd.Flags().Float64P(ChangeThresholdPercentFlag, "t", 0.1, "Report prices immediately if they've changed by more than this percentage (1 means 1%)")
 	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 5215, "The port which you'll report prices to")
-	publisherAgentCmd.Flags().StringSliceP(OutgoingWsUrlFlag, "", nil, "Every outgoing websocket server that you want to publish data to, space separated")
-	publisherAgentCmd.Flags().StringSliceP(OutgoingWsAuthFlag, "", nil, "The auth token for every outgoing websocket server that you want to publish data to, space separated and in the same order as the urls")
+	publisherAgentCmd.Flags().StringP(StorkRegistryBaseUrlFlag, "", ProdStorkRegistryBaseUrl, "The base URL for the Stork Registry (defaults to the production Stork Registry)")
+	publisherAgentCmd.Flags().StringP(StorkRegistryRefreshIntervalFlag, "", "10m", "How frequently to refresh brokers from the Stork Registry")
+	publisherAgentCmd.Flags().StringP(BrokerReconnectDelayFlag, "", "5s", "The time to wait before reconnecting to a broker websocket after a failure")
 
 	publisherAgentCmd.Flags().StringP(PullBasedWsUrlFlag, "u", "", "A websocket URL to pull price updates from")
 	publisherAgentCmd.Flags().StringP(PullBasedAuthFlag, "a", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A Basic auth token needed to connect to the pull websocket")
-	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "A Basic auth token needed to connect to the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A subscription message for the pull websocket")
+	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "The time to wait before reconnecting to the pull websocket after a failure")
 
 	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any extra logic")
 
@@ -65,8 +71,7 @@ func init() {
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
 	publisherAgentCmd.MarkFlagRequired(PrivateKeyFlag)
 	publisherAgentCmd.MarkFlagRequired(PublicKeyFlag)
-	publisherAgentCmd.MarkFlagRequired(OutgoingWsUrlFlag)
-	publisherAgentCmd.MarkFlagRequired(OutgoingWsAuthFlag)
+	publisherAgentCmd.MarkFlagRequired(StorkAuthFlag)
 }
 
 func runPublisherAgent(cmd *cobra.Command, args []string) error {
@@ -78,8 +83,10 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	deltaUpdatePeriodStr, _ := cmd.Flags().GetString(DeltaUpdatePeriodFlag)
 	changeThresholdPercent, _ := cmd.Flags().GetFloat64(ChangeThresholdPercentFlag)
 	incomingWsPort, _ := cmd.Flags().GetInt(IncomingWsPortFlag)
-	outgoingWsUrls, _ := cmd.Flags().GetStringSlice(OutgoingWsUrlFlag)
-	outgoingWsAuths, _ := cmd.Flags().GetStringSlice(OutgoingWsAuthFlag)
+	storkAuth, _ := cmd.Flags().GetString(StorkAuthFlag)
+	storkRegistryBaseUrl, _ := cmd.Flags().GetString(StorkRegistryBaseUrlFlag)
+	storkRegistryRefreshIntervalStr, _ := cmd.Flags().GetString(StorkRegistryRefreshIntervalFlag)
+	brokerReconnectDelayStr, _ := cmd.Flags().GetString(BrokerReconnectDelayFlag)
 
 	pullBasedWsUrl, _ := cmd.Flags().GetString(PullBasedWsUrlFlag)
 	pullBasedAuth, _ := cmd.Flags().GetString(PullBasedAuthFlag)
@@ -115,26 +122,28 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("delta update period must be positive")
 	}
 
+	storkRegistryRefreshDuration, err := time.ParseDuration(storkRegistryRefreshIntervalStr)
+	if err != nil {
+		return fmt.Errorf("invalid stork registry refresh duration: %s", storkRegistryRefreshIntervalStr)
+	}
+	if storkRegistryRefreshDuration.Nanoseconds() == 0 {
+		return errors.New("stork registry refresh duration must be positive")
+	}
+
+	brokerReconnectDelayDuration, err := time.ParseDuration(brokerReconnectDelayStr)
+	if err != nil {
+		return fmt.Errorf("invalid broker reconnect duration: %s", brokerReconnectDelayStr)
+	}
+	if brokerReconnectDelayDuration.Nanoseconds() == 0 {
+		return errors.New("broker reconnect duration must be positive")
+	}
+
 	if changeThresholdPercent <= 0 {
 		return errors.New("change threshold percent must be positive")
 	}
 
 	if incomingWsPort <= 0 || incomingWsPort > 65535 {
 		return errors.New("incoming ws port must be between 0 and 65535")
-	}
-
-	// todo: use the registry for this instead of the command line
-	if len(outgoingWsUrls) == 0 {
-		return errors.New("outgoing ws urls must be specified")
-	}
-
-	if len(outgoingWsUrls) != len(outgoingWsAuths) {
-		return errors.New("must have an auth for each outgoing ws url")
-	}
-
-	outgoingWsUrlToAuth := make(map[string]storkpublisheragent.AuthToken)
-	for idx, outgoingWsUrl := range outgoingWsUrls {
-		outgoingWsUrlToAuth[outgoingWsUrl] = storkpublisheragent.AuthToken(outgoingWsAuths[idx])
 	}
 
 	pullBasedReconnectDuration, err := time.ParseDuration(pullBasedReconnectDelay)
@@ -158,7 +167,10 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		deltaUpdatePeriod,
 		changeThresholdPercent,
 		storkpublisheragent.OracleId(oracleId),
-		outgoingWsUrlToAuth,
+		storkRegistryBaseUrl,
+		storkRegistryRefreshDuration,
+		brokerReconnectDelayDuration,
+		storkpublisheragent.AuthToken(storkAuth),
 		pullBasedWsUrl,
 		storkpublisheragent.AuthToken(pullBasedAuth),
 		pullBasedSubscriptionRequest,

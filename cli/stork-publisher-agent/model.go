@@ -94,3 +94,9 @@ type SignedPriceUpdateBatch[T Signature] map[AssetId]SignedPriceUpdate[T]
 type SubscriptionRequest struct {
 	Assets []AssetId `json:"assets"`
 }
+
+type BrokerPublishUrl string
+type BrokerConnectionConfig struct {
+	PublishUrl BrokerPublishUrl `json:"publish_url"`
+	AssetIds   []AssetId        `json:"asset_ids"`
+}

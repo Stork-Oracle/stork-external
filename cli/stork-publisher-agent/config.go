@@ -12,7 +12,10 @@ type StorkPublisherAgentConfig struct {
 	DeltaCheckPeriod               time.Duration
 	ChangeThresholdProportion      float64 // 0-1
 	OracleId                       OracleId
-	OutgoingWsUrlsAndAuths         map[string]AuthToken
+	StorkRegistryBaseUrl           string
+	StorkAuth                      AuthToken
+	StorkRegistryRefreshInterval   time.Duration
+	BrokerReconnectDelay           time.Duration
 	PullBasedWsUrl                 string
 	PullBasedAuth                  AuthToken
 	PullBasedWsSubscriptionRequest string
@@ -28,7 +31,10 @@ func NewStorkPublisherAgentConfig(
 	deltaPeriod time.Duration,
 	changeThresholdPercentage float64,
 	oracleId OracleId,
-	outgoingWsUrlsAndAuths map[string]AuthToken,
+	storkRegistryBaseUrl string,
+	storkRegistryRefreshInterval time.Duration,
+	brokerReconnectDelay time.Duration,
+	storkAuth AuthToken,
 	pullBasedWsUrl string,
 	pullBasedAuth AuthToken,
 	pullBasedWsSubscriptionRequest string,
@@ -43,7 +49,10 @@ func NewStorkPublisherAgentConfig(
 		DeltaCheckPeriod:               deltaPeriod,
 		ChangeThresholdProportion:      changeThresholdPercentage / 100.0,
 		OracleId:                       oracleId,
-		OutgoingWsUrlsAndAuths:         outgoingWsUrlsAndAuths,
+		StorkRegistryBaseUrl:           storkRegistryBaseUrl,
+		StorkRegistryRefreshInterval:   storkRegistryRefreshInterval,
+		BrokerReconnectDelay:           brokerReconnectDelay,
+		StorkAuth:                      storkAuth,
 		PullBasedWsUrl:                 pullBasedWsUrl,
 		PullBasedAuth:                  pullBasedAuth,
 		PullBasedWsSubscriptionRequest: pullBasedWsSubscriptionRequest,
