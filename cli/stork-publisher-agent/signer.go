@@ -4,6 +4,7 @@ package stork_publisher_agent
 #cgo LDFLAGS: -L/app/rust/stork/target/aarch64-unknown-linux-gnu/release -L../../rust/stork/target/release -lstork
 #cgo CFLAGS: -I/app/rust/stork/src -I../../rust/stork/src
 #include "signing.h"
+#include <stdlib.h>
 */
 import "C"
 import (
@@ -213,10 +214,6 @@ func bytesToFieldElement(b []byte) (*felt.Felt, error) {
 	return felt.NewFelt(element), nil
 }
 
-func shiftLeft(num *big.Int, shift int) *big.Int {
-	return new(big.Int).Lsh(num, uint(shift))
-}
-
 func trimLeadingZeros(str string) string {
 	return strings.TrimLeft(str, "0")
 }
@@ -240,21 +237,26 @@ func createBufferFromBigInt(i *big.Int) *C.uint8_t {
 }
 
 func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
-	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
-
-	priceInt, _ := new(big.Int).SetString(string(quantizedPrice), 10)
-	timestampInt := new(big.Int).SetInt64(timestampNs / 1_000_000_000)
-
-	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.starkOracleNameInt)
-	yInt := new(big.Int).Add(shiftLeft(priceInt, 32), timestampInt)
-
 	pedersonHashBuf := make([]byte, 32)
 	sigRBuf := make([]byte, 32)
 	sigSBuf := make([]byte, 32)
 
+	cAsset := C.CString(assetHexPadded)
+	defer C.free(unsafe.Pointer(cAsset))
+
+	cQuantizedPrice := C.CString(string(quantizedPrice))
+	defer C.free(unsafe.Pointer(cQuantizedPrice))
+
+	timestampNsPtr := C.malloc(C.sizeof_int64_t)
+	defer C.free(timestampNsPtr) // Ensure memory is freed
+
+	*(*C.int64_t)(timestampNsPtr) = C.int64_t(timestampNs)
+
 	hashAndSignStatus := C.hash_and_sign(
-		createBufferFromBigInt(xInt),
-		createBufferFromBigInt(yInt),
+		cAsset,
+		cQuantizedPrice,
+		(*C.int64_t)(timestampNsPtr),
+		createBufferFromBigInt(s.starkOracleNameInt),
 		createBufferFromBytes(s.starkPkBytes),
 		createBufferFromBytes(pedersonHashBuf),
 		createBufferFromBytes(sigRBuf),
