@@ -14,6 +14,8 @@ const PRIVATE_KEY = vars.get("PRIVATE_KEY");
 const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
 const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
 const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
+const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
+const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -33,10 +35,35 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    bevmTestnet: {
+      url: "https://testnet.bevm.io/rpc",
+      accounts: [PRIVATE_KEY],
+      chainId: 11503,
+    },
+    bitlayerTestnet: {
+      url: "https://testnet-rpc.bitlayer.org/",
+      accounts: [PRIVATE_KEY],
+      chainId: 200810,
+    },
+    coreTestnet: {
+      url: "https://rpc.test.btcs.network",
+      accounts: [PRIVATE_KEY],
+      chainId: 1115,
+    },
     holesky: {
       url: "https://rpc.holesky.ethpandaops.io/",
       accounts: [PRIVATE_KEY],
       chainId: 17000
+    },
+    lorenzoTestnet: {
+      url: "https://rpc-testnet.lorenzo-protocol.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 83291
+    },
+    merlinTestnet: {
+      url: "https://testnet-rpc.merlinchain.io/",
+      accounts: [PRIVATE_KEY],
+      chainId: 686868
     },
     molten: {
       url: "https://molten.calderachain.xyz/http",
@@ -58,6 +85,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80002,
     },
+    rootstockTestnet: {
+      url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
+      accounts: [PRIVATE_KEY],
+      chainId: 31,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -68,11 +100,17 @@ const config: HardhatUserConfig = {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
+      bitlayerTestnet: 'fake',
+      bevmTestnet: 'fake',
+      coreTestnet: CORE_TESTNET_API_KEY,
       holesky: ETHERSCAN_API_KEY,
+      lorenzoTestnet: 'fake',
+      merlinTestnet: 'fake',
       molten: 'fake',
       omniOmega: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
+      rootstockTestnet: 'fake',
       volmexTestnet: 'fake'
     },
     customChains: [
@@ -93,6 +131,46 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "bevmTestnet",
+        chainId: 11503,
+        urls: {
+          apiURL: "https://scan-testnet-api.bevm.io/api",
+          browserURL: "https://bevm.io"
+        }
+      },
+      {
+        network: "bitlayerTestnet",
+        chainId: 200810,
+        urls: {
+          apiURL: "https://api-testnet.bitlayer.org/scan/api",
+          browserURL: "https://testnet.btrscan.com/"
+        }
+      },
+      {
+        network: "coreTestnet",
+        chainId: 1115,
+        urls: {
+          apiURL: "https://api.test.btcs.network/api",
+          browserURL: "https://scan.test.btcs.network/"
+        }
+      },
+      {
+        network: "lorenzoTestnet",
+        chainId: 83291,
+        urls: {
+          apiURL: "https://scan-testnet.lorenzo-protocol.xyz/api",
+          browserURL: "https://scan-testnet.lorenzo-protocol.xyz"
+        }
+      },
+      {
+        network: "merlinTestnet",
+        chainId: 686868,
+        urls: {
+          apiURL: "https://testnet-scan.merlinchain.io/api",
+          browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      },
+      {
         network: "molten",
         chainId: 360,
         urls: {
@@ -106,6 +184,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
           browserURL: "https://omega.omniscan.network"
+        }
+      },
+      {
+        network: "rootstockTestnet",
+        chainId: 31,
+        urls: {
+          apiURL: "https://rootstock-testnet.blockscout.com/api/",
+          browserURL: "https://rootstock-testnet.blockscout.com/"
         }
       },
       {
