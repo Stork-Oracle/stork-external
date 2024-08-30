@@ -1,8 +1,8 @@
 # Stage 1a: Build the Rust library for arm64
-FROM --platform=$BUILDPLATFORM rust:1.80.1-bookworm AS rust-build
+FROM rust:1.80-bookworm AS rust-build
 # Install cross-compilation tools
 RUN apt-get update &&\
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
     gcc-aarch64-linux-gnu \
     libc6-dev-arm64-cross \
     g++-x86-64-linux-gnu libc6-dev-amd64-cross \
@@ -32,10 +32,10 @@ RUN case "$TARGETPLATFORM" in \
     cp /app/rust/stork/target/$TARGET/release/libstork.so /usr/local/lib/
 
 # Stage 2: Build the Go Library
-FROM --platform=$BUILDPLATFORM golang:1.22-bookworm AS go-build
+FROM golang:1.22-bookworm AS go-build
 
 # Install cross-compilation tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     gcc-aarch64-linux-gnu \
     libc6-dev-arm64-cross \
     g++-x86-64-linux-gnu libc6-dev-amd64-cross \
