@@ -64,9 +64,9 @@ RUN case "$TARGETPLATFORM" in \
     CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH CC=$CC go build -o /stork .
 
 # Stage 3: Create the final image
-FROM --platform=$BUILDPLATFORM debian:bookworm-slim
-COPY --from=go-build /stork /usr/local/bin/stork
+FROM debian:bookworm-slim
 
+COPY --from=go-build /stork /usr/local/bin/stork
 COPY --from=rust-build /usr/local/lib/libstork.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
@@ -74,4 +74,5 @@ RUN apt-get update && apt-get install -y \
     libc6 \
     libpthread-stubs0-dev \
     ca-certificates
+
 ENTRYPOINT ["/usr/local/bin/stork"]
