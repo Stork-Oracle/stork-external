@@ -1,4 +1,4 @@
-# Stage 1a: Build the Rust library for arm64
+# Stage 1: Build the Rust binary
 FROM rust:1.80-bookworm AS rust-build
 # Install cross-compilation tools
 RUN apt-get update &&\
