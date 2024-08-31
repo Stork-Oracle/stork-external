@@ -54,5 +54,4 @@ jobs:
         run: go test ./stork-publisher-agent
         working-directory: ./cli/
         env:
-          LD_LIBRARY_PATH: .
-
+          LD_LIBRARY_PATH: ./cli
