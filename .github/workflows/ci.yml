@@ -55,3 +55,6 @@ jobs:
       - name: Run Go tests
         run: go test ./...
         working-directory: ./cli/
+        env:
+          LD_LIBRARY_PATH: ./cli/
+
