@@ -20,12 +20,15 @@ type ErrorMessage struct {
 }
 
 type (
-	OracleId       string
-	AssetId        string
-	PublisherKey   string
-	PrivateKey     string
-	SignatureType  string
-	QuantizedPrice string
+	OracleId          string
+	AssetId           string
+	EvmPublisherKey   string
+	EvmPrivateKey     string
+	StarkPublisherKey string
+	StarkPrivateKey   string
+	PublisherKey      string
+	SignatureType     string
+	QuantizedPrice    string
 )
 
 const EvmSignatureType = SignatureType("evm")

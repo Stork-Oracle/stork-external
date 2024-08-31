@@ -11,19 +11,21 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
+	"math/big"
+	"strings"
+	"unsafe"
+
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
-	"log"
-	"math/big"
-	"strings"
-	"unsafe"
 )
 
 type Signer[T Signature] struct {
 	config             StorkPublisherAgentConfig
+	signatureType      SignatureType
 	evmPrivateKey      *ecdsa.PrivateKey
 	evmPublicAddress   common.Address
 	starkOracleNameInt *big.Int
@@ -31,17 +33,17 @@ type Signer[T Signature] struct {
 	logger             zerolog.Logger
 }
 
-func NewSigner[T Signature](config StorkPublisherAgentConfig, logger zerolog.Logger) (*Signer[T], error) {
-	privateKey, err := convertHexToECDSA(config.PrivateKey)
-
-	switch config.SignatureType {
+func NewSigner[T Signature](config StorkPublisherAgentConfig, signatureType SignatureType, logger zerolog.Logger) (*Signer[T], error) {
+	switch signatureType {
 	case EvmSignatureType:
+		privateKey, err := convertHexToECDSA(config.EvmPrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("error converting private key to ECDSA: %v", err)
 		}
 		publicAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
 		signer := Signer[T]{
 			config:           config,
+			signatureType:    signatureType,
 			evmPrivateKey:    privateKey,
 			evmPublicAddress: publicAddress,
 			logger:           logger,
@@ -51,7 +53,7 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig, logger zerolog.Log
 		oracleNameHex := hex.EncodeToString([]byte(config.OracleId))
 		oracleNameInt, _ := new(big.Int).SetString(oracleNameHex, 16)
 
-		pkTrimmed := strings.TrimPrefix(string(config.PrivateKey), "0x")
+		pkTrimmed := strings.TrimPrefix(string(config.StarkPrivateKey), "0x")
 		if len(pkTrimmed)%2 != 0 {
 			pkTrimmed = "0" + pkTrimmed
 		}
@@ -64,13 +66,14 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig, logger zerolog.Log
 
 		signer := Signer[T]{
 			config:             config,
+			signatureType:      signatureType,
 			starkPkBytes:       pkBytes,
 			starkOracleNameInt: oracleNameInt,
 			logger:             logger,
 		}
 		return &signer, nil
 	default:
-		return nil, fmt.Errorf("unknown signature type: %v", config.SignatureType)
+		return nil, fmt.Errorf("unknown signature type: %v", signatureType)
 	}
 }
 
@@ -79,7 +82,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType Tr
 	var timestampedSignature TimestampedSignature[T]
 	var publisherKey PublisherKey
 	var externalAssetId string
-	switch s.config.SignatureType {
+	switch s.signatureType {
 	case EvmSignatureType:
 		timestampedSignatureRef, err := s.SignEvm(priceUpdate.Asset, quantizedPrice, priceUpdate.PublishTimestamp)
 		if err != nil {
@@ -101,10 +104,10 @@ func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType Tr
 			panic(err)
 		}
 		timestampedSignature = *timestampedSignatureRef
-		publisherKey = s.config.PublicKey
+		publisherKey = PublisherKey(s.config.StarkPublicKey)
 		externalAssetId = paddedAssetHex + s.starkOracleNameInt.Text(16)
 	default:
-		log.Fatalf("unknown signature type: %v", s.config.SignatureType)
+		log.Fatalf("unknown signature type: %v", s.signatureType)
 	}
 
 	signedPriceUpdate := SignedPriceUpdate[T]{
@@ -114,7 +117,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType Tr
 		SignedPrice: SignedPrice[T]{
 			PublisherKey:         publisherKey,
 			ExternalAssetId:      externalAssetId,
-			SignatureType:        s.config.SignatureType,
+			SignatureType:        s.signatureType,
 			QuantizedPrice:       quantizedPrice,
 			TimestampedSignature: timestampedSignature,
 		},
@@ -123,7 +126,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType Tr
 	return signedPriceUpdate
 }
 
-func convertHexToECDSA(privateKey PrivateKey) (*ecdsa.PrivateKey, error) {
+func convertHexToECDSA(privateKey EvmPrivateKey) (*ecdsa.PrivateKey, error) {
 	privateKeyStr := strings.Replace(string(privateKey), "0x", "", 1)
 
 	// Create a new ecdsa.PrivateKey object

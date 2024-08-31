@@ -2,16 +2,18 @@ package stork_publisher_agent
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
-	"github.com/rs/zerolog"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
 )
 
 type PublisherAgentRunner[T Signature] struct {
 	config                  StorkPublisherAgentConfig
+	signatureType           SignatureType
 	logger                  zerolog.Logger
 	priceUpdateCh           chan PriceUpdate
 	signedPriceBatchCh      chan SignedPriceUpdateBatch[T]
@@ -27,9 +29,10 @@ type PublisherAgentRunner[T Signature] struct {
 
 func NewPublisherAgentRunner[T Signature](
 	config StorkPublisherAgentConfig,
+	signatureType SignatureType,
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
-	signer, err := NewSigner[T](config, logger)
+	signer, err := NewSigner[T](config, signatureType, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create signer")
 	}
@@ -40,6 +43,7 @@ func NewPublisherAgentRunner[T Signature](
 	)
 	return &PublisherAgentRunner[T]{
 		config:                  config,
+		signatureType:           signatureType,
 		logger:                  logger,
 		priceUpdateCh:           make(chan PriceUpdate, 4096),
 		signedPriceBatchCh:      make(chan SignedPriceUpdateBatch[T], 4096),
@@ -54,11 +58,25 @@ func NewPublisherAgentRunner[T Signature](
 	}
 }
 
+func (r *PublisherAgentRunner[T]) getPublisherKey() PublisherKey {
+	var publicKey PublisherKey
+	switch r.signatureType {
+	case EvmSignatureType:
+		publicKey = PublisherKey(r.config.EvmPublicKey)
+	case StarkSignatureType:
+		publicKey = PublisherKey(r.config.StarkPublicKey)
+	default:
+		panic("unknown signature type: " + r.signatureType)
+	}
+	return publicKey
+}
+
 func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	r.logger.Info().Msg("Running broker connection updater")
 
 	// query Stork Registry for brokers
-	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(r.config.PublicKey)
+
+	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(r.getPublisherKey())
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
 		return

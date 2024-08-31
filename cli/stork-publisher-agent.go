@@ -3,31 +3,34 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"regexp"
+	"time"
+
 	storkpublisheragent "github.com/Stork-Oracle/stork_external/stork-publisher-agent"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
-	"net/http"
-	"regexp"
-	"time"
 )
 
 var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)
 
 var publisherAgentCmd = &cobra.Command{
 	Use:   "publisher-agent",
-	Short: "Start a process to sign price updates and make them available to Stork",
+	Short: "Start a process to sign price updates and make them available to the Stork network",
 	RunE:  runPublisherAgent,
 }
 
 // required
-const SignatureTypeFlag = "signature-type"
+const SignatureTypesFlag = "signature-types"
 const OracleIdFlag = "oracle-id"
-const PrivateKeyFlag = "private-key"
-const PublicKeyFlag = "public-key"
 const StorkAuthFlag = "stork-auth"
 
 // optional
+const EvmPrivateKeyFlag = "evm-private-key"
+const EvmPublicKeyFlag = "evm-public-key"
+const StarkPrivateKeyFlag = "stark-private-key"
+const StarkPublicKeyFlag = "stark-public-key"
 const ClockUpdatePeriodFlag = "clock-update-period"
 const DeltaUpdatePeriodFlag = "delta-update-period"
 const ChangeThresholdPercentFlag = "change-threshold-percent"
@@ -46,11 +49,14 @@ const SignEveryUpdateFlag = "sign-every-update"
 const ProdStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
 
 func init() {
-	publisherAgentCmd.Flags().StringP(SignatureTypeFlag, "s", "", "Signature Type (evm or stark)")
+	publisherAgentCmd.Flags().StringSliceP(SignatureTypesFlag, "s", nil, "Signature Types, space-separated (valid types: [evm, stark])")
 	publisherAgentCmd.Flags().StringP(OracleIdFlag, "o", "", "oracle id (must be 5 characters)")
-	publisherAgentCmd.Flags().StringP(PrivateKeyFlag, "p", "", "Your private key for signing updates")
-	publisherAgentCmd.Flags().StringP(PublicKeyFlag, "k", "", "Your public key for signing updates")
 	publisherAgentCmd.Flags().StringP(StorkAuthFlag, "", "", "The auth token for Stork broker servers")
+
+	publisherAgentCmd.Flags().StringP(EvmPrivateKeyFlag, "", "", "Your EVM private key for signing updates")
+	publisherAgentCmd.Flags().StringP(EvmPublicKeyFlag, "", "", "Your EVM public key for signing updates")
+	publisherAgentCmd.Flags().StringP(StarkPrivateKeyFlag, "", "", "Your Stark private key for signing updates")
+	publisherAgentCmd.Flags().StringP(StarkPublicKeyFlag, "", "", "Your Stark public key for signing updates")
 
 	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
 	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
@@ -67,18 +73,18 @@ func init() {
 
 	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any extra logic")
 
-	publisherAgentCmd.MarkFlagRequired(SignatureTypeFlag)
+	publisherAgentCmd.MarkFlagRequired(SignatureTypesFlag)
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
-	publisherAgentCmd.MarkFlagRequired(PrivateKeyFlag)
-	publisherAgentCmd.MarkFlagRequired(PublicKeyFlag)
 	publisherAgentCmd.MarkFlagRequired(StorkAuthFlag)
 }
 
 func runPublisherAgent(cmd *cobra.Command, args []string) error {
-	signatureTypeStr, _ := cmd.Flags().GetString(SignatureTypeFlag)
+	signatureTypesStr, _ := cmd.Flags().GetStringSlice(SignatureTypesFlag)
 	oracleId, _ := cmd.Flags().GetString(OracleIdFlag)
-	privateKey, _ := cmd.Flags().GetString(PrivateKeyFlag)
-	publicKey, _ := cmd.Flags().GetString(PublicKeyFlag)
+	evmPrivateKey, _ := cmd.Flags().GetString(EvmPrivateKeyFlag)
+	evmPublicKey, _ := cmd.Flags().GetString(EvmPublicKeyFlag)
+	starkPrivateKey, _ := cmd.Flags().GetString(StarkPrivateKeyFlag)
+	starkPublicKey, _ := cmd.Flags().GetString(StarkPublicKeyFlag)
 	clockUpdatePeriodStr, _ := cmd.Flags().GetString(ClockUpdatePeriodFlag)
 	deltaUpdatePeriodStr, _ := cmd.Flags().GetString(DeltaUpdatePeriodFlag)
 	changeThresholdPercent, _ := cmd.Flags().GetFloat64(ChangeThresholdPercentFlag)
@@ -96,17 +102,34 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	signEveryUpdate, _ := cmd.Flags().GetBool(SignEveryUpdateFlag)
 
 	// validate cli options
-	signatureType := storkpublisheragent.SignatureType(signatureTypeStr)
-	if !(signatureType == storkpublisheragent.EvmSignatureType || signatureType == storkpublisheragent.StarkSignatureType) {
-		return fmt.Errorf("invalid signature type: %s", signatureType)
+	signatureTypes := make([]storkpublisheragent.SignatureType, 0)
+	for _, signatureTypeStr := range signatureTypesStr {
+		signatureType := storkpublisheragent.SignatureType(signatureTypeStr)
+
+		switch signatureType {
+		case storkpublisheragent.EvmSignatureType:
+			if !Hex32Regex.MatchString(evmPrivateKey) {
+				return errors.New("must pass a valid EVM private key")
+			}
+			if !Hex32Regex.MatchString(evmPublicKey) {
+				return errors.New("must pass a valid EVM public key")
+			}
+		case storkpublisheragent.StarkSignatureType:
+			if !Hex32Regex.MatchString(starkPrivateKey) {
+				return errors.New("must pass a valid Stark private key")
+			}
+			if !Hex32Regex.MatchString(starkPublicKey) {
+				return errors.New("must pass a valid Stark public key")
+			}
+		default:
+			return fmt.Errorf("invalid signature type: %s", signatureType)
+		}
+
+		signatureTypes = append(signatureTypes, signatureType)
 	}
 
 	if len(oracleId) != 5 {
 		return errors.New("oracle id length must be 5")
-	}
-
-	if !Hex32Regex.MatchString(privateKey) {
-		return errors.New("private key must start with 0x and consist entirely of hex characters")
 	}
 
 	clockUpdatePeriod, err := time.ParseDuration(clockUpdatePeriodStr)
@@ -160,9 +183,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	mainLogger.Info().Msg("initializing")
 
 	config := storkpublisheragent.NewStorkPublisherAgentConfig(
-		signatureType,
-		storkpublisheragent.PrivateKey(privateKey),
-		storkpublisheragent.PublisherKey(publicKey),
+		signatureTypes,
+		storkpublisheragent.EvmPrivateKey(evmPrivateKey),
+		storkpublisheragent.EvmPublisherKey(evmPublicKey),
+		storkpublisheragent.StarkPrivateKey(starkPrivateKey),
+		storkpublisheragent.StarkPublisherKey(starkPublicKey),
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
 		changeThresholdPercent,
@@ -178,26 +203,34 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		signEveryUpdate,
 	)
 
-	switch config.SignatureType {
-	case storkpublisheragent.EvmSignatureType:
-		runner := *storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, mainLogger)
-		go runner.Run()
-
-		http.HandleFunc("/evm/publish", runner.HandleNewIncomingWsConnection)
-		mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
-		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
-		mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
-	case storkpublisheragent.StarkSignatureType:
-		runner := *storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, mainLogger)
-		go runner.Run()
-
-		http.HandleFunc("/stark/publish", runner.HandleNewIncomingWsConnection)
-		mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
-		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
-		mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
-	default:
-		return fmt.Errorf("invalid signature type: %s", signatureType)
+	var evmRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.EvmSignature]
+	var starkRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.StarkSignature]
+	for _, signatureType := range config.SignatureTypes {
+		switch signatureType {
+		case storkpublisheragent.EvmSignatureType:
+			evmRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, storkpublisheragent.EvmSignatureType, mainLogger)
+			go evmRunner.Run()
+		case storkpublisheragent.StarkSignatureType:
+			starkRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, storkpublisheragent.StarkSignatureType, mainLogger)
+			go starkRunner.Run()
+		default:
+			return fmt.Errorf("invalid signature type: %s", signatureType)
+		}
 	}
+
+	newIncomingWsHandler := func(resp http.ResponseWriter, req *http.Request) {
+		if evmRunner != nil {
+			evmRunner.HandleNewIncomingWsConnection(resp, req)
+		}
+		if starkRunner != nil {
+			starkRunner.HandleNewIncomingWsConnection(resp, req)
+		}
+	}
+
+	http.HandleFunc("/publish", newIncomingWsHandler)
+	mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
+	err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
+	mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
 
 	return nil
 
