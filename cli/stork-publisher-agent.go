@@ -61,7 +61,7 @@ func init() {
 	publisherAgentCmd.Flags().StringP(ClockUpdatePeriodFlag, "c", "500ms", "How frequently to update the price even if it's not changing much")
 	publisherAgentCmd.Flags().StringP(DeltaUpdatePeriodFlag, "d", "10ms", "How frequently to check if we're hitting the change threshold")
 	publisherAgentCmd.Flags().Float64P(ChangeThresholdPercentFlag, "t", 0.1, "Report prices immediately if they've changed by more than this percentage (1 means 1%)")
-	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 5215, "The port which you'll report prices to")
+	publisherAgentCmd.Flags().IntP(IncomingWsPortFlag, "i", 0, "The port which you'll report prices to")
 	publisherAgentCmd.Flags().StringP(StorkRegistryBaseUrlFlag, "", ProdStorkRegistryBaseUrl, "The base URL for the Stork Registry (defaults to the production Stork Registry)")
 	publisherAgentCmd.Flags().StringP(StorkRegistryRefreshIntervalFlag, "", "10m", "How frequently to refresh brokers from the Stork Registry")
 	publisherAgentCmd.Flags().StringP(BrokerReconnectDelayFlag, "", "5s", "The time to wait before reconnecting to a broker websocket after a failure")
@@ -71,7 +71,7 @@ func init() {
 	publisherAgentCmd.Flags().StringP(PullBasedSubscriptionRequestFlag, "x", "", "A subscription message for the pull websocket")
 	publisherAgentCmd.Flags().StringP(PullBasedReconnectDelayFlag, "r", "5s", "The time to wait before reconnecting to the pull websocket after a failure")
 
-	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any extra logic")
+	publisherAgentCmd.Flags().BoolP(SignEveryUpdateFlag, "b", false, "Just sign every update received without any clock or delta logic")
 
 	publisherAgentCmd.MarkFlagRequired(SignatureTypesFlag)
 	publisherAgentCmd.MarkFlagRequired(OracleIdFlag)
@@ -165,7 +165,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("change threshold percent must be positive")
 	}
 
-	if incomingWsPort <= 0 || incomingWsPort > 65535 {
+	if incomingWsPort > 65535 {
 		return errors.New("incoming ws port must be between 0 and 65535")
 	}
 
@@ -218,20 +218,23 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	newIncomingWsHandler := func(resp http.ResponseWriter, req *http.Request) {
-		if evmRunner != nil {
-			evmRunner.HandleNewIncomingWsConnection(resp, req)
+	if incomingWsPort > 0 {
+		newIncomingWsHandler := func(resp http.ResponseWriter, req *http.Request) {
+			if evmRunner != nil {
+				evmRunner.HandleNewIncomingWsConnection(resp, req)
+			}
+			if starkRunner != nil {
+				starkRunner.HandleNewIncomingWsConnection(resp, req)
+			}
 		}
-		if starkRunner != nil {
-			starkRunner.HandleNewIncomingWsConnection(resp, req)
-		}
+		http.HandleFunc("/publish", newIncomingWsHandler)
+		mainLogger.Info().Msgf("starting incoming http server on port %d", incomingWsPort)
+		err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
+		mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
+	} else {
+		mainLogger.Info().Msg("Not running incoming http server because incoming ws port is not specified")
+		select {}
 	}
 
-	http.HandleFunc("/publish", newIncomingWsHandler)
-	mainLogger.Warn().Msgf("starting incoming http server on port %d", incomingWsPort)
-	err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
-	mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
-
 	return nil
-
 }

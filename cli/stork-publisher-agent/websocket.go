@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/rs/zerolog"
 	"io"
 	"net"
 	"net/http"
@@ -13,21 +11,27 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
 )
+
+const StalePriceThreshold = time.Second * 10
+const HandshakeTimeout = time.Second * 10
+const ReadBufferSize = 1048576
+const WriteBufferSize = 1048576
 
 type WebsocketConnection struct {
 	conn    *websocket.Conn
 	logger  zerolog.Logger
-	connId  ConnectionId
 	onClose func()
 	closed  chan struct{}
 }
 
-func NewWebsocketConnection(conn *websocket.Conn, connId ConnectionId, logger zerolog.Logger, onClose func()) *WebsocketConnection {
+func NewWebsocketConnection(conn *websocket.Conn, logger zerolog.Logger, onClose func()) *WebsocketConnection {
 	return &WebsocketConnection{
 		conn:    conn,
 		logger:  logger,
-		connId:  connId,
 		onClose: onClose,
 		closed:  make(chan struct{}),
 	}
@@ -95,7 +99,7 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 					select {
 					case priceUpdateCh <- priceUpdate:
 					default:
-						if time.Since(lastDropLogTime) >= time.Second*10 {
+						if time.Since(lastDropLogTime) >= StalePriceThreshold {
 							logger.Error().Msg("dropped incoming price update - too many updates")
 							lastDropLogTime = time.Now()
 						}
@@ -346,9 +350,9 @@ func upgradeAndEnforceCompression(resp http.ResponseWriter, req *http.Request, e
 
 func GetWsUpgrader() websocket.Upgrader {
 	return websocket.Upgrader{
-		HandshakeTimeout:  time.Second * 10,
-		ReadBufferSize:    1048576,
-		WriteBufferSize:   1048576,
+		HandshakeTimeout:  HandshakeTimeout,
+		ReadBufferSize:    ReadBufferSize,
+		WriteBufferSize:   WriteBufferSize,
 		EnableCompression: true,
 		Error: func(resp http.ResponseWriter, req *http.Request, status int, reason error) {
 			http.Error(resp, fmt.Sprintf(`{"type":"handshake","error":"%s"}`, reason), status)

@@ -72,7 +72,7 @@ func (r *PublisherAgentRunner[T]) getPublisherKey() PublisherKey {
 }
 
 func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
-	r.logger.Info().Msg("Running broker connection updater")
+	r.logger.Debug().Msg("Running broker connection updater")
 
 	// query Stork Registry for brokers
 
@@ -104,7 +104,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 		}
 	}
 
-	r.logger.Info().Msg("Broker connection updater finished")
+	r.logger.Debug().Msg("Broker connection updater finished")
 }
 
 func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
@@ -153,7 +153,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 
 func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, auth AuthToken, subscriptionRequest string, reconnectDelay time.Duration) {
 	for {
-		r.logger.Info().Msgf("Connecting to pull-based WebSocket with url %s", url)
+		r.logger.Debug().Msgf("Connecting to pull-based WebSocket with url %s", url)
 
 		var headers http.Header
 		if len(auth) > 0 {
@@ -170,13 +170,13 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 		if err != nil {
 			r.logger.Error().Err(err).Msgf("Failed to read connection message from pull-based WebSocket: %v", err)
 		}
-		r.logger.Info().Msgf("Received connection message: %s", messageBytes)
+		r.logger.Debug().Msgf("Received connection message: %s", messageBytes)
 
 		if len(subscriptionRequest) > 0 {
-			r.logger.Info().Msgf("Sending subscription request: %s", subscriptionRequest)
+			r.logger.Debug().Msgf("Sending subscription request: %s", subscriptionRequest)
 			err = incomingWsConn.WriteMessage(websocket.TextMessage, []byte(subscriptionRequest))
 			_, subscriptionResponse, err := incomingWsConn.ReadMessage()
-			r.logger.Info().Msgf("Received subscription response: %s", subscriptionResponse)
+			r.logger.Debug().Msgf("Received subscription response: %s", subscriptionResponse)
 			if err != nil {
 				r.logger.Error().Err(err).Msg("Failed to send subscription request to pull-based WebSocket")
 				break
@@ -201,7 +201,7 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 				select {
 				case r.priceUpdateCh <- priceUpdate:
 				default:
-					if time.Since(lastDropLogTime) >= time.Second*10 {
+					if time.Since(lastDropLogTime) >= StalePriceThreshold {
 						r.logger.Error().Msg("dropped incoming price update - too many updates")
 						lastDropLogTime = time.Now()
 					}
@@ -216,7 +216,7 @@ func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, aut
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}, authToken AuthToken) {
 	for {
-		r.logger.Info().Msgf("Connecting to outgoing WebSocket with url %s", url)
+		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
 		var headers http.Header
 		if len(authToken) > 0 {
@@ -229,16 +229,13 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			break
 		}
 
-		connId := ConnectionId(uuid.New().String())
-
-		r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("adding subscriber websocket")
+		r.logger.Debug().Str("broker_url", string(url)).Msg("adding receiver websocket")
 
 		websocketConn := *NewWebsocketConnection(
 			conn,
-			connId,
 			r.logger,
 			func() {
-				r.logger.Info().Str("auth_token", string(authToken)).Str("conn_id", string(connId)).Msg("removing subscriber websocket")
+				r.logger.Info().Str("broker_url", string(url)).Msg("removing receiver websocket")
 				r.outgoingConnectionsLock.Lock()
 				delete(r.outgoingConnections, url)
 				r.outgoingConnectionsLock.Unlock()
@@ -274,11 +271,10 @@ func (r *PublisherAgentRunner[T]) HandleNewIncomingWsConnection(resp http.Respon
 
 	connId := ConnectionId(uuid.New().String())
 
-	r.logger.Info().Str("conn_id", string(connId)).Msg("adding publisher websocket")
+	r.logger.Debug().Str("conn_id", string(connId)).Msg("adding publisher websocket")
 
 	websocketConn := *NewWebsocketConnection(
 		conn,
-		connId,
 		r.logger,
 		func() {
 			r.logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")

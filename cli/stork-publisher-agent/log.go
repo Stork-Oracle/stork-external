@@ -1,19 +1,14 @@
 package stork_publisher_agent
 
 import (
+	"net/http"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"net/http"
 )
 
 func BaseAppLogger() zerolog.Logger {
-
-	return log.With().Str("application", "stork-publisher-agent").
-		Logger().
-		Hook(zerolog.HookFunc(func(e *zerolog.Event, l zerolog.Level, msg string) {
-			// for capture by cloudwatch log filter, should be in line with python logger levels
-			e.Int32("levelno", (int32(l)+1)*10)
-		}))
+	return log.With().Str("application", "stork-publisher-agent").Logger()
 }
 
 func MainLogger() zerolog.Logger {

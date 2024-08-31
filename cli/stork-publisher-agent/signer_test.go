@@ -1,6 +1,7 @@
 package stork_publisher_agent
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -36,7 +37,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Price:            72147.681412670819,
+		Value:            *big.NewFloat(72147.681412670819),
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*EvmSignature]{
 		OracleId: "faked",
@@ -92,7 +93,7 @@ func TestSigner_SignStark(t *testing.T) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Price:            3.33595034988,
+		Value:            *big.NewFloat(3.33595034988),
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*StarkSignature]{
 		OracleId: "czowx",
@@ -146,7 +147,7 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Price:            72147.681412670819,
+		Value:            *big.NewFloat(72147.681412670819),
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
@@ -182,7 +183,7 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Price:            3.33595034988,
+		Value:            *big.NewFloat(3.33595034988),
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)

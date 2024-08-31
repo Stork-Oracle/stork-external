@@ -1,11 +1,12 @@
 package stork_publisher_agent
 
 import (
-	"github.com/rs/zerolog"
 	"math"
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type DeltaTick struct{}
@@ -57,7 +58,8 @@ func NewPriceUpdateProcessor[T Signature](
 func (p *PriceUpdateProcessor[T]) DeltaUpdate() []PriceUpdateWithTrigger {
 	significantUpdates := make([]PriceUpdateWithTrigger, 0)
 	for asset, priceUpdate := range p.priceUpdates {
-		currentPrice := priceUpdate.Price
+		// float imprecision is ok for change threshold computation
+		currentPrice, _ := priceUpdate.Value.Float64()
 		lastReportedPrice, exists := p.lastReportedPrice[asset]
 		if exists {
 			if math.Abs((currentPrice-lastReportedPrice)/lastReportedPrice) > p.changeThresholdProportion {
@@ -119,7 +121,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 	}
 
 	numSignerThreads := runtime.NumCPU()
-	p.logger.Info().Msgf("Starting %v signer threads", numSignerThreads)
+	p.logger.Debug().Msgf("Starting %v signer threads", numSignerThreads)
 	// start a signing thread for each CPU core
 	for i := 0; i < numSignerThreads; i++ {
 		go func(updates chan PriceUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T], threadNum int) {
@@ -129,7 +131,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 				elapsed := time.Since(start).Microseconds()
 				atomic.AddInt32(&p.signQueueSize, -1)
 				ageMs := (time.Now().UnixNano() - update.PriceUpdate.PublishTimestamp) / 1_000_000
-				p.logger.Info().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, p.signQueueSize)
+				p.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, p.signQueueSize)
 			}
 		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)
 	}
@@ -175,7 +177,8 @@ func (p *PriceUpdateProcessor[T]) Run() {
 			for _, priceUpdate := range priceUpdates {
 				priceUpdatesToSignCh <- priceUpdate
 				atomic.AddInt32(&p.signQueueSize, 1)
-				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = priceUpdate.PriceUpdate.Price
+				lastReportedPrice, _ := priceUpdate.PriceUpdate.Value.Float64()
+				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = lastReportedPrice
 			}
 		}
 	}

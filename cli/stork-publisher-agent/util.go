@@ -1,18 +1,14 @@
 package stork_publisher_agent
 
 import (
-	"fmt"
 	"math/big"
 )
 
-func FloatToQuantizedPrice(f float64) QuantizedPrice {
-	// convert to string first to avoid rounding error
-	strValue := fmt.Sprintf("%.18f", f)
-	bigFloatValue, _, _ := big.ParseFloat(strValue, 10, 0, big.ToZero)
+func FloatToQuantizedPrice(f *big.Float) QuantizedPrice {
 	multiplier := new(big.Float).SetInt64(1e18)
-	bigFloatValue.Mul(bigFloatValue, multiplier)
+	f.Mul(f, multiplier)
 	result := new(big.Int)
-	bigFloatValue.Int(result)
+	f.Int(result)
 	return StringifyQuantizedPrice(result)
 }
 

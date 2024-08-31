@@ -1,5 +1,7 @@
 package stork_publisher_agent
 
+import "math/big"
+
 type MessageType string
 
 const WildcardSubscriptionAsset = "*"
@@ -37,9 +39,9 @@ const StarkSignatureType = SignatureType("stark")
 // Incoming
 
 type PriceUpdate struct {
-	PublishTimestamp int64   `json:"t"`
-	Asset            AssetId `json:"a"`
-	Price            float64 `json:"p"` // todo: consider making this a string
+	PublishTimestamp int64     `json:"t"`
+	Asset            AssetId   `json:"a"`
+	Value            big.Float `json:"v"`
 }
 
 // Intermediate
