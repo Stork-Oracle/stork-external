@@ -47,8 +47,8 @@ jobs:
 
       - name: Move Rust binary to Go project
         run: |
-          mv ./path_to_rust_project/target/x86_64-unknown-linux-gnu/release/storklib.so ./cli/
-          mv ./path_to_rust_project/target/aarch64-unknown-linux-gnu/release/storklib.so ./cli/
+          mv ./rust/stork/target/x86_64-unknown-linux-gnu/release/storklib.so ./cli/
+          mv ./rust/stork/target/aarch64-unknown-linux-gnu/release/storklib.so ./cli/
 
       - name: Run Go tests
         run: go test ./...
