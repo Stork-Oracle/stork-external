@@ -51,7 +51,7 @@ jobs:
           mv ./rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./cli/
 
       - name: Run Go tests
-        run: ls -l ./cli/ && go test ./stork-publisher-agent
+        run: ls -l . && go test ./stork-publisher-agent
         working-directory: ./cli/
         env:
-          LD_LIBRARY_PATH: ./cli/
+          LD_LIBRARY_PATH: .
