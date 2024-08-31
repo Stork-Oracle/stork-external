@@ -1,7 +1,6 @@
 package stork_publisher_agent
 
 import (
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -15,7 +14,7 @@ type PublisherAgentRunner[T Signature] struct {
 	config                  StorkPublisherAgentConfig
 	signatureType           SignatureType
 	logger                  zerolog.Logger
-	priceUpdateCh           chan PriceUpdate
+	PriceUpdateCh           chan PriceUpdate
 	signedPriceBatchCh      chan SignedPriceUpdateBatch[T]
 	registryClient          *RegistryClient
 	brokerMap               map[BrokerPublishUrl]map[AssetId]struct{}
@@ -45,7 +44,7 @@ func NewPublisherAgentRunner[T Signature](
 		config:                  config,
 		signatureType:           signatureType,
 		logger:                  logger,
-		priceUpdateCh:           make(chan PriceUpdate, 4096),
+		PriceUpdateCh:           make(chan PriceUpdate, 4096),
 		signedPriceBatchCh:      make(chan SignedPriceUpdateBatch[T], 4096),
 		registryClient:          registryClient,
 		brokerMap:               make(map[BrokerPublishUrl]map[AssetId]struct{}),
@@ -121,7 +120,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 		r.config.DeltaCheckPeriod,
 		r.config.ChangeThresholdProportion,
 		r.config.SignEveryUpdate,
-		r.priceUpdateCh,
+		r.PriceUpdateCh,
 		r.signedPriceBatchCh,
 		r.logger,
 	)
@@ -139,79 +138,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 
 	go r.RunBrokerConnectionUpdater()
 
-	if len(r.config.PullBasedWsUrl) > 0 {
-		go r.RunPullBasedIncomingConnection(
-			r.config.PullBasedWsUrl,
-			r.config.PullBasedAuth,
-			r.config.PullBasedWsSubscriptionRequest,
-			r.config.PullBasedWsReconnectDelay,
-		)
-	}
-
 	processor.Run()
-}
-
-func (r *PublisherAgentRunner[T]) RunPullBasedIncomingConnection(url string, auth AuthToken, subscriptionRequest string, reconnectDelay time.Duration) {
-	for {
-		r.logger.Debug().Msgf("Connecting to pull-based WebSocket with url %s", url)
-
-		var headers http.Header
-		if len(auth) > 0 {
-			headers = http.Header{"Authorization": []string{"Basic " + string(auth)}}
-		}
-
-		incomingWsConn, _, err := websocket.DefaultDialer.Dial(url, headers)
-		if err != nil {
-			r.logger.Error().Err(err).Msgf("Failed to connect to pull-based WebSocket: %v", err)
-			break
-		}
-
-		_, messageBytes, err := incomingWsConn.ReadMessage()
-		if err != nil {
-			r.logger.Error().Err(err).Msgf("Failed to read connection message from pull-based WebSocket: %v", err)
-		}
-		r.logger.Debug().Msgf("Received connection message: %s", messageBytes)
-
-		if len(subscriptionRequest) > 0 {
-			r.logger.Debug().Msgf("Sending subscription request: %s", subscriptionRequest)
-			err = incomingWsConn.WriteMessage(websocket.TextMessage, []byte(subscriptionRequest))
-			_, subscriptionResponse, err := incomingWsConn.ReadMessage()
-			r.logger.Debug().Msgf("Received subscription response: %s", subscriptionResponse)
-			if err != nil {
-				r.logger.Error().Err(err).Msg("Failed to send subscription request to pull-based WebSocket")
-				break
-			}
-		}
-
-		var lastDropLogTime time.Time
-
-		for {
-			_, messageBytes, err := incomingWsConn.ReadMessage()
-			if err != nil {
-				r.logger.Error().Err(err).Msg("Failed to read from pull-based WebSocket")
-				break
-			}
-			var message WebsocketMessage[[]PriceUpdate]
-			err = json.Unmarshal(messageBytes, &message)
-			if err != nil {
-				r.logger.Error().Err(err).Msgf("Failed to unmarshal message from pull-based WebSocket: %s", messageBytes)
-				break
-			}
-			for _, priceUpdate := range message.Data {
-				select {
-				case r.priceUpdateCh <- priceUpdate:
-				default:
-					if time.Since(lastDropLogTime) >= StalePriceThreshold {
-						r.logger.Error().Msg("dropped incoming price update - too many updates")
-						lastDropLogTime = time.Now()
-					}
-				}
-			}
-		}
-
-		r.logger.Info().Msgf("Waiting %s to reconnect to pull-based WebSocket", reconnectDelay)
-		time.Sleep(reconnectDelay)
-	}
 }
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}, authToken AuthToken) {
@@ -291,5 +218,5 @@ func (r *PublisherAgentRunner[T]) HandleNewIncomingWsConnection(resp http.Respon
 	r.incomingConnectionsLock.Unlock()
 
 	// kick off the reader thread for the publisher
-	go incomingWebsocketConn.Reader(r.priceUpdateCh)
+	go incomingWebsocketConn.Reader(r.PriceUpdateCh)
 }

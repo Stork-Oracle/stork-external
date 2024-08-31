@@ -169,6 +169,10 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		return errors.New("incoming ws port must be between 0 and 65535")
 	}
 
+	if incomingWsPort == 0 && len(pullBasedWsUrl) == 0 {
+		return errors.New("must specify an incoming ws url to pull from or a port to expose for our incoming ws")
+	}
+
 	pullBasedReconnectDuration, err := time.ParseDuration(pullBasedReconnectDelay)
 	if err != nil {
 		return fmt.Errorf("invalid pull-based websocket reconnect period: %s", pullBasedReconnectDuration)
@@ -203,19 +207,34 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		signEveryUpdate,
 	)
 
+	priceUpdateChannels := make([]chan storkpublisheragent.PriceUpdate, 0)
 	var evmRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.EvmSignature]
 	var starkRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.StarkSignature]
 	for _, signatureType := range config.SignatureTypes {
 		switch signatureType {
 		case storkpublisheragent.EvmSignatureType:
 			evmRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, storkpublisheragent.EvmSignatureType, mainLogger)
+			priceUpdateChannels = append(priceUpdateChannels, evmRunner.PriceUpdateCh)
 			go evmRunner.Run()
 		case storkpublisheragent.StarkSignatureType:
 			starkRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, storkpublisheragent.StarkSignatureType, mainLogger)
+			priceUpdateChannels = append(priceUpdateChannels, starkRunner.PriceUpdateCh)
 			go starkRunner.Run()
 		default:
 			return fmt.Errorf("invalid signature type: %s", signatureType)
 		}
+	}
+
+	if len(pullBasedWsUrl) > 0 {
+		incomingWsPuller := storkpublisheragent.IncomingWebsocketPuller{
+			Auth:                config.StorkAuth,
+			Url:                 pullBasedWsUrl,
+			SubscriptionRequest: pullBasedSubscriptionRequest,
+			ReconnectDelay:      pullBasedReconnectDuration,
+			PriceUpdateChannels: priceUpdateChannels,
+			Logger:              mainLogger,
+		}
+		go incomingWsPuller.Run()
 	}
 
 	if incomingWsPort > 0 {
