@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Install necessary targets
+        run: rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
+
+      - name: Build Rust binary
+        run: |
+          cargo build --release --target=x86_64-unknown-linux-gnu
+          cargo build --release --target=aarch64-unknown-linux-gnu
+        working-directory: ./rust/stork
+
+      - name: Move Rust binary to Go project
+        run: |
+          mv ./path_to_rust_project/target/x86_64-unknown-linux-gnu/release/storklib.so ./cli/
+          mv ./path_to_rust_project/target/aarch64-unknown-linux-gnu/release/storklib.so ./cli/
+
+      - name: Run Go tests
+        run: go test ./...
+        working-directory: ./cli/
