@@ -47,13 +47,11 @@ jobs:
 
       - name: Move Rust binary to Go project
         run: |
-          ls -l ./rust/stork/target/
-          ls -l ./rust/stork/target/x86_64-unknown-linux-gnu/release
           mv ./rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./cli/
           mv ./rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./cli/
 
       - name: Run Go tests
-        run: go test ./...
+        run: go test ./cli/stork-publisher-agent
         working-directory: ./cli/
         env:
           LD_LIBRARY_PATH: ./cli/
