@@ -53,7 +53,6 @@ jobs:
       - name: Run Go tests
         run: |
           ls -l
-          ldconfig -p | grep stork
           go test ./stork-publisher-agent
         working-directory: ./cli/
         env:
