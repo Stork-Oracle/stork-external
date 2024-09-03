@@ -10,14 +10,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@matterlabs/hardhat-zksync": "^1.1.0",
+    "@matterlabs/hardhat-zksync-upgradable": "^1.5.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@openzeppelin/hardhat-upgrades": "^3.2.0",
-    "ethers": "^6.13.1",
+    "ethers": "^6.13.2",
     "hardhat": "^2.22.9"
   },
   "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "zksync-ethers": "^6.12.0"
   }
 }

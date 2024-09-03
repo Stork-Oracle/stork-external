@@ -2,6 +2,8 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
 require("@openzeppelin/hardhat-upgrades");
+import "@matterlabs/hardhat-zksync";
+import "@matterlabs/hardhat-zksync-upgradable";
 
 import './tasks/deploy';
 import './tasks/upgrade';
@@ -89,6 +91,13 @@ const config: HardhatUserConfig = {
       url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
       accounts: [PRIVATE_KEY],
       chainId: 31,
+    },
+    sophonTestnet: {
+      url: "https://rpc.testnet.sophon.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 531050104,
+      zksync: true,
+      ethNetwork: "sepolia"
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
