@@ -30,6 +30,7 @@ func (p *IncomingWebsocketPuller) Run() {
 		incomingWsConn, _, err := websocket.DefaultDialer.Dial(p.Url, headers)
 		if err != nil {
 			p.Logger.Error().Err(err).Msgf("Failed to connect to pull-based WebSocket: %v", err)
+			p.Logger.Error().Msgf("url: %s auth: %s", p.Url, p.Auth)
 			break
 		}
 

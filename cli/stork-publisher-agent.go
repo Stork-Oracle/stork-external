@@ -213,11 +213,13 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	for _, signatureType := range config.SignatureTypes {
 		switch signatureType {
 		case storkpublisheragent.EvmSignatureType:
-			evmRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, storkpublisheragent.EvmSignatureType, mainLogger)
+			mainLogger.Info().Msg("Starting EVM runner")
+			evmRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, signatureType, storkpublisheragent.RunnerLogger(signatureType))
 			priceUpdateChannels = append(priceUpdateChannels, evmRunner.PriceUpdateCh)
 			go evmRunner.Run()
 		case storkpublisheragent.StarkSignatureType:
-			starkRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, storkpublisheragent.StarkSignatureType, mainLogger)
+			mainLogger.Info().Msg("Starting Stark runner")
+			starkRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, signatureType, storkpublisheragent.RunnerLogger(signatureType))
 			priceUpdateChannels = append(priceUpdateChannels, starkRunner.PriceUpdateCh)
 			go starkRunner.Run()
 		default:
@@ -227,7 +229,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 
 	if len(pullBasedWsUrl) > 0 {
 		incomingWsPuller := storkpublisheragent.IncomingWebsocketPuller{
-			Auth:                config.StorkAuth,
+			Auth:                config.PullBasedAuth,
 			Url:                 pullBasedWsUrl,
 			SubscriptionRequest: pullBasedSubscriptionRequest,
 			ReconnectDelay:      pullBasedReconnectDuration,

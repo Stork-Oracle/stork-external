@@ -15,6 +15,10 @@ func MainLogger() zerolog.Logger {
 	return BaseAppLogger().With().Str("service", "main").Logger()
 }
 
+func RunnerLogger(signatureType SignatureType) zerolog.Logger {
+	return BaseAppLogger().With().Str("service", "runner").Str("signature_type", string(signatureType)).Logger()
+}
+
 type HttpHeaders http.Header
 
 func (hdrs HttpHeaders) MarshalZerologObject(e *zerolog.Event) {
