@@ -34,10 +34,11 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
+	value, _ := new(big.Float).SetString("72147.681412670819")
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Value:            *big.NewFloat(72147.681412670819),
+		Value:            *value,
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*EvmSignature]{
 		OracleId: "faked",
@@ -90,10 +91,14 @@ func TestSigner_SignStark(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
+	value, success := new(big.Float).SetString("3.33595034988")
+	if !success {
+		t.Fatalf("failed to parse float value")
+	}
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Value:            *big.NewFloat(3.33595034988),
+		Value:            *value,
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*StarkSignature]{
 		OracleId: "czowx",
@@ -144,10 +149,14 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 	if err != nil {
 		b.Fatalf("error creating signer: %v", err)
 	}
+	value, success := new(big.Float).SetString("72147.681412670819")
+	if !success {
+		b.Fatalf("failed to parse float value")
+	}
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Value:            *big.NewFloat(72147.681412670819),
+		Value:            *value,
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
@@ -180,10 +189,11 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 	if err != nil {
 		b.Fatalf("error creating signer: %v", err)
 	}
+	value, _ := new(big.Float).SetString("3.33595034988")
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Value:            *big.NewFloat(3.33595034988),
+		Value:            *value,
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
