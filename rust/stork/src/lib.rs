@@ -16,12 +16,12 @@ fn write_field_element_to_buffer(field_element: FieldElement, buf_ptr: *mut u8) 
 
 #[no_mangle]
 pub extern "C" fn hash_and_sign(x_ptr: *const u8, y_ptr: *const u8, pk_ptr: *const u8, pedersen_hash_ptr: *mut u8, sig_r_ptr: *mut u8, sig_s_ptr: *mut u8) -> i32 {
-        let x_fe = bytes_to_field_element(x_ptr).unwrap_or_else(|e| {panic!("Failed to convert x byte buffer to field element")});
-        let y_fe = bytes_to_field_element(y_ptr).unwrap_or_else(|e| {panic!("Failed to convert y byte buffer to field element")});
-        let pk_fe = bytes_to_field_element(pk_ptr).unwrap_or_else(|e| {panic!("Failed to convert pk byte buffer to field element")});
+        let x_fe = bytes_to_field_element(x_ptr).unwrap_or_else(|_e| {panic!("Failed to convert x byte buffer to field element")});
+        let y_fe = bytes_to_field_element(y_ptr).unwrap_or_else(|_e| {panic!("Failed to convert y byte buffer to field element")});
+        let pk_fe = bytes_to_field_element(pk_ptr).unwrap_or_else(|_e| {panic!("Failed to convert pk byte buffer to field element")});
 
         let hashed = pedersen_hash(&x_fe, &y_fe);
-        let signature = starknet_core::crypto::ecdsa_sign(&pk_fe, &hashed).unwrap_or_else(|e| {panic!("Failed to sign pedersen hash")});
+        let signature = starknet_core::crypto::ecdsa_sign(&pk_fe, &hashed).unwrap_or_else(|_e| {panic!("Failed to sign pedersen hash")});
 
         write_field_element_to_buffer(hashed, pedersen_hash_ptr);
         write_field_element_to_buffer(signature.r, sig_r_ptr);
