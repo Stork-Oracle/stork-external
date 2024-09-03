@@ -45,14 +45,17 @@ jobs:
           cargo build --release --target=aarch64-unknown-linux-gnu
         working-directory: ./rust/stork
 
-      - name: Move Rust binary to Go project
+      - name: Run Go tests for amd64 architecture
         run: |
           mv ./rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./cli/
-          mv ./rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./cli/
+          go test ./stork-publisher-agent
+        working-directory: ./cli/
+        env:
+          LD_LIBRARY_PATH: .
 
-      - name: Run Go tests
+      - name: Run Go tests for arm64 architecture
         run: |
-          ls -l
+          mv ./rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./cli/
           go test ./stork-publisher-agent
         working-directory: ./cli/
         env:
