@@ -19,3 +19,7 @@ ignition/deployments/chain-31337
 # OpenZeppelin
 .openzeppelin/dev-*.json
 .openzeppelin/.session
+
+# zksync artifacts
+artifacts-zk
+cache-zk
