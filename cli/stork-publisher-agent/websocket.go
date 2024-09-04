@@ -72,7 +72,29 @@ func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Log
 	}
 }
 
-func (iwc *IncomingWebsocketConnection) Reader(priceUpdateChannels []chan PriceUpdate) {
+func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*ValueUpdate, error) {
+	var value *big.Float
+	if len(valueUpdatePushWebsocket.ValueString) > 0 {
+		var success bool
+		value, success = new(big.Float).SetString(valueUpdatePushWebsocket.ValueString)
+		if !success {
+			return nil, errors.New("failed to convert string to float")
+		}
+	} else if valueUpdatePushWebsocket.ValueFloat > 0 {
+		value = new(big.Float).SetFloat64(valueUpdatePushWebsocket.ValueFloat)
+	} else {
+		return nil, errors.New("must set ValueString or ValueFloat (with a positive value)")
+	}
+
+	valueUpdate := ValueUpdate{
+		PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
+		Asset:            valueUpdatePushWebsocket.Asset,
+		Value:            value,
+	}
+	return &valueUpdate, nil
+}
+
+func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueUpdate) {
 	logger := iwc.logger.With().Str("op", "reader").Logger()
 
 	var lastDropLogTime time.Time
@@ -87,8 +109,8 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateChannels []chan PriceU
 
 	err := readLoop(iwc.conn, nil, logger, func(wsMsgReader io.Reader) error {
 		// parse the message
-		var priceUpdateMsg WebsocketMessage[[]PriceUpdatePushWebsocket]
-		err := json.NewDecoder(wsMsgReader).Decode(&priceUpdateMsg)
+		var valueUpdateMsg WebsocketMessage[[]ValueUpdatePushWebsocket]
+		err := json.NewDecoder(wsMsgReader).Decode(&valueUpdateMsg)
 		if err != nil {
 			iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
 			err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger)
@@ -96,17 +118,20 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateChannels []chan PriceU
 				iwc.logger.Error().Err(err).Msgf("Failed to send error message")
 			}
 		} else {
-			if priceUpdateMsg.Type == "prices" {
-				for _, priceUpdatePushWs := range priceUpdateMsg.Data {
-					value, _ := new(big.Float).SetString(priceUpdatePushWs.Value)
-					priceUpdate := PriceUpdate{
-						PublishTimestamp: priceUpdatePushWs.PublishTimestamp,
-						Asset:            priceUpdatePushWs.Asset,
-						Value:            value,
+			if valueUpdateMsg.Type == "prices" {
+				for _, valueUpdatePushWs := range valueUpdateMsg.Data {
+					valueUpdate, err := convertToValueUpdate(valueUpdatePushWs)
+					if err != nil {
+						iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
+						err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger)
+						if err != nil {
+							iwc.logger.Error().Err(err).Msgf("Failed to send error message")
+						}
+						break
 					}
-					for _, priceUpdateCh := range priceUpdateChannels {
+					for _, valueUpdateCh := range valueUpdateChannels {
 						select {
-						case priceUpdateCh <- priceUpdate:
+						case valueUpdateCh <- *valueUpdate:
 						default:
 							if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
 								logger.Error().Msg("dropped incoming price update - too many updates")
@@ -370,7 +395,7 @@ func getWsUpgrader() websocket.Upgrader {
 	}
 }
 
-func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, priceUpdateChannels []chan PriceUpdate) {
+func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, valueUpdateChannels []chan ValueUpdate) {
 	conn, err := upgradeAndEnforceCompression(resp, req, false, getWsUpgrader(), logger, "")
 	if err != nil {
 		// debug log because err could be rate limit violation
@@ -392,5 +417,5 @@ func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, 
 	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger)
 
 	// kick off the reader thread for the publisher
-	go incomingWebsocketConn.Reader(priceUpdateChannels)
+	go incomingWebsocketConn.Reader(valueUpdateChannels)
 }

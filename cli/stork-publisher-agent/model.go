@@ -43,10 +43,11 @@ type PriceUpdatePullWebsocket struct {
 	Price            float64 `json:"p"`
 }
 
-type PriceUpdatePushWebsocket struct {
+type ValueUpdatePushWebsocket struct {
 	PublishTimestamp int64   `json:"t"`
 	Asset            AssetId `json:"a"`
-	Value            string  `json:"v"`
+	ValueString      string  `json:"vs"`
+	ValueFloat       float64 `json:"vf"`
 }
 
 // Intermediate
@@ -54,15 +55,16 @@ type TriggerType string
 
 const ClockTriggerType = TriggerType("clock")
 const DeltaTriggerType = TriggerType("delta")
+const UnspecifiedTriggerType = TriggerType("unspecified")
 
-type PriceUpdate struct {
+type ValueUpdate struct {
 	PublishTimestamp int64
 	Asset            AssetId
 	Value            *big.Float
 }
 
-type PriceUpdateWithTrigger struct {
-	PriceUpdate PriceUpdate
+type ValueUpdateWithTrigger struct {
+	ValueUpdate ValueUpdate
 	TriggerType TriggerType
 }
 

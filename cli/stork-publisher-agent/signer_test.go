@@ -35,7 +35,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 		t.Fatalf("error creating signer: %v", err)
 	}
 	value, _ := new(big.Float).SetString("72147.681412670819")
-	priceUpdate := PriceUpdate{
+	valueUpdate := ValueUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
 		Value:            value,
@@ -60,7 +60,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 			},
 		},
 	}
-	signedPriceUpdate := signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
+	signedPriceUpdate := signer.GetSignedPriceUpdate(valueUpdate, ClockTriggerType)
 
 	assert.Equal(t, expectedSignedPriceUpdate, signedPriceUpdate)
 }
@@ -95,7 +95,7 @@ func TestSigner_SignStark(t *testing.T) {
 	if !success {
 		t.Fatalf("failed to parse float value")
 	}
-	priceUpdate := PriceUpdate{
+	valueUpdate := ValueUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
 		Value:            value,
@@ -120,7 +120,7 @@ func TestSigner_SignStark(t *testing.T) {
 		},
 	}
 
-	signedPriceUpdate := signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
+	signedPriceUpdate := signer.GetSignedPriceUpdate(valueUpdate, ClockTriggerType)
 	assert.Equal(t, expectedSignedPriceUpdate, signedPriceUpdate)
 }
 
@@ -153,13 +153,13 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 	if !success {
 		b.Fatalf("failed to parse float value")
 	}
-	priceUpdate := PriceUpdate{
+	valueUpdate := ValueUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
 		Value:            value,
 	}
 	for i := 0; i < b.N; i++ {
-		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
+		signer.GetSignedPriceUpdate(valueUpdate, ClockTriggerType)
 	}
 }
 
@@ -190,12 +190,12 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 		b.Fatalf("error creating signer: %v", err)
 	}
 	value, _ := new(big.Float).SetString("3.33595034988")
-	priceUpdate := PriceUpdate{
+	valueUpdate := ValueUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
 		Value:            value,
 	}
 	for i := 0; i < b.N; i++ {
-		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
+		signer.GetSignedPriceUpdate(valueUpdate, ClockTriggerType)
 	}
 }

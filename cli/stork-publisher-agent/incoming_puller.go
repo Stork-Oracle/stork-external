@@ -15,7 +15,7 @@ type IncomingWebsocketPuller struct {
 	Url                 string
 	SubscriptionRequest string
 	ReconnectDelay      time.Duration
-	PriceUpdateChannels []chan PriceUpdate
+	ValueUpdateChannels []chan ValueUpdate
 	Logger              zerolog.Logger
 }
 
@@ -67,14 +67,14 @@ func (p *IncomingWebsocketPuller) Run() {
 				break
 			}
 			for _, priceUpdatePullWebsocket := range message.Data {
-				priceUpdate := PriceUpdate{
+				valueUpdate := ValueUpdate{
 					PublishTimestamp: priceUpdatePullWebsocket.PublishTimestamp,
 					Asset:            priceUpdatePullWebsocket.Asset,
 					Value:            new(big.Float).SetFloat64(priceUpdatePullWebsocket.Price),
 				}
-				for _, priceUpdateCh := range p.PriceUpdateChannels {
+				for _, valueUpdateCh := range p.ValueUpdateChannels {
 					select {
-					case priceUpdateCh <- priceUpdate:
+					case valueUpdateCh <- valueUpdate:
 					default:
 						if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
 							p.Logger.Error().Msg("dropped incoming price update - too many updates")

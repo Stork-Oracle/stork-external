@@ -77,29 +77,29 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig, signatureType Sign
 	}
 }
 
-func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType TriggerType) SignedPriceUpdate[T] {
-	quantizedPrice := FloatToQuantizedPrice(priceUpdate.Value)
+func (s *Signer[T]) GetSignedPriceUpdate(valueUpdate ValueUpdate, triggerType TriggerType) SignedPriceUpdate[T] {
+	quantizedPrice := FloatToQuantizedPrice(valueUpdate.Value)
 	var timestampedSignature TimestampedSignature[T]
 	var publisherKey PublisherKey
 	var externalAssetId string
 	switch s.signatureType {
 	case EvmSignatureType:
-		timestampedSignatureRef, err := s.SignEvm(priceUpdate.Asset, quantizedPrice, priceUpdate.PublishTimestamp)
+		timestampedSignatureRef, err := s.SignEvm(valueUpdate.Asset, quantizedPrice, valueUpdate.PublishTimestamp)
 		if err != nil {
 			panic(err)
 		}
 		timestampedSignature = *timestampedSignatureRef
 		publisherKey = PublisherKey(s.evmPublicAddress.Hex())
-		externalAssetId = string(priceUpdate.Asset)
+		externalAssetId = string(valueUpdate.Asset)
 	case StarkSignatureType:
 		// Convert asset to hex string
-		assetHex := hex.EncodeToString([]byte(priceUpdate.Asset))
+		assetHex := hex.EncodeToString([]byte(valueUpdate.Asset))
 		paddedAssetHex := assetHex
 		if len(assetHex) < 34 {
 			paddedAssetHex = "0x" + assetHex + strings.Repeat("0", 32-len(assetHex))
 		}
 
-		timestampedSignatureRef, err := s.SignStark(paddedAssetHex, quantizedPrice, priceUpdate.PublishTimestamp)
+		timestampedSignatureRef, err := s.SignStark(paddedAssetHex, quantizedPrice, valueUpdate.PublishTimestamp)
 		if err != nil {
 			panic(err)
 		}
@@ -112,7 +112,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType Tr
 
 	signedPriceUpdate := SignedPriceUpdate[T]{
 		OracleId: s.config.OracleId,
-		AssetId:  priceUpdate.Asset,
+		AssetId:  valueUpdate.Asset,
 		Trigger:  triggerType,
 		SignedPrice: SignedPrice[T]{
 			PublisherKey:         publisherKey,

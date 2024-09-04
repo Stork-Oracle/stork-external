@@ -13,7 +13,7 @@ type PublisherAgentRunner[T Signature] struct {
 	config                  StorkPublisherAgentConfig
 	signatureType           SignatureType
 	logger                  zerolog.Logger
-	PriceUpdateCh           chan PriceUpdate
+	ValueUpdateCh           chan ValueUpdate
 	signedPriceBatchCh      chan SignedPriceUpdateBatch[T]
 	registryClient          *RegistryClient
 	brokerMap               map[BrokerPublishUrl]map[AssetId]struct{}
@@ -40,7 +40,7 @@ func NewPublisherAgentRunner[T Signature](
 		config:                  config,
 		signatureType:           signatureType,
 		logger:                  logger,
-		PriceUpdateCh:           make(chan PriceUpdate, 4096),
+		ValueUpdateCh:           make(chan ValueUpdate, 4096),
 		signedPriceBatchCh:      make(chan SignedPriceUpdateBatch[T], 4096),
 		registryClient:          registryClient,
 		brokerMap:               make(map[BrokerPublishUrl]map[AssetId]struct{}),
@@ -114,7 +114,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 		r.config.DeltaCheckPeriod,
 		r.config.ChangeThresholdProportion,
 		r.config.SignEveryUpdate,
-		r.PriceUpdateCh,
+		r.ValueUpdateCh,
 		r.signedPriceBatchCh,
 		r.logger,
 	)

@@ -207,7 +207,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		signEveryUpdate,
 	)
 
-	priceUpdateChannels := make([]chan storkpublisheragent.PriceUpdate, 0)
+	valueUpdateChannels := make([]chan storkpublisheragent.ValueUpdate, 0)
 	var evmRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.EvmSignature]
 	var starkRunner *storkpublisheragent.PublisherAgentRunner[*storkpublisheragent.StarkSignature]
 	for _, signatureType := range config.SignatureTypes {
@@ -215,12 +215,12 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		case storkpublisheragent.EvmSignatureType:
 			mainLogger.Info().Msg("Starting EVM runner")
 			evmRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.EvmSignature](*config, signatureType, storkpublisheragent.RunnerLogger(signatureType))
-			priceUpdateChannels = append(priceUpdateChannels, evmRunner.PriceUpdateCh)
+			valueUpdateChannels = append(valueUpdateChannels, evmRunner.ValueUpdateCh)
 			go evmRunner.Run()
 		case storkpublisheragent.StarkSignatureType:
 			mainLogger.Info().Msg("Starting Stark runner")
 			starkRunner = storkpublisheragent.NewPublisherAgentRunner[*storkpublisheragent.StarkSignature](*config, signatureType, storkpublisheragent.RunnerLogger(signatureType))
-			priceUpdateChannels = append(priceUpdateChannels, starkRunner.PriceUpdateCh)
+			valueUpdateChannels = append(valueUpdateChannels, starkRunner.ValueUpdateCh)
 			go starkRunner.Run()
 		default:
 			return fmt.Errorf("invalid signature type: %s", signatureType)
@@ -233,7 +233,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			Url:                 pullBasedWsUrl,
 			SubscriptionRequest: pullBasedSubscriptionRequest,
 			ReconnectDelay:      pullBasedReconnectDuration,
-			PriceUpdateChannels: priceUpdateChannels,
+			ValueUpdateChannels: valueUpdateChannels,
 			Logger:              storkpublisheragent.IncomingLogger(),
 		}
 		go incomingWsPuller.Run()
@@ -245,7 +245,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 				resp,
 				req,
 				storkpublisheragent.IncomingLogger(),
-				priceUpdateChannels,
+				valueUpdateChannels,
 			)
 		})
 		mainLogger.Info().Msgf("starting incoming http server on port %d", incomingWsPort)

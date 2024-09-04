@@ -15,12 +15,12 @@ type ClockTick struct{}
 
 const SignedMessageBatchPeriod = 1 * time.Millisecond
 
-type PriceUpdateProcessor[T Signature] struct {
-	priceUpdateCh             chan PriceUpdate
+type ValueUpdateProcessor[T Signature] struct {
+	valueUpdateCh             chan ValueUpdate
 	signedPriceUpdateBatchCh  chan SignedPriceUpdateBatch[T]
 	signer                    Signer[T]
 	numRunners                int
-	priceUpdates              map[AssetId]PriceUpdate
+	valueUpdates              map[AssetId]ValueUpdate
 	lastReportedPrice         map[AssetId]float64
 	clockPeriod               time.Duration
 	deltaCheckPeriod          time.Duration
@@ -39,16 +39,16 @@ func NewPriceUpdateProcessor[T Signature](
 	deltaCheckPeriod time.Duration,
 	changeThresholdProportion float64,
 	signEveryUpdate bool,
-	priceUpdateCh chan PriceUpdate,
+	valueUpdateCh chan ValueUpdate,
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T],
 	logger zerolog.Logger,
-) *PriceUpdateProcessor[T] {
-	return &PriceUpdateProcessor[T]{
-		priceUpdateCh:             priceUpdateCh,
+) *ValueUpdateProcessor[T] {
+	return &ValueUpdateProcessor[T]{
+		valueUpdateCh:             valueUpdateCh,
 		signedPriceUpdateBatchCh:  signedPriceUpdateBatchCh,
 		signer:                    signer,
 		numRunners:                numRunners,
-		priceUpdates:              make(map[AssetId]PriceUpdate),
+		valueUpdates:              make(map[AssetId]ValueUpdate),
 		lastReportedPrice:         make(map[AssetId]float64),
 		clockPeriod:               clockPeriod,
 		deltaCheckPeriod:          deltaCheckPeriod,
@@ -58,18 +58,18 @@ func NewPriceUpdateProcessor[T Signature](
 	}
 }
 
-func (p *PriceUpdateProcessor[T]) DeltaUpdate() []PriceUpdateWithTrigger {
-	significantUpdates := make([]PriceUpdateWithTrigger, 0)
-	for asset, priceUpdate := range p.priceUpdates {
+func (vup *ValueUpdateProcessor[T]) DeltaUpdate() []ValueUpdateWithTrigger {
+	significantUpdates := make([]ValueUpdateWithTrigger, 0)
+	for asset, valueUpdate := range vup.valueUpdates {
 		// float imprecision is ok for change threshold computation
-		currentPrice, _ := priceUpdate.Value.Float64()
-		lastReportedPrice, exists := p.lastReportedPrice[asset]
+		currentValue, _ := valueUpdate.Value.Float64()
+		lastReportedValue, exists := vup.lastReportedPrice[asset]
 		if exists {
-			if math.Abs((currentPrice-lastReportedPrice)/lastReportedPrice) > p.changeThresholdProportion {
+			if math.Abs((currentValue-lastReportedValue)/lastReportedValue) > vup.changeThresholdProportion {
 				significantUpdates = append(
 					significantUpdates,
-					PriceUpdateWithTrigger{
-						PriceUpdate: priceUpdate,
+					ValueUpdateWithTrigger{
+						ValueUpdate: valueUpdate,
 						TriggerType: DeltaTriggerType,
 					},
 				)
@@ -79,14 +79,14 @@ func (p *PriceUpdateProcessor[T]) DeltaUpdate() []PriceUpdateWithTrigger {
 	return significantUpdates
 }
 
-func (p *PriceUpdateProcessor[T]) ClockUpdate() []PriceUpdateWithTrigger {
-	updates := make([]PriceUpdateWithTrigger, 0)
+func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
+	updates := make([]ValueUpdateWithTrigger, 0)
 
-	for _, priceUpdate := range p.priceUpdates {
+	for _, valueUpdate := range vup.valueUpdates {
 		updates = append(
 			updates,
-			PriceUpdateWithTrigger{
-				PriceUpdate: priceUpdate,
+			ValueUpdateWithTrigger{
+				ValueUpdate: valueUpdate,
 				TriggerType: ClockTriggerType,
 			},
 		)
@@ -95,46 +95,46 @@ func (p *PriceUpdateProcessor[T]) ClockUpdate() []PriceUpdateWithTrigger {
 	return updates
 }
 
-func (p *PriceUpdateProcessor[T]) Run() {
+func (vup *ValueUpdateProcessor[T]) Run() {
 	queue := make(chan any, 4096)
-	priceUpdatesToSignCh := make(chan PriceUpdateWithTrigger, 4096)
+	priceUpdatesToSignCh := make(chan ValueUpdateWithTrigger, 4096)
 	signedPriceUpdateCh := make(chan SignedPriceUpdate[T], 4096)
 
 	// update price map thread
 	go func(q chan any) {
-		for priceUpdate := range p.priceUpdateCh {
-			q <- priceUpdate
+		for valueUpdate := range vup.valueUpdateCh {
+			q <- valueUpdate
 		}
 	}(queue)
 
-	if !p.signEveryUpdate {
+	if !vup.signEveryUpdate {
 		// clock thread
 		go func(q chan any) {
-			for range time.Tick(p.clockPeriod) {
+			for range time.Tick(vup.clockPeriod) {
 				q <- ClockTick{}
 			}
 		}(queue)
 
 		// delta check thread
 		go func(q chan any) {
-			for range time.Tick(p.deltaCheckPeriod) {
+			for range time.Tick(vup.deltaCheckPeriod) {
 				q <- DeltaTick{}
 			}
 		}(queue)
 	}
 
-	numSignerThreads := runtime.NumCPU() / p.numRunners
-	p.logger.Debug().Msgf("Starting %v signer threads", numSignerThreads)
+	numSignerThreads := runtime.NumCPU() / vup.numRunners
+	vup.logger.Debug().Msgf("Starting %v signer threads", numSignerThreads)
 	// start a signing thread for each CPU core
 	for i := 0; i < numSignerThreads; i++ {
-		go func(updates chan PriceUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T], threadNum int) {
+		go func(updates chan ValueUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T], threadNum int) {
 			for update := range updates {
 				start := time.Now()
-				signedUpdates <- p.signer.GetSignedPriceUpdate(update.PriceUpdate, update.TriggerType)
+				signedUpdates <- vup.signer.GetSignedPriceUpdate(update.ValueUpdate, update.TriggerType)
 				elapsed := time.Since(start).Microseconds()
-				atomic.AddInt32(&p.signQueueSize, -1)
-				ageMs := (time.Now().UnixNano() - update.PriceUpdate.PublishTimestamp) / 1_000_000
-				p.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, p.signQueueSize)
+				atomic.AddInt32(&vup.signQueueSize, -1)
+				ageMs := (time.Now().UnixNano() - update.ValueUpdate.PublishTimestamp) / 1_000_000
+				vup.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, vup.signQueueSize)
 			}
 		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)
 	}
@@ -152,7 +152,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 			case <-ticker.C:
 				{
 					if len(signedPriceUpdateBatch) > 0 {
-						p.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
+						vup.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
 						signedPriceUpdateBatch = make(SignedPriceUpdateBatch[T])
 					}
 				}
@@ -161,27 +161,27 @@ func (p *PriceUpdateProcessor[T]) Run() {
 	}(signedPriceUpdateCh)
 
 	for val := range queue {
-		var priceUpdates []PriceUpdateWithTrigger
+		var valueUpdates []ValueUpdateWithTrigger
 		switch msg := val.(type) {
 		case DeltaTick:
-			priceUpdates = p.DeltaUpdate()
+			valueUpdates = vup.DeltaUpdate()
 		case ClockTick:
-			priceUpdates = p.ClockUpdate()
-		case PriceUpdate:
-			if p.signEveryUpdate {
-				priceUpdatesToSignCh <- PriceUpdateWithTrigger{PriceUpdate: msg, TriggerType: DeltaTriggerType}
-				atomic.AddInt32(&p.signQueueSize, 1)
+			valueUpdates = vup.ClockUpdate()
+		case ValueUpdate:
+			if vup.signEveryUpdate {
+				priceUpdatesToSignCh <- ValueUpdateWithTrigger{ValueUpdate: msg, TriggerType: UnspecifiedTriggerType}
+				atomic.AddInt32(&vup.signQueueSize, 1)
 			} else {
-				p.priceUpdates[msg.Asset] = msg
+				vup.valueUpdates[msg.Asset] = msg
 			}
 		}
 
-		if len(priceUpdates) > 0 {
-			for _, priceUpdate := range priceUpdates {
+		if len(valueUpdates) > 0 {
+			for _, priceUpdate := range valueUpdates {
 				priceUpdatesToSignCh <- priceUpdate
-				atomic.AddInt32(&p.signQueueSize, 1)
-				lastReportedPrice, _ := priceUpdate.PriceUpdate.Value.Float64()
-				p.lastReportedPrice[priceUpdate.PriceUpdate.Asset] = lastReportedPrice
+				atomic.AddInt32(&vup.signQueueSize, 1)
+				lastReportedPrice, _ := priceUpdate.ValueUpdate.Value.Float64()
+				vup.lastReportedPrice[priceUpdate.ValueUpdate.Asset] = lastReportedPrice
 			}
 		}
 	}
