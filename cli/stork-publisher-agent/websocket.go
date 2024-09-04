@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
@@ -71,7 +72,7 @@ func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Log
 	}
 }
 
-func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
+func (iwc *IncomingWebsocketConnection) Reader(priceUpdateChannels []chan PriceUpdate) {
 	logger := iwc.logger.With().Str("op", "reader").Logger()
 
 	var lastDropLogTime time.Time
@@ -103,12 +104,14 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 						Asset:            priceUpdatePushWs.Asset,
 						Value:            value,
 					}
-					select {
-					case priceUpdateCh <- priceUpdate:
-					default:
-						if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
-							logger.Error().Msg("dropped incoming price update - too many updates")
-							lastDropLogTime = time.Now()
+					for _, priceUpdateCh := range priceUpdateChannels {
+						select {
+						case priceUpdateCh <- priceUpdate:
+						default:
+							if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
+								logger.Error().Msg("dropped incoming price update - too many updates")
+								lastDropLogTime = time.Now()
+							}
 						}
 					}
 				}
@@ -355,7 +358,7 @@ func upgradeAndEnforceCompression(resp http.ResponseWriter, req *http.Request, e
 	}
 }
 
-func GetWsUpgrader() websocket.Upgrader {
+func getWsUpgrader() websocket.Upgrader {
 	return websocket.Upgrader{
 		HandshakeTimeout:  HandshakeTimeout,
 		ReadBufferSize:    ReadBufferSize,
@@ -365,4 +368,29 @@ func GetWsUpgrader() websocket.Upgrader {
 			http.Error(resp, fmt.Sprintf(`{"type":"handshake","error":"%s"}`, reason), status)
 		},
 	}
+}
+
+func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, priceUpdateChannels []chan PriceUpdate) {
+	conn, err := upgradeAndEnforceCompression(resp, req, false, getWsUpgrader(), logger, "")
+	if err != nil {
+		// debug log because err could be rate limit violation
+		logger.Debug().Err(err).Object("request_headers", HttpHeaders(req.Header)).Msg("failed to complete publisher websocket handshake")
+		return
+	}
+
+	connId := ConnectionId(uuid.New().String())
+
+	logger.Debug().Str("conn_id", string(connId)).Msg("adding publisher websocket")
+
+	websocketConn := *NewWebsocketConnection(
+		conn,
+		logger,
+		func() {
+			logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
+		},
+	)
+	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger)
+
+	// kick off the reader thread for the publisher
+	go incomingWebsocketConn.Reader(priceUpdateChannels)
 }

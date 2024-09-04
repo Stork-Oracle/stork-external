@@ -234,21 +234,20 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			SubscriptionRequest: pullBasedSubscriptionRequest,
 			ReconnectDelay:      pullBasedReconnectDuration,
 			PriceUpdateChannels: priceUpdateChannels,
-			Logger:              mainLogger,
+			Logger:              storkpublisheragent.IncomingLogger(),
 		}
 		go incomingWsPuller.Run()
 	}
 
 	if incomingWsPort > 0 {
-		newIncomingWsHandler := func(resp http.ResponseWriter, req *http.Request) {
-			if evmRunner != nil {
-				evmRunner.HandleNewIncomingWsConnection(resp, req)
-			}
-			if starkRunner != nil {
-				starkRunner.HandleNewIncomingWsConnection(resp, req)
-			}
-		}
-		http.HandleFunc("/publish", newIncomingWsHandler)
+		http.HandleFunc("/publish", func(resp http.ResponseWriter, req *http.Request) {
+			storkpublisheragent.HandleNewIncomingWsConnection(
+				resp,
+				req,
+				storkpublisheragent.IncomingLogger(),
+				priceUpdateChannels,
+			)
+		})
 		mainLogger.Info().Msgf("starting incoming http server on port %d", incomingWsPort)
 		err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", incomingWsPort), nil)
 		mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")

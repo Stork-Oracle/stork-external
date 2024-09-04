@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
@@ -20,9 +19,6 @@ type PublisherAgentRunner[T Signature] struct {
 	brokerMap               map[BrokerPublishUrl]map[AssetId]struct{}
 	outgoingConnections     map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock sync.RWMutex
-	incomingConnections     map[ConnectionId]*IncomingWebsocketConnection
-	incomingConnectionsLock sync.RWMutex
-	upgrader                websocket.Upgrader
 	signer                  Signer[T]
 }
 
@@ -50,9 +46,6 @@ func NewPublisherAgentRunner[T Signature](
 		brokerMap:               make(map[BrokerPublishUrl]map[AssetId]struct{}),
 		outgoingConnections:     make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock: sync.RWMutex{},
-		incomingConnections:     make(map[ConnectionId]*IncomingWebsocketConnection),
-		incomingConnectionsLock: sync.RWMutex{},
-		upgrader:                GetWsUpgrader(),
 		signer:                  *signer,
 	}
 }
@@ -187,37 +180,4 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			time.Sleep(r.config.BrokerReconnectDelay)
 		}
 	}
-}
-
-func (r *PublisherAgentRunner[T]) HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request) {
-	conn, err := upgradeAndEnforceCompression(resp, req, false, r.upgrader, r.logger, "")
-	if err != nil {
-		// debug log because err could be rate limit violation
-		r.logger.Debug().Err(err).Object("request_headers", HttpHeaders(req.Header)).Msg("failed to complete publisher websocket handshake")
-		return
-	}
-
-	connId := ConnectionId(uuid.New().String())
-
-	r.logger.Debug().Str("conn_id", string(connId)).Msg("adding publisher websocket")
-
-	websocketConn := *NewWebsocketConnection(
-		conn,
-		r.logger,
-		func() {
-			r.logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
-			r.incomingConnectionsLock.Lock()
-			delete(r.incomingConnections, connId)
-			r.incomingConnectionsLock.Unlock()
-		},
-	)
-	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, r.logger)
-
-	// add subscriber to list
-	r.incomingConnectionsLock.Lock()
-	r.incomingConnections[connId] = incomingWebsocketConn
-	r.incomingConnectionsLock.Unlock()
-
-	// kick off the reader thread for the publisher
-	go incomingWebsocketConn.Reader(r.PriceUpdateCh)
 }
