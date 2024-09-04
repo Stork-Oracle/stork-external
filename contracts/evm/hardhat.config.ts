@@ -52,6 +52,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1115,
     },
+    glueTestnet: {
+      url: "https://testnet-ws-1.server-1.glue.net/",
+      accounts: [PRIVATE_KEY],
+      chainId: 1300,
+    },
     holesky: {
       url: "https://rpc.holesky.ethpandaops.io/",
       accounts: [PRIVATE_KEY],
@@ -112,6 +117,7 @@ const config: HardhatUserConfig = {
       bitlayerTestnet: 'fake',
       bevmTestnet: 'fake',
       coreTestnet: CORE_TESTNET_API_KEY,
+      glueTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       lorenzoTestnet: 'fake',
       merlinTestnet: 'fake',
@@ -161,6 +167,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.test.btcs.network/api",
           browserURL: "https://scan.test.btcs.network/"
+        }
+      },
+      {
+        network: "glueTestnet",
+        chainId: 1300,
+        urls: {
+          apiURL: "https://backend.explorer.testnet.dev.gke.glue.net/api",
+          browserURL: "https://explorer.testnet.dev.gke.glue.net/"
         }
       },
       {
