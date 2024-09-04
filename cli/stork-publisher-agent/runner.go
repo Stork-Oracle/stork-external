@@ -116,6 +116,7 @@ func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 func (r *PublisherAgentRunner[T]) Run() {
 	processor := NewPriceUpdateProcessor[T](
 		r.signer,
+		len(r.config.SignatureTypes),
 		r.config.ClockPeriod,
 		r.config.DeltaCheckPeriod,
 		r.config.ChangeThresholdProportion,

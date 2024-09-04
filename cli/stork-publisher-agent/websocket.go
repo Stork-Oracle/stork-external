@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"reflect"
@@ -16,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const StalePriceThreshold = time.Second * 10
+const FullQueueLogFrequency = time.Second * 10
 const HandshakeTimeout = time.Second * 10
 const ReadBufferSize = 1048576
 const WriteBufferSize = 1048576
@@ -85,7 +86,7 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 
 	err := readLoop(iwc.conn, nil, logger, func(wsMsgReader io.Reader) error {
 		// parse the message
-		var priceUpdateMsg WebsocketMessage[[]PriceUpdate]
+		var priceUpdateMsg WebsocketMessage[[]PriceUpdatePushWebsocket]
 		err := json.NewDecoder(wsMsgReader).Decode(&priceUpdateMsg)
 		if err != nil {
 			iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
@@ -95,11 +96,17 @@ func (iwc *IncomingWebsocketConnection) Reader(priceUpdateCh chan PriceUpdate) {
 			}
 		} else {
 			if priceUpdateMsg.Type == "prices" {
-				for _, priceUpdate := range priceUpdateMsg.Data {
+				for _, priceUpdatePushWs := range priceUpdateMsg.Data {
+					value, _ := new(big.Float).SetString(priceUpdatePushWs.Value)
+					priceUpdate := PriceUpdate{
+						PublishTimestamp: priceUpdatePushWs.PublishTimestamp,
+						Asset:            priceUpdatePushWs.Asset,
+						Value:            value,
+					}
 					select {
 					case priceUpdateCh <- priceUpdate:
 					default:
-						if time.Since(lastDropLogTime) >= StalePriceThreshold {
+						if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
 							logger.Error().Msg("dropped incoming price update - too many updates")
 							lastDropLogTime = time.Now()
 						}

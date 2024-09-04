@@ -6,10 +6,10 @@ import (
 
 func FloatToQuantizedPrice(f *big.Float) QuantizedPrice {
 	multiplier := new(big.Float).SetInt64(1e18)
-	f.Mul(f, multiplier)
-	result := new(big.Int)
-	f.Int(result)
-	return StringifyQuantizedPrice(result)
+	result := new(big.Float).Mul(new(big.Float).Set(f), multiplier)
+	intResult := new(big.Int)
+	result.Int(intResult)
+	return StringifyQuantizedPrice(intResult)
 }
 
 func StringifyQuantizedPrice(price *big.Int) QuantizedPrice {

@@ -38,7 +38,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Value:            *value,
+		Value:            value,
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*EvmSignature]{
 		OracleId: "faked",
@@ -98,7 +98,7 @@ func TestSigner_SignStark(t *testing.T) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Value:            *value,
+		Value:            value,
 	}
 	expectedSignedPriceUpdate := SignedPriceUpdate[*StarkSignature]{
 		OracleId: "czowx",
@@ -156,7 +156,7 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1710191092123456789,
 		Asset:            "BTCUSDMARK",
-		Value:            *value,
+		Value:            value,
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)
@@ -193,7 +193,7 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 	priceUpdate := PriceUpdate{
 		PublishTimestamp: 1708940577123456789,
 		Asset:            "DYDXUSD",
-		Value:            *value,
+		Value:            value,
 	}
 	for i := 0; i < b.N; i++ {
 		signer.GetSignedPriceUpdate(priceUpdate, ClockTriggerType)

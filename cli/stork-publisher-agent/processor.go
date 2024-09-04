@@ -19,6 +19,7 @@ type PriceUpdateProcessor[T Signature] struct {
 	priceUpdateCh             chan PriceUpdate
 	signedPriceUpdateBatchCh  chan SignedPriceUpdateBatch[T]
 	signer                    Signer[T]
+	numRunners                int
 	priceUpdates              map[AssetId]PriceUpdate
 	lastReportedPrice         map[AssetId]float64
 	clockPeriod               time.Duration
@@ -33,6 +34,7 @@ type PriceUpdateProcessor[T Signature] struct {
 
 func NewPriceUpdateProcessor[T Signature](
 	signer Signer[T],
+	numRunners int,
 	clockPeriod time.Duration,
 	deltaCheckPeriod time.Duration,
 	changeThresholdProportion float64,
@@ -45,6 +47,7 @@ func NewPriceUpdateProcessor[T Signature](
 		priceUpdateCh:             priceUpdateCh,
 		signedPriceUpdateBatchCh:  signedPriceUpdateBatchCh,
 		signer:                    signer,
+		numRunners:                numRunners,
 		priceUpdates:              make(map[AssetId]PriceUpdate),
 		lastReportedPrice:         make(map[AssetId]float64),
 		clockPeriod:               clockPeriod,
@@ -120,7 +123,7 @@ func (p *PriceUpdateProcessor[T]) Run() {
 		}(queue)
 	}
 
-	numSignerThreads := runtime.NumCPU()
+	numSignerThreads := runtime.NumCPU() / p.numRunners
 	p.logger.Debug().Msgf("Starting %v signer threads", numSignerThreads)
 	// start a signing thread for each CPU core
 	for i := 0; i < numSignerThreads; i++ {

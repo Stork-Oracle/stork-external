@@ -2,6 +2,7 @@ package stork_publisher_agent
 
 import (
 	"encoding/json"
+	"math/big"
 	"net/http"
 	"time"
 
@@ -59,18 +60,23 @@ func (p *IncomingWebsocketPuller) Run() {
 				p.Logger.Error().Err(err).Msg("Failed to read from pull-based WebSocket")
 				break
 			}
-			var message WebsocketMessage[[]PriceUpdate]
+			var message WebsocketMessage[[]PriceUpdatePullWebsocket]
 			err = json.Unmarshal(messageBytes, &message)
 			if err != nil {
 				p.Logger.Error().Err(err).Msgf("Failed to unmarshal message from pull-based WebSocket: %s", messageBytes)
 				break
 			}
-			for _, priceUpdate := range message.Data {
+			for _, priceUpdatePullWebsocket := range message.Data {
+				priceUpdate := PriceUpdate{
+					PublishTimestamp: priceUpdatePullWebsocket.PublishTimestamp,
+					Asset:            priceUpdatePullWebsocket.Asset,
+					Value:            new(big.Float).SetFloat64(priceUpdatePullWebsocket.Price),
+				}
 				for _, priceUpdateCh := range p.PriceUpdateChannels {
 					select {
 					case priceUpdateCh <- priceUpdate:
 					default:
-						if time.Since(lastDropLogTime) >= StalePriceThreshold {
+						if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
 							p.Logger.Error().Msg("dropped incoming price update - too many updates")
 							lastDropLogTime = time.Now()
 						}

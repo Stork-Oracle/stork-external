@@ -37,11 +37,16 @@ const EvmSignatureType = SignatureType("evm")
 const StarkSignatureType = SignatureType("stark")
 
 // Incoming
+type PriceUpdatePullWebsocket struct {
+	PublishTimestamp int64   `json:"t"`
+	Asset            AssetId `json:"a"`
+	Price            float64 `json:"p"`
+}
 
-type PriceUpdate struct {
-	PublishTimestamp int64     `json:"t"`
-	Asset            AssetId   `json:"a"`
-	Value            big.Float `json:"v"`
+type PriceUpdatePushWebsocket struct {
+	PublishTimestamp int64   `json:"t"`
+	Asset            AssetId `json:"a"`
+	Value            string  `json:"v"`
 }
 
 // Intermediate
@@ -49,6 +54,12 @@ type TriggerType string
 
 const ClockTriggerType = TriggerType("clock")
 const DeltaTriggerType = TriggerType("delta")
+
+type PriceUpdate struct {
+	PublishTimestamp int64
+	Asset            AssetId
+	Value            *big.Float
+}
 
 type PriceUpdateWithTrigger struct {
 	PriceUpdate PriceUpdate

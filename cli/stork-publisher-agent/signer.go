@@ -78,7 +78,7 @@ func NewSigner[T Signature](config StorkPublisherAgentConfig, signatureType Sign
 }
 
 func (s *Signer[T]) GetSignedPriceUpdate(priceUpdate PriceUpdate, triggerType TriggerType) SignedPriceUpdate[T] {
-	quantizedPrice := FloatToQuantizedPrice(&priceUpdate.Value)
+	quantizedPrice := FloatToQuantizedPrice(priceUpdate.Value)
 	var timestampedSignature TimestampedSignature[T]
 	var publisherKey PublisherKey
 	var externalAssetId string
