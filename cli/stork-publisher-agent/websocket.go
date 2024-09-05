@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"math/big"
 	"net"
 	"net/http"
 	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -74,36 +72,36 @@ func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Log
 	}
 }
 
-func (m *ValueUpdatePushWebsocket) getFloatValue() (float64, error) {
+func (m *ValueUpdatePushWebsocket) getBigFloatValue() (*big.Float, error) {
 	switch v := m.Value.(type) {
 	case float64:
-		return v, nil
+		bf := new(big.Float).SetFloat64(v)
+		return bf, nil
 	case string:
 		if v == "" {
-			return math.NaN(), fmt.Errorf("value cannot be an empty string")
+			return nil, fmt.Errorf("value cannot be an empty string")
 		}
 
-		floatValue, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return math.NaN(), fmt.Errorf("invalid float string: %v", err)
+		bf, success := new(big.Float).SetString(v)
+		if !success {
+			return nil, errors.New("failed to convert string to float")
 		}
-		return floatValue, nil
+		return bf, nil
+	case big.Float:
+		return &v, nil
 	default:
-		return math.NaN(), fmt.Errorf("unsupported type for value: %T", v)
+		return nil, fmt.Errorf("unsupported type for value: %T", v)
 	}
 }
 
 func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*ValueUpdate, error) {
-	if floatVal, err := valueUpdatePushWebsocket.getFloatValue(); err != nil {
+	if bigFloatVal, err := valueUpdatePushWebsocket.getBigFloatValue(); err != nil {
 		return nil, err
-	} else if math.IsNaN(floatVal) {
-		return nil, fmt.Errorf("value evaluates to NaN")
 	} else {
-		value := new(big.Float).SetFloat64(floatVal)
 		valueUpdate := ValueUpdate{
 			PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
 			Asset:            valueUpdatePushWebsocket.Asset,
-			Value:            value,
+			Value:            bigFloatVal,
 		}
 		return &valueUpdate, nil
 	}
