@@ -29,6 +29,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 		"",
 		time.Duration(0),
 		false,
+		0,
 	)
 	signer, err := NewSigner[*EvmSignature](*config, EvmSignatureType, zerolog.Logger{})
 	if err != nil {
@@ -85,6 +86,7 @@ func TestSigner_SignStark(t *testing.T) {
 		"",
 		time.Duration(0),
 		false,
+		0,
 	)
 
 	signer, err := NewSigner[*StarkSignature](*config, StarkSignatureType, zerolog.Logger{})
@@ -144,6 +146,7 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 		"",
 		time.Duration(0),
 		false,
+		0,
 	)
 	signer, err := NewSigner[*EvmSignature](*config, EvmSignatureType, zerolog.Logger{})
 	if err != nil {
@@ -183,6 +186,7 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 		"",
 		time.Duration(0),
 		false,
+		0,
 	)
 
 	signer, err := NewSigner[*StarkSignature](*config, StarkSignatureType, zerolog.Logger{})
