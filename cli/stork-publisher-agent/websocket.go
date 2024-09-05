@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"math/big"
 	"net"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -72,19 +74,31 @@ func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Log
 	}
 }
 
-func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*ValueUpdate, error) {
-	var value *big.Float
-	if len(valueUpdatePushWebsocket.ValueString) > 0 {
-		var success bool
-		value, success = new(big.Float).SetString(valueUpdatePushWebsocket.ValueString)
-		if !success {
-			return nil, errors.New("failed to convert string to float")
+func (m *ValueUpdatePushWebsocket) getFloatValue() (float64, error) {
+	switch v := m.Value.(type) {
+	case float64:
+		return v, nil
+	case string:
+		if v == "" {
+			return math.NaN(), fmt.Errorf("value cannot be an empty string")
 		}
-	} else if valueUpdatePushWebsocket.ValueFloat > 0 {
-		value = new(big.Float).SetFloat64(valueUpdatePushWebsocket.ValueFloat)
-	} else {
-		return nil, errors.New("must set ValueString or ValueFloat (with a positive value)")
+
+		floatValue, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return math.NaN(), fmt.Errorf("invalid float string: %v", err)
+		}
+		return floatValue, nil
+	default:
+		return math.NaN(), fmt.Errorf("unsupported type for value: %T", v)
 	}
+}
+
+func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*ValueUpdate, error) {
+	floatVal, err := valueUpdatePushWebsocket.getFloatValue()
+	if err != nil {
+		return nil, err
+	}
+	value := new(big.Float).SetFloat64(floatVal)
 
 	valueUpdate := ValueUpdate{
 		PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
