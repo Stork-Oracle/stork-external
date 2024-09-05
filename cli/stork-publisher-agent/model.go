@@ -44,10 +44,9 @@ type PriceUpdatePullWebsocket struct {
 }
 
 type ValueUpdatePushWebsocket struct {
-	PublishTimestamp int64   `json:"t"`
-	Asset            AssetId `json:"a"`
-	ValueString      string  `json:"vs"`
-	ValueFloat       float64 `json:"vf"`
+	PublishTimestamp int64       `json:"t"`
+	Asset            AssetId     `json:"a"`
+	Value            interface{} `json:"v"`
 }
 
 // Intermediate
