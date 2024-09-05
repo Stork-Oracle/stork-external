@@ -2,13 +2,14 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
 require("@openzeppelin/hardhat-upgrades");
-import "@matterlabs/hardhat-zksync";
+// import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-upgradable";
+import "@matterlabs/hardhat-zksync-verify";
 
-import './tasks/deploy';
-import './tasks/upgrade';
-import './tasks/interact';
-import './tasks/print-abi';
+// import './tasks/deploy';
+// import './tasks/upgrade';
+// import './tasks/interact';
+// import './tasks/print-abi';
 
 import { vars } from "hardhat/config";
 
@@ -18,6 +19,8 @@ const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
 const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
+
+const SOPHON_TEST_PK = vars.get("SOPHON_TEST_PK");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -106,10 +109,11 @@ const config: HardhatUserConfig = {
     },
     sophonTestnet: {
       url: "https://rpc.testnet.sophon.xyz",
-      accounts: [PRIVATE_KEY],
-      chainId: 531050104,
+      ethNetwork: "sepolia",
+      accounts: [SOPHON_TEST_PK],
+      // chainId: 531050104,
       zksync: true,
-      ethNetwork: "sepolia"
+      verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",

@@ -6,9 +6,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Stork.sol";
 
-contract UpgradeableStork is Initializable, UUPSUpgradeable, OwnableUpgradeable, Stork {
-    function initialize(address initialOwner, address storkPublicKey, uint validTimePeriodSeconds, uint singleUpdateFeeInWei) initializer public {
-        __Ownable_init(initialOwner);
+contract UpgradeableStorkZK is Initializable, UUPSUpgradeable, OwnableUpgradeable, Stork {
+    function initialize(address storkPublicKey, uint validTimePeriodSeconds, uint singleUpdateFeeInWei) initializer public {
+        __Ownable_init();
         __UUPSUpgradeable_init();
 
         _initialize(storkPublicKey, validTimePeriodSeconds, singleUpdateFeeInWei);
