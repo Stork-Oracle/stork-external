@@ -107,14 +107,16 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 		}
 	}(queue)
 
-	if !vup.signEveryUpdate {
-		// clock thread
+	// clock thread if configured
+	if vup.clockPeriod.Nanoseconds() > 0 {
 		go func(q chan any) {
 			for range time.Tick(vup.clockPeriod) {
 				q <- ClockTick{}
 			}
 		}(queue)
+	}
 
+	if !vup.signEveryUpdate {
 		// delta check thread
 		go func(q chan any) {
 			for range time.Tick(vup.deltaCheckPeriod) {
@@ -171,9 +173,8 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 			if vup.signEveryUpdate {
 				priceUpdatesToSignCh <- ValueUpdateWithTrigger{ValueUpdate: msg, TriggerType: UnspecifiedTriggerType}
 				atomic.AddInt32(&vup.signQueueSize, 1)
-			} else {
-				vup.valueUpdates[msg.Asset] = msg
 			}
+			vup.valueUpdates[msg.Asset] = msg
 		}
 
 		if len(valueUpdates) > 0 {
