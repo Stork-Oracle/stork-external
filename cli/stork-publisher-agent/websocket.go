@@ -94,18 +94,19 @@ func (m *ValueUpdatePushWebsocket) getFloatValue() (float64, error) {
 }
 
 func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*ValueUpdate, error) {
-	floatVal, err := valueUpdatePushWebsocket.getFloatValue()
-	if err != nil {
+	if floatVal, err := valueUpdatePushWebsocket.getFloatValue(); err != nil {
 		return nil, err
+	} else if math.IsNaN(floatVal) {
+		return nil, fmt.Errorf("value evaluates to NaN")
+	} else {
+		value := new(big.Float).SetFloat64(floatVal)
+		valueUpdate := ValueUpdate{
+			PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
+			Asset:            valueUpdatePushWebsocket.Asset,
+			Value:            value,
+		}
+		return &valueUpdate, nil
 	}
-	value := new(big.Float).SetFloat64(floatVal)
-
-	valueUpdate := ValueUpdate{
-		PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
-		Asset:            valueUpdatePushWebsocket.Asset,
-		Value:            value,
-	}
-	return &valueUpdate, nil
 }
 
 func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueUpdate) {
