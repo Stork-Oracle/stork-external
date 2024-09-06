@@ -31,8 +31,8 @@ export async function getDeployedAddressesPath() {
   return path.join(__dirname, "..", "..", "deployments", `chain-${chainId}`, "deployed_addresses.json");
 }
 
-export async function loadContractDeploymentAddress() {
+export async function loadContractDeploymentAddress(deployment?: string) {
   const deployedAddressPath = await getDeployedAddressesPath();
   const deployedAddresses = require(deployedAddressPath);
-  return deployedAddresses[CONTRACT_DEPLOYMENT];
+  return deployedAddresses[deployment ?? CONTRACT_DEPLOYMENT];
 }

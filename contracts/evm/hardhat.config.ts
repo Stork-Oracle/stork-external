@@ -6,10 +6,10 @@ require("@openzeppelin/hardhat-upgrades");
 import "@matterlabs/hardhat-zksync-upgradable";
 import "@matterlabs/hardhat-zksync-verify";
 
-// import './tasks/deploy';
-// import './tasks/upgrade';
-// import './tasks/interact';
-// import './tasks/print-abi';
+import './tasks/deploy';
+import './tasks/upgrade';
+import './tasks/interact';
+import './tasks/print-abi';
 
 import { vars } from "hardhat/config";
 
@@ -111,7 +111,7 @@ const config: HardhatUserConfig = {
       url: "https://rpc.testnet.sophon.xyz",
       ethNetwork: "sepolia",
       accounts: [SOPHON_TEST_PK],
-      // chainId: 531050104,
+      chainId: 531050104,
       zksync: true,
       verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
     },

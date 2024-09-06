@@ -21,7 +21,7 @@ async function main(command: AllowedCommands, args: any) {
     throw new Error(`Invalid command: ${command}`);
   }
 
-  const contractAddress = await loadContractDeploymentAddress();
+  const contractAddress = await loadContractDeploymentAddress("Stork#UpgradeableStorkZK");
   if (!contractAddress) {
     throw new Error(
       "Contract address not found. Please deploy the contract first."
@@ -32,8 +32,10 @@ async function main(command: AllowedCommands, args: any) {
   // @ts-expect-error ethers is loaded in hardhat/config
   const [deployer] = await ethers.getSigners();
 
+  console.log(deployer)
+
   // @ts-expect-error artifacts is loaded in hardhat/config
-  const contractArtifact = await artifacts.readArtifact("UpgradeableStork");
+  const contractArtifact = await artifacts.readArtifact("UpgradeableStorkZK");
 
   // @ts-expect-error ethers is loaded in hardhat/config
   // Initialize contract instance for interaction
