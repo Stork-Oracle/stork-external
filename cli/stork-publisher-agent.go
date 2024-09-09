@@ -73,6 +73,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			ReconnectDelay:      config.PullBasedWsReconnectDelay,
 			ValueUpdateChannels: valueUpdateChannels,
 			Logger:              storkpublisheragent.IncomingLogger(),
+			ReadTimeout:         config.PullBasedWsReadTimeout,
 		}
 		go incomingWsPuller.Run()
 	}

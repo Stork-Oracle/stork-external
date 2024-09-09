@@ -19,6 +19,7 @@ const DefaultStorkRegistryRefreshInterval = "10m"
 const DefaultStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
 const DefaultBrokerReconnectDelay = "5s"
 const DefaultPullBasedReconnectDelay = "5s"
+const DefaultPullBasedReadTimeout = "10s"
 
 type ConfigFile struct {
 	SignatureTypes                 []SignatureType
@@ -31,6 +32,7 @@ type ConfigFile struct {
 	PullBasedWsUrl                 string
 	PullBasedWsSubscriptionRequest string
 	PullBasedWsReconnectDelay      string
+	PullBasedWsReadTimeout         string
 	SignEveryUpdate                bool
 	IncomingWsPort                 int
 }
@@ -181,6 +183,15 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		return nil, fmt.Errorf("invalid pull-based websocket reconnect period: %s", pullBasedReconnectDelayStr)
 	}
 
+	pullBasedWsReadTimeoutStr := configFile.PullBasedWsReadTimeout
+	if len(pullBasedWsReadTimeoutStr) == 0 {
+		pullBasedWsReadTimeoutStr = DefaultPullBasedReadTimeout
+	}
+	pullBasedWsReadTimeout, err := time.ParseDuration(pullBasedWsReadTimeoutStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid pull-based websocket read timeout: %s", pullBasedWsReadTimeoutStr)
+	}
+
 	storkRegistryBaseUrl := configFile.StorkRegistryBaseUrl
 	if len(storkRegistryBaseUrl) == 0 {
 		storkRegistryBaseUrl = DefaultStorkRegistryBaseUrl
@@ -204,6 +215,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		keysFile.PullBasedAuth,
 		configFile.PullBasedWsSubscriptionRequest,
 		pullBasedReconnectDuration,
+		pullBasedWsReadTimeout,
 		configFile.SignEveryUpdate,
 		configFile.IncomingWsPort,
 	)
@@ -229,6 +241,7 @@ type StorkPublisherAgentConfig struct {
 	PullBasedAuth                  AuthToken
 	PullBasedWsSubscriptionRequest string
 	PullBasedWsReconnectDelay      time.Duration
+	PullBasedWsReadTimeout         time.Duration
 	SignEveryUpdate                bool
 	IncomingWsPort                 int
 }
@@ -251,6 +264,7 @@ func NewStorkPublisherAgentConfig(
 	pullBasedAuth AuthToken,
 	pullBasedWsSubscriptionRequest string,
 	pullBasedWsReconnectDelay time.Duration,
+	pullBasedWsReadTimeout time.Duration,
 	signEveryUpdate bool,
 	incomingWsPort int,
 ) *StorkPublisherAgentConfig {
@@ -272,6 +286,7 @@ func NewStorkPublisherAgentConfig(
 		PullBasedAuth:                  pullBasedAuth,
 		PullBasedWsSubscriptionRequest: pullBasedWsSubscriptionRequest,
 		PullBasedWsReconnectDelay:      pullBasedWsReconnectDelay,
+		PullBasedWsReadTimeout:         pullBasedWsReadTimeout,
 		SignEveryUpdate:                signEveryUpdate,
 		IncomingWsPort:                 incomingWsPort,
 	}
