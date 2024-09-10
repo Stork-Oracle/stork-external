@@ -56,3 +56,5 @@ Generate the contract bindings
 abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go
 ```
 
+# Stork Publisher Agent
+See [Stork Publisher Agent](stork-publisher-agent).
