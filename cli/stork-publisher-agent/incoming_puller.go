@@ -17,6 +17,7 @@ type IncomingWebsocketPuller struct {
 	ReconnectDelay      time.Duration
 	ValueUpdateChannels []chan ValueUpdate
 	Logger              zerolog.Logger
+	ReadTimeout         time.Duration
 }
 
 func (p *IncomingWebsocketPuller) Run() {
@@ -31,7 +32,6 @@ func (p *IncomingWebsocketPuller) Run() {
 		incomingWsConn, _, err := websocket.DefaultDialer.Dial(p.Url, headers)
 		if err != nil {
 			p.Logger.Error().Err(err).Msgf("Failed to connect to pull-based WebSocket: %v", err)
-			p.Logger.Error().Msgf("url: %s auth: %s", p.Url, p.Auth)
 			break
 		}
 
@@ -55,11 +55,19 @@ func (p *IncomingWebsocketPuller) Run() {
 		var lastDropLogTime time.Time
 
 		for {
+			if p.ReadTimeout > 0 {
+				deadline := time.Now().Add(p.ReadTimeout)
+				err = incomingWsConn.SetReadDeadline(deadline)
+				if err != nil {
+					p.Logger.Warn().Err(err).Msg("Failed to set read deadline on pull-based WebSocket")
+				}
+			}
 			_, messageBytes, err := incomingWsConn.ReadMessage()
 			if err != nil {
 				p.Logger.Error().Err(err).Msg("Failed to read from pull-based WebSocket")
 				break
 			}
+
 			var message WebsocketMessage[[]PriceUpdatePullWebsocket]
 			err = json.Unmarshal(messageBytes, &message)
 			if err != nil {
