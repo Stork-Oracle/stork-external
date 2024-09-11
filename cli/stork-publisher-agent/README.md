@@ -51,6 +51,8 @@ The only information you need to pass is the asset's name, its price and the tim
 ## Give Stork Your Public Key
 Let Stork know your public key(s) so we can route your data appropriately.
 
+NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.
+
 ## Signing Every Update
 To have the agent sign and send every update it receives (rather than using clock and delta update logic), add the configuration `"SignEveryUpdate": true` to your `config.json`.
 
