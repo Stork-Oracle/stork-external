@@ -12,10 +12,6 @@ import json
 import starknet
 
 
-def new_id(size=6, chars=string.ascii_lowercase):
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
 def main():
     parser = argparse.ArgumentParser(description='Generate a secrets.json file for the Stork Publisher Agent')
 
