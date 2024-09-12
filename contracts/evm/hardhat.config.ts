@@ -45,10 +45,25 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 200810,
     },
+    bobSepolia: {
+      url: "https://bob-sepolia.rpc.gobob.xyz/",
+      accounts: [PRIVATE_KEY],
+      chainId: 808813,
+    },
+    citreaTestnet: {
+      url: "https://rpc.devnet.citrea.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 62298,
+    },
     coreTestnet: {
       url: "https://rpc.test.btcs.network",
       accounts: [PRIVATE_KEY],
       chainId: 1115,
+    },
+    filecoinCalibration: {
+      url: "https://rpc.ankr.com/filecoin_testnet",
+      accounts: [PRIVATE_KEY],
+      chainId: 314159,
     },
     glueTestnet: {
       url: "https://testnet-ws-1.server-1.glue.net/",
@@ -65,6 +80,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 83291
     },
+    mantaSepolia: {
+      url: "https://manta-sepolia.rpc.caldera.xyz/http",
+      accounts: [PRIVATE_KEY],
+      chainId: 3441006,
+    },
     merlinTestnet: {
       url: "https://testnet-rpc.merlinchain.io/",
       accounts: [PRIVATE_KEY],
@@ -74,6 +94,11 @@ const config: HardhatUserConfig = {
       url: "https://molten.calderachain.xyz/http",
       accounts: [PRIVATE_KEY],
       chainId: 360
+    },
+    movementTestnet: {
+      url: "https://mevm.devnet.imola.movementlabs.xyz/",
+      accounts: [PRIVATE_KEY],
+      chainId: 30732
     },
     omniOmega: {
       url: "https://omega.omni.network/",
@@ -100,24 +125,39 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 5633311,
     },
+    xlayerTestnet: {
+      url: "https://xlayertestrpc.okx.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 195
+    },
+    zetachainTestnet: {
+      url: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+      accounts: [PRIVATE_KEY],
+      chainId: 7001
+    }
   },
   etherscan: {
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
-      bitlayerTestnet: 'fake',
       bevmTestnet: 'fake',
+      bitlayerTestnet: 'fake',
+      bobSepolia: 'fake',
+      citreaTestnet: 'fake',
       coreTestnet: CORE_TESTNET_API_KEY,
       glueTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       lorenzoTestnet: 'fake',
+      mantaSepolia: 'fake',
       merlinTestnet: 'fake',
       molten: 'fake',
       omniOmega: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
-      volmexTestnet: 'fake'
+      volmexTestnet: 'fake',
+      xlayerTestnet: 'fake',
+      zetachainTestnet: 'fake'
     },
     customChains: [
       {
@@ -153,6 +193,22 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "bobSepolia",
+        chainId: 808813,
+        urls: {
+          apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
+          browserURL: "https://bob-sepolia.explorer.gobob.xyz/"
+        }
+      },
+      {
+        network: "citreaTestnet",
+        chainId: 62298,
+        urls: {
+          apiURL: "https://explorer.devnet.citrea.xyz//api",
+          browserURL: "https://explorer.devnet.citrea.xyz/"
+        }
+      },
+      {
         network: "coreTestnet",
         chainId: 1115,
         urls: {
@@ -174,6 +230,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://scan-testnet.lorenzo-protocol.xyz/api",
           browserURL: "https://scan-testnet.lorenzo-protocol.xyz"
+        }
+      },
+      {
+        network: "mantaSepolia",
+        chainId: 3441006,
+        urls: {
+          apiURL: "https://manta-sepolia.explorer.caldera.xyz/api",
+          browserURL: "https://manta-sepolia.explorer.caldera.xyz/"
         }
       },
       {
@@ -214,6 +278,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://volmex-testnet-custom-gas-0.explorer.caldera.xyz/api",
           browserURL: "https://volmex-testnet-custom-gas-0.explorer.caldera.xyz"
+        }
+      },
+      {
+        network: "xlayerTestnet",
+        chainId: 195,
+        urls: {
+          apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER_TESTNET",
+          browserURL: "https://www.oklink.com/xlayer-test"
+        }
+      },
+      {
+        network: "zetachainTestnet",
+        chainId: 7001,
+        urls: {
+          apiURL: "https://zetachain-athens-3.blockscout.com/api",
+          browserURL: "https://zetachain-athens-3.blockscout.com/"
         }
       }
     ],
