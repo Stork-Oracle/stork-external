@@ -17,7 +17,7 @@ def new_id(size=6, chars=string.ascii_lowercase):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate secrets.json file for the Stork Publisher Agent')
+    parser = argparse.ArgumentParser(description='Generate a secrets.json file for the Stork Publisher Agent')
 
     parser.add_argument('--oracle-id',
                         required=True,
@@ -29,12 +29,14 @@ def main():
                         help='The signature types you want to use for this publisher agent, space separated')
     parser.add_argument('--stork-auth',
                         required=True,
-                        help='The stork auth header the publisher should use')
+                        help='The stork auth token the publisher should use')
     parser.add_argument('--pull-based-auth',
                         required=False,
-                        help='The auth token to use for your pull-based price source, if using')
-
-
+                        help='The auth token for your pull-based price source, if using')
+    parser.add_argument('--output-path',
+                        required=False,
+                        default="/tmp/stork-publisher-agent/",
+                        help='The directory to write your secret to')
     args = parser.parse_args()
 
     if len(args.oracle_id) != 5:
@@ -63,10 +65,11 @@ def main():
         secrets_dict["StarkPrivateKey"] = stark_private_key_hex
         secrets_dict["StarkPublicKey"] = stark_public_key_hex
 
-    out_filepath = os.path.join(os.path.dirname(__file__), f'secrets.json')
+    os.makedirs(args.output_path, exist_ok=True)
+    out_filepath = os.path.join(args.output_path, f'secrets.json')
 
     with open(out_filepath, 'w') as f:
-        f.write(json.dumps(secrets_dict))
+        f.write(json.dumps(secrets_dict, indent=2))
 
     print(f'Wrote secrets file to {out_filepath}')
 
