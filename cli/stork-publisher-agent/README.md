@@ -17,9 +17,9 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 }
 ```
 
-You'll need to generate your own EVM and/or Stark keys, choose a 5 character oracle id and get a StorkAuth key from Stork.
+Once you've gotten a StorkAuth key from Stork, you can use the [generate_secrets.py](../../python/src/generate_secrets/generate_secrets.py) script to generate your EVM and/or Stork keys and to build the `secrets.json` file. Make sure not to check this file into version control or share it in any way. 
 
-`secrets.json` follows the structure of the [KeysFile struct](config.go):
+You can also generate your own keys and build your own `secrets.json` file - it follows the structure of the [KeysFile struct](config.go):
 ```json
 {
   "EvmPrivateKey": "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
