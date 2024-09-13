@@ -125,7 +125,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 		}(queue)
 	}
 
-	numSignerThreads := runtime.NumCPU() / vup.numRunners
+	numSignerThreads := max(runtime.NumCPU()/vup.numRunners, 1)
 	vup.logger.Debug().Msgf("Starting %v signer threads", numSignerThreads)
 	// start a signing thread for each CPU core
 	for i := 0; i < numSignerThreads; i++ {
