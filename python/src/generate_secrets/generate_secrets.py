@@ -7,10 +7,7 @@ import random
 import secrets
 import string
 import json
-<<<<<<< HEAD
 import base64
-=======
->>>>>>> main
 
 # local
 import starknet
@@ -27,15 +24,15 @@ def main():
                         nargs='+',
                         choices=["stark", "evm"],
                         help='The signature types you want to use for this publisher agent, space separated')
-    parser.add_argument('--stork-auth-token',
-                        required=False,
-                        help='The base64 encoded Stork token the publisher should use')
     parser.add_argument('--stork-user-name',
                         required=False,
-                        help="The Stork user's username (must also set stork password)")
+                        help="The Stork user's username, e.g. myusername (must also set stork password)")
     parser.add_argument('--stork-password',
                         required=False,
-                        help="The Stork user's password (must also set stork user name)")
+                        help="The Stork user's password e.g. mypassword (must also set stork user name)")
+    parser.add_argument('--stork-auth-token',
+                        required=False,
+                        help="The Stork user's base64 encoded username:password, e.g. bXl1c2VybmFtZTpteXBhc3N3b3Jk")
     parser.add_argument('--pull-based-auth',
                         required=False,
                         help='The auth token for your pull-based price source, if using')
