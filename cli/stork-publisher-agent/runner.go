@@ -76,10 +76,12 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// add or update desired connections
 	for brokerUrl, newAssetIdMap := range newBrokerMap {
-		_, exists := r.brokerMap[brokerUrl]
-		if exists {
+		_, brokerExists := r.brokerMap[brokerUrl]
+		outgoingConnection, outgoingConnectionExists := r.outgoingConnections[brokerUrl]
+
+		if brokerExists && outgoingConnectionExists {
 			// update connection
-			r.outgoingConnections[brokerUrl].UpdateAssets(newAssetIdMap)
+			outgoingConnection.UpdateAssets(newAssetIdMap)
 		} else {
 			// create connection
 			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap, r.config.StorkAuth)
@@ -147,7 +149,8 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 		conn, _, err := websocket.DefaultDialer.Dial(string(url), headers)
 		if err != nil {
 			r.logger.Error().Err(err).Msgf("Failed to connect to outgoing WebSocket: %v", err)
-			break
+			time.Sleep(r.config.BrokerReconnectDelay)
+			continue
 		}
 
 		r.logger.Debug().Str("broker_url", string(url)).Msg("adding receiver websocket")
