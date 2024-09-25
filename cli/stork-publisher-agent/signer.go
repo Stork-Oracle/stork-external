@@ -84,7 +84,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(valueUpdate ValueUpdate, triggerType Tr
 	var externalAssetId string
 	switch s.signatureType {
 	case EvmSignatureType:
-		timestampedSignatureRef, err := s.SignEvm(valueUpdate.Asset, quantizedPrice, valueUpdate.PublishTimestamp)
+		timestampedSignatureRef, err := s.SignEvmPrice(valueUpdate.Asset, quantizedPrice, valueUpdate.PublishTimestamp)
 		if err != nil {
 			panic(err)
 		}
@@ -99,7 +99,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(valueUpdate ValueUpdate, triggerType Tr
 			paddedAssetHex = "0x" + assetHex + strings.Repeat("0", 32-len(assetHex))
 		}
 
-		timestampedSignatureRef, err := s.SignStark(paddedAssetHex, quantizedPrice, valueUpdate.PublishTimestamp)
+		timestampedSignatureRef, err := s.SignStarkPrice(paddedAssetHex, quantizedPrice, valueUpdate.PublishTimestamp)
 		if err != nil {
 			panic(err)
 		}
@@ -179,7 +179,7 @@ func bytesToSignature[T Signature](signature []byte) (rsv T, err error) {
 	return result.(T), nil
 }
 
-func (s *Signer[T]) SignEvm(assetId AssetId, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
+func (s *Signer[T]) SignEvmPrice(assetId AssetId, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
 	timestampBigInt := big.NewInt(timestampNs / 1_000_000_000)
 
 	quantizedPriceBigInt := new(big.Int)
@@ -242,14 +242,7 @@ func createBufferFromBigInt(i *big.Int) *C.uint8_t {
 	return (*C.uint8_t)(unsafe.Pointer(&bytes[0]))
 }
 
-func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
-	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
-
-	priceInt, _ := new(big.Int).SetString(string(quantizedPrice), 10)
-	timestampInt := new(big.Int).SetInt64(timestampNs / 1_000_000_000)
-
-	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.starkOracleNameInt)
-	yInt := new(big.Int).Add(shiftLeft(priceInt, 32), timestampInt)
+func (s *Signer[T]) signStarkXY(xInt *big.Int, yInt *big.Int) (pedersenHash, sigR, sigS *string, err error) {
 
 	pedersonHashBuf := make([]byte, 32)
 	sigRBuf := make([]byte, 32)
@@ -264,34 +257,100 @@ func (s *Signer[T]) SignStark(assetHexPadded string, quantizedPrice QuantizedPri
 		createBufferFromBytes(sigSBuf),
 	)
 	if hashAndSignStatus != 0 {
-		return nil, errors.New(fmt.Sprintf("failed to hash and sign - response code %v", hashAndSignStatus))
+		return nil, nil, nil, errors.New(fmt.Sprintf("failed to hash and sign - response code %v", hashAndSignStatus))
 	}
 
 	pedersenHashFelt, err := bytesToFieldElement(pedersonHashBuf)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 	sigRFelt, err := bytesToFieldElement(sigRBuf)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 	sigSFelt, err := bytesToFieldElement(sigSBuf)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	pedersenHashStr := pedersenHashFelt.String()
+	sigRStr := sigRFelt.String()
+	sigSStr := sigSFelt.String()
+
+	return &pedersenHashStr, &sigRStr, &sigSStr, nil
+}
+
+func (s *Signer[T]) SignStarkPrice(assetHexPadded string, quantizedPrice QuantizedPrice, timestampNs int64) (*TimestampedSignature[T], error) {
+	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
+
+	priceInt, _ := new(big.Int).SetString(string(quantizedPrice), 10)
+	timestampInt := new(big.Int).SetInt64(timestampNs / 1_000_000_000)
+
+	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.starkOracleNameInt)
+	yInt := new(big.Int).Add(shiftLeft(priceInt, 32), timestampInt)
+
+	pedersenHash, sigR, sigS, err := s.signStarkXY(xInt, yInt)
 	if err != nil {
 		return nil, err
 	}
 
 	var starkSignature any
 	starkSignature = &StarkSignature{
-		R: "0" + trimLeadingZeros(sigRFelt.String()),
-		S: "0" + trimLeadingZeros(sigSFelt.String()),
+		R: "0" + trimLeadingZeros(*sigR),
+		S: "0" + trimLeadingZeros(*sigS),
 	}
 	signature := starkSignature.(T)
 	// trim leading 0s
-	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHashFelt.String())))
+	msgHash := add0x(trimLeadingZeros(strip0x(*pedersenHash)))
 	timestampedSignature := TimestampedSignature[T]{
 		Signature: signature,
 		Timestamp: timestampNs,
 		MsgHash:   msgHash,
 	}
 	return &timestampedSignature, nil
+}
+
+// Connection Auth
+func (s *Signer[T]) GetConnectionSignature(timestampNs int64, publicKey PublisherKey) (*string, *string, error) {
+	switch s.signatureType {
+	case EvmSignatureType:
+		return s.getEvmConnectionSignature(timestampNs, publicKey)
+	case StarkSignatureType:
+		return s.getStarkConnectionSignature(timestampNs, publicKey)
+	default:
+		return nil, nil, errors.New(fmt.Sprintf("unknown signature type %v", s.signatureType))
+	}
+}
+
+func (s *Signer[T]) getEvmConnectionSignature(timestampNs int64, publicKey PublisherKey) (*string, *string, error) {
+	timestampBigInt := big.NewInt(timestampNs / 1_000_000_000)
+
+	publisherAddress := common.HexToAddress(string(publicKey))
+	payload := [][]byte{
+		publisherAddress.Bytes(),
+		common.LeftPadBytes(timestampBigInt.Bytes(), 32),
+	}
+
+	msgHash, signature, err := signData(s.evmPrivateKey, payload)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	signatureString := hex.EncodeToString(signature)
+	return &msgHash, &signatureString, nil
+}
+
+func (s *Signer[T]) getStarkConnectionSignature(timestampNs int64, publicKey PublisherKey) (*string, *string, error) {
+	timestampBigInt := big.NewInt(timestampNs / 1_000_000_000)
+	publisherAddress := common.HexToAddress(string(publicKey))
+	publisherAddressInt := publisherAddress.Big()
+	msgHash, sigR, sigS, err := s.signStarkXY(publisherAddressInt, timestampBigInt)
+	if err != nil {
+		return nil, nil, err
+	}
+	strippedR := strip0x(*sigR)
+	strippedS := strip0x(*sigS)
+	signatureStr := fmt.Sprintf("%064s%064s", strippedR, strippedS)
+
+	return msgHash, &signatureStr, nil
 }

@@ -28,6 +28,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 		"",
 		"",
 		time.Duration(0),
+		time.Duration(0),
 		false,
 		0,
 	)
@@ -85,6 +86,7 @@ func TestSigner_SignStark(t *testing.T) {
 		"",
 		"",
 		time.Duration(0),
+		time.Duration(0),
 		false,
 		0,
 	)
@@ -126,6 +128,76 @@ func TestSigner_SignStark(t *testing.T) {
 	assert.Equal(t, expectedSignedPriceUpdate, signedPriceUpdate)
 }
 
+func TestSigner_GetConnectionSignature_Stark(t *testing.T) {
+	config := NewStorkPublisherAgentConfig(
+		[]SignatureType{StarkSignatureType},
+		"",
+		"",
+		"0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a",
+		"0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06",
+		time.Duration(0),
+		time.Duration(0),
+		0.0,
+		"czowx",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		"",
+		"",
+		"",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		false,
+		0,
+	)
+
+	signer, err := NewSigner[*StarkSignature](*config, StarkSignatureType, zerolog.Logger{})
+	if err != nil {
+		t.Fatalf("error creating signer: %v", err)
+	}
+
+	msgHash, signature, err := signer.GetConnectionSignature(1727220712123123123, PublisherKey(config.StarkPublicKey))
+
+	assert.Equal(t, "0x5178587ea35ba813ac6b04af0c79f533cb4fd68a7f3e491ed6f41cab70bb0ab", *msgHash)
+	assert.Equal(t, "05413511ef95430d2cd6c65ed8d5d3086ac50416247948e171b335054afe597d060329a905f765d740d9fcfbbe833d301893d67e91f8b7534d08fa809f3b12bb", *signature)
+}
+
+func TestSigner_GetConnectionSignature_Evm(t *testing.T) {
+	config := NewStorkPublisherAgentConfig(
+		[]SignatureType{EvmSignatureType},
+		"0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
+		"0x99e295e85cb07c16b7bb62a44df532a7f2620237",
+		"",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		0.0,
+		"faked",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		"",
+		"",
+		"",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		false,
+		0,
+	)
+
+	signer, err := NewSigner[*StarkSignature](*config, EvmSignatureType, zerolog.Logger{})
+	if err != nil {
+		t.Fatalf("error creating signer: %v", err)
+	}
+
+	msgHash, signature, err := signer.GetConnectionSignature(1727220712123123123, PublisherKey(config.EvmPublicKey))
+
+	assert.Equal(t, "0xaa8a109b87b30e8dc780e05385ec76bd315310e4cc72220cba8ec97c41253685", *msgHash)
+	assert.Equal(t, "052970fda7d9c8cd2e3a11bf01944e1552e21378530ffebdbafc10acb366f4da59fc04d6d2f4801640db1020f0f2e4cc95c71cd9ad933aa2a139b862eee3f9d400", *signature)
+}
+
 func BenchmarkSigner_SignEvm(b *testing.B) {
 	config := NewStorkPublisherAgentConfig(
 		[]SignatureType{EvmSignatureType},
@@ -144,6 +216,7 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 		"",
 		"",
 		"",
+		time.Duration(0),
 		time.Duration(0),
 		false,
 		0,
@@ -184,6 +257,7 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 		"",
 		"",
 		"",
+		time.Duration(0),
 		time.Duration(0),
 		false,
 		0,

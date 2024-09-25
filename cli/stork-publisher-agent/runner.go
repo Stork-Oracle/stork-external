@@ -2,6 +2,7 @@ package stork_publisher_agent
 
 import (
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -82,7 +83,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			r.outgoingConnections[brokerUrl].UpdateAssets(newAssetIdMap)
 		} else {
 			// create connection
-			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap, r.config.StorkAuth)
+			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap, r.getPublisherKey())
 		}
 		r.brokerMap[brokerUrl] = newAssetIdMap
 	}
@@ -135,13 +136,20 @@ func (r *PublisherAgentRunner[T]) Run() {
 	processor.Run()
 }
 
-func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}, authToken AuthToken) {
+func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}, publicKey PublisherKey) {
 	for {
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
-		var headers http.Header
-		if len(authToken) > 0 {
-			headers = http.Header{"Authorization": []string{"Basic " + string(authToken)}}
+		nowNs := time.Now().UnixNano()
+		_, signature, err := r.signer.GetConnectionSignature(nowNs, publicKey)
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to sign connection")
+		}
+		headers := http.Header{
+			"X-PUBLIC-KEY": []string{string(publicKey)},
+			"X-TIMESTAMP":  []string{strconv.FormatInt(nowNs, 10)},
+			"X-SIG-TYPE":   []string{string(r.signatureType)},
+			"X-SIGNATURE":  []string{*signature},
 		}
 
 		conn, _, err := websocket.DefaultDialer.Dial(string(url), headers)
