@@ -120,6 +120,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 31,
     },
+    soneiumMinato: {
+      url: "https://rpc.minato.soneium.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 1946
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -155,6 +160,7 @@ const config: HardhatUserConfig = {
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
+      soneiumMinato: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -270,6 +276,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://rootstock-testnet.blockscout.com/api/",
           browserURL: "https://rootstock-testnet.blockscout.com/"
+        }
+      },
+      {
+        network: "soneiumMinato",
+        chainId: 1946,
+        urls: {
+          apiURL: "https://explorer-testnet.soneium.org/api/",
+          browserURL: "https://explorer-testnet.soneium.org/"
         }
       },
       {
