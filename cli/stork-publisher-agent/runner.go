@@ -76,10 +76,8 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// add or update desired connections
 	for brokerUrl, newAssetIdMap := range newBrokerMap {
-		_, brokerExists := r.brokerMap[brokerUrl]
 		outgoingConnection, outgoingConnectionExists := r.outgoingConnections[brokerUrl]
-
-		if brokerExists && outgoingConnectionExists {
+		if outgoingConnectionExists {
 			// update connection
 			outgoingConnection.UpdateAssets(newAssetIdMap)
 		} else {
