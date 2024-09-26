@@ -28,6 +28,7 @@ func TestSigner_GetSignedPriceUpdate_Evm(t *testing.T) {
 		"",
 		"",
 		time.Duration(0),
+		time.Duration(0),
 		false,
 		0,
 	)
@@ -84,6 +85,7 @@ func TestSigner_SignStark(t *testing.T) {
 		"",
 		"",
 		"",
+		time.Duration(0),
 		time.Duration(0),
 		false,
 		0,
@@ -145,6 +147,7 @@ func BenchmarkSigner_SignEvm(b *testing.B) {
 		"",
 		"",
 		time.Duration(0),
+		time.Duration(0),
 		false,
 		0,
 	)
@@ -184,6 +187,7 @@ func BenchmarkSigner_SignStark(b *testing.B) {
 		"",
 		"",
 		"",
+		time.Duration(0),
 		time.Duration(0),
 		false,
 		0,

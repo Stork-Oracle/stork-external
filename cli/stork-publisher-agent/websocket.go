@@ -22,6 +22,7 @@ const FullQueueLogFrequency = time.Second * 10
 const HandshakeTimeout = time.Second * 10
 const ReadBufferSize = 1048576
 const WriteBufferSize = 1048576
+const OutgoingWriteTimeout = time.Second * 10
 
 type WebsocketConnection struct {
 	conn    *websocket.Conn
@@ -126,7 +127,7 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 		err := json.NewDecoder(wsMsgReader).Decode(&valueUpdateMsg)
 		if err != nil {
 			iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
-			err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger)
+			err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger, OutgoingWriteTimeout)
 			if err != nil {
 				iwc.logger.Error().Err(err).Msgf("Failed to send error message")
 			}
@@ -136,7 +137,7 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 					valueUpdate, err := convertToValueUpdate(valueUpdatePushWs)
 					if err != nil {
 						iwc.logger.Error().Err(err).Msgf("Failed to parse incoming message")
-						err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger)
+						err := sendWebsocketResponse(iwc.conn, "failed to parse price update", iwc.logger, OutgoingWriteTimeout)
 						if err != nil {
 							iwc.logger.Error().Err(err).Msgf("Failed to send error message")
 						}
@@ -312,10 +313,15 @@ func SendWebsocketMsg[T any](conn *websocket.Conn, msgType string, data T, trace
 		Data:    data,
 	}
 
-	return sendWebsocketResponse[WebsocketMessage[T]](conn, msg, logger)
+	return sendWebsocketResponse[WebsocketMessage[T]](conn, msg, logger, OutgoingWriteTimeout)
 }
 
-func sendWebsocketResponse[T any](conn *websocket.Conn, msg T, logger zerolog.Logger) error {
+func sendWebsocketResponse[T any](conn *websocket.Conn, msg T, logger zerolog.Logger, writeTimeout time.Duration) error {
+	if writeTimeout.Nanoseconds() > 0 {
+		deadline := time.Now().Add(writeTimeout)
+		_ = conn.SetWriteDeadline(deadline)
+	}
+
 	// a websocket connection can be closed at any time, so we need to handle this case in each part of the write process
 	if dataWriter, err := conn.NextWriter(websocket.TextMessage); err != nil {
 		if netErr, ok := err.(net.Error); ok {
