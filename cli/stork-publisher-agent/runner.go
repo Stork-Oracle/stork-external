@@ -10,16 +10,16 @@ import (
 )
 
 type PublisherAgentRunner[T Signature] struct {
-	config                  StorkPublisherAgentConfig
-	signatureType           SignatureType
-	logger                  zerolog.Logger
-	ValueUpdateCh           chan ValueUpdate
-	signedPriceBatchCh      chan SignedPriceUpdateBatch[T]
-	registryClient          *RegistryClient
-	brokerMap               map[BrokerPublishUrl]map[AssetId]struct{}
-	outgoingConnections     map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
-	outgoingConnectionsLock sync.RWMutex
-	signer                  Signer[T]
+	config                      StorkPublisherAgentConfig
+	signatureType               SignatureType
+	logger                      zerolog.Logger
+	ValueUpdateCh               chan ValueUpdate
+	signedPriceBatchCh          chan SignedPriceUpdateBatch[T]
+	registryClient              *RegistryClient
+	assetsByBroker              map[BrokerPublishUrl]map[AssetId]struct{}
+	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
+	outgoingConnectionsLock     sync.RWMutex
+	signer                      Signer[T]
 }
 
 func NewPublisherAgentRunner[T Signature](
@@ -43,7 +43,7 @@ func NewPublisherAgentRunner[T Signature](
 		ValueUpdateCh:           make(chan ValueUpdate, 4096),
 		signedPriceBatchCh:      make(chan SignedPriceUpdateBatch[T], 4096),
 		registryClient:          registryClient,
-		brokerMap:               make(map[BrokerPublishUrl]map[AssetId]struct{}),
+		assetsByBroker:          make(map[BrokerPublishUrl]map[AssetId]struct{}),
 		outgoingConnections:     make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock: sync.RWMutex{},
 		signer:                  *signer,
@@ -76,7 +76,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// add or update desired connections
 	for brokerUrl, newAssetIdMap := range newBrokerMap {
-		outgoingConnection, outgoingConnectionExists := r.outgoingConnections[brokerUrl]
+		outgoingConnection, outgoingConnectionExists := r.outgoingConnectionsByBroker[brokerUrl]
 		if outgoingConnectionExists {
 			// update connection
 			outgoingConnection.UpdateAssets(newAssetIdMap)
@@ -84,15 +84,15 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			// create connection
 			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap, r.config.StorkAuth)
 		}
-		r.brokerMap[brokerUrl] = newAssetIdMap
+		r.assetsByBroker[brokerUrl] = newAssetIdMap
 	}
 
 	// remove undesired connections
-	for url, _ := range r.brokerMap {
+	for url, _ := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
-			r.outgoingConnections[url].Remove()
-			delete(r.brokerMap, url)
+			r.outgoingConnectionsByBroker[url].Remove()
+			delete(r.assetsByBroker, url)
 		}
 	}
 
@@ -123,7 +123,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 	go func(signedPriceBatchCh chan SignedPriceUpdateBatch[T]) {
 		for signedPriceUpdateBatch := range signedPriceBatchCh {
 			r.outgoingConnectionsLock.RLock()
-			for _, outgoingConnection := range r.outgoingConnections {
+			for _, outgoingConnection := range r.outgoingConnectionsByBroker {
 				outgoingConnection.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
 			}
 			r.outgoingConnectionsLock.RUnlock()
@@ -159,7 +159,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			func() {
 				r.logger.Info().Str("broker_url", string(url)).Msg("removing receiver websocket")
 				r.outgoingConnectionsLock.Lock()
-				delete(r.outgoingConnections, url)
+				delete(r.outgoingConnectionsByBroker, url)
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
@@ -167,7 +167,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()
-		r.outgoingConnections[url] = outgoingWebsocketConn
+		r.outgoingConnectionsByBroker[url] = outgoingWebsocketConn
 		r.outgoingConnectionsLock.Unlock()
 
 		// read until a failure happens or the connection is closed
