@@ -37,16 +37,16 @@ func NewPublisherAgentRunner[T Signature](
 		config.StorkAuth,
 	)
 	return &PublisherAgentRunner[T]{
-		config:                  config,
-		signatureType:           signatureType,
-		logger:                  logger,
-		ValueUpdateCh:           make(chan ValueUpdate, 4096),
-		signedPriceBatchCh:      make(chan SignedPriceUpdateBatch[T], 4096),
-		registryClient:          registryClient,
-		assetsByBroker:          make(map[BrokerPublishUrl]map[AssetId]struct{}),
-		outgoingConnections:     make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
-		outgoingConnectionsLock: sync.RWMutex{},
-		signer:                  *signer,
+		config:                      config,
+		signatureType:               signatureType,
+		logger:                      logger,
+		ValueUpdateCh:               make(chan ValueUpdate, 4096),
+		signedPriceBatchCh:          make(chan SignedPriceUpdateBatch[T], 4096),
+		registryClient:              registryClient,
+		assetsByBroker:              make(map[BrokerPublishUrl]map[AssetId]struct{}),
+		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
+		outgoingConnectionsLock:     sync.RWMutex{},
+		signer:                      *signer,
 	}
 }
 
