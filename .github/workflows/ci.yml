@@ -48,13 +48,13 @@ jobs:
       - name: Run Go tests for amd64 architecture
         run: |
           cp ./rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./cli/
-          cd ./cli && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/cli" go test -v ./stork-publisher-agent
+          cd ./cli && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/cli" go test -v ./publisher-agent
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/cli
 
       - name: Run Go tests for arm64 architecture
         run: |
           cp ./rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./cli/
-          cd ./cli && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/cli" go test -v ./stork-publisher-agent
+          cd ./cli && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/cli" go test -v ./publisher-agent
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/cli

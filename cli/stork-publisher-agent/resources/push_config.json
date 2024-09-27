@@ -1,5 +1,0 @@
-{
-  "SignatureTypes": ["evm", "stark"],
-  "IncomingWsPort": 5216,
-  "SignEveryUpdate": true
-}
