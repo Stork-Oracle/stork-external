@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/Stork-Oracle/stork_external/lib/signer"
 )
 
 type RegistryClient struct {
@@ -19,7 +21,7 @@ func NewRegistryClient(baseUrl string, authToken AuthToken) *RegistryClient {
 	}
 }
 
-func (c *RegistryClient) GetBrokersForPublisher(publisherKey PublisherKey) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
+func (c *RegistryClient) GetBrokersForPublisher(publisherKey signer.PublisherKey) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))

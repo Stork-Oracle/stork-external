@@ -63,7 +63,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		case StarkSignatureType:
 			mainLogger.Info().Msg("Starting Stark runner")
 			logger := RunnerLogger(signatureType)
-			thisSigner, err := signer.NewEvmSigner(config.EvmPrivateKey, logger)
+			thisSigner, err := signer.NewStarkSigner(config.StarkPrivateKey, string(config.StarkPublicKey), string(config.OracleId), logger)
 			if err != nil {
 				return fmt.Errorf("failed to create EVM signer: %v", err)
 			}

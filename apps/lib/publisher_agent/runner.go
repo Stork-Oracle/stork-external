@@ -12,7 +12,7 @@ import (
 
 type PublisherAgentRunner[T signer.Signature] struct {
 	config                      StorkPublisherAgentConfig
-	signatureType               SignatureType
+	signatureType               signer.SignatureType
 	logger                      zerolog.Logger
 	ValueUpdateCh               chan ValueUpdate
 	signedPriceBatchCh          chan SignedPriceUpdateBatch[T]
@@ -25,8 +25,8 @@ type PublisherAgentRunner[T signer.Signature] struct {
 
 func NewPublisherAgentRunner[T signer.Signature](
 	config StorkPublisherAgentConfig,
-	signer *signer.Signer[T],
-	signatureType SignatureType,
+	signer signer.Signer[T],
+	signatureType signer.SignatureType,
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
 	registryClient := NewRegistryClient(
@@ -43,21 +43,8 @@ func NewPublisherAgentRunner[T signer.Signature](
 		assetsByBroker:              make(map[BrokerPublishUrl]map[AssetId]struct{}),
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
-		signer:                      *signer,
+		signer:                      signer,
 	}
-}
-
-func (r *PublisherAgentRunner[T]) getPublisherKey() PublisherKey {
-	var publicKey PublisherKey
-	switch r.signatureType {
-	case EvmSignatureType:
-		publicKey = PublisherKey(r.config.EvmPublicKey)
-	case StarkSignatureType:
-		publicKey = PublisherKey(r.config.StarkPublicKey)
-	default:
-		panic("unknown signature type: " + r.signatureType)
-	}
-	return publicKey
 }
 
 func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
@@ -65,7 +52,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// query Stork Registry for brokers
 
-	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(r.getPublisherKey())
+	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(r.signer.GetPublisherKey())
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
 		return

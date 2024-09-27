@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stork-Oracle/stork_external/lib/signer"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
@@ -169,7 +170,7 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 
 }
 
-type OutgoingWebsocketConnection[T Signature] struct {
+type OutgoingWebsocketConnection[T signer.Signature] struct {
 	WebsocketConnection
 	assetIds                 map[AssetId]struct{}
 	assetIdsLock             sync.RWMutex
@@ -178,7 +179,7 @@ type OutgoingWebsocketConnection[T Signature] struct {
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
 		WebsocketConnection:      conn,
 		assetIds:                 assetIds,

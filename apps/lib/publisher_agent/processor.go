@@ -149,9 +149,9 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 					AssetId:  update.ValueUpdate.Asset,
 					Trigger:  update.TriggerType,
 					SignedPrice: SignedPrice[T]{
-						PublisherKey:         PublisherKey(vup.signer.GetPublisherKey()),
+						PublisherKey:         signer.PublisherKey(vup.signer.GetPublisherKey()),
 						ExternalAssetId:      externalAssetId,
-						SignatureType:        SignatureType(vup.signer.GetSignatureType()),
+						SignatureType:        signer.SignatureType(vup.signer.GetSignatureType()),
 						QuantizedPrice:       quantizedPrice,
 						TimestampedSignature: *timestampedSig,
 					},
