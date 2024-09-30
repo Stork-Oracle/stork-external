@@ -95,6 +95,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 360
     },
+    monadDevnet: {
+      url: "https://devnet1.monad.xyz/rpc/Hr83nzcKqOU2xOPXKme4bKm3BlDdxQPH99k9NAe1",
+      accounts: [PRIVATE_KEY],
+      chainId: 41454
+    },
     movementTestnet: {
       url: "https://mevm.devnet.imola.movementlabs.xyz/",
       accounts: [PRIVATE_KEY],
@@ -156,6 +161,7 @@ const config: HardhatUserConfig = {
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
       molten: 'fake',
+      monadDevnet: 'fake',
       omniOmega: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
@@ -260,6 +266,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://molten.calderaexplorer.xyz/api",
           browserURL: "https://molten.calderaexplorer.xyz/"
+        }
+      },
+      {
+        network: "monadDevnet",
+        chainId: 41454,
+        urls: {
+          apiURL: "https://brightstar-884.devnet1.monad.xyz/api",
+          browserURL: "https://brightstar-884.devnet1.monad.xyz/"
         }
       },
       {
