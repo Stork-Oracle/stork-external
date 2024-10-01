@@ -1,8 +1,6 @@
 package stork_publisher_agent
 
 import (
-	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -16,7 +14,7 @@ type PublisherAgentRunner[T Signature] struct {
 	logger                  zerolog.Logger
 	ValueUpdateCh           chan ValueUpdate
 	signedPriceBatchCh      chan SignedPriceUpdateBatch[T]
-	registryClient          *RegistryClient
+	registryClient          *RegistryClient[T]
 	brokerMap               map[BrokerPublishUrl]map[AssetId]struct{}
 	outgoingConnections     map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock sync.RWMutex
@@ -33,9 +31,10 @@ func NewPublisherAgentRunner[T Signature](
 		logger.Fatal().Err(err).Msg("failed to create signer")
 	}
 
-	registryClient := NewRegistryClient(
+	registryClient := NewRegistryClient[T](
 		config.StorkRegistryBaseUrl,
-		config.StorkAuth,
+		*signer,
+		logger,
 	)
 	return &PublisherAgentRunner[T]{
 		config:                  config,
@@ -141,18 +140,12 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
 		nowNs := time.Now().UnixNano()
-		_, signature, err := r.signer.GetConnectionSignature(nowNs, publicKey)
+		connectionHeaders, err := r.signer.getConnectionHeaders(nowNs, publicKey)
 		if err != nil {
-			r.logger.Error().Err(err).Msg("failed to sign connection")
-		}
-		headers := http.Header{
-			"X-PUBLIC-KEY": []string{string(publicKey)},
-			"X-TIMESTAMP":  []string{strconv.FormatInt(nowNs, 10)},
-			"X-SIG-TYPE":   []string{string(r.signatureType)},
-			"X-SIGNATURE":  []string{*signature},
+			r.logger.Error().Err(err).Msg("failed to generate connection headers")
 		}
 
-		conn, _, err := websocket.DefaultDialer.Dial(string(url), headers)
+		conn, _, err := websocket.DefaultDialer.Dial(string(url), connectionHeaders)
 		if err != nil {
 			r.logger.Error().Err(err).Msgf("Failed to connect to outgoing WebSocket: %v", err)
 			break

@@ -157,7 +157,7 @@ func TestSigner_GetConnectionSignature_Stark(t *testing.T) {
 		t.Fatalf("error creating signer: %v", err)
 	}
 
-	msgHash, signature, err := signer.GetConnectionSignature(1727220712123123123, PublisherKey(config.StarkPublicKey))
+	msgHash, signature, err := signer.getConnectionSignature(1727220712123123123, PublisherKey(config.StarkPublicKey))
 
 	assert.Equal(t, "0x5178587ea35ba813ac6b04af0c79f533cb4fd68a7f3e491ed6f41cab70bb0ab", *msgHash)
 	assert.Equal(t, "05413511ef95430d2cd6c65ed8d5d3086ac50416247948e171b335054afe597d060329a905f765d740d9fcfbbe833d301893d67e91f8b7534d08fa809f3b12bb", *signature)
@@ -192,7 +192,7 @@ func TestSigner_GetConnectionSignature_Evm(t *testing.T) {
 		t.Fatalf("error creating signer: %v", err)
 	}
 
-	msgHash, signature, err := signer.GetConnectionSignature(1727220712123123123, PublisherKey(config.EvmPublicKey))
+	msgHash, signature, err := signer.getConnectionSignature(1727220712123123123, PublisherKey(config.EvmPublicKey))
 
 	assert.Equal(t, "0xaa8a109b87b30e8dc780e05385ec76bd315310e4cc72220cba8ec97c41253685", *msgHash)
 	assert.Equal(t, "052970fda7d9c8cd2e3a11bf01944e1552e21378530ffebdbafc10acb366f4da59fc04d6d2f4801640db1020f0f2e4cc95c71cd9ad933aa2a139b862eee3f9d400", *signature)

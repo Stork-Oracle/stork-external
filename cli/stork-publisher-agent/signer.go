@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"net/http"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -311,7 +313,22 @@ func (s *Signer[T]) SignStarkPrice(assetHexPadded string, quantizedPrice Quantiz
 }
 
 // Connection Auth
-func (s *Signer[T]) GetConnectionSignature(timestampNs int64, publicKey PublisherKey) (*string, *string, error) {
+func (s *Signer[T]) getConnectionHeaders(timestampNs int64, publicKey PublisherKey) (http.Header, error) {
+	_, signature, err := s.getConnectionSignature(timestampNs, publicKey)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to sign connection")
+		return nil, err
+	}
+	headers := http.Header{
+		"X-PUBLIC-KEY": []string{string(publicKey)},
+		"X-TIMESTAMP":  []string{strconv.FormatInt(timestampNs, 10)},
+		"X-SIG-TYPE":   []string{string(s.signatureType)},
+		"X-SIGNATURE":  []string{*signature},
+	}
+	return headers, nil
+}
+
+func (s *Signer[T]) getConnectionSignature(timestampNs int64, publicKey PublisherKey) (*string, *string, error) {
 	switch s.signatureType {
 	case EvmSignatureType:
 		return s.getEvmConnectionSignature(timestampNs, publicKey)

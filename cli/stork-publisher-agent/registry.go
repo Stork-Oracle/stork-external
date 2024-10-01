@@ -3,28 +3,38 @@ package stork_publisher_agent
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/rs/zerolog"
 )
 
-type RegistryClient struct {
-	baseUrl   string
-	authToken AuthToken
+type RegistryClient[T Signature] struct {
+	baseUrl string
+	signer  Signer[T]
+	logger  zerolog.Logger
 }
 
-func NewRegistryClient(baseUrl string, authToken AuthToken) *RegistryClient {
-	return &RegistryClient{
-		baseUrl:   baseUrl,
-		authToken: authToken,
+func NewRegistryClient[T Signature](baseUrl string, signer Signer[T], logger zerolog.Logger) *RegistryClient[T] {
+	return &RegistryClient[T]{
+		baseUrl: baseUrl,
+		signer:  signer,
+		logger:  logger,
 	}
 }
 
-func (c *RegistryClient) GetBrokersForPublisher(publisherKey PublisherKey) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
+func (c *RegistryClient[T]) GetBrokersForPublisher(publisherKey PublisherKey) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))
-	authHeader := http.Header{"Authorization": []string{"Basic " + string(c.authToken)}}
-	response, err := RestQuery("GET", brokerEndpoint, queryParams, nil, authHeader)
+
+	nowNs := time.Now().UnixNano()
+	connectionHeaders, err := c.signer.getConnectionHeaders(nowNs, publisherKey)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("failed to generate connection headers")
+	}
+
+	response, err := RestQuery("GET", brokerEndpoint, queryParams, nil, connectionHeaders)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get broker list: %v", err)
 	}
@@ -32,6 +42,12 @@ func (c *RegistryClient) GetBrokersForPublisher(publisherKey PublisherKey) (map[
 	err = json.Unmarshal(response, &brokers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal broker list: %v", err)
+	}
+
+	if len(brokers) == 0 {
+		c.logger.Warn().Msgf("broker list is empty - make sure your publisher key (%s) is correct and that Stork has registered it", publisherKey)
+		emptyMap := make(map[BrokerPublishUrl]map[AssetId]struct{})
+		return emptyMap, nil
 	}
 
 	// combine all configs into a single asset map per url
