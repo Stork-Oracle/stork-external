@@ -9,7 +9,7 @@ import (
 )
 
 var EvmpushCmd = &cobra.Command{
-	Use:   "evm-push",
+	Use:   "evm",
 	Short: "Push WebSocket prices to EVM contract",
 	Run:   runEvmPush,
 }

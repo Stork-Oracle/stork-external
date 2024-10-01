@@ -46,7 +46,7 @@ WORKDIR /app/cli
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the source code from the cli directory into the container
+# Copy the source code from the lib and cmd directories into the container
 COPY lib/ ./lib/
 COPY cmd/publisher_agent/ ./cmd/publisher_agent/
 

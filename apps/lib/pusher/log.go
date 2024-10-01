@@ -15,14 +15,14 @@ func BaseLogger(application string) zerolog.Logger {
 }
 
 func AppLogger(command string) zerolog.Logger {
-	return BaseLogger("storkcli").With().Str("command", command).Logger()
+	return BaseLogger("stork-pusher").With().Str("command", command).Logger()
 }
 
 func EvmPusherLogger(
 	chainRpcUrl string,
 	contractAddress string,
 ) zerolog.Logger {
-	return AppLogger("evm-push").With().
+	return AppLogger("evm").With().
 		Str("chainRpcUrl", chainRpcUrl).
 		Str("contractAddress", contractAddress).
 		Logger()
