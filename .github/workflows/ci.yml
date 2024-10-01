@@ -49,3 +49,10 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
 
+      - name: Run Go tests for arm64 architecture
+        run: |
+          cp ./apps/lib/signer/rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./apps/
+          cd ./apps && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/apps" go test -v ./lib/...
+        env:
+          LD_LIBRARY_PATH: ${{ github.workspace }}/apps
+
