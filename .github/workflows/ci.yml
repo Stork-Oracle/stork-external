@@ -44,7 +44,7 @@ jobs:
 
       - name: Run Go tests for amd64 architecture
         run: |
-          cp ./rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./apps/
+          cp ./apps/lib/signer/rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./apps/
           cd ./apps && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/apps" go test -v ./lib/...
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
