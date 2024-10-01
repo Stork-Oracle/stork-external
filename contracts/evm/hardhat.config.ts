@@ -95,6 +95,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 360
     },
+    monadDevnet: {
+      url: "https://devnet1.monad.xyz/rpc/Hr83nzcKqOU2xOPXKme4bKm3BlDdxQPH99k9NAe1",
+      accounts: [PRIVATE_KEY],
+      chainId: 41454
+    },
     movementTestnet: {
       url: "https://mevm.devnet.imola.movementlabs.xyz/",
       accounts: [PRIVATE_KEY],
@@ -119,6 +124,11 @@ const config: HardhatUserConfig = {
       url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
       accounts: [PRIVATE_KEY],
       chainId: 31,
+    },
+    soneiumMinato: {
+      url: "https://rpc.minato.soneium.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 1946
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
@@ -151,10 +161,12 @@ const config: HardhatUserConfig = {
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
       molten: 'fake',
+      monadDevnet: 'fake',
       omniOmega: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
+      soneiumMinato: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -257,6 +269,14 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "monadDevnet",
+        chainId: 41454,
+        urls: {
+          apiURL: "https://brightstar-884.devnet1.monad.xyz/api",
+          browserURL: "https://brightstar-884.devnet1.monad.xyz/"
+        }
+      },
+      {
         network: "omniOmega",
         chainId: 164,
         urls: {
@@ -270,6 +290,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://rootstock-testnet.blockscout.com/api/",
           browserURL: "https://rootstock-testnet.blockscout.com/"
+        }
+      },
+      {
+        network: "soneiumMinato",
+        chainId: 1946,
+        urls: {
+          apiURL: "https://explorer-testnet.soneium.org/api/",
+          browserURL: "https://explorer-testnet.soneium.org/"
         }
       },
       {

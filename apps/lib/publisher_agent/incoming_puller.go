@@ -32,7 +32,8 @@ func (p *IncomingWebsocketPuller) Run() {
 		incomingWsConn, _, err := websocket.DefaultDialer.Dial(p.Url, headers)
 		if err != nil {
 			p.Logger.Error().Err(err).Msgf("Failed to connect to pull-based WebSocket: %v", err)
-			break
+			time.Sleep(p.ReconnectDelay)
+			continue
 		}
 
 		_, messageBytes, err := incomingWsConn.ReadMessage()
@@ -48,7 +49,8 @@ func (p *IncomingWebsocketPuller) Run() {
 			p.Logger.Debug().Msgf("Received subscription response: %s", subscriptionResponse)
 			if err != nil {
 				p.Logger.Error().Err(err).Msg("Failed to send subscription request to pull-based WebSocket")
-				break
+				time.Sleep(p.ReconnectDelay)
+				continue
 			}
 		}
 
