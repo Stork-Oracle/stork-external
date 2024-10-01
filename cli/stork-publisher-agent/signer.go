@@ -119,6 +119,7 @@ func (s *Signer[T]) GetSignedPriceUpdate(valueUpdate ValueUpdate, triggerType Tr
 			ExternalAssetId:      externalAssetId,
 			SignatureType:        s.signatureType,
 			QuantizedPrice:       quantizedPrice,
+			Metadata:             valueUpdate.Metadata,
 			TimestampedSignature: timestampedSignature,
 		},
 	}

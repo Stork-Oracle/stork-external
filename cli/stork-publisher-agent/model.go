@@ -37,16 +37,19 @@ const EvmSignatureType = SignatureType("evm")
 const StarkSignatureType = SignatureType("stark")
 
 // Incoming
+type Metadata map[string]interface{}
 type PriceUpdatePullWebsocket struct {
-	PublishTimestamp int64   `json:"t"`
-	Asset            AssetId `json:"a"`
-	Price            float64 `json:"p"`
+	PublishTimestamp int64    `json:"t"`
+	Asset            AssetId  `json:"a"`
+	Price            float64  `json:"p"`
+	Metadata         Metadata `json:"m,omitempty"`
 }
 
 type ValueUpdatePushWebsocket struct {
 	PublishTimestamp int64       `json:"t"`
 	Asset            AssetId     `json:"a"`
 	Value            interface{} `json:"v"`
+	Metadata         Metadata    `json:"m,omitempty"`
 }
 
 // Intermediate
@@ -60,6 +63,7 @@ type ValueUpdate struct {
 	PublishTimestamp int64
 	Asset            AssetId
 	Value            *big.Float
+	Metadata         Metadata
 }
 
 type ValueUpdateWithTrigger struct {
@@ -96,6 +100,7 @@ type SignedPrice[T Signature] struct {
 	SignatureType        SignatureType           `json:"signature_type"`
 	QuantizedPrice       QuantizedPrice          `json:"price"`
 	TimestampedSignature TimestampedSignature[T] `json:"timestamped_signature"`
+	Metadata             Metadata                `json:"metadata,omitempty"`
 }
 
 // SignedPriceUpdate represents a signed price from a publisher
