@@ -83,10 +83,15 @@ func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
 	updates := make([]ValueUpdateWithTrigger, 0)
 
 	for _, valueUpdate := range vup.valueUpdates {
+		currentTimeValueUpdate := ValueUpdate{
+			PublishTimestamp: time.Now().UnixNano(),
+			Value:            valueUpdate.Value,
+			Asset:            valueUpdate.Asset,
+		}
 		updates = append(
 			updates,
 			ValueUpdateWithTrigger{
-				ValueUpdate: valueUpdate,
+				ValueUpdate: currentTimeValueUpdate,
 				TriggerType: ClockTriggerType,
 			},
 		)
