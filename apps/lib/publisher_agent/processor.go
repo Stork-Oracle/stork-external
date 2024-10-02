@@ -169,6 +169,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 						SignatureType:        signer.SignatureType(vup.signer.GetSignatureType()),
 						QuantizedPrice:       quantizedPrice,
 						TimestampedSignature: *timestampedSig,
+						Metadata:             update.ValueUpdate.Metadata,
 					},
 				}
 
