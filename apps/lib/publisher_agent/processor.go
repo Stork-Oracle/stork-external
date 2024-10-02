@@ -100,6 +100,7 @@ func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
 			PublishTimestamp: time.Now().UnixNano(),
 			Value:            valueUpdate.Value,
 			Asset:            valueUpdate.Asset,
+			Metadata:         valueUpdate.Metadata,
 		}
 		updates = append(
 			updates,
