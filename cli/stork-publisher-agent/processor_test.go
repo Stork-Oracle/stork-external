@@ -113,3 +113,107 @@ func TestDeltaOnly(t *testing.T) {
 	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
 	assert.Equal(t, QuantizedPrice("2000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
 }
+
+func TestZeroPrice(t *testing.T) {
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	config := NewStorkPublisherAgentConfig(
+		[]SignatureType{EvmSignatureType},
+		evmPrivateKey,
+		evmPublicKey,
+		starkPrivateKey,
+		starkPublicKey,
+		time.Duration(0),
+		10*time.Millisecond,
+		DefaultChangeThresholdPercent,
+		"czowx",
+		DefaultStorkRegistryBaseUrl,
+		time.Duration(0),
+		time.Duration(0),
+		storkAuth,
+		"",
+		"",
+		"",
+		time.Duration(0),
+		time.Duration(0),
+		false,
+		0,
+	)
+
+	signer, err := NewSigner[*EvmSignature](*config, EvmSignatureType, logger)
+	if err != nil {
+		t.Fatalf("NewSigner[*EvmSignature]: %v", err)
+	}
+
+	inputCh := make(chan ValueUpdate)
+	outputCh := make(chan SignedPriceUpdateBatch[*EvmSignature])
+	processor := NewPriceUpdateProcessor[*EvmSignature](
+		*signer,
+		1,
+		config.ClockPeriod,
+		config.DeltaCheckPeriod,
+		DefaultChangeThresholdPercent,
+		false,
+		inputCh,
+		outputCh,
+		logger,
+	)
+
+	go processor.Run()
+
+	// initial zero update gets sent out
+	zeroUpdate := ValueUpdate{
+		PublishTimestamp: 10000000,
+		Asset:            assetId,
+		Value:            big.NewFloat(0.0),
+	}
+
+	inputCh <- zeroUpdate
+	firstResult, success := getNextSignedOutput(outputCh, time.Second)
+	if !success {
+		t.Fatalf("getNextSignedOutput timed out")
+	}
+	assert.Equal(t, int64(10000000), firstResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
+	assert.Equal(t, QuantizedPrice("0"), firstResult[assetId].SignedPrice.QuantizedPrice)
+
+	// subsequent zero updates have no delta, so nothing is sent out
+	subsequentZeroUpdate := ValueUpdate{
+		PublishTimestamp: 20000000,
+		Asset:            assetId,
+		Value:            big.NewFloat(0.0),
+	}
+
+	inputCh <- subsequentZeroUpdate
+	_, success = getNextSignedOutput(outputCh, time.Second)
+	if success {
+		t.Fatalf("getNextSignedOutput should have timed out")
+	}
+
+	// any nonzero value has infinite delta, so gets sent out
+	nonzeroUpdate := ValueUpdate{
+		PublishTimestamp: 30000000,
+		Asset:            assetId,
+		Value:            big.NewFloat(1.0),
+	}
+	inputCh <- nonzeroUpdate
+	nextResult, success := getNextSignedOutput(outputCh, time.Second)
+	if !success {
+		t.Fatalf("getNextSignedOutput timed out")
+	}
+	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
+	assert.Equal(t, QuantizedPrice("1000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
+
+	// updating price back to zero gets sent out
+	returnToZeroUpdate := ValueUpdate{
+		PublishTimestamp: 40000000,
+		Asset:            assetId,
+		Value:            big.NewFloat(0.0),
+	}
+
+	inputCh <- returnToZeroUpdate
+	returnToZeroResult, success := getNextSignedOutput(outputCh, time.Second)
+	if !success {
+		t.Fatalf("getNextSignedOutput timed out")
+	}
+	assert.Equal(t, int64(40000000), returnToZeroResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
+	assert.Equal(t, QuantizedPrice("0"), returnToZeroResult[assetId].SignedPrice.QuantizedPrice)
+}
