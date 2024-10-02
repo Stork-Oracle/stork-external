@@ -1,0 +1,6 @@
+assets:
+  SHIBUSD:
+    asset_id: SHIBUSD
+    fallback_period_sec: 60
+    percent_change_threshold: 1
+    encoded_asset_id: 0xb39f98df3f03608241d2e0ef2b566f78d5c7d31b376f298cf7e115cbf006f92d

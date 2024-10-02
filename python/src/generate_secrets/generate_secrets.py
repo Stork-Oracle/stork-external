@@ -38,7 +38,7 @@ def main():
                         help='The auth token for your pull-based price source, if using')
     parser.add_argument('--output-path',
                         required=False,
-                        default="/tmp/stork-publisher-agent/",
+                        default="/tmp/publisher-agent/",
                         help='The directory to write your secret to')
     args = parser.parse_args()
 
