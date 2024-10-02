@@ -8,10 +8,10 @@ Stork leverages cryptographic primitives used in blockchain technologies to secu
 
 This repository contains various components utilized by data publishers and subscribers to leverage Stork's technology.
 
-#### Apps
+#### [Apps](apps)
 
 Tooling used to interface with Stork's services and on-chain contracts.
 
-#### Contracts
+#### [Contracts](contracts)
 
 All contracts developed by Stork will be managed in this repository.

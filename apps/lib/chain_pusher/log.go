@@ -1,4 +1,4 @@
-package pusher
+package chain_pusher
 
 import (
 	"github.com/rs/zerolog"
@@ -15,7 +15,7 @@ func BaseLogger(application string) zerolog.Logger {
 }
 
 func AppLogger(command string) zerolog.Logger {
-	return BaseLogger("stork-pusher").With().Str("command", command).Logger()
+	return BaseLogger("stork-chain-pusher").With().Str("command", command).Logger()
 }
 
 func EvmPusherLogger(

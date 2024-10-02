@@ -9,14 +9,14 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
 
-	"github.com/Stork-Oracle/stork_external/lib/pusher"
+	"github.com/Stork-Oracle/stork_external/lib/chain_pusher"
 )
 
 var verbose bool
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "stork-push",
+		Use:   "stork-chain-push",
 		Short: "Stork CLI tool for pushing prices to contracts on multiple chains",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
@@ -39,7 +39,7 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(pusher.EvmpushCmd)
+	rootCmd.AddCommand(chain_pusher.EvmpushCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

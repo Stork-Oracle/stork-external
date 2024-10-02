@@ -1,4 +1,4 @@
-package pusher
+package chain_pusher
 
 import (
 	"encoding/json"

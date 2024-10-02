@@ -28,7 +28,7 @@ go run . evm-push --help
 ```
 
 ```
-go run ./cmd/pusher/main.go evm \
+go run ./cmd/chain_pusher/main.go evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -69,7 +69,7 @@ docker run \
     --log-opt awslogs-stream=polygon-testnet \
     --log-opt mode=non-blocking \
     --log-opt max-buffer-size=4m \
-    storknetwork/pusher:v1.0.0 evm \
+    storknetwork/chain-pusher:v1.0.0 evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c https://rpc-amoy.polygon.technology \
