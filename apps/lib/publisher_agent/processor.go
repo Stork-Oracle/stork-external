@@ -78,6 +78,15 @@ func (vup *ValueUpdateProcessor[T]) DeltaUpdate() []ValueUpdateWithTrigger {
 					},
 				)
 			}
+		} else {
+			// the first update for an asset is always significant
+			significantUpdates = append(
+				significantUpdates,
+				ValueUpdateWithTrigger{
+					ValueUpdate: valueUpdate,
+					TriggerType: DeltaTriggerType,
+				},
+			)
 		}
 	}
 	return significantUpdates
@@ -180,7 +189,6 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 			// add incoming signed updates into a map
 			case signedUpdate := <-signedUpdates:
 				signedPriceUpdateBatch[signedUpdate.AssetId] = signedUpdate
-
 			case <-ticker.C:
 				{
 					if len(signedPriceUpdateBatch) > 0 {
