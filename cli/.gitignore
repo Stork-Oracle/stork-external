@@ -1,6 +1,0 @@
-*.secret
-
-build
-
-*.asset-config.yaml
-!sample.asset-config.yaml
