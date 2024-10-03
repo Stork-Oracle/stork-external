@@ -37,6 +37,7 @@ The command will pull the docker image from our registry and run it in detached 
 
 Note that you may need to change the `--platform` argument if you're using an amd64 architecture.
 
+You should run the publisher agent from infrastructure in Tokyo (ideally AWS availability zone `ap-northeast-1a`) to ensure your updates reach the Stork Network quickly.
 ### Publishing Prices
 To publish a price to the Stork Network, you can connect to your Stork Publisher Agent's local port and send prices for each asset.
 

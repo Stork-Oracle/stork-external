@@ -32,6 +32,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 	registryClient := NewRegistryClient(
 		config.StorkRegistryBaseUrl,
 		config.StorkAuth,
+		logger,
 	)
 	return &PublisherAgentRunner[T]{
 		config:                      config,
