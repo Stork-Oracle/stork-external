@@ -14,7 +14,7 @@ import (
 var PublisherAgentCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a process to sign price updates and make them available to the Stork network",
-	RunE:  runPublisherAgent,
+	RunE:  runPublisherAgentFromCmd,
 }
 
 // required
@@ -29,7 +29,7 @@ func init() {
 	PublisherAgentCmd.MarkFlagRequired(KeysFilePathFlag)
 }
 
-func runPublisherAgent(cmd *cobra.Command, args []string) error {
+func runPublisherAgentFromCmd(cmd *cobra.Command, args []string) error {
 	configFilePath, _ := cmd.Flags().GetString(ConfigFilePathFlag)
 	keysFilePath, _ := cmd.Flags().GetString(KeysFilePathFlag)
 
@@ -45,13 +45,21 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	mainLogger := MainLogger()
 	mainLogger.Info().Msg("initializing publisher agent")
 
+	err = RunPublisherAgent(config, mainLogger)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RunPublisherAgent(config *StorkPublisherAgentConfig, logger zerolog.Logger) error {
 	valueUpdateChannels := make([]chan ValueUpdate, 0)
 	var evmRunner *PublisherAgentRunner[*signer.EvmSignature]
 	var starkRunner *PublisherAgentRunner[*signer.StarkSignature]
 	for _, signatureType := range config.SignatureTypes {
 		switch signatureType {
 		case EvmSignatureType:
-			mainLogger.Info().Msg("Starting EVM runner")
+			logger.Info().Msg("Starting EVM runner")
 			logger := RunnerLogger(signatureType)
 			thisSigner, err := signer.NewEvmSigner(config.EvmPrivateKey, logger)
 			if err != nil {
@@ -61,7 +69,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			valueUpdateChannels = append(valueUpdateChannels, evmRunner.ValueUpdateCh)
 			go evmRunner.Run()
 		case StarkSignatureType:
-			mainLogger.Info().Msg("Starting Stark runner")
+			logger.Info().Msg("Starting Stark runner")
 			logger := RunnerLogger(signatureType)
 			thisSigner, err := signer.NewStarkSigner(config.StarkPrivateKey, string(config.StarkPublicKey), string(config.OracleId), logger)
 			if err != nil {
@@ -97,13 +105,12 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 				valueUpdateChannels,
 			)
 		})
-		mainLogger.Info().Msgf("starting incoming http server on port %d", config.IncomingWsPort)
-		err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.IncomingWsPort), nil)
-		mainLogger.Fatal().Err(err).Msg("incoming http server failed, process exiting")
+		logger.Info().Msgf("starting incoming http server on port %d", config.IncomingWsPort)
+		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.IncomingWsPort), nil)
+		logger.Error().Err(err).Msg("incoming http server failed, process exiting")
+		return err
 	} else {
-		mainLogger.Info().Msg("Not running incoming http server because incoming ws port is not specified")
+		logger.Info().Msg("Not running incoming http server because incoming ws port is not specified")
 		select {}
 	}
-
-	return nil
 }

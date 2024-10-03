@@ -11,14 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const evmPrivateKey = "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de"
-const evmPublicKey = "0x99e295e85cb07c16b7bb62a44df532a7f2620237"
-const starkPublicKey = "0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a"
-const starkPrivateKey = "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06"
-const storkAuth = "fake_auth"
-
-const assetId = "fakeAsset"
-
 func getNextSignedOutput[T signer.Signature](ch chan SignedPriceUpdateBatch[T], timeout time.Duration) (SignedPriceUpdateBatch[T], bool) {
 	select {
 	case value := <-ch:
@@ -30,28 +22,7 @@ func getNextSignedOutput[T signer.Signature](ch chan SignedPriceUpdateBatch[T], 
 
 func TestDeltaOnly(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-	config := NewStorkPublisherAgentConfig(
-		[]signer.SignatureType{EvmSignatureType},
-		evmPrivateKey,
-		evmPublicKey,
-		starkPrivateKey,
-		starkPublicKey,
-		time.Duration(0),
-		10*time.Millisecond,
-		DefaultChangeThresholdPercent,
-		"czowx",
-		DefaultStorkRegistryBaseUrl,
-		time.Duration(0),
-		time.Duration(0),
-		storkAuth,
-		"",
-		"",
-		"",
-		time.Duration(0),
-		time.Duration(0),
-		false,
-		0,
-	)
+	config := GetDeltaOnlyTestConfig()
 
 	evmSigner, err := signer.NewEvmSigner(evmPrivateKey, logger)
 	if err != nil {
@@ -118,28 +89,7 @@ func TestDeltaOnly(t *testing.T) {
 
 func TestZeroPrice(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-	config := NewStorkPublisherAgentConfig(
-		[]signer.SignatureType{EvmSignatureType},
-		evmPrivateKey,
-		evmPublicKey,
-		starkPrivateKey,
-		starkPublicKey,
-		time.Duration(0),
-		10*time.Millisecond,
-		DefaultChangeThresholdPercent,
-		"czowx",
-		DefaultStorkRegistryBaseUrl,
-		time.Duration(0),
-		time.Duration(0),
-		storkAuth,
-		"",
-		"",
-		"",
-		time.Duration(0),
-		time.Duration(0),
-		false,
-		0,
-	)
+	config := GetDeltaOnlyTestConfig()
 
 	evmSigner, err := signer.NewEvmSigner(evmPrivateKey, logger)
 	if err != nil {
