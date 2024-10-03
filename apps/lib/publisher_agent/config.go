@@ -13,7 +13,7 @@ import (
 )
 
 var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)
-var StorkAuthRegex = regexp.MustCompile(`^[0-9a-fA-F]+$`)
+var StorkAuthRegex = regexp.MustCompile(`^[A-Za-z0-9+/]+={0,2}$`)
 
 const DefaultClockUpdatePeriod = "500ms"
 const DefaultDeltaUpdatePeriod = "10ms"
@@ -114,7 +114,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 
 	if !StorkAuthRegex.MatchString(string(keysFile.StorkAuth)) {
-		return nil, errors.New("stork auth token must a non-empty string made up only of hex characters")
+		return nil, errors.New("stork auth token must a non-empty base64 string")
 	}
 
 	if len(keysFile.OracleId) != 5 {
