@@ -35,6 +35,8 @@ docker run --platform linux/arm64 --pull always --restart always --name publishe
 ```
 The command will pull the docker image from our registry and run it in detached mode. If the container crashes it will automatically restart. This example assumes your config files are located in `/home/ubuntu` and that you're using port 5216 for the incoming websocket.
 
+Check `docker logs -f publisher-agent` for any error logs once you've launched the agent.
+
 Note that you may need to change the `--platform` argument if you're using an amd64 architecture.
 
 You should run the publisher agent from infrastructure in Tokyo (ideally AWS availability zone `ap-northeast-1a`) to ensure your updates reach the Stork Network quickly.
