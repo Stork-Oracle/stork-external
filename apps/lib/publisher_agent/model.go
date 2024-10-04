@@ -98,3 +98,6 @@ type BrokerConnectionConfig struct {
 	PublishUrl BrokerPublishUrl `json:"publish_url"`
 	AssetIds   []AssetId        `json:"asset_ids"`
 }
+type RegistryErrorResponse struct {
+	Error string `json:"error"`
+}
