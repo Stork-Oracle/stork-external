@@ -104,6 +104,7 @@ func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*V
 			PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
 			Asset:            valueUpdatePushWebsocket.Asset,
 			Value:            bigFloatVal,
+			Metadata:         valueUpdatePushWebsocket.Metadata,
 		}
 		return &valueUpdate, nil
 	}

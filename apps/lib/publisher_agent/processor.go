@@ -100,6 +100,7 @@ func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
 			PublishTimestamp: time.Now().UnixNano(),
 			Value:            valueUpdate.Value,
 			Asset:            valueUpdate.Asset,
+			Metadata:         valueUpdate.Metadata,
 		}
 		updates = append(
 			updates,
@@ -168,6 +169,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 						SignatureType:        signer.SignatureType(vup.signer.GetSignatureType()),
 						QuantizedPrice:       quantizedPrice,
 						TimestampedSignature: *timestampedSig,
+						Metadata:             update.ValueUpdate.Metadata,
 					},
 				}
 
