@@ -1,4 +1,4 @@
-module github.com/Stork-Oracle/stork_external
+module github.com/Stork-Oracle/stork-external
 
 go 1.22.2
 
