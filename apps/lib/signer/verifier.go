@@ -16,7 +16,19 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature EvmSignature) error {
+func VerifyPublisherPrice[T Signature](publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signatureType SignatureType, signature T) error {
+	switch signatureType {
+	case EvmSignatureType:
+		return VerifyEvmPublisherPrice(publishTimestamp, externalAssetId, quantizedValue, publisherKey, signature)
+	case StarkSignatureType:
+		return VerifyStarkPublisherPrice(publishTimestamp, externalAssetId, quantizedValue, publisherKey, signature)
+	default:
+		return fmt.Errorf("invalid signature type: %s", signatureType)
+	}
+}
+
+func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature interface{}) error {
+	evmSignature := signature.(EvmSignature)
 	publisherAddress := common.HexToAddress(string(publisherKey))
 	payload := getPublisherEvmPricePayload(
 		publishTimestamp,
@@ -24,7 +36,7 @@ func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, qua
 		externalAssetId,
 		publisherAddress,
 	)
-	isValid, err := verifyEvmSignature(publisherAddress, payload, signature)
+	isValid, err := verifyEvmSignature(publisherAddress, payload, evmSignature)
 	if err != nil {
 		return fmt.Errorf("failed to verify signature: %w", err)
 	}
@@ -65,16 +77,17 @@ func VerifyStarkPublisherPrice(publishTimestamp int64, externalAssetId string, q
 	}
 }
 
-func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey PublisherKey, signature StarkSignature) bool {
+func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey PublisherKey, signature interface{}) bool {
+	starkSignature := signature.(StarkSignature)
 	publicKeyStr, _ := strings.CutPrefix(string(publicKey), "0x")
 	pubKeyInt := new(big.Int)
 	pubKeyInt.SetString(publicKeyStr, 16)
 
-	rStr, _ := strings.CutPrefix(signature.R, "0x")
+	rStr, _ := strings.CutPrefix(starkSignature.R, "0x")
 	rInt := new(big.Int)
 	rInt.SetString(rStr, 16)
 
-	sStr, _ := strings.CutPrefix(signature.S, "0x")
+	sStr, _ := strings.CutPrefix(starkSignature.S, "0x")
 	sInt := new(big.Int)
 	sInt.SetString(sStr, 16)
 
