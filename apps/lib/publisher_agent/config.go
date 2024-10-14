@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 )
 
 var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)

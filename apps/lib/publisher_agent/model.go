@@ -3,7 +3,7 @@ package publisher_agent
 import (
 	"math/big"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 )
 
 type MessageType string
