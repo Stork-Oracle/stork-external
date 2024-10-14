@@ -14,24 +14,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/rs/zerolog"
 )
 
-type Verifier[T Signature] interface {
-	VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature T) error
-}
-
-type EvmVerifier struct {
-	logger zerolog.Logger
-}
-
-func NewEvmVerifier(logger zerolog.Logger) *EvmVerifier {
-	return &EvmVerifier{
-		logger: logger,
-	}
-}
-
-func (e *EvmVerifier) VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature EvmSignature) error {
+func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature EvmSignature) error {
 	publisherAddress := common.HexToAddress(string(publisherKey))
 	payload := getPublisherEvmPricePayload(
 		publishTimestamp,
@@ -70,17 +55,7 @@ func verifyEvmSignature(publisherAddress common.Address, payload [][]byte, signa
 	return address == publisherAddress, nil
 }
 
-type StarkVerifier struct {
-	logger zerolog.Logger
-}
-
-func NewStarkVerifier(logger zerolog.Logger) *StarkVerifier {
-	return &StarkVerifier{
-		logger: logger,
-	}
-}
-
-func (s *StarkVerifier) VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature StarkSignature) error {
+func VerifyStarkPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature StarkSignature) error {
 	xInt, yInt := getPublisherPriceStarkXY(publishTimestamp, externalAssetId, quantizedValue)
 	isValid := verifyStarkSignature(xInt, yInt, publisherKey, signature)
 	if !isValid {

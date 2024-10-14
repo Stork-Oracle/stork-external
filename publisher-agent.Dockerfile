@@ -47,8 +47,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code from the lib and cmd directories into the container
-COPY apps/lib ./lib/
-COPY apps/cmd/publisher_agent ./cmd/publisher_agent/
+COPY apps/lib ./apps/lib/
+COPY apps/cmd/publisher_agent ./apps/cmd/publisher_agent/
 
 COPY --from=rust-build /usr/local/lib/libstork.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
@@ -59,7 +59,7 @@ RUN case "$TARGETPLATFORM" in \
         "linux/arm64")  export GOARCH="arm64" && export CC="aarch64-linux-gnu-gcc";; \
         *) echo "Unsupported platform: $TARGETPLATFORM" ; exit 1 ;; \
     esac && \
-    CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH CC=$CC go build -o /stork cmd/publisher_agent/main.go
+    CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH CC=$CC go build -o /stork ./apps/cmd/publisher_agent/main.go
 
 # Stage 3: Create the final image
 FROM debian:bookworm-slim
