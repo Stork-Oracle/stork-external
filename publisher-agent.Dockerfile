@@ -18,7 +18,7 @@ ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc
 WORKDIR /app/rust/stork
 
 # Copy the Rust source code into the container
-COPY lib/signer/rust/stork .
+COPY apps/lib/signer/rust/stork .
 
 # Install dependencies and build the Rust library depending on the target platform
 ARG TARGETPLATFORM
@@ -47,8 +47,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code from the lib and cmd directories into the container
-COPY lib/ ./lib/
-COPY cmd/publisher_agent/ ./cmd/publisher_agent/
+COPY apps/lib ./lib/
+COPY apps/cmd/publisher_agent ./cmd/publisher_agent/
 
 COPY --from=rust-build /usr/local/lib/libstork.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
