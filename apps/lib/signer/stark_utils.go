@@ -20,3 +20,7 @@ func getPublisherPriceStarkXY(publishTimestamp int64, asset string, quantizedVal
 	yInt = new(big.Int).Add(shiftLeft(priceInt, 32), timestampInt)
 	return xInt, yInt
 }
+
+func shiftLeft(num *big.Int, shift int) *big.Int {
+	return new(big.Int).Lsh(num, uint(shift))
+}
