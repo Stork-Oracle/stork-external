@@ -723,5 +723,12 @@
     ],
     "stateMutability": "pure",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]

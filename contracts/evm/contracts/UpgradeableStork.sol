@@ -27,4 +27,9 @@ contract UpgradeableStork is Initializable, UUPSUpgradeable, OwnableUpgradeable,
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function withdraw() public onlyOwner {
+        address payable to = payable(msg.sender);
+        to.transfer(address(this).balance);
+    }
 }

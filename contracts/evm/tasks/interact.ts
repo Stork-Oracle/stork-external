@@ -11,6 +11,7 @@ const allowedCommands = [
   "singleUpdateFeeInWei",,
   "updateStorkPublicKey",
   "storkPublicKey",
+  "withdraw"
 ];
 
 type AllowedCommands = (typeof allowedCommands)[number];
@@ -75,6 +76,9 @@ async function main(command: AllowedCommands, args: any) {
     case "storkPublicKey":
       returnVal = await contract[command]();
       console.log(returnVal);
+      break;
+    case "withdraw":
+      returnVal = await contract.withdraw();
       break;
     default:
       throw new Error(`Invalid command: ${command}`);
