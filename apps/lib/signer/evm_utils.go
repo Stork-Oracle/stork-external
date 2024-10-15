@@ -12,7 +12,7 @@ import (
 
 func getPublisherEvmPricePayload(
 	timestamp int64,
-	quantizedPrice string,
+	quantizedPrice QuantizedPrice,
 	assetId string,
 	publicAddress common.Address,
 ) [][]byte {

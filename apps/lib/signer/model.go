@@ -7,6 +7,7 @@ type (
 	EvmPrivateKey     string
 	StarkPublisherKey string
 	StarkPrivateKey   string
+	QuantizedPrice    string
 )
 
 const EvmSignatureType = SignatureType("evm")

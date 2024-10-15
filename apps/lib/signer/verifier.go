@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signatureType SignatureType, signature interface{}) error {
+func VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue QuantizedPrice, publisherKey PublisherKey, signatureType SignatureType, signature interface{}) error {
 	switch signatureType {
 	case EvmSignatureType:
 		return VerifyEvmPublisherPrice(publishTimestamp, externalAssetId, quantizedValue, publisherKey, signature)
@@ -27,7 +27,7 @@ func VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quanti
 	}
 }
 
-func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature interface{}) error {
+func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue QuantizedPrice, publisherKey PublisherKey, signature interface{}) error {
 	evmSignature := signature.(EvmSignature)
 	publisherAddress := common.HexToAddress(string(publisherKey))
 	payload := getPublisherEvmPricePayload(
@@ -67,7 +67,7 @@ func verifyEvmSignature(publisherAddress common.Address, payload [][]byte, signa
 	return address == publisherAddress, nil
 }
 
-func VerifyStarkPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature interface{}) error {
+func VerifyStarkPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue QuantizedPrice, publisherKey PublisherKey, signature interface{}) error {
 	xInt, yInt := getPublisherPriceStarkXY(publishTimestamp, externalAssetId, quantizedValue)
 	isValid := verifyStarkSignature(xInt, yInt, publisherKey, signature)
 	if !isValid {
