@@ -5,10 +5,14 @@ import (
 	"strings"
 )
 
+const starkOracleNameHexLength = 10
+
 func getPublisherPriceStarkXY(publishTimestamp int64, asset string, quantizedValue string) (xInt *big.Int, yInt *big.Int) {
 	trimmedExternalAssetId, _ := strings.CutPrefix(asset, "0x")
-	assetHexStr := trimmedExternalAssetId[:32]
-	starkOracleNameStr := trimmedExternalAssetId[32:]
+
+	assetLength := len(trimmedExternalAssetId) - starkOracleNameHexLength
+	assetHexStr := trimmedExternalAssetId[:assetLength]
+	starkOracleNameStr := trimmedExternalAssetId[assetLength:]
 	assetInt := new(big.Int)
 	assetInt.SetString(assetHexStr, 16)
 	starkOracleNameInt := new(big.Int)

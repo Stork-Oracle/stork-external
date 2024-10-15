@@ -42,3 +42,16 @@ func TestStarkVerifier_VerifyPublisherPrice(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestStarkVerifier_VerifyPublisherPriceLongAssetId(t *testing.T) {
+	signature := StarkSignature{
+		R: "0x518f9a20f62381dc341e83e8715d36dfb0f7e1f3cf8efd2231f3b1a6b843685",
+		S: "0x434cfdd6adfe376c86a5a28320212be79c04c36f3d7fe432db53b215a07cef4",
+	}
+	pubKey := PublisherKey("0x2798bbe74d340f938e8151b4af9992481dbb952ed359e2c46cf23021d6befd8")
+
+	err := VerifyStarkPublisherPrice(1729023715673877869, "444a5457494e594553555344545741503438307073727631", "574709288691000000", pubKey, signature)
+	if err != nil {
+		t.Error(err)
+	}
+}
