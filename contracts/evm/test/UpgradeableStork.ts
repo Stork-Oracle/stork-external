@@ -564,4 +564,36 @@ describe("UpgradeableStork", function() {
       ]);
     });
   });
+
+  describe("withdraw", function () {
+    it("Should withdraw successfully", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const initialBalance = await ethers.provider.getBalance(owner.address);
+
+      const updateRes = await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+      const { gasUsed: updatedGasUsed, gasPrice: updateGasPrice } = await updateRes.wait()
+      const updateGasCost = updatedGasUsed * updateGasPrice
+
+      const withdrawRes = await deployed.withdraw();
+      const { gasUsed: withdrawGasUsed, gasPrice: withdrawGasPrice } = await withdrawRes.wait()
+      const withdrawGasCost = withdrawGasUsed * withdrawGasPrice
+
+      const finalBalance = await ethers.provider.getBalance(owner.address);
+      // @ts-expect-error these are all bigints
+      expect(finalBalance).to.equal(initialBalance - updateGasCost - withdrawGasCost);
+    });
+  });
 });
