@@ -87,7 +87,7 @@ func TestDeltaOnly(t *testing.T) {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
 	assert.Equal(t, int64(10000000), firstResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
-	assert.Equal(t, QuantizedPrice("1000000000000000000"), firstResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, signer.QuantizedPrice("1000000000000000000"), firstResult[assetId].SignedPrice.QuantizedPrice)
 
 	// subsequent updates with no change don't get sent out
 	noDeltaUpdate := ValueUpdate{
@@ -113,7 +113,7 @@ func TestDeltaOnly(t *testing.T) {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
 	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
-	assert.Equal(t, QuantizedPrice("2000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, signer.QuantizedPrice("2000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
 }
 
 func TestZeroPrice(t *testing.T) {
@@ -176,7 +176,7 @@ func TestZeroPrice(t *testing.T) {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
 	assert.Equal(t, int64(10000000), firstResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
-	assert.Equal(t, QuantizedPrice("0"), firstResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, signer.QuantizedPrice("0"), firstResult[assetId].SignedPrice.QuantizedPrice)
 
 	// subsequent zero updates have no delta, so nothing is sent out
 	subsequentZeroUpdate := ValueUpdate{
@@ -203,7 +203,7 @@ func TestZeroPrice(t *testing.T) {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
 	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
-	assert.Equal(t, QuantizedPrice("1000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, signer.QuantizedPrice("1000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
 
 	// updating price back to zero gets sent out
 	returnToZeroUpdate := ValueUpdate{
@@ -218,5 +218,5 @@ func TestZeroPrice(t *testing.T) {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
 	assert.Equal(t, int64(40000000), returnToZeroResult[assetId].SignedPrice.TimestampedSignature.Timestamp)
-	assert.Equal(t, QuantizedPrice("0"), returnToZeroResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, signer.QuantizedPrice("0"), returnToZeroResult[assetId].SignedPrice.QuantizedPrice)
 }

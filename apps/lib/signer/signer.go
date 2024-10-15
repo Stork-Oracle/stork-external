@@ -23,7 +23,7 @@ import (
 )
 
 type Signer[T Signature] interface {
-	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
+	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue QuantizedPrice) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
 	GetPublisherKey() PublisherKey
 	GetSignatureType() SignatureType
 }
@@ -79,7 +79,7 @@ func NewStarkSigner(privateKeyStr StarkPrivateKey, publicKeyStr, oracleId string
 	}, nil
 }
 
-func (s *EvmSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[*EvmSignature], encodedAssetId string, err error) {
+func (s *EvmSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue QuantizedPrice) (timestampedSig *TimestampedSignature[*EvmSignature], encodedAssetId string, err error) {
 	timestampBigInt := big.NewInt(publishTimestamp / 1_000_000_000)
 
 	quantizedPriceBigInt := new(big.Int)
@@ -119,7 +119,7 @@ func (s *EvmSigner) GetSignatureType() SignatureType {
 	return EvmSignatureType
 }
 
-func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
+func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue QuantizedPrice) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
 	// Convert asset to hex string
 	assetHex := hex.EncodeToString([]byte(asset))
 	assetHexPadded := assetHex
@@ -128,7 +128,7 @@ func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, q
 	}
 
 	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
-	priceInt, _ := new(big.Int).SetString(quantizedValue, 10)
+	priceInt, _ := new(big.Int).SetString(string(quantizedValue), 10)
 	timestampInt := new(big.Int).SetInt64(publishTimestamp / 1_000_000_000)
 
 	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.oracleNameInt)

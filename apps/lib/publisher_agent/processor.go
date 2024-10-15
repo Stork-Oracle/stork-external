@@ -153,7 +153,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 				start := time.Now()
 
 				quantizedPrice := FloatToQuantizedPrice(update.ValueUpdate.Value)
-				timestampedSig, externalAssetId, err := vup.signer.SignPublisherPrice(update.ValueUpdate.PublishTimestamp, string(update.ValueUpdate.Asset), string(quantizedPrice))
+				timestampedSig, externalAssetId, err := vup.signer.SignPublisherPrice(update.ValueUpdate.PublishTimestamp, string(update.ValueUpdate.Asset), quantizedPrice)
 				if err != nil {
 					vup.logger.Error().Err(err).Msg("Failed to sign update")
 					continue
