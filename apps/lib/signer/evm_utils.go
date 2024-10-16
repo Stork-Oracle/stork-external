@@ -18,7 +18,7 @@ func getPublisherEvmPricePayload(
 ) [][]byte {
 	timestampBigInt := big.NewInt(timestamp / 1_000_000_000)
 	quantizedPriceBigInt := new(big.Int)
-	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
+	quantizedPriceBigInt.SetString(quantizedPrice, 10)
 
 	return [][]byte{
 		publicAddress.Bytes(),
