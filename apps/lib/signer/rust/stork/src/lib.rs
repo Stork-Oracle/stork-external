@@ -32,19 +32,42 @@ pub extern "C" fn hash_and_sign(x_ptr: *const u8, y_ptr: *const u8, pk_ptr: *con
 
 #[no_mangle]
 pub extern "C" fn validate_stark_signature(x_ptr: *const u8, y_ptr: *const u8, public_key_ptr: *const u8, sig_r_ptr: *const u8, sig_s_ptr: *const u8) -> i32 {
-        let x_fe = bytes_to_field_element(x_ptr).unwrap_or_else(|_e| {panic!("Failed to convert x byte buffer to field element")});
-        let y_fe = bytes_to_field_element(y_ptr).unwrap_or_else(|_e| {panic!("Failed to convert y byte buffer to field element")});
-        let public_key_fe = bytes_to_field_element(public_key_ptr).unwrap_or_else(|_e| {panic!("Failed to convert public key byte buffer to field element")});
-        let sig_r_fe = bytes_to_field_element(sig_r_ptr).unwrap_or_else(|_e| {panic!("Failed to convert signature R byte buffer to field element")});
-        let sig_s_fe = bytes_to_field_element(sig_s_ptr).unwrap_or_else(|_e| {panic!("Failed to convert signature S byte buffer to field element")});
+    let x_fe = match bytes_to_field_element(x_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
 
-        let hashed = pedersen_hash(&x_fe, &y_fe);
-        let signature = Signature{ r: sig_r_fe, s: sig_s_fe };
-        let result = starknet_core::crypto::ecdsa_verify(&public_key_fe, &hashed, &signature).unwrap_or_else(|_e| {panic!("Failed to verify pedersen hash")});
+    let y_fe = match bytes_to_field_element(y_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
 
-        if result {
-                1
-        } else {
-                0
-        }
+    let public_key_fe = match bytes_to_field_element(public_key_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let sig_r_fe = match bytes_to_field_element(sig_r_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let sig_s_fe = match bytes_to_field_element(sig_s_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let hashed = pedersen_hash(&x_fe, &y_fe);
+    let signature = Signature { r: sig_r_fe, s: sig_s_fe };
+
+    let result = match starknet_core::crypto::ecdsa_verify(&public_key_fe, &hashed, &signature) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    if result {
+        1
+    } else {
+        0
+    }
 }
