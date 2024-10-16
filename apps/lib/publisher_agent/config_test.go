@@ -3,7 +3,7 @@ package publisher_agent
 import (
 	"testing"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/stretchr/testify/assert"
 )
 

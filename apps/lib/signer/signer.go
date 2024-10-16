@@ -128,7 +128,7 @@ func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, q
 	}
 
 	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
-	priceInt, _ := new(big.Int).SetString(string(quantizedValue), 10)
+	priceInt, _ := new(big.Int).SetString(quantizedValue, 10)
 	timestampInt := new(big.Int).SetInt64(publishTimestamp / 1_000_000_000)
 
 	xInt := new(big.Int).Add(shiftLeft(assetInt, 40), s.oracleNameInt)
@@ -232,10 +232,6 @@ func bytesToRsvSignature(signature []byte) (rsv *EvmSignature, err error) {
 func bytesToFieldElement(b []byte) (*felt.Felt, error) {
 	element := new(fp.Element).SetBytes(b)
 	return felt.NewFelt(element), nil
-}
-
-func shiftLeft(num *big.Int, shift int) *big.Int {
-	return new(big.Int).Lsh(num, uint(shift))
 }
 
 func trimLeadingZeros(str string) string {

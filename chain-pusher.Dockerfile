@@ -14,8 +14,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code from the lib and cmd directories into the container
-COPY lib/ ./lib/
-COPY cmd/chain_pusher/ ./cmd/chain_pusher/
+COPY apps/lib ./lib/
+COPY apps/cmd/chain_pusher ./cmd/chain_pusher/
 
 ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \

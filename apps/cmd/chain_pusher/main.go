@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
 
-	"github.com/Stork-Oracle/stork_external/lib/chain_pusher"
+	"github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher"
 )
 
 var verbose bool

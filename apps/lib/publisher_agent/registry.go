@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/rs/zerolog"
 )
 

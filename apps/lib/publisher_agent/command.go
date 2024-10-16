@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"

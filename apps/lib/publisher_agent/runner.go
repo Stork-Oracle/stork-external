@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
