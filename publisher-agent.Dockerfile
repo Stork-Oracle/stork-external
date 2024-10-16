@@ -1,5 +1,5 @@
 # Stage 1: Build the Rust binary
-FROM storknetwork/signer:v1.0.0-dev AS rust-build
+FROM storknetwork/signer:v1.0.0 AS rust-build
 
 
 # Stage 2: Build the Go Library
