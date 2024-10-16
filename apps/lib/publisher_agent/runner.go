@@ -21,6 +21,7 @@ type PublisherAgentRunner[T signer.Signature] struct {
 	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock     sync.RWMutex
 	signer                      signer.Signer[T]
+	publisherMetadataReporter   *PublisherMetadataReporter
 }
 
 func NewPublisherAgentRunner[T signer.Signature](
@@ -34,6 +35,13 @@ func NewPublisherAgentRunner[T signer.Signature](
 		config.StorkAuth,
 		logger,
 	)
+
+	publisherMetadataReporter := NewPublisherMetadataReporter(
+		signer.GetPublisherKey(),
+		signatureType,
+		config.PublisherMetadataUpdateInterval,
+	)
+
 	return &PublisherAgentRunner[T]{
 		config:                      config,
 		signatureType:               signatureType,
@@ -45,6 +53,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
 		signer:                      signer,
+		publisherMetadataReporter:   publisherMetadataReporter,
 	}
 }
 
@@ -117,6 +126,10 @@ func (r *PublisherAgentRunner[T]) Run() {
 	}(r.signedPriceBatchCh)
 
 	go r.RunBrokerConnectionUpdater()
+
+	if r.config.PublisherMetadataUpdateInterval.Nanoseconds() > 0 {
+		go r.publisherMetadataReporter.Run()
+	}
 
 	processor.Run()
 }
