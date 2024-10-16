@@ -26,8 +26,9 @@ type ErrorMessage struct {
 }
 
 type (
-	OracleId string
-	AssetId  string
+	OracleId       string
+	AssetId        string
+	QuantizedPrice string
 )
 
 const EvmSignatureType = signer.SignatureType("evm")
@@ -73,7 +74,7 @@ type SignedPrice[T signer.Signature] struct {
 	PublisherKey         signer.PublisherKey            `json:"publisher_key"`
 	ExternalAssetId      string                         `json:"external_asset_id"`
 	SignatureType        signer.SignatureType           `json:"signature_type"`
-	QuantizedPrice       signer.QuantizedPrice          `json:"price"`
+	QuantizedPrice       QuantizedPrice                 `json:"price"`
 	TimestampedSignature signer.TimestampedSignature[T] `json:"timestamped_signature"`
 	Metadata             Metadata                       `json:"metadata,omitempty"`
 }

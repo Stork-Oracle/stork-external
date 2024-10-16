@@ -2,11 +2,9 @@ package publisher_agent
 
 import (
 	"math/big"
-
-	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 )
 
-func FloatToQuantizedPrice(f *big.Float) signer.QuantizedPrice {
+func FloatToQuantizedPrice(f *big.Float) QuantizedPrice {
 	multiplier := new(big.Float).SetInt64(1e18)
 	result := new(big.Float).Mul(new(big.Float).Set(f), multiplier)
 	intResult := new(big.Int)
@@ -14,7 +12,7 @@ func FloatToQuantizedPrice(f *big.Float) signer.QuantizedPrice {
 	return StringifyQuantizedPrice(intResult)
 }
 
-func StringifyQuantizedPrice(price *big.Int) signer.QuantizedPrice {
+func StringifyQuantizedPrice(price *big.Int) QuantizedPrice {
 	// Convert the big.Int to a string
 	valStr := price.String()
 
@@ -23,5 +21,5 @@ func StringifyQuantizedPrice(price *big.Int) signer.QuantizedPrice {
 		valStr = valStr[:len(valStr)-6] + "000000"
 	}
 
-	return signer.QuantizedPrice(valStr)
+	return QuantizedPrice(valStr)
 }
