@@ -1,4 +1,5 @@
-use starknet_core::crypto::pedersen_hash;
+use std::ptr::hash;
+use starknet_core::crypto::{pedersen_hash, Signature};
 use starknet_core::types::{FieldElement, FromByteArrayError};
 
 fn bytes_to_field_element(bytes_ptr: *const u8) -> Result<FieldElement, FromByteArrayError> {
@@ -27,4 +28,46 @@ pub extern "C" fn hash_and_sign(x_ptr: *const u8, y_ptr: *const u8, pk_ptr: *con
         write_field_element_to_buffer(signature.s, sig_s_ptr);
 
         return 0
+}
+
+#[no_mangle]
+pub extern "C" fn validate_stark_signature(x_ptr: *const u8, y_ptr: *const u8, public_key_ptr: *const u8, sig_r_ptr: *const u8, sig_s_ptr: *const u8) -> i32 {
+    let x_fe = match bytes_to_field_element(x_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let y_fe = match bytes_to_field_element(y_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let public_key_fe = match bytes_to_field_element(public_key_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let sig_r_fe = match bytes_to_field_element(sig_r_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let sig_s_fe = match bytes_to_field_element(sig_s_ptr) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    let hashed = pedersen_hash(&x_fe, &y_fe);
+    let signature = Signature { r: sig_r_fe, s: sig_s_fe };
+
+    let result = match starknet_core::crypto::ecdsa_verify(&public_key_fe, &hashed, &signature) {
+        Ok(val) => val,
+        Err(_) => return 0,
+    };
+
+    if result {
+        1
+    } else {
+        0
+    }
 }
