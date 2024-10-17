@@ -51,6 +51,11 @@ const config: HardhatUserConfig = {
       chainId: 808813,
     },
     citreaTestnet: {
+      url: "https://rpc.testnet.citrea.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 5115,
+    },
+    citreaDevnet: {
       url: "https://rpc.devnet.citrea.xyz",
       accounts: [PRIVATE_KEY],
       chainId: 62298,
@@ -110,6 +115,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 164
     },
+    plumeDevnet: {
+      url: "https://test-rpc.plumenetwork.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 98864
+    },
     polygon: {
       url: "https://polygon.llamarpc.com",
       accounts: [PRIVATE_KEY],
@@ -129,6 +139,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.minato.soneium.org",
       accounts: [PRIVATE_KEY],
       chainId: 1946
+    },
+    sonicTestnet: {
+      url: "https://rpc.testnet.soniclabs.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 64165,
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
@@ -163,10 +178,12 @@ const config: HardhatUserConfig = {
       molten: 'fake',
       monadDevnet: 'fake',
       omniOmega: 'fake',
+      plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
       soneiumMinato: 'fake',
+      sonicTestnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -214,9 +231,17 @@ const config: HardhatUserConfig = {
       },
       {
         network: "citreaTestnet",
+        chainId: 5115,
+        urls: {
+          apiURL: "https://explorer.testnet.citrea.xyz/api",
+          browserURL: "https://explorer.testnet.citrea.xyz/"
+        }
+      },
+      {
+        network: "citreaDevnet",
         chainId: 62298,
         urls: {
-          apiURL: "https://explorer.devnet.citrea.xyz//api",
+          apiURL: "https://explorer.devnet.citrea.xyz/api",
           browserURL: "https://explorer.devnet.citrea.xyz/"
         }
       },
@@ -282,6 +307,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
           browserURL: "https://omega.omniscan.network"
+        }
+      },
+      {
+        network: "plumeDevnet",
+        chainId: 98864,
+        urls: {
+          apiURL: "https://plume-testnet.explorer.caldera.xyz/api",
+          browserURL: "https://plume-testnet.explorer.caldera.xyz/"
         }
       },
       {
