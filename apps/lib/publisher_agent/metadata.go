@@ -1,18 +1,21 @@
 package publisher_agent
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/Stork-Oracle/stork_external/lib/signer"
+	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/rs/zerolog"
 )
 
 const publicIpUrl = "https://api.ipify.org"
 const awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
-const publisherMetadataReportUrl = ""
+const publisherMetadataReportUrl = "http://rest-api:8080/v1/publisher/metadata"
 const versionFile = "version.txt"
 
 type PublisherMetadata struct {
@@ -32,6 +35,7 @@ type PublisherMetadataReporter struct {
 	publicKey     signer.PublisherKey
 	signatureType signer.SignatureType
 	reportPeriod  time.Duration
+	storkAuth     AuthToken
 	logger        zerolog.Logger
 }
 
@@ -39,11 +43,15 @@ func NewPublisherMetadataReporter(
 	publicKey signer.PublisherKey,
 	signatureType signer.SignatureType,
 	reportPeriod time.Duration,
+	storkAuth AuthToken,
+	logger zerolog.Logger,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
 		publicKey:     publicKey,
 		signatureType: signatureType,
 		reportPeriod:  reportPeriod,
+		storkAuth:     storkAuth,
+		logger:        logger,
 	}
 }
 
@@ -62,8 +70,17 @@ func (p *PublisherMetadataReporter) Run() {
 
 func (p *PublisherMetadataReporter) report() error {
 	metadata := p.getMetadata()
-	//instanceTypeResult, err := RestQuery("GET", publisherMetadataReportUrl+"/publisher_metadata", nil, metadata, nil)
-	p.logger.Debug().Msgf("Reported publisher metadata: %v", metadata)
+	metadataJson, err := json.Marshal(metadata)
+	if err != nil {
+		p.logger.Info().Err(err).Msgf("Error marshaling publisher metadata")
+	}
+	authHeader := http.Header{"Authorization": []string{"Basic " + string(p.storkAuth)}}
+	_, err = RestQuery("POST", publisherMetadataReportUrl, nil, bytes.NewReader(metadataJson), authHeader)
+	if err != nil {
+		p.logger.Info().Err(err).Msgf("Error reporting publisher metadata")
+	}
+
+	p.logger.Info().Msgf("Reported publisher metadata: %v", metadata)
 	return nil
 }
 

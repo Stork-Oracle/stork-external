@@ -40,6 +40,8 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signer.GetPublisherKey(),
 		signatureType,
 		config.PublisherMetadataUpdateInterval,
+		config.StorkAuth,
+		logger,
 	)
 
 	return &PublisherAgentRunner[T]{
