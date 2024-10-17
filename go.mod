@@ -1,11 +1,9 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.23.0
-
-toolchain go1.23.2
+go 1.22.0
 
 require (
-	github.com/NethermindEth/juno v0.12.1
+	github.com/NethermindEth/juno v0.11.7
 	github.com/consensys/gnark-crypto v0.13.0
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/google/uuid v1.6.0
