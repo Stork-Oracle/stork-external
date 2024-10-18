@@ -9,7 +9,7 @@ if [ -z "$IMAGE_NAME" ]; then
   exit 1
 fi
 
-TAG="v1.0.0"
+TAG=$(cat version.txt)
 DOCKERHUB_USERNAME="storknetwork"
 
 docker buildx use stork-cli-builder

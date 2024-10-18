@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 func RestQuery(method string, baseUrl string, query url.Values, requestBody io.Reader, header http.Header) ([]byte, error) {
@@ -26,7 +27,9 @@ func RestQuery(method string, baseUrl string, query url.Values, requestBody io.R
 		return nil, fmt.Errorf("error creating %s request for url %s: %v", method, urlString, err)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error making %s request for url %s: %v", method, urlString, err)
