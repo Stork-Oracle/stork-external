@@ -19,10 +19,12 @@ const publisherMetadataReportUrl = "http://rest-api:8080/v1/publisher/metadata"
 const versionFile = "version.txt"
 
 type PublisherMetadata struct {
-	PublisherAgentVersion string      `json:"publisher_agent_version"`
-	Architecture          string      `json:"architecture"`
-	PublicIp              string      `json:"public_ip"`
-	AwsMetadata           AwsMetadata `json:"aws_metadata"`
+	PublisherKey          signer.PublisherKey  `json:"publisher_key"`
+	SignatureType         signer.SignatureType `json:"signature_type"`
+	PublisherAgentVersion string               `json:"publisher_agent_version"`
+	Architecture          string               `json:"architecture"`
+	PublicIp              string               `json:"public_ip"`
+	AwsMetadata           AwsMetadata          `json:"aws_metadata"`
 }
 
 type AwsMetadata struct {
@@ -91,6 +93,8 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 	version := getPublisherAgentVersion()
 
 	return PublisherMetadata{
+		PublisherKey:          p.publicKey,
+		SignatureType:         p.signatureType,
 		PublisherAgentVersion: version,
 		Architecture:          architecture,
 		PublicIp:              publicIp,
