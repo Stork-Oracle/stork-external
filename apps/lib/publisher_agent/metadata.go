@@ -15,7 +15,6 @@ import (
 
 const publicIpUrl = "https://api.ipify.org"
 const awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
-const publisherMetadataReportUrl = "http://rest-api:8080/v1/publisher/metadata"
 const versionFile = "version.txt"
 
 type PublisherMetadata struct {
@@ -34,26 +33,29 @@ type AwsMetadata struct {
 }
 
 type PublisherMetadataReporter struct {
-	publicKey     signer.PublisherKey
-	signatureType signer.SignatureType
-	reportPeriod  time.Duration
-	storkAuth     AuthToken
-	logger        zerolog.Logger
+	publicKey           signer.PublisherKey
+	signatureType       signer.SignatureType
+	reportPeriod        time.Duration
+	storkRestApiBaseUrl string
+	storkAuth           AuthToken
+	logger              zerolog.Logger
 }
 
 func NewPublisherMetadataReporter(
 	publicKey signer.PublisherKey,
 	signatureType signer.SignatureType,
 	reportPeriod time.Duration,
+	storkRestApiBaseUrl string,
 	storkAuth AuthToken,
 	logger zerolog.Logger,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
-		publicKey:     publicKey,
-		signatureType: signatureType,
-		reportPeriod:  reportPeriod,
-		storkAuth:     storkAuth,
-		logger:        logger,
+		publicKey:           publicKey,
+		signatureType:       signatureType,
+		reportPeriod:        reportPeriod,
+		storkRestApiBaseUrl: storkRestApiBaseUrl,
+		storkAuth:           storkAuth,
+		logger:              logger,
 	}
 }
 
@@ -77,7 +79,7 @@ func (p *PublisherMetadataReporter) report() error {
 		p.logger.Info().Err(err).Msgf("Error marshaling publisher metadata")
 	}
 	authHeader := http.Header{"Authorization": []string{"Basic " + string(p.storkAuth)}}
-	_, err = RestQuery("POST", publisherMetadataReportUrl, nil, bytes.NewReader(metadataJson), authHeader)
+	_, err = RestQuery("POST", p.storkRestApiBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeader)
 	if err != nil {
 		p.logger.Info().Err(err).Msgf("Error reporting publisher metadata")
 	}
@@ -137,7 +139,7 @@ func getAwsMetadata() AwsMetadata {
 		IsAws: true,
 	}
 
-	azResult, err := RestQuery("GET", awsMetadataUrl+"/availability-zone-id", nil, nil, nil)
+	azResult, err := RestQuery("GET", awsMetadataUrl+"/placement/availability-zone-id", nil, nil, nil)
 	if err == nil {
 		metadata.AvailabilityZoneId = string(azResult)
 	}
