@@ -231,6 +231,41 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	return config, nil
 }
 
+func LoadKeysFromEnv(keysFile *KeysFile) {
+	// retrieve environment variables, and assign to keysFile fields if they exist
+	// this will and should overwrite any data extracted from the keysFile provided via -k
+	// currently I'm only overwriting if the environement variable is set AND not empty
+
+	evmPrivateKey := os.Getenv("STORK_EVM_PRIVATE_KEY")
+	if evmPrivateKey != "" {
+		keysFile.EvmPrivateKey = signer.EvmPrivateKey(evmPrivateKey)
+	}
+	evmPublicKey := os.Getenv("STORK_EVM_PUBLIC_KEY")
+	if evmPublicKey != "" {
+		keysFile.EvmPublicKey = signer.EvmPublisherKey(evmPublicKey)
+	}
+	starkPrivateKey := os.Getenv("STORK_STARK_PRIVATE_KEY")
+	if starkPrivateKey != "" {
+		keysFile.StarkPrivateKey = signer.StarkPrivateKey(starkPrivateKey)
+	}
+	starkPublicKey := os.Getenv("STORK_STARK_PUBLIC_KEY")
+	if starkPublicKey != "" {
+		keysFile.StarkPublicKey = signer.StarkPublisherKey(starkPublicKey)
+	}
+	oracleId := os.Getenv("STORK_ORACLE_ID")
+	if oracleId != "" {
+		keysFile.OracleId = OracleId(oracleId)
+	}
+	storkAuth := os.Getenv("STORK_AUTH")
+	if storkAuth != "" {
+		keysFile.StorkAuth = AuthToken(storkAuth)
+	}
+	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
+	if pullBasedAuth != "" {
+		keysFile.PullBasedAuth = AuthToken(pullBasedAuth)
+	}
+}
+
 type StorkPublisherAgentConfig struct {
 	SignatureTypes                 []signer.SignatureType
 	EvmPrivateKey                  signer.EvmPrivateKey
