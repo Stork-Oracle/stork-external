@@ -26,7 +26,6 @@ func init() {
 	PublisherAgentCmd.Flags().StringP(KeysFilePathFlag, "k", "", "The path of your keys json file")
 
 	PublisherAgentCmd.MarkFlagRequired(ConfigFilePathFlag)
-	PublisherAgentCmd.MarkFlagRequired(KeysFilePathFlag)
 }
 
 func runPublisherAgent(cmd *cobra.Command, args []string) error {
