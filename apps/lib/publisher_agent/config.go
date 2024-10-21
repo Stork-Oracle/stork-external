@@ -20,7 +20,8 @@ const DefaultDeltaUpdatePeriod = "10ms"
 const DefaultChangeThresholdPercent = 0.1
 const DefaultStorkRegistryRefreshInterval = "10m"
 const DefaultPublisherMetadataRefreshInterval = "1h"
-const DefaultStorkRestApiBaseUrl = "https://rest.jp.stork-oracle.network"
+const DefaultStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
+const DefaultPublisherMetadataBaseUrl = "https://rest.jp.stork-oracle.network"
 const DefaultBrokerReconnectDelay = "5s"
 const DefaultPullBasedReconnectDelay = "5s"
 const DefaultPullBasedReadTimeout = "10s"
@@ -30,10 +31,11 @@ type ConfigFile struct {
 	ClockPeriod                      string
 	DeltaCheckPeriod                 string
 	ChangeThresholdPercent           float64 // 0-100
-	StorkRestApiBaseUrl              string
+	StorkRegistryBaseUrl             string
 	StorkRegistryRefreshInterval     string
 	BrokerReconnectDelay             string
 	PublisherMetadataRefreshInterval string
+	PublisherMetadataBaseUrl         string
 	PullBasedWsUrl                   string
 	PullBasedWsSubscriptionRequest   string
 	PullBasedWsReconnectDelay        string
@@ -211,9 +213,14 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		return nil, fmt.Errorf("invalid pull-based websocket read timeout: %s", pullBasedWsReadTimeoutStr)
 	}
 
-	storkRestApiBaseUrl := configFile.StorkRestApiBaseUrl
-	if len(storkRestApiBaseUrl) == 0 {
-		storkRestApiBaseUrl = DefaultStorkRestApiBaseUrl
+	storkRegistryBaseUrl := configFile.StorkRegistryBaseUrl
+	if len(storkRegistryBaseUrl) == 0 {
+		storkRegistryBaseUrl = DefaultStorkRegistryBaseUrl
+	}
+
+	publisherMetadataBaseUrl := configFile.PublisherMetadataBaseUrl
+	if len(publisherMetadataBaseUrl) == 0 {
+		publisherMetadataBaseUrl = DefaultPublisherMetadataBaseUrl
 	}
 
 	config := NewStorkPublisherAgentConfig(
@@ -226,9 +233,10 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		deltaUpdatePeriod,
 		changeThresholdPercent,
 		keysFile.OracleId,
-		storkRestApiBaseUrl,
+		storkRegistryBaseUrl,
 		storkRegistryRefreshDuration,
 		brokerReconnectDelayDuration,
+		publisherMetadataBaseUrl,
 		publisherMetadataUpdateDuration,
 		keysFile.StorkAuth,
 		configFile.PullBasedWsUrl,
@@ -253,10 +261,11 @@ type StorkPublisherAgentConfig struct {
 	DeltaCheckPeriod                time.Duration
 	ChangeThresholdProportion       float64 // 0-1
 	OracleId                        OracleId
-	StorkRestApiBaseUrl             string
+	StorkRegistryBaseUrl            string
 	StorkAuth                       AuthToken
 	StorkRegistryRefreshInterval    time.Duration
 	BrokerReconnectDelay            time.Duration
+	PublisherMetadataBaseUrl        string
 	PublisherMetadataUpdateInterval time.Duration
 	PullBasedWsUrl                  string
 	PullBasedAuth                   AuthToken
@@ -280,6 +289,7 @@ func NewStorkPublisherAgentConfig(
 	storkRegistryBaseUrl string,
 	storkRegistryRefreshInterval time.Duration,
 	brokerReconnectDelay time.Duration,
+	publisherMetadataBaseUrl string,
 	publisherMetadataUpdateInterval time.Duration,
 	storkAuth AuthToken,
 	pullBasedWsUrl string,
@@ -300,9 +310,10 @@ func NewStorkPublisherAgentConfig(
 		DeltaCheckPeriod:                deltaPeriod,
 		ChangeThresholdProportion:       changeThresholdPercentage / 100.0,
 		OracleId:                        oracleId,
-		StorkRestApiBaseUrl:             storkRegistryBaseUrl,
+		StorkRegistryBaseUrl:            storkRegistryBaseUrl,
 		StorkRegistryRefreshInterval:    storkRegistryRefreshInterval,
 		BrokerReconnectDelay:            brokerReconnectDelay,
+		PublisherMetadataBaseUrl:        publisherMetadataBaseUrl,
 		PublisherMetadataUpdateInterval: publisherMetadataUpdateInterval,
 		StorkAuth:                       storkAuth,
 		PullBasedWsUrl:                  pullBasedWsUrl,

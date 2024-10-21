@@ -31,7 +31,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
 	registryClient := NewRegistryClient(
-		config.StorkRestApiBaseUrl,
+		config.StorkRegistryBaseUrl,
 		config.StorkAuth,
 		logger,
 	)
@@ -40,7 +40,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signer.GetPublisherKey(),
 		signatureType,
 		config.PublisherMetadataUpdateInterval,
-		config.StorkRestApiBaseUrl,
+		config.PublisherMetadataBaseUrl,
 		config.StorkAuth,
 		logger,
 	)

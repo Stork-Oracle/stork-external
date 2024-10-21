@@ -33,29 +33,29 @@ type AwsMetadata struct {
 }
 
 type PublisherMetadataReporter struct {
-	publicKey           signer.PublisherKey
-	signatureType       signer.SignatureType
-	reportPeriod        time.Duration
-	storkRestApiBaseUrl string
-	storkAuth           AuthToken
-	logger              zerolog.Logger
+	publicKey                signer.PublisherKey
+	signatureType            signer.SignatureType
+	reportPeriod             time.Duration
+	publisherMetadataBaseUrl string
+	storkAuth                AuthToken
+	logger                   zerolog.Logger
 }
 
 func NewPublisherMetadataReporter(
 	publicKey signer.PublisherKey,
 	signatureType signer.SignatureType,
 	reportPeriod time.Duration,
-	storkRestApiBaseUrl string,
+	publisherMetadataBaseUrl string,
 	storkAuth AuthToken,
 	logger zerolog.Logger,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
-		publicKey:           publicKey,
-		signatureType:       signatureType,
-		reportPeriod:        reportPeriod,
-		storkRestApiBaseUrl: storkRestApiBaseUrl,
-		storkAuth:           storkAuth,
-		logger:              logger,
+		publicKey:                publicKey,
+		signatureType:            signatureType,
+		reportPeriod:             reportPeriod,
+		publisherMetadataBaseUrl: publisherMetadataBaseUrl,
+		storkAuth:                storkAuth,
+		logger:                   logger,
 	}
 }
 
@@ -79,7 +79,7 @@ func (p *PublisherMetadataReporter) report() error {
 		p.logger.Info().Err(err).Msgf("Error marshaling publisher metadata")
 	}
 	authHeader := http.Header{"Authorization": []string{"Basic " + string(p.storkAuth)}}
-	_, err = RestQuery("POST", p.storkRestApiBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeader)
+	_, err = RestQuery("POST", p.publisherMetadataBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeader)
 	if err != nil {
 		p.logger.Info().Err(err).Msgf("Error reporting publisher metadata")
 	}
