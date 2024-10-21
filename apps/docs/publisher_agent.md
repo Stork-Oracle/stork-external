@@ -31,7 +31,7 @@ You can also generate your own keys and build your own `secrets.json` file - it 
 
 You can run the docker container like this:
 ```bash
-docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/secrets.json:/etc/secrets.json -d --log-opt max-size=1g storknetwork/publisher-agent:v1.0.0 start -c /etc/config.json -k /etc/secrets.json
+docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/secrets.json:/etc/secrets.json -d --log-opt max-size=1g storknetwork/publisher-agent:v0.1.0 start -c /etc/config.json -k /etc/secrets.json
 ```
 The command will pull the docker image from our registry and run it in detached mode. If the container crashes it will automatically restart. This example assumes your config files are located in `/home/ubuntu` and that you're using port 5216 for the incoming websocket.
 
