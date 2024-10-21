@@ -70,10 +70,11 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
-	keyFileData, err := readFile(keysFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read keys file: %w", err)
-	}
+
+	keyFileData, keyFileReadErr := readFile(keysFilePath)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to read keys file: %w", err)
+	// }
 
 	var configFile ConfigFile
 	err = json.Unmarshal(configFileData, &configFile)
@@ -82,10 +83,16 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 
 	var keysFile KeysFile
-	err = json.Unmarshal(keyFileData, &keysFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
+
+	// only deserialize keyFileData if keysFilePath was successfully read
+	if keyFileReadErr == nil {
+		err = json.Unmarshal(keyFileData, &keysFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
+		}
 	}
+	// overwrite keysFile with any set env vars
+	LoadKeysFileFromEnv(&keysFile)
 
 	// validate config and key file
 	if configFile.SignatureTypes == nil || len(configFile.SignatureTypes) == 0 {
@@ -231,7 +238,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	return config, nil
 }
 
-func LoadKeysFromEnv(keysFile *KeysFile) {
+func LoadKeysFileFromEnv(keysFile *KeysFile) {
 	// retrieve environment variables, and assign to keysFile fields if they exist
 	// this will and should overwrite any data extracted from the keysFile provided via -k
 	// currently I'm only overwriting if the environement variable is set AND not empty
