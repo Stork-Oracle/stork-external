@@ -88,6 +88,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 			return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
 		}
 	}
+
 	// overwrite keysFile with any set env vars
 	LoadKeysFileFromEnv(&keysFile)
 
