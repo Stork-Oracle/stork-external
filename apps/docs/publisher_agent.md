@@ -17,7 +17,7 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 }
 ```
 
-Once you've gotten a StorkAuth key from Stork, you can use the [generate_keys.py](../../python/src/generate_secrets/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
+Once you've gotten a StorkAuth key from Stork, you can use the [generate_keys.py](../../python/src/generate_keys/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
 
 You can also generate your own keys and build your own `keys.json` file - it follows the structure of the [Keys struct](../lib/publisher_agent/config.go):
 ```json

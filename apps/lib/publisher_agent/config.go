@@ -126,6 +126,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 
 	// overwrite keys with any set env vars
 	keys.updateFromEnvVars()
+
 	// validate config and keys file
 	if configFile.SignatureTypes == nil || len(configFile.SignatureTypes) == 0 {
 		return nil, fmt.Errorf("must specify at least one signatureType")
