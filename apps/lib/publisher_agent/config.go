@@ -72,9 +72,6 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 
 	keyFileData, keyFileReadErr := readFile(keysFilePath)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to read keys file: %w", err)
-	// }
 
 	var configFile ConfigFile
 	err = json.Unmarshal(configFileData, &configFile)
@@ -238,11 +235,8 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	return config, nil
 }
 
+// this overwrites any existing values in keysFile
 func LoadKeysFileFromEnv(keysFile *KeysFile) {
-	// retrieve environment variables, and assign to keysFile fields if they exist
-	// this will and should overwrite any data extracted from the keysFile provided via -k
-	// currently I'm only overwriting if the environement variable is set AND not empty
-
 	evmPrivateKey := os.Getenv("STORK_EVM_PRIVATE_KEY")
 	if evmPrivateKey != "" {
 		keysFile.EvmPrivateKey = signer.EvmPrivateKey(evmPrivateKey)

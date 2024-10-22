@@ -19,6 +19,8 @@ var PublisherAgentCmd = &cobra.Command{
 
 // required
 const ConfigFilePathFlag = "config-file-path"
+
+// not required
 const KeysFilePathFlag = "keys-file-path"
 
 func init() {
