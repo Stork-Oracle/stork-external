@@ -9,7 +9,7 @@ To run the agent on your infrastructure, you'll need to first create a `config.j
 
 Here we open a websocket at `ws://localhost:5216/publish` to receive price updates. The agent will sign and send the latest price every 500 ms (clock updates) or when the price has changed by more than 0.1% (delta updates). 
 
-`config.json` follows the structure of the [ConfigFile struct](../lib/publisher_agent/config.go#L27):
+`config.json` follows the structure of the [Config struct](../lib/publisher_agent/config.go):
 ```json
 {
   "SignatureTypes": ["evm"],
@@ -19,7 +19,7 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 
 Once you've gotten a StorkAuth key from Stork, you can use the [generate_keys.py](../../python/src/generate_secrets/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
 
-You can also generate your own keys and build your own `keys.json` file - it follows the structure of the [Keys struct](../lib/publisher_agent/config.go#L43):
+You can also generate your own keys and build your own `keys.json` file - it follows the structure of the [Keys struct](../lib/publisher_agent/config.go):
 ```json
 {
   "EvmPrivateKey": "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
@@ -32,15 +32,15 @@ You can also generate your own keys and build your own `keys.json` file - it fol
 The keys.json file can be subsituted or combined with environment variables if preferred. If the same property has a value set in both the keys.json and environment variable, the environment variable takes priority.
 
 The available environment variables are:
-| Key | Details |
-|---------|---------|
-| STORK_EVM_PRIVATE_KEY | [EVM Private Key](../lib/signer/model.go#L7) |
-| STORK_EVM_PUBLIC_KEY | [EVM Publisher Key](../lib/signer/model.go#L6) |
-| STORK_STARK_PRIVATE_KEY | [Stark Private Key](../lib/signer/model.go#L9) |
-| STORK_STARK_PUBLIC_KEY | [Stark Publisher Key](../lib/signer/model.go#L8) |
-| STORK_ORACLE_ID | [Oracle ID](../lib/publisher_agent/model.go#L29) |
-| STORK_AUTH | [Auth Token](../lib/publisher_agent/model.go#L14) |
-| STORK_PULL_BASE_AUTH | [Auth Token](../lib/publisher_agent/model.go#L14) |
+| Key |
+|---------|
+| STORK_EVM_PRIVATE_KEY |
+| STORK_EVM_PUBLIC_KEY |
+| STORK_STARK_PRIVATE_KEY |
+| STORK_STARK_PUBLIC_KEY |
+| STORK_ORACLE_ID |
+| STORK_AUTH |
+| STORK_PULL_BASE_AUTH |
 
 You can run the docker container like this using keys.json:
 ```bash
