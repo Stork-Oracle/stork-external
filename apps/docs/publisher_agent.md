@@ -9,7 +9,7 @@ To run the agent on your infrastructure, you'll need to first create a `config.j
 
 Here we open a websocket at `ws://localhost:5216/publish` to receive price updates. The agent will sign and send the latest price every 500 ms (clock updates) or when the price has changed by more than 0.1% (delta updates). 
 
-`config.json` follows the structure of the [ConfigFile struct](config.go):
+`config.json` follows the structure of the [ConfigFile struct](../lib/publisher_agent/config.go#L27):
 ```json
 {
   "SignatureTypes": ["evm"],
@@ -19,7 +19,7 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 
 Once you've gotten a StorkAuth key from Stork, you can use the [generate_secrets.py](../../python/src/generate_secrets/generate_secrets.py) script to generate your EVM and/or Stork keys and to build the `secrets.json` file. Make sure not to check this file into version control or share it in any way. 
 
-You can also generate your own keys and build your own `secrets.json` file - it follows the structure of the [KeysFile struct](config.go):
+You can also generate your own keys and build your own `secrets.json` file - it follows the structure of the [KeysFile struct](../lib/publisher_agent/config.go#L43):
 ```json
 {
   "EvmPrivateKey": "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
