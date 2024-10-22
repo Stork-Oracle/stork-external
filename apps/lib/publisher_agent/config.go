@@ -19,25 +19,29 @@ const DefaultClockUpdatePeriod = "500ms"
 const DefaultDeltaUpdatePeriod = "10ms"
 const DefaultChangeThresholdPercent = 0.1
 const DefaultStorkRegistryRefreshInterval = "10m"
+const DefaultPublisherMetadataRefreshInterval = "1h"
 const DefaultStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
+const DefaultPublisherMetadataBaseUrl = "https://rest.jp.stork-oracle.network"
 const DefaultBrokerReconnectDelay = "5s"
 const DefaultPullBasedReconnectDelay = "5s"
 const DefaultPullBasedReadTimeout = "10s"
 
 type ConfigFile struct {
-	SignatureTypes                 []signer.SignatureType
-	ClockPeriod                    string
-	DeltaCheckPeriod               string
-	ChangeThresholdPercent         float64 // 0-100
-	StorkRegistryBaseUrl           string
-	StorkRegistryRefreshInterval   string
-	BrokerReconnectDelay           string
-	PullBasedWsUrl                 string
-	PullBasedWsSubscriptionRequest string
-	PullBasedWsReconnectDelay      string
-	PullBasedWsReadTimeout         string
-	SignEveryUpdate                bool
-	IncomingWsPort                 int
+	SignatureTypes                   []signer.SignatureType
+	ClockPeriod                      string
+	DeltaCheckPeriod                 string
+	ChangeThresholdPercent           float64 // 0-100
+	StorkRegistryBaseUrl             string
+	StorkRegistryRefreshInterval     string
+	BrokerReconnectDelay             string
+	PublisherMetadataRefreshInterval string
+	PublisherMetadataBaseUrl         string
+	PullBasedWsUrl                   string
+	PullBasedWsSubscriptionRequest   string
+	PullBasedWsReconnectDelay        string
+	PullBasedWsReadTimeout           string
+	SignEveryUpdate                  bool
+	IncomingWsPort                   int
 }
 
 type KeysFile struct {
@@ -171,6 +175,15 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		return nil, errors.New("broker reconnect duration must be positive")
 	}
 
+	publisherMetadataUpdateIntervalStr := configFile.PublisherMetadataRefreshInterval
+	if len(publisherMetadataUpdateIntervalStr) == 0 {
+		publisherMetadataUpdateIntervalStr = DefaultPublisherMetadataRefreshInterval
+	}
+	publisherMetadataUpdateDuration, err := time.ParseDuration(publisherMetadataUpdateIntervalStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid publisher metadata update duration: %s", publisherMetadataUpdateIntervalStr)
+	}
+
 	changeThresholdPercent := configFile.ChangeThresholdPercent
 	if changeThresholdPercent == 0 {
 		changeThresholdPercent = DefaultChangeThresholdPercent
@@ -210,6 +223,11 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		storkRegistryBaseUrl = DefaultStorkRegistryBaseUrl
 	}
 
+	publisherMetadataBaseUrl := configFile.PublisherMetadataBaseUrl
+	if len(publisherMetadataBaseUrl) == 0 {
+		publisherMetadataBaseUrl = DefaultPublisherMetadataBaseUrl
+	}
+
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
 		keysFile.EvmPrivateKey,
@@ -223,6 +241,8 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		storkRegistryBaseUrl,
 		storkRegistryRefreshDuration,
 		brokerReconnectDelayDuration,
+		publisherMetadataBaseUrl,
+		publisherMetadataUpdateDuration,
 		keysFile.StorkAuth,
 		configFile.PullBasedWsUrl,
 		keysFile.PullBasedAuth,
@@ -269,26 +289,28 @@ func LoadKeysFileFromEnv(keysFile *KeysFile) {
 }
 
 type StorkPublisherAgentConfig struct {
-	SignatureTypes                 []signer.SignatureType
-	EvmPrivateKey                  signer.EvmPrivateKey
-	EvmPublicKey                   signer.EvmPublisherKey
-	StarkPrivateKey                signer.StarkPrivateKey
-	StarkPublicKey                 signer.StarkPublisherKey
-	ClockPeriod                    time.Duration
-	DeltaCheckPeriod               time.Duration
-	ChangeThresholdProportion      float64 // 0-1
-	OracleId                       OracleId
-	StorkRegistryBaseUrl           string
-	StorkAuth                      AuthToken
-	StorkRegistryRefreshInterval   time.Duration
-	BrokerReconnectDelay           time.Duration
-	PullBasedWsUrl                 string
-	PullBasedAuth                  AuthToken
-	PullBasedWsSubscriptionRequest string
-	PullBasedWsReconnectDelay      time.Duration
-	PullBasedWsReadTimeout         time.Duration
-	SignEveryUpdate                bool
-	IncomingWsPort                 int
+	SignatureTypes                  []signer.SignatureType
+	EvmPrivateKey                   signer.EvmPrivateKey
+	EvmPublicKey                    signer.EvmPublisherKey
+	StarkPrivateKey                 signer.StarkPrivateKey
+	StarkPublicKey                  signer.StarkPublisherKey
+	ClockPeriod                     time.Duration
+	DeltaCheckPeriod                time.Duration
+	ChangeThresholdProportion       float64 // 0-1
+	OracleId                        OracleId
+	StorkRegistryBaseUrl            string
+	StorkAuth                       AuthToken
+	StorkRegistryRefreshInterval    time.Duration
+	BrokerReconnectDelay            time.Duration
+	PublisherMetadataBaseUrl        string
+	PublisherMetadataUpdateInterval time.Duration
+	PullBasedWsUrl                  string
+	PullBasedAuth                   AuthToken
+	PullBasedWsSubscriptionRequest  string
+	PullBasedWsReconnectDelay       time.Duration
+	PullBasedWsReadTimeout          time.Duration
+	SignEveryUpdate                 bool
+	IncomingWsPort                  int
 }
 
 func NewStorkPublisherAgentConfig(
@@ -304,6 +326,8 @@ func NewStorkPublisherAgentConfig(
 	storkRegistryBaseUrl string,
 	storkRegistryRefreshInterval time.Duration,
 	brokerReconnectDelay time.Duration,
+	publisherMetadataBaseUrl string,
+	publisherMetadataUpdateInterval time.Duration,
 	storkAuth AuthToken,
 	pullBasedWsUrl string,
 	pullBasedAuth AuthToken,
@@ -314,25 +338,27 @@ func NewStorkPublisherAgentConfig(
 	incomingWsPort int,
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
-		SignatureTypes:                 signatureTypes,
-		EvmPrivateKey:                  evmPrivateKey,
-		EvmPublicKey:                   evmPublisherKey,
-		StarkPrivateKey:                starkPrivateKey,
-		StarkPublicKey:                 starkPublisherKey,
-		ClockPeriod:                    clockPeriod,
-		DeltaCheckPeriod:               deltaPeriod,
-		ChangeThresholdProportion:      changeThresholdPercentage / 100.0,
-		OracleId:                       oracleId,
-		StorkRegistryBaseUrl:           storkRegistryBaseUrl,
-		StorkRegistryRefreshInterval:   storkRegistryRefreshInterval,
-		BrokerReconnectDelay:           brokerReconnectDelay,
-		StorkAuth:                      storkAuth,
-		PullBasedWsUrl:                 pullBasedWsUrl,
-		PullBasedAuth:                  pullBasedAuth,
-		PullBasedWsSubscriptionRequest: pullBasedWsSubscriptionRequest,
-		PullBasedWsReconnectDelay:      pullBasedWsReconnectDelay,
-		PullBasedWsReadTimeout:         pullBasedWsReadTimeout,
-		SignEveryUpdate:                signEveryUpdate,
-		IncomingWsPort:                 incomingWsPort,
+		SignatureTypes:                  signatureTypes,
+		EvmPrivateKey:                   evmPrivateKey,
+		EvmPublicKey:                    evmPublisherKey,
+		StarkPrivateKey:                 starkPrivateKey,
+		StarkPublicKey:                  starkPublisherKey,
+		ClockPeriod:                     clockPeriod,
+		DeltaCheckPeriod:                deltaPeriod,
+		ChangeThresholdProportion:       changeThresholdPercentage / 100.0,
+		OracleId:                        oracleId,
+		StorkRegistryBaseUrl:            storkRegistryBaseUrl,
+		StorkRegistryRefreshInterval:    storkRegistryRefreshInterval,
+		BrokerReconnectDelay:            brokerReconnectDelay,
+		PublisherMetadataBaseUrl:        publisherMetadataBaseUrl,
+		PublisherMetadataUpdateInterval: publisherMetadataUpdateInterval,
+		StorkAuth:                       storkAuth,
+		PullBasedWsUrl:                  pullBasedWsUrl,
+		PullBasedAuth:                   pullBasedAuth,
+		PullBasedWsSubscriptionRequest:  pullBasedWsSubscriptionRequest,
+		PullBasedWsReconnectDelay:       pullBasedWsReconnectDelay,
+		PullBasedWsReadTimeout:          pullBasedWsReadTimeout,
+		SignEveryUpdate:                 signEveryUpdate,
+		IncomingWsPort:                  incomingWsPort,
 	}
 }

@@ -39,6 +39,8 @@ COPY --from=go-build /stork /usr/local/bin/stork-publisher-agent
 COPY --from=rust-build /usr/local/lib/libstork.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
+COPY version.txt version.txt
+
 RUN apt-get update && apt-get install -y \
     libc6 \
     libpthread-stubs0-dev \
