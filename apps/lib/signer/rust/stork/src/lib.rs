@@ -1,4 +1,3 @@
-use std::ptr::hash;
 use starknet_core::crypto::{pedersen_hash, Signature};
 use starknet_core::types::{FieldElement, FromByteArrayError};
 
