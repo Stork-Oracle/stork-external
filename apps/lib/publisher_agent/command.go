@@ -25,7 +25,7 @@ const KeysFilePathFlag = "keys-file-path"
 
 func init() {
 	PublisherAgentCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
-	PublisherAgentCmd.Flags().StringP(KeysFilePathFlag, "k", "", "The path of your keys json file")
+	PublisherAgentCmd.Flags().StringP(KeysFilePathFlag, "k", "", "the path of your keys json file")
 
 	PublisherAgentCmd.MarkFlagRequired(ConfigFilePathFlag)
 }
