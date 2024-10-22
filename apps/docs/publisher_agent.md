@@ -29,7 +29,7 @@ You can also generate your own keys and build your own `secrets.json` file - it 
 }
 ```
 
-The secrets.json file can be subsituted or combined with environment variables if preferred. If the same property has a value set in both the secrets.json and environment variable, the environment variable take priority.
+The secrets.json file can be subsituted or combined with environment variables if preferred. If the same property has a value set in both the secrets.json and environment variable, the environment variable takes priority.
 
 The available environment variables are:
 | Key | Details |
