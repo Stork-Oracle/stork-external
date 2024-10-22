@@ -35,7 +35,7 @@ func TestLoadKeysFileFromEnv(t *testing.T) {
 	os.Setenv("STORK_STARK_PUBLIC_KEY", starkPublicKey)
 
 	var keysFile KeysFile
-	LoadKeysFileFromEnv(&keysFile)
+	loadKeysFileFromEnv(&keysFile)
 
 	assert.Equal(t, signer.EvmPrivateKey(evmPrivateKey), keysFile.EvmPrivateKey)
 	assert.Equal(t, signer.EvmPublisherKey(evmPublicKey), keysFile.EvmPublicKey)

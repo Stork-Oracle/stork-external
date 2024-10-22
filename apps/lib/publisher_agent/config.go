@@ -94,7 +94,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 
 	// overwrite keysFile with any set env vars
-	LoadKeysFileFromEnv(&keysFile)
+	loadKeysFileFromEnv(&keysFile)
 
 	// validate config and key file
 	if configFile.SignatureTypes == nil || len(configFile.SignatureTypes) == 0 {
@@ -257,7 +257,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 }
 
 // this overwrites any existing values in keysFile
-func LoadKeysFileFromEnv(keysFile *KeysFile) {
+func loadKeysFileFromEnv(keysFile *KeysFile) {
 	evmPrivateKey := os.Getenv("STORK_EVM_PRIVATE_KEY")
 	if evmPrivateKey != "" {
 		keysFile.EvmPrivateKey = signer.EvmPrivateKey(evmPrivateKey)
