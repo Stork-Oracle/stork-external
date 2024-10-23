@@ -5,6 +5,7 @@ const allowedCommands = [
   "version",
   "updateTemporalNumericValuesV1",
   "getTemporalNumericValueV1",
+  "getTemporalNumericValueUnsafeV1",
   "updateValidTimePeriodSeconds",
   "validTimePeriodSeconds",
   "updateSingleUpdateFeeInWei",
@@ -59,6 +60,12 @@ async function main(command: AllowedCommands, args: any) {
       // @ts-expect-error
       const encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
       returnVal = await contract.getTemporalNumericValueV1(encoded);
+      console.log(returnVal);
+      break;
+    case "getTemporalNumericValueUnsafeV1":
+      // @ts-expect-error
+      const encodedUnsafe = ethers.keccak256(ethers.toUtf8Bytes(args));
+      returnVal = await contract.getTemporalNumericValueUnsafeV1(encodedUnsafe);
       console.log(returnVal);
       break;
     case "updateValidTimePeriodSeconds":

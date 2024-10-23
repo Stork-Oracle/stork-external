@@ -1,7 +1,10 @@
+// SPDX-License-Identifier: Apache 2
+
 pragma solidity >=0.8.24 <0.9.0;
 
-import {ChainlinkAdapterIface} from "./ChainlinkAdapterIface.sol";
 import {Stork} from "./Stork.sol";
+import "./StorkStructs.sol";
+import {UpgradeableStork} from "./UpgradeableStork.sol";
 
 // todo harry: should we be explicit about forking here
 
@@ -14,11 +17,16 @@ import {Stork} from "./Stork.sol";
  * @notice This does not store any roundId information on-chain. Please review the code before using this implementation.
  * Users should deploy an instance of this contract to wrap every price feed id that they need to use.
  */
-contract StorkChainlinkAdapter is ChainlinkAdapterIface {
+contract StorkChainlinkAdapter {
     bytes32 public priceId;
     Stork public stork;
 
-    function decimals() external view returns (uint8) {
+    constructor(address _stork, bytes32 _priceId) {
+        priceId = _priceId;
+        stork = Stork(_stork);
+    }
+
+    function decimals() external pure returns (uint8) {
         return 18;
     }
 
@@ -31,11 +39,11 @@ contract StorkChainlinkAdapter is ChainlinkAdapterIface {
     }
 
     function latestAnswer() public view virtual returns (int256) {
-        return stork.getTemporalNumericValueV1(priceId).quantizedValue;
+        return stork.getTemporalNumericValueUnsafeV1(priceId).quantizedValue;
     }
 
     function latestTimestamp() public view returns (uint256) {
-        return stork.getTemporalNumericValueV1(priceId).timestampNs;
+        return stork.getTemporalNumericValueUnsafeV1(priceId).timestampNs;
     }
 
     function latestRound() public view returns (uint256) {
@@ -64,7 +72,7 @@ contract StorkChainlinkAdapter is ChainlinkAdapterIface {
         uint80 answeredInRound
     )
     {
-        StorkStructs.TemporalNumericValue value = stork.getTemporalNumericValueV1(priceId);
+        StorkStructs.TemporalNumericValue memory value = stork.getTemporalNumericValueUnsafeV1(priceId);
         return (
             _roundId,
             value.quantizedValue,
@@ -85,7 +93,7 @@ contract StorkChainlinkAdapter is ChainlinkAdapterIface {
         uint80 answeredInRound
     )
     {
-        StorkStructs.TemporalNumericValue value = stork.getTemporalNumericValueV1(priceId);
+        StorkStructs.TemporalNumericValue memory value = stork.getTemporalNumericValueUnsafeV1(priceId);
         roundId = uint80(value.timestampNs);
         return (
             roundId,

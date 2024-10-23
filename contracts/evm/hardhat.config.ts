@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 require("@openzeppelin/hardhat-upgrades");
 
 import './tasks/deploy';
+import './tasks/deploy_chainlink_adapter';
 import './tasks/upgrade';
 import './tasks/interact';
 import './tasks/print-abi';
