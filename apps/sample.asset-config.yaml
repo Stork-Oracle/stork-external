@@ -1,6 +1,6 @@
 assets:
-  SHIBUSD:
-    asset_id: SHIBUSD
+  BTCUSD:
+    asset_id: BTCUSD
     fallback_period_sec: 60
     percent_change_threshold: 1
-    encoded_asset_id: 0xb39f98df3f03608241d2e0ef2b566f78d5c7d31b376f298cf7e115cbf006f92d
+    encoded_asset_id: 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de
