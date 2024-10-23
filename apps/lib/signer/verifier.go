@@ -1,8 +1,6 @@
 package signer
 
 /*
-#cgo LDFLAGS: -L/app/rust/stork/target/aarch64-unknown-linux-gnu/release -L./rust/stork/target/release -lstork
-#cgo CFLAGS: -I/app/rust/stork/src -I./rust/stork/src
 #include "signing.h"
 */
 import "C"
