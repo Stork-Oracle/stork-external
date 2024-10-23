@@ -5,11 +5,11 @@ The easiest way to become a Stork Publisher is to run the Stork Publisher Agent 
 ## Getting Started
 
 ### Setup
-To run the agent on your infrastructure, you'll need to first create a `config.json` file containing all non-secret configuration and a `secrets.json` file containing all secret configuration, and then run the Stork Publisher Agent docker container.
+To run the agent on your infrastructure, you'll need to first create a `config.json` file containing all non-secret configuration and a `keys.json` file containing all keys including secret configuration, and then run the Stork Publisher Agent docker container.
 
 Here we open a websocket at `ws://localhost:5216/publish` to receive price updates. The agent will sign and send the latest price every 500 ms (clock updates) or when the price has changed by more than 0.1% (delta updates). 
 
-`config.json` follows the structure of the [ConfigFile struct](config.go):
+`config.json` follows the structure of the [Config struct](../lib/publisher_agent/config.go):
 ```json
 {
   "SignatureTypes": ["evm"],
@@ -17,9 +17,9 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 }
 ```
 
-Once you've gotten a StorkAuth key from Stork, you can use the [generate_secrets.py](../../python/src/generate_secrets/generate_secrets.py) script to generate your EVM and/or Stork keys and to build the `secrets.json` file. Make sure not to check this file into version control or share it in any way. 
+Once you've gotten a StorkAuth key from Stork, you can use the [generate_keys.py](../../python/src/generate_keys/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
 
-You can also generate your own keys and build your own `secrets.json` file - it follows the structure of the [KeysFile struct](config.go):
+You can also generate your own keys and build your own `keys.json` file - it follows the structure of the [Keys struct](../lib/publisher_agent/config.go):
 ```json
 {
   "EvmPrivateKey": "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
@@ -29,10 +29,29 @@ You can also generate your own keys and build your own `secrets.json` file - it 
 }
 ```
 
-You can run the docker container like this:
+The keys.json file can be subsituted or combined with environment variables if preferred. If the same property has a value set in both the keys.json and environment variable, the environment variable takes priority.
+
+The available environment variables are:
+| Key |
+|---------|
+| STORK_EVM_PRIVATE_KEY |
+| STORK_EVM_PUBLIC_KEY |
+| STORK_STARK_PRIVATE_KEY |
+| STORK_STARK_PUBLIC_KEY |
+| STORK_ORACLE_ID |
+| STORK_AUTH |
+| STORK_PULL_BASE_AUTH |
+
+You can run the docker container like this using keys.json:
 ```bash
-docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/secrets.json:/etc/secrets.json -d --log-opt max-size=1g storknetwork/publisher-agent:v0.1.0 start -c /etc/config.json -k /etc/secrets.json
+docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/keys.json:/etc/keys.json -d --log-opt max-size=1g storknetwork/publisher-agent:v0.1.0 start -c /etc/config.json -k /etc/keys.json
 ```
+
+or using environment variables:
+```bash
+docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -e STORK_EVM_PRIVATE_KEY="0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de" -e STORK_EVM_PUBLIC_KEY="0x99e295e85cb07c16b7bb62a44df532a7f2620237" -e STORK_STARK_PRIVATE_KEY="0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a" -e STORK_STARK_PUBLIC_KEY="0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06" -e STORK_ORACLE_ID="czowx" -e STORK_AUTH="fakeauth" -d --log-opt max-size=1g storknetwork/publisher-agent:v0.1.0 start -c /etc/config.
+```
+
 The command will pull the docker image from our registry and run it in detached mode. If the container crashes it will automatically restart. This example assumes your config files are located in `/home/ubuntu` and that you're using port 5216 for the incoming websocket.
 
 Check `docker logs -f publisher-agent` for any error logs once you've launched the agent.

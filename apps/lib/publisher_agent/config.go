@@ -26,7 +26,7 @@ const DefaultBrokerReconnectDelay = "5s"
 const DefaultPullBasedReconnectDelay = "5s"
 const DefaultPullBasedReadTimeout = "10s"
 
-type ConfigFile struct {
+type Config struct {
 	SignatureTypes                   []signer.SignatureType
 	ClockPeriod                      string
 	DeltaCheckPeriod                 string
@@ -44,7 +44,7 @@ type ConfigFile struct {
 	IncomingWsPort                   int
 }
 
-type KeysFile struct {
+type Keys struct {
 	EvmPrivateKey   signer.EvmPrivateKey
 	EvmPublicKey    signer.EvmPublisherKey
 	StarkPrivateKey signer.StarkPrivateKey
@@ -52,6 +52,38 @@ type KeysFile struct {
 	OracleId        OracleId
 	StorkAuth       AuthToken
 	PullBasedAuth   AuthToken
+}
+
+// this overwrites
+func (k *Keys) updateFromEnvVars() {
+	evmPrivateKey := os.Getenv("STORK_EVM_PRIVATE_KEY")
+	if evmPrivateKey != "" {
+		k.EvmPrivateKey = signer.EvmPrivateKey(evmPrivateKey)
+	}
+	evmPublicKey := os.Getenv("STORK_EVM_PUBLIC_KEY")
+	if evmPublicKey != "" {
+		k.EvmPublicKey = signer.EvmPublisherKey(evmPublicKey)
+	}
+	starkPrivateKey := os.Getenv("STORK_STARK_PRIVATE_KEY")
+	if starkPrivateKey != "" {
+		k.StarkPrivateKey = signer.StarkPrivateKey(starkPrivateKey)
+	}
+	starkPublicKey := os.Getenv("STORK_STARK_PUBLIC_KEY")
+	if starkPublicKey != "" {
+		k.StarkPublicKey = signer.StarkPublisherKey(starkPublicKey)
+	}
+	oracleId := os.Getenv("STORK_ORACLE_ID")
+	if oracleId != "" {
+		k.OracleId = OracleId(oracleId)
+	}
+	storkAuth := os.Getenv("STORK_AUTH")
+	if storkAuth != "" {
+		k.StorkAuth = AuthToken(storkAuth)
+	}
+	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
+	if pullBasedAuth != "" {
+		k.PullBasedAuth = AuthToken(pullBasedAuth)
+	}
 }
 
 func readFile(path string) ([]byte, error) {
@@ -74,24 +106,28 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
-	keyFileData, err := readFile(keysFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read keys file: %w", err)
-	}
 
-	var configFile ConfigFile
+	var configFile Config
 	err = json.Unmarshal(configFileData, &configFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config file: %w", err)
 	}
 
-	var keysFile KeysFile
-	err = json.Unmarshal(keyFileData, &keysFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
+	var keys Keys
+	keysFileData, keysFileReadErr := readFile(keysFilePath)
+
+	// only deserialize keysFileData if keysFilePath was successfully read
+	if keysFileReadErr == nil {
+		err = json.Unmarshal(keysFileData, &keys)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
+		}
 	}
 
-	// validate config and key file
+	// overwrite keys with any set env vars
+	keys.updateFromEnvVars()
+
+	// validate config and keys file
 	if configFile.SignatureTypes == nil || len(configFile.SignatureTypes) == 0 {
 		return nil, fmt.Errorf("must specify at least one signatureType")
 	}
@@ -99,17 +135,17 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	for _, signatureType := range configFile.SignatureTypes {
 		switch signatureType {
 		case EvmSignatureType:
-			if !Hex32Regex.MatchString(string(keysFile.EvmPrivateKey)) {
+			if !Hex32Regex.MatchString(string(keys.EvmPrivateKey)) {
 				return nil, errors.New("must pass a valid EVM private key")
 			}
-			if !Hex32Regex.MatchString(string(keysFile.EvmPublicKey)) {
+			if !Hex32Regex.MatchString(string(keys.EvmPublicKey)) {
 				return nil, errors.New("must pass a valid EVM public key")
 			}
 		case StarkSignatureType:
-			if !Hex32Regex.MatchString(string(keysFile.StarkPrivateKey)) {
+			if !Hex32Regex.MatchString(string(keys.StarkPrivateKey)) {
 				return nil, errors.New("must pass a valid Stark private key")
 			}
-			if !Hex32Regex.MatchString(string(keysFile.StarkPublicKey)) {
+			if !Hex32Regex.MatchString(string(keys.StarkPublicKey)) {
 				return nil, errors.New("must pass a valid Stark public key")
 			}
 		default:
@@ -117,11 +153,11 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		}
 	}
 
-	if !StorkAuthRegex.MatchString(string(keysFile.StorkAuth)) {
+	if !StorkAuthRegex.MatchString(string(keys.StorkAuth)) {
 		return nil, errors.New("stork auth token must a non-empty base64 string")
 	}
 
-	if len(keysFile.OracleId) != 5 {
+	if len(keys.OracleId) != 5 {
 		return nil, errors.New("oracle id length must be 5")
 	}
 
@@ -225,22 +261,22 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
-		keysFile.EvmPrivateKey,
-		keysFile.EvmPublicKey,
-		keysFile.StarkPrivateKey,
-		keysFile.StarkPublicKey,
+		keys.EvmPrivateKey,
+		keys.EvmPublicKey,
+		keys.StarkPrivateKey,
+		keys.StarkPublicKey,
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
 		changeThresholdPercent,
-		keysFile.OracleId,
+		keys.OracleId,
 		storkRegistryBaseUrl,
 		storkRegistryRefreshDuration,
 		brokerReconnectDelayDuration,
 		publisherMetadataBaseUrl,
 		publisherMetadataUpdateDuration,
-		keysFile.StorkAuth,
+		keys.StorkAuth,
 		configFile.PullBasedWsUrl,
-		keysFile.PullBasedAuth,
+		keys.PullBasedAuth,
 		configFile.PullBasedWsSubscriptionRequest,
 		pullBasedReconnectDuration,
 		pullBasedWsReadTimeout,
