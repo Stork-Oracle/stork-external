@@ -205,13 +205,16 @@ describe("Stork", () => {
       );
       const updateData = {
         temporalNumericValue: {
-          timestampNs: new anchor.BN("1720722087644999936"),
-          quantizedValue: new anchor.BN("60000000000000000000000"),
+          timestampNs: new anchor.BN("1722632569208762117"),
+          quantizedValue: new anchor.BN("62507457175499998000000"),
         },
         id: newId,
-        publisherMerkleRoot: Buffer.from("example data"),
-        valueComputeAlgHash: Buffer.from("example data"),
-        treasuryId
+        publisherMerkleRoot: hexStringToByteArray("e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318"),
+        valueComputeAlgHash: hexStringToByteArray("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"),
+        r: hexStringToByteArray("b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741"),
+        s: hexStringToByteArray("16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758"),
+        v: 28,
+        treasuryId,
       };
       try {
         await program.methods

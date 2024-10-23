@@ -7,6 +7,8 @@ This contract is used to read and write the latest values from the Stork network
 ### Getting started
 
 ```
+solana-keygen new --outfile ~/.config/solana/id.json
+export COPYFILE_DISABLE=1 # for macos
 yarn install
 anchor test
 ```
@@ -22,19 +24,19 @@ anchor localnet
 #### Deploy
 
 ```
-anchor deploy
+anchor deploy --provider.cluster localnet
 ```
 
 #### Upgrade
 
 ```
-anchor upgrade
+anchor upgrade --provider.cluster localnet
 ```
 
 #### Verify
 
 ```
-anchor verify
+anchor verify --provider.cluster localnet 9yjwoWUgyKeH2cEC4S5G9uudobYAcmDH9zU1mq1hKWyb
 ```
 
 #### Test
