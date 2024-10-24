@@ -52,7 +52,7 @@ pub mod stork {
             update_data.s,
             update_data.v,
         ) {
-            return Err(StorkError::InvalidSignature.into());
+            return err!(StorkError::InvalidSignature);
         }
 
         require_gte!(
