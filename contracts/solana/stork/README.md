@@ -17,6 +17,8 @@ anchor test
 
 #### Run local node
 
+It appears that the contract will be deployed to the localnet cluster by default.
+
 ```
 anchor localnet
 ```
@@ -24,19 +26,19 @@ anchor localnet
 #### Deploy
 
 ```
-anchor deploy --provider.cluster localnet
+anchor deploy
 ```
 
 #### Upgrade
 
 ```
-anchor upgrade --provider.cluster localnet
+anchor upgrade
 ```
 
 #### Verify
 
 ```
-anchor verify --provider.cluster localnet 9yjwoWUgyKeH2cEC4S5G9uudobYAcmDH9zU1mq1hKWyb
+anchor verify <program-id>
 ```
 
 #### Test
