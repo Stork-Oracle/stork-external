@@ -48,8 +48,6 @@ const initializeCliProgram = (): {
   const idl = require("../target/idl/stork.json");
 
   console.log("Program ID:", idl.address);
-
-  console.log("Initializing program...");
   return {
     program: new anchor.Program<Stork>(idl, provider),
     payer: payerKeypair,
@@ -237,7 +235,7 @@ cliProgram
   .argument("endpoint", "The REST endpoint")
   .argument("auth_key", "The auth key")
   .action(async (assetPairs, restUrl, authKey) => {
-    console.log("Writing to feed...");
+    console.log("Writing to feeds...");
     const { program, payer } = initializeCliProgram();
     try {
       const result = await fetch(
@@ -258,7 +256,6 @@ cliProgram
 
       for (const key in responseData.data) {
         const data = responseData.data[key];
-        console.log(data.stork_signed_price.timestamped_signature.signature.r);
 
         const treasuryId = Math.floor(Math.random() * 256);
         console.log(`Generated random treasury ID: ${treasuryId}`);
