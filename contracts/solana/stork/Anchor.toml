@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-stork = "F8C2ffLfHGQTQxnix4LaroXuHh2Cdv8wJw7R9UDEfmX1"
+stork = "stk8Pgk9NBcMR3qcfjdqewQsSuAQHqw9j1CKd6dB5GL"
 
 [registry]
 url = "https://api.apr.dev"

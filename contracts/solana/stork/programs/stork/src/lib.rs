@@ -4,7 +4,7 @@ use anchor_lang::solana_program::system_instruction;
 mod verify;
 use verify::{verify_stork_evm_signature, EvmPubkey};
 
-declare_id!("F8C2ffLfHGQTQxnix4LaroXuHh2Cdv8wJw7R9UDEfmX1");
+declare_id!("stk8Pgk9NBcMR3qcfjdqewQsSuAQHqw9j1CKd6dB5GL");
 
 pub const STORK_CONFIG_SEED: &[u8] = b"stork_config";
 pub const STORK_FEED_SEED: &[u8] = b"stork_feed";
@@ -52,7 +52,7 @@ pub mod stork {
             update_data.s,
             update_data.v,
         ) {
-            return Err(StorkError::InvalidSignature.into());
+            return err!(StorkError::InvalidSignature);
         }
 
         require_gte!(
