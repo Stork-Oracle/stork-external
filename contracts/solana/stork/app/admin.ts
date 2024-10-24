@@ -1,4 +1,4 @@
-import { Argument, Command } from "commander";
+import { Command } from "commander";
 
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
@@ -58,8 +58,8 @@ const initializeCliProgram = (): {
 
 const cliProgram = new Command();
 cliProgram
-  .name("sol-stork")
-  .description("Solana Stork client")
+  .name("admin")
+  .description("Solana Stork admin client")
   .version("0.1.0");
 
 const DEFAULT_SINGLE_UPDATE_FEE_IN_LAMPORTS = 1;
@@ -184,9 +184,12 @@ cliProgram
       [STORK_CONFIG_SEED],
       program.programId
     );
-    await program.methods.updateStorkEvmPublicKey(hexStringToByteArray(evmPublicKey)).accounts({
-      config: configPda,
-    }).rpc();
+    await program.methods
+      .updateStorkEvmPublicKey(hexStringToByteArray(evmPublicKey))
+      .accounts({
+        config: configPda,
+      })
+      .rpc();
   });
 
 cliProgram
@@ -199,9 +202,12 @@ cliProgram
       [STORK_CONFIG_SEED],
       program.programId
     );
-    await program.methods.updateStorkSolPublicKey(new PublicKey(solanaPubKey)).accounts({
-      config: configPda,
-    }).rpc();
+    await program.methods
+      .updateStorkSolPublicKey(new PublicKey(solanaPubKey))
+      .accounts({
+        config: configPda,
+      })
+      .rpc();
     console.log("Solana public key updated successfully.");
   });
 
@@ -215,24 +221,27 @@ cliProgram
       [STORK_CONFIG_SEED],
       program.programId
     );
-    await program.methods.updateSingleUpdateFeeInLamports(new BN(fee)).accounts({
-      config: configPda,
-    }).rpc();
+    await program.methods
+      .updateSingleUpdateFeeInLamports(new BN(fee))
+      .accounts({
+        config: configPda,
+      })
+      .rpc();
     console.log("Single update fee updated successfully.");
   });
 
 cliProgram
   .command("write-to-feed")
   .description("Write to a feed")
-  .argument("asset_pair", "The asset pair")
+  .argument("asset_pairs", "The asset pairs (comma separated)")
   .argument("endpoint", "The REST endpoint")
   .argument("auth_key", "The auth key")
-  .action(async (assetPair, restUrl, authKey) => {
+  .action(async (assetPairs, restUrl, authKey) => {
     console.log("Writing to feed...");
     const { program, payer } = initializeCliProgram();
     try {
       const result = await fetch(
-        `${restUrl}/v1/prices/latest\?assets\=${assetPair}`,
+        `${restUrl}/v1/prices/latest\?assets\=${assetPairs}`,
         {
           headers: {
             Authorization: `Basic ${authKey}`,
@@ -246,65 +255,56 @@ cliProgram
       );
 
       const responseData = JSON.parse(safeJsonText);
-      console.log(
-        responseData.data[assetPair].stork_signed_price.timestamped_signature
-          .signature.r
-      );
 
-      const treasuryId = Math.floor(Math.random() * 256);
-      console.log(`Generated random treasury ID: ${treasuryId}`);
-      const updateData = {
-        temporalNumericValue: {
-          timestampNs: new anchor.BN(
-            responseData.data[
-              assetPair
-            ].stork_signed_price.timestamped_signature.timestamp
+      for (const key in responseData.data) {
+        const data = responseData.data[key];
+        console.log(data.stork_signed_price.timestamped_signature.signature.r);
+
+        const treasuryId = Math.floor(Math.random() * 256);
+        console.log(`Generated random treasury ID: ${treasuryId}`);
+        const updateData = {
+          temporalNumericValue: {
+            timestampNs: new anchor.BN(
+              data.stork_signed_price.timestamped_signature.timestamp
+            ),
+            quantizedValue: new anchor.BN(data.stork_signed_price.price),
+          },
+          id: hexStringToByteArray(data.stork_signed_price.encoded_asset_id),
+          publisherMerkleRoot: hexStringToByteArray(
+            data.stork_signed_price.publisher_merkle_root
           ),
-          quantizedValue: new anchor.BN(
-            responseData.data[assetPair].stork_signed_price.price
+          valueComputeAlgHash: hexStringToByteArray(
+            data.stork_signed_price.calculation_alg.checksum
           ),
-        },
-        id: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.encoded_asset_id
-        ),
-        publisherMerkleRoot: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.publisher_merkle_root
-        ),
-        valueComputeAlgHash: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.calculation_alg
-            .checksum
-        ),
-        r: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.timestamped_signature
-            .signature.r
-        ),
-        s: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.timestamped_signature
-            .signature.s
-        ),
-        v: hexStringToByteArray(
-          responseData.data[assetPair].stork_signed_price.timestamped_signature
-            .signature.v
-        )[0],
-        treasuryId,
-      };
+          r: hexStringToByteArray(
+            data.stork_signed_price.timestamped_signature.signature.r
+          ),
+          s: hexStringToByteArray(
+            data.stork_signed_price.timestamped_signature.signature.s
+          ),
+          v: hexStringToByteArray(
+            data.stork_signed_price.timestamped_signature.signature.v
+          )[0],
+          treasuryId,
+        };
 
-      // Derive the PDA for the feed and the treasury account
-      const [treasuryPDA] = await PublicKey.findProgramAddressSync(
-        [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
-        program.programId
-      );
+        // Derive the PDA for the feed and the treasury account
+        const [treasuryPDA] = await PublicKey.findProgramAddressSync(
+          [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
+          program.programId
+        );
 
-      await program.methods
-        .updateTemporalNumericValueEvm(updateData)
-        .accounts({
-          treasury: treasuryPDA,
-          payer: payer.publicKey,
-        })
-        .signers([payer])
-        .rpc();
+        await program.methods
+          .updateTemporalNumericValueEvm(updateData)
+          .accounts({
+            treasury: treasuryPDA,
+            payer: payer.publicKey,
+          })
+          .signers([payer])
+          .rpc();
 
-      console.log("Feed updated successfully!");
+        console.log(`Feed updated successfully! ${key}`);
+      }
     } catch (error) {
       console.error("Error writing to feed:", error);
     }
