@@ -14,7 +14,7 @@ if [ -z "$AUTH_TOKEN" ]; then
   exit 1
 fi
 
-SLEEP_INTERVAL=${3:-0}
+SLEEP_INTERVAL=${3:-60}
 
 # Loop indefinitely
 while true; do
