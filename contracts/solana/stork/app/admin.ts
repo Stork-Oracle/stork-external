@@ -231,8 +231,8 @@ cliProgram
   });
 
 cliProgram
-  .command("write-to-feed")
-  .description("Write to a feed")
+  .command("write-to-feeds")
+  .description("Write to feeds")
   .argument("asset_pairs", "The asset pairs (comma separated)")
   .argument("endpoint", "The REST endpoint")
   .argument("auth_key", "The auth key")
