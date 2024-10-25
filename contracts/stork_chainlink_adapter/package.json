@@ -1,7 +1,7 @@
 {
   "name": "@storknetwork/stork_chainlink_adapter",
   "private": false,
-  "version": "1.0.0,
+  "version": "1.0.0",
   "description": "Solidity Contracts to get Stork data on chain in the same format as Chainlink",
   "repository": {
     "type": "git",
