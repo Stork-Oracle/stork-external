@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,7 +40,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 
-	contractPubKey, err := solana.PublicKeyFromBase58(contractAddr)
+	contractPubKey := solana.MustPublicKeyFromBase58(contractAddr)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Invalid contract address")
 		return nil, err
@@ -60,18 +61,21 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 	feedAccounts := make([]solana.PublicKey, len(assetConfig.Assets))
 	i := 0
 	for _, asset := range assetConfig.Assets {
-		encoded := []byte(asset.EncodedAssetId)
-
+		encodedAssetIdBytes, err := hexStringToByteArray(string(asset.EncodedAssetId))
+		if err != nil {
+			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to convert encoded asset ID to bytes")
+			return nil, err
+		}
 		//derive pda
 		feedAccount, _, err := solana.FindProgramAddress(
 			[][]byte{
-				[]byte("stork-feed"),
-				encoded,
+				[]byte("stork_feed"),
+				encodedAssetIdBytes,
 			},
 			contractPubKey,
 		)
 		if err != nil {
-			logger.Fatal().Err(err).Msg("Failed to derive PDA for feed account")
+			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to derive PDA for feed account")
 			return nil, err
 		}
 		feedAccounts[i] = feedAccount
@@ -147,7 +151,7 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 			sci.contractAddr,
 		)
 		if err != nil {
-			sci.logger.Error().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to derive PDA for feed account")
+			sci.logger.Error().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to derive PDA for feed account in PullValues")
 			continue
 		}
 
@@ -377,4 +381,10 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		Msg("Pushed new value to contract")
 
 	return nil
+}
+
+func hexStringToByteArray(hexString string) ([]byte, error) {
+	// Remove "0x" prefix if present
+	hexString = strings.TrimPrefix(hexString, "0x")
+	return hex.DecodeString(hexString)
 }
