@@ -44,6 +44,6 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	evmInteracter := NewEvmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, verifyPublishers, logger)
 
-	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, mnemonicFile, verifyPublishers, batchingWindow, pollingFrequency, evmInteracter, &logger)
+	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteracter, &logger)
 	evmPusher.Run()
 }
