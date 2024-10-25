@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Apache 2
+
+pragma solidity >=0.8.24 <0.9.0;
+
 contract StorkStructs {
     struct TemporalNumericValue {
         // slot 1

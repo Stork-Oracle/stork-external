@@ -1,8 +1,11 @@
-/*
-* A minimal interface for the Stork contract including only
-*/
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity >=0.8.24 <0.9.0;
+
+import "./StorkStructs.sol";
+
+
 interface IStorkTemporalNumericValueUnsafeGetter {
     function getTemporalNumericValueUnsafeV1(
         bytes32 id
-    ) public view returns (StorkStructs.TemporalNumericValue memory value);
+    ) external view returns (StorkStructs.TemporalNumericValue memory value);
 }

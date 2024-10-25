@@ -1,15 +1,22 @@
 {
-  "name": "stork_chainlink_adapter",
-  "version": "1.0.0",
+  "name": "@storknetwork/stork_chainlink_adapter",
+  "private": false,
+  "version": "1.0.0,
   "description": "Solidity Contracts to get Stork data on chain in the same format as Chainlink",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Stork-Oracle/stork-external.git"
   },
   "author": "Stork",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/Stork-Oracle/stork-external/issues"
   },
-  "homepage": "https://github.com/Stork-Oracle/stork-external#readme"
+  "homepage": "https://github.com/Stork-Oracle/stork-external#readme",
+  "main": "index.js",
+  "keywords": [
+    "stork",
+    "oracle",
+    "chainlink"
+  ]
 }
