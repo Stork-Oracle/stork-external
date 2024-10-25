@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"os"
 	"sync"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	confirm "github.com/gagliardetto/solana-go/rpc/sendAndConfirmTransaction"
 	"github.com/gagliardetto/solana-go/rpc/ws"
 	"github.com/rs/zerolog"
 	"golang.org/x/time/rate"
@@ -45,12 +45,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 
-	privateKeyBytes, err := os.ReadFile(privateKeyFile)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to read private key file")
-		return nil, err
-	}
-	payer, err := solana.PrivateKeyFromBase58(string(privateKeyBytes))
+	payer, err := solana.PrivateKeyFromSolanaKeygenFile(privateKeyFile)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to parse private key")
 		return nil, err
@@ -322,6 +317,9 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		},
 		sci.contractAddr,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to derive PDA for config account: %w", err)
+	}
 
 	instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
 		updateData,
@@ -346,14 +344,30 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		recentBlockHash.Value.Blockhash,
 		solana.TransactionPayer(sci.payer.PublicKey()),
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	sig, err := sci.client.SendTransaction(context.Background(), tx)
+	_, err = tx.Sign(
+		func(key solana.PublicKey) *solana.PrivateKey {
+			if key == sci.payer.PublicKey() {
+				return &sci.payer
+			}
+			return nil
+		})
 	if err != nil {
-		return fmt.Errorf("failed to send transaction: %w", err)
+		return fmt.Errorf("failed to sign transaction: %w", err)
+	}
+
+	sig, err := confirm.SendAndConfirmTransaction(
+		context.Background(),
+		sci.client,
+		sci.wsClient,
+		tx,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to send and confirm transaction: %w", err)
 	}
 
 	sci.logger.Info().
