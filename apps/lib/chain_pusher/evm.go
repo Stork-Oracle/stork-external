@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/contract_bindings_evm"
+	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
