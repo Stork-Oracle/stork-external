@@ -14,6 +14,7 @@ func init() {
 	SolanapushCmd.Flags().StringP(StorkWebsocketEndpointFlag, "w", "", StorkWebsocketEndpointDesc)
 	SolanapushCmd.Flags().StringP(StorkAuthCredentialsFlag, "a", "", StorkAuthCredentialsDesc)
 	SolanapushCmd.Flags().StringP(ChainRpcUrlFlag, "c", "", ChainRpcUrlDesc)
+	SolanapushCmd.Flags().StringP(ChainWsUrlFlag, "u", "", ChainWsUrlDesc)
 	SolanapushCmd.Flags().StringP(ContractAddressFlag, "x", "", ContractAddressDesc)
 	SolanapushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	SolanapushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
@@ -32,6 +33,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	storkWsEndpoint, _ := cmd.Flags().GetString(StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(ChainRpcUrlFlag)
+	chainWsUrl, _ := cmd.Flags().GetString(ChainWsUrlFlag)
 	contractAddress, _ := cmd.Flags().GetString(ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
@@ -40,7 +42,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 
 	logger := SolanaPusherLogger(chainRpcUrl, contractAddress)
 
-	solanaInteracter, err := NewSolanaContractInteracter(chainRpcUrl, storkWsEndpoint, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
+	solanaInteracter, err := NewSolanaContractInteracter(chainRpcUrl, chainWsUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Solana contract interacter")
 	}
