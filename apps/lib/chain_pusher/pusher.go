@@ -14,7 +14,6 @@ type Pusher struct {
 	chainRpcUrl      string
 	contractAddress  string
 	assetConfigFile  string
-	mnemonicFile     string
 	verifyPublishers bool
 	batchingWindow   int
 	pollingFrequency int
@@ -22,15 +21,13 @@ type Pusher struct {
 	logger           *zerolog.Logger
 }
 
-func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, mnemonicFile string, verifyPublishers bool, batchingWindow, pollingFrequency int, interacter ContractInteracter, logger *zerolog.Logger) *Pusher {
+func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingFrequency int, interacter ContractInteracter, logger *zerolog.Logger) *Pusher {
 	return &Pusher{
 		storkWsEndpoint:  storkWsEndpoint,
 		storkAuth:        storkAuth,
 		chainRpcUrl:      chainRpcUrl,
 		contractAddress:  contractAddress,
 		assetConfigFile:  assetConfigFile,
-		mnemonicFile:     mnemonicFile,
-		verifyPublishers: verifyPublishers,
 		batchingWindow:   batchingWindow,
 		pollingFrequency: pollingFrequency,
 		interacter:       interacter,
