@@ -4,7 +4,7 @@ use anchor_lang::solana_program::system_instruction;
 mod verify;
 use verify::{verify_stork_evm_signature, EvmPubkey};
 
-declare_id!("2TSL7JwuTu9co7yUizwuh8EVdd4d96vDo9JykQCw8SHi");
+declare_id!("3ZZfMdMb4Ar1X5Utk39nEa3TKmZSyUeirkUjbbuqBX4V");
 
 pub const STORK_CONFIG_SEED: &[u8] = b"stork_config";
 pub const STORK_FEED_SEED: &[u8] = b"stork_feed";

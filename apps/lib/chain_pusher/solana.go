@@ -280,25 +280,64 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	}
 
 	// Convert strings to [32]byte using stringToByte32
-	publisherMerkleRoot, err := stringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+	// publisherMerkleRoot, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
+	// }
+
+	// valueComputeAlgHash, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
+	// }
+
+	// r, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert R: %w", err)
+	// }
+
+	// s, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert S: %w", err)
+	// }
+
+	// v, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert V: %w", err)
+	// }
+
+	publisherMerkleRootBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 	if err != nil {
 		return fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
 	}
+	var publisherMerkleRoot [32]uint8
+	copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
 
-	valueComputeAlgHash, err := stringToByte32(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+	valueComputeAlgHashBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
 	if err != nil {
 		return fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
 	}
+	var valueComputeAlgHash [32]uint8
+	copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
 
-	r, err := stringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
+	rBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
 		return fmt.Errorf("failed to convert R: %w", err)
 	}
+	var r [32]uint8
+	copy(r[:], rBytes)
 
-	s, err := stringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
+	sBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
 		return fmt.Errorf("failed to convert S: %w", err)
 	}
+	var s [32]uint8
+	copy(s[:], sBytes)
+
+	vBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
+	if err != nil {
+		return fmt.Errorf("failed to convert V: %w", err)
+	}
+	v := uint8(vBytes[0])
 
 	// Create the update instruction
 	updateData := contract.TemporalNumericValueEvmInput{
@@ -311,7 +350,7 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		ValueComputeAlgHash: valueComputeAlgHash,
 		R:                   r,
 		S:                   s,
-		V:                   uint8(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V[0]),
+		V:                   v,
 		TreasuryId:          treasuryId,
 	}
 
