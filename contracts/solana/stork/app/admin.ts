@@ -13,6 +13,9 @@ const STORK_FEED_SEED = Buffer.from("stork_feed");
 const STORK_CONFIG_SEED = Buffer.from("stork_config");
 const STORK_TREASURY_SEED = Buffer.from("stork_treasury");
 
+const idl = require("../target/idl/stork.json");
+console.log("Loading IDL...");
+
 if (!anchorProviderUrl || !anchorWallet) {
   throw new Error("ANCHOR_PROVIDER_URL and ANCHOR_WALLET must be set");
 }
@@ -44,12 +47,7 @@ const initializeCliProgram = (): {
 
   anchor.setProvider(provider);
 
-  console.log("Loading IDL...");
-  const idl = require("../target/idl/stork.json");
-
   console.log("Program ID:", idl.address);
-
-  console.log("Initializing program...");
   return {
     program: new anchor.Program<Stork>(idl, provider),
     payer: payerKeypair,
@@ -230,85 +228,162 @@ cliProgram
     console.log("Single update fee updated successfully.");
   });
 
+async function fetchTransactionDetails(connection, transactionSignature) {
+  let transactionDetails = null;
+  const maxRetries = 5;
+  const delay = 2000; // 2 seconds
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    transactionDetails = await connection.getParsedTransaction(
+      transactionSignature,
+      {
+        commitment: "confirmed",
+      }
+    );
+
+    if (transactionDetails) {
+      break;
+    }
+
+    console.log(
+      `Retrying to fetch transaction details... Attempt ${attempt + 1}`
+    );
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+
+  return transactionDetails;
+}
+
+const writeToFeedsAction = async (
+  assetPairs,
+  restUrl,
+  authKey,
+  { treasuryId, report = false }
+) => {
+  console.log("Writing to feeds...");
+  const { program, payer } = initializeCliProgram();
+  try {
+    const result = await fetch(
+      `${restUrl}/v1/prices/latest\?assets\=${assetPairs}`,
+      {
+        headers: {
+          Authorization: `Basic ${authKey}`,
+        },
+      }
+    );
+    const rawJson = await result.text();
+    const safeJsonText = rawJson.replace(
+      /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
+      (match) => `"${match}"` // Convert large numbers to strings
+    );
+
+    const responseData = JSON.parse(safeJsonText);
+
+    if (treasuryId === "") {
+      treasuryId = Math.floor(Math.random() * 256);
+      console.log(`Generated random treasury ID: ${treasuryId}`);
+    } else {
+      console.log(`Using provided treasury ID: ${JSON.stringify(treasuryId)}`);
+    }
+
+    const [treasuryPDA] = await PublicKey.findProgramAddressSync(
+      [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
+      program.programId
+    );
+
+    const instructions = await Promise.all(Object.values(responseData.data).map((data: any) => {
+      const updateData = {
+        temporalNumericValue: {
+          timestampNs: new anchor.BN(
+            data.stork_signed_price.timestamped_signature.timestamp
+          ),
+          quantizedValue: new anchor.BN(data.stork_signed_price.price),
+        },
+        id: hexStringToByteArray(data.stork_signed_price.encoded_asset_id),
+        publisherMerkleRoot: hexStringToByteArray(
+          data.stork_signed_price.publisher_merkle_root
+        ),
+        valueComputeAlgHash: hexStringToByteArray(
+          data.stork_signed_price.calculation_alg.checksum
+        ),
+        r: hexStringToByteArray(
+          data.stork_signed_price.timestamped_signature.signature.r
+        ),
+        s: hexStringToByteArray(
+          data.stork_signed_price.timestamped_signature.signature.s
+        ),
+        v: hexStringToByteArray(
+          data.stork_signed_price.timestamped_signature.signature.v
+        )[0],
+        treasuryId,
+      };
+
+      return program.methods
+        .updateTemporalNumericValueEvm(updateData)
+        .accounts({
+          treasury: treasuryPDA,
+          payer: payer.publicKey,
+        })
+        .instruction();
+    }));
+
+
+    const transaction = new anchor.web3.Transaction();
+
+    transaction.add(...instructions);
+
+    const transactionSignature = await program.provider.sendAndConfirm(
+      transaction
+    );
+
+    if (report) {
+      const transactionDetails = await fetchTransactionDetails(
+        program.provider.connection,
+        transactionSignature
+      );
+
+      console.log(transactionDetails);
+
+      if (transactionDetails && transactionDetails.meta) {
+        console.log(
+          "Compute Units Used:",
+          transactionDetails.meta.computeUnitsConsumed
+        );
+      } else {
+        console.log("Failed to retrieve transaction details.");
+      }
+    }
+
+    console.log(`Feeds updated successfully!`);
+  } catch (error) {
+    console.error("Error writing to feed:", error);
+  }
+};
+
+cliProgram
+  .command("bootstrap-treasuries")
+  .description("Bootstrap the treasuries")
+  .argument("endpoint", "The REST endpoint")
+  .argument("auth_key", "The auth key")
+  .action(async (restUrl, authKey) => {
+    const btcAssetPair = "BTCUSD";
+
+    for (let i = 0; i < 256; i++) {
+      await writeToFeedsAction(btcAssetPair, restUrl, authKey, {
+        treasuryId: i,
+      });
+    }
+  });
+
 cliProgram
   .command("write-to-feeds")
   .description("Write to feeds")
   .argument("asset_pairs", "The asset pairs (comma separated)")
   .argument("endpoint", "The REST endpoint")
   .argument("auth_key", "The auth key")
-  .action(async (assetPairs, restUrl, authKey) => {
-    console.log("Writing to feed...");
-    const { program, payer } = initializeCliProgram();
-    try {
-      const result = await fetch(
-        `${restUrl}/v1/prices/latest\?assets\=${assetPairs}`,
-        {
-          headers: {
-            Authorization: `Basic ${authKey}`,
-          },
-        }
-      );
-      const rawJson = await result.text();
-      const safeJsonText = rawJson.replace(
-        /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
-        (match) => `"${match}"` // Convert large numbers to strings
-      );
-
-      const responseData = JSON.parse(safeJsonText);
-
-      for (const key in responseData.data) {
-        const data = responseData.data[key];
-        console.log(data.stork_signed_price.timestamped_signature.signature.r);
-
-        const treasuryId = Math.floor(Math.random() * 256);
-        console.log(`Generated random treasury ID: ${treasuryId}`);
-        const updateData = {
-          temporalNumericValue: {
-            timestampNs: new anchor.BN(
-              data.stork_signed_price.timestamped_signature.timestamp
-            ),
-            quantizedValue: new anchor.BN(data.stork_signed_price.price),
-          },
-          id: hexStringToByteArray(data.stork_signed_price.encoded_asset_id),
-          publisherMerkleRoot: hexStringToByteArray(
-            data.stork_signed_price.publisher_merkle_root
-          ),
-          valueComputeAlgHash: hexStringToByteArray(
-            data.stork_signed_price.calculation_alg.checksum
-          ),
-          r: hexStringToByteArray(
-            data.stork_signed_price.timestamped_signature.signature.r
-          ),
-          s: hexStringToByteArray(
-            data.stork_signed_price.timestamped_signature.signature.s
-          ),
-          v: hexStringToByteArray(
-            data.stork_signed_price.timestamped_signature.signature.v
-          )[0],
-          treasuryId,
-        };
-
-        // Derive the PDA for the feed and the treasury account
-        const [treasuryPDA] = await PublicKey.findProgramAddressSync(
-          [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
-          program.programId
-        );
-
-        await program.methods
-          .updateTemporalNumericValueEvm(updateData)
-          .accounts({
-            treasury: treasuryPDA,
-            payer: payer.publicKey,
-          })
-          .signers([payer])
-          .rpc();
-
-        console.log(`Feed updated successfully! ${key}`);
-      }
-    } catch (error) {
-      console.error("Error writing to feed:", error);
-    }
-  });
+  .option("-t, --treasury-id", "The treasury ID", "")
+  .option("-r, --report", "Report the results", false)
+  .action(writeToFeedsAction);
 
 cliProgram
   .command("get-feed")
@@ -323,6 +398,20 @@ cliProgram
     const feed = await program.account.temporalNumericValueFeed.fetch(feedPda);
     console.log(feed.latestValue.quantizedValue.toString());
     console.log(feed.latestValue.timestampNs.toString());
+  });
+
+cliProgram
+  .command("get-treasury-balance")
+  .argument("treasury_id", "The treasury ID")
+  .action(async (treasuryId) => {
+    const { program } = initializeCliProgram();
+
+    const [treasuryPda] = await PublicKey.findProgramAddressSync(
+      [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
+      program.programId
+    );
+    const balance = await program.provider.connection.getBalance(treasuryPda);
+    console.log(`Treasury balance ${treasuryId}`, balance);
   });
 
 cliProgram.parse();
