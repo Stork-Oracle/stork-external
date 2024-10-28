@@ -40,7 +40,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 
-	contractPubKey := solana.MustPublicKeyFromBase58(contractAddr)
+	contractPubKey, err := solana.PublicKeyFromBase58(contractAddr)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Invalid contract address")
 		return nil, err
@@ -82,6 +82,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		i++
 	}
 
+	contract.SetProgramID(contractPubKey)
 	return &SolanaContractInteracter{
 		logger:              logger,
 		client:              client,
@@ -199,7 +200,6 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 		go func(encodedAssetId InternalEncodedAssetId, priceUpdate AggregatedSignedPrice) {
 			defer wg.Done()
 
-			// Wait for rate limiter
 			err := limiter.Wait(context.Background())
 			if err != nil {
 				errChan <- fmt.Errorf("rate limiter error: %w", err)
@@ -213,7 +213,6 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 		}(encodedAssetId, priceUpdate)
 	}
 
-	// Wait for all goroutines to finish
 	wg.Wait()
 	close(errChan)
 
@@ -239,7 +238,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	var assetId [32]uint8
 	copy(assetId[:], encodedAssetId[:])
 
-	// Derive the PDA for the feed account
 	feedAccount, _, err := solana.FindProgramAddress(
 		[][]byte{
 			[]byte("stork_feed"),
@@ -251,14 +249,13 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		return fmt.Errorf("failed to derive PDA for feed account: %w", err)
 	}
 
-	// Randomly select a treasury ID (0-255)
 	randomId, err := rand.Int(rand.Reader, big.NewInt(256))
 	if err != nil {
 		return fmt.Errorf("failed to generate random treasury ID: %w", err)
 	}
+
 	treasuryId := uint8(randomId.Uint64())
 
-	// Derive the PDA for the selected treasury account
 	treasuryAccount, _, err := solana.FindProgramAddress(
 		[][]byte{
 			[]byte("stork_treasury"),
@@ -278,32 +275,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		Lo: quantizedPriceBigInt.Uint64(),
 		Hi: quantizedPriceBigInt.Rsh(quantizedPriceBigInt, 64).Uint64(),
 	}
-
-	// Convert strings to [32]byte using stringToByte32
-	// publisherMerkleRoot, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
-	// }
-
-	// valueComputeAlgHash, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
-	// }
-
-	// r, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to convert R: %w", err)
-	// }
-
-	// s, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to convert S: %w", err)
-	// }
-
-	// v, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to convert V: %w", err)
-	// }
 
 	publisherMerkleRootBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 	if err != nil {
@@ -339,19 +310,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	}
 	v := uint8(vBytes[0])
 
-	sci.logger.Error().
-		Uint64("timestampNs", uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp)).
-		Str("quantizedPrice", quantizedPrice.String()).
-		Str("assetId", hex.EncodeToString(assetId[:])).
-		Str("publisherMerkleRoot", hex.EncodeToString(publisherMerkleRoot[:])).
-		Str("valueComputeAlgHash", hex.EncodeToString(valueComputeAlgHash[:])).
-		Str("r", hex.EncodeToString(r[:])).
-		Str("s", hex.EncodeToString(s[:])).
-		Uint8("v", v).
-		Uint8("treasuryId", treasuryId).
-		Msg("Update data")
-
-	// Create the update instruction
 	updateData := contract.TemporalNumericValueEvmInput{
 		TemporalNumericValue: contract.TemporalNumericValue{
 			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
@@ -375,13 +333,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to derive PDA for config account: %w", err)
 	}
-	sci.logger.Error().
-		Str("configAccount", configAccount.String()).
-		Str("treasuryAccount", treasuryAccount.String()).
-		Str("feedAccount", feedAccount.String()).
-		Str("payerAccount", sci.payer.PublicKey().String()).
-		Str("systemProgram", solana.SystemProgramID.String()).
-		Msg("Instruction accounts")
 
 	instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
 		updateData,
@@ -391,6 +342,7 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		sci.payer.PublicKey(),
 		solana.SystemProgramID,
 	).ValidateAndBuild()
+
 	if err != nil {
 		return fmt.Errorf("failed to build instruction: %w", err)
 	}
@@ -400,7 +352,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		return fmt.Errorf("failed to get recent blockhash: %w", err)
 	}
 
-	// Create and send the transaction
 	tx, err := solana.NewTransaction(
 		[]solana.Instruction{instruction},
 		recentBlockHash.Value.Blockhash,
@@ -409,9 +360,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to create transaction: %w", err)
 	}
-	sci.logger.Error().
-		Str("transaction", tx.String()).
-		Msg("Transaction details")
 
 	_, err = tx.Sign(
 		func(key solana.PublicKey) *solana.PrivateKey {
@@ -423,22 +371,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to sign transaction: %w", err)
 	}
-
-	// sim, err := sci.client.SimulateTransaction(context.Background(), tx)
-	// if err != nil {
-	// 	sci.logger.Error().
-	// 		Err(err).
-	// 		Str("simulation_error", fmt.Sprintf("%+v", sim)).
-	// 		Msg("Transaction simulation failed")
-	// 	return fmt.Errorf("transaction simulation failed: %w", err)
-	// }
-
-	// Print the simulation logs
-	// if sim.Value.Logs != nil {
-	// 	sci.logger.Error().
-	// 		Strs("simulation_logs", sim.Value.Logs).
-	// 		Msg("Transaction simulation logs")
-	// }
 
 	sig, err := confirm.SendAndConfirmTransaction(
 		context.Background(),
@@ -461,7 +393,6 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 }
 
 func hexStringToByteArray(hexString string) ([]byte, error) {
-	// Remove "0x" prefix if present
 	hexString = strings.TrimPrefix(hexString, "0x")
 	return hex.DecodeString(hexString)
 }
