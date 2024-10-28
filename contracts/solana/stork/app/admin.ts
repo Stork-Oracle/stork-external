@@ -234,15 +234,20 @@ async function fetchTransactionDetails(connection, transactionSignature) {
   const delay = 2000; // 2 seconds
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    transactionDetails = await connection.getParsedTransaction(transactionSignature, {
-      commitment: "confirmed",
-    });
+    transactionDetails = await connection.getParsedTransaction(
+      transactionSignature,
+      {
+        commitment: "confirmed",
+      }
+    );
 
     if (transactionDetails) {
       break;
     }
 
-    console.log(`Retrying to fetch transaction details... Attempt ${attempt + 1}`);
+    console.log(
+      `Retrying to fetch transaction details... Attempt ${attempt + 1}`
+    );
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
@@ -274,17 +279,19 @@ const writeToFeedsAction = async (
 
     const responseData = JSON.parse(safeJsonText);
 
-    for (const key in responseData.data) {
-      const data = responseData.data[key];
+    if (treasuryId === "") {
+      treasuryId = Math.floor(Math.random() * 256);
+      console.log(`Generated random treasury ID: ${treasuryId}`);
+    } else {
+      console.log(`Using provided treasury ID: ${JSON.stringify(treasuryId)}`);
+    }
 
-      if (treasuryId === "") {
-        const treasuryId = Math.floor(Math.random() * 256);
-        console.log(`Generated random treasury ID: ${treasuryId}`);
-      } else {
-        console.log(
-          `Using provided treasury ID: ${JSON.stringify(treasuryId)}`
-        );
-      }
+    const [treasuryPDA] = await PublicKey.findProgramAddressSync(
+      [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
+      program.programId
+    );
+
+    const instructions = await Promise.all(Object.values(responseData.data).map((data: any) => {
       const updateData = {
         temporalNumericValue: {
           timestampNs: new anchor.BN(
@@ -311,38 +318,43 @@ const writeToFeedsAction = async (
         treasuryId,
       };
 
-      // Derive the PDA for the feed and the treasury account
-      const [treasuryPDA] = await PublicKey.findProgramAddressSync(
-        [STORK_TREASURY_SEED, new Uint8Array([treasuryId])],
-        program.programId
-      );
-
-      const transactionSignature = await program.methods
+      return program.methods
         .updateTemporalNumericValueEvm(updateData)
         .accounts({
           treasury: treasuryPDA,
           payer: payer.publicKey,
         })
-        .signers([payer])
-        .rpc();
+        .instruction();
+    }));
 
-      if (report) {
-        const transactionDetails = await fetchTransactionDetails(
-          program.provider.connection,
-          transactionSignature
+
+    const transaction = new anchor.web3.Transaction();
+
+    transaction.add(...instructions);
+
+    const transactionSignature = await program.provider.sendAndConfirm(
+      transaction
+    );
+
+    if (report) {
+      const transactionDetails = await fetchTransactionDetails(
+        program.provider.connection,
+        transactionSignature
+      );
+
+      console.log(transactionDetails);
+
+      if (transactionDetails && transactionDetails.meta) {
+        console.log(
+          "Compute Units Used:",
+          transactionDetails.meta.computeUnitsConsumed
         );
-
-        console.log(transactionDetails);
-
-        if (transactionDetails && transactionDetails.meta) {
-          console.log("Compute Units Used:", transactionDetails.meta.computeUnitsConsumed);
-        } else {
-          console.log("Failed to retrieve transaction details.");
-        }
+      } else {
+        console.log("Failed to retrieve transaction details.");
       }
-
-      console.log(`Feed updated successfully! ${key}`);
     }
+
+    console.log(`Feeds updated successfully!`);
   } catch (error) {
     console.error("Error writing to feed:", error);
   }
