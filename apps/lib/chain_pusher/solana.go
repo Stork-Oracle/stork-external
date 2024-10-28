@@ -262,7 +262,7 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	treasuryAccount, _, err := solana.FindProgramAddress(
 		[][]byte{
 			[]byte("stork_treasury"),
-			[]byte{treasuryId},
+			{treasuryId},
 		},
 		sci.contractAddr,
 	)
@@ -339,6 +339,18 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	}
 	v := uint8(vBytes[0])
 
+	sci.logger.Error().
+		Uint64("timestampNs", uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp)).
+		Str("quantizedPrice", quantizedPrice.String()).
+		Str("assetId", hex.EncodeToString(assetId[:])).
+		Str("publisherMerkleRoot", hex.EncodeToString(publisherMerkleRoot[:])).
+		Str("valueComputeAlgHash", hex.EncodeToString(valueComputeAlgHash[:])).
+		Str("r", hex.EncodeToString(r[:])).
+		Str("s", hex.EncodeToString(s[:])).
+		Uint8("v", v).
+		Uint8("treasuryId", treasuryId).
+		Msg("Update data")
+
 	// Create the update instruction
 	updateData := contract.TemporalNumericValueEvmInput{
 		TemporalNumericValue: contract.TemporalNumericValue{
@@ -363,6 +375,13 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to derive PDA for config account: %w", err)
 	}
+	sci.logger.Error().
+		Str("configAccount", configAccount.String()).
+		Str("treasuryAccount", treasuryAccount.String()).
+		Str("feedAccount", feedAccount.String()).
+		Str("payerAccount", sci.payer.PublicKey().String()).
+		Str("systemProgram", solana.SystemProgramID.String()).
+		Msg("Instruction accounts")
 
 	instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
 		updateData,
@@ -390,6 +409,9 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to create transaction: %w", err)
 	}
+	sci.logger.Error().
+		Str("transaction", tx.String()).
+		Msg("Transaction details")
 
 	_, err = tx.Sign(
 		func(key solana.PublicKey) *solana.PrivateKey {
@@ -401,6 +423,22 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 	if err != nil {
 		return fmt.Errorf("failed to sign transaction: %w", err)
 	}
+
+	// sim, err := sci.client.SimulateTransaction(context.Background(), tx)
+	// if err != nil {
+	// 	sci.logger.Error().
+	// 		Err(err).
+	// 		Str("simulation_error", fmt.Sprintf("%+v", sim)).
+	// 		Msg("Transaction simulation failed")
+	// 	return fmt.Errorf("transaction simulation failed: %w", err)
+	// }
+
+	// Print the simulation logs
+	// if sim.Value.Logs != nil {
+	// 	sci.logger.Error().
+	// 		Strs("simulation_logs", sim.Value.Logs).
+	// 		Msg("Transaction simulation logs")
+	// }
 
 	sig, err := confirm.SendAndConfirmTransaction(
 		context.Background(),
