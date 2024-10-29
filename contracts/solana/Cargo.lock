@@ -1601,6 +1601,15 @@ name = "stork"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "stork-sdk",
+]
+
+[[package]]
+name = "stork-sdk"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "solana-program",
 ]
 
 [[package]]
