@@ -8,17 +8,12 @@ This contract is a light wrapper around the [Stork EVM contract](../evm) which c
 npm i @storknetwork/stork_chainlink_adapter
 ```
 
-2. Update your `remappings.txt` file to include:
-```
-@storknetwork/stork_chainlink_adapter/=node_modules/@storknetwork/stork_chainlink_adapter
-```
-
-3. Import the Stork Chainlink Adapter contract into your solidity contract using:
+2. Import the Stork Chainlink Adapter contract into your solidity contract using:
 ```
 import "@storknetwork/stork_chainlink_adapter/contracts/StorkChainlinkAdapter.sol";
 ```
 
-4. Create one StorkChainlinkAdapter for each asset whose price you want to track. This object takes in the contract address of Stork's contract on this chain, and the bytes32-formatted price id for this asset:
+3. Create one StorkChainlinkAdapter for each asset whose price you want to track. This object takes in the contract address of Stork's contract on this chain, and the bytes32-formatted price id for this asset:
 ```
 storkChainlinkAdapter = new StorkChainlinkAdapter(storkContract, priceId);
 ```
