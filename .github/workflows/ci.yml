@@ -23,10 +23,31 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install ARM64 gcc toolchain
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
@@ -65,26 +86,82 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './contracts/solana/programs/stork/package-lock.json'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Yarn
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ~/.yarn
+          key: ${{ runner.os }}-yarn-global-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-global-
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install Yarn dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./contracts/solana/programs/stork
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
 
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-solana-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-solana-
+
+      - name: Cache Solana CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.local/share/solana/install
+            ~/.config/solana/id.json
+          key: ${{ runner.os }}-solana-${{ hashFiles('.github/workflows/ci.yml') }}
+
       - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Solana
         run: |
-          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          [ -f ~/.config/solana/id.json ] || solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
           solana config set --url localhost
 
+      - name: Cache Anchor CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/anchor
+            ~/.cargo/bin/avm
+          key: ${{ runner.os }}-anchor-${{ hashFiles('.github/workflows/ci.yml') }}
+
       - name: Install Anchor CLI
-        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          && avm install latest
-          && avm use latest
+        run: |
+          [ -f ~/.cargo/bin/avm ] || cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
 
       - name: Build programs
         run: |
