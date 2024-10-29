@@ -4,14 +4,13 @@ use anchor_lang::solana_program::system_instruction;
 mod verify;
 use verify::{verify_stork_evm_signature, EvmPubkey};
 
-use stork_sdk::temporal_numeric_value::{TemporalNumericValue, TemporalNumericValueFeed};
+use stork_sdk::{
+    pda::{STORK_CONFIG_SEED, STORK_FEED_SEED, STORK_TREASURY_SEED},
+    temporal_numeric_value::{TemporalNumericValue, TemporalNumericValueFeed},
+};
 
 // This needs to match the ID in the stork-sdk crate
 declare_id!(stork_sdk::PROGRAM_ID);
-
-pub const STORK_CONFIG_SEED: &[u8] = b"stork_config";
-pub const STORK_FEED_SEED: &[u8] = b"stork_feed";
-pub const STORK_TREASURY_SEED: &[u8] = b"stork_treasury";
 
 #[program]
 pub mod stork {
@@ -157,7 +156,7 @@ pub struct UpdateTemporalNumericValue<'info> {
         init_if_needed,
         payer = payer,
         space = TemporalNumericValueFeed::LEN,
-        seeds = [STORK_FEED_SEED, update_data.id.as_ref()],
+        seeds = [STORK_FEED_SEED.as_ref(), update_data.id.as_ref()],
         bump,
         rent_exempt = enforce
     )]

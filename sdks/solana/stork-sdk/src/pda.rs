@@ -2,9 +2,9 @@ use {
     crate::PROGRAM_ID, anchor_lang::prelude::*
 };
 
-pub const STORK_CONFIG_SEED: &str = "stork_config";
-pub const STORK_FEED_SEED: &str = "stork_feed";
-pub const STORK_TREASURY_SEED: &str = "stork_treasury";
+pub const STORK_CONFIG_SEED: &[u8] = b"stork_config";
+pub const STORK_FEED_SEED: &[u8] = b"stork_feed";
+pub const STORK_TREASURY_SEED: &[u8] = b"stork_treasury";
 
 pub fn get_config_address() -> Pubkey {
     Pubkey::find_program_address(&[STORK_CONFIG_SEED.as_ref()], &PROGRAM_ID).0
