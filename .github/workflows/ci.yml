@@ -89,32 +89,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: './contracts/solana/programs/stork/package-lock.json'
 
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Cache Yarn
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.npm
-            ~/.yarn
-          key: ${{ runner.os }}-yarn-global-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-global-
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install Yarn dependencies
-        run: yarn install --frozen-lockfile
-        working-directory: ./contracts/solana/programs/stork
-
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
