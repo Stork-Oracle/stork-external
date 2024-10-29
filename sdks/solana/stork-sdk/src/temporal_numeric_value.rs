@@ -1,11 +1,14 @@
 use {
     crate::error::GetTemporalNumericValueError,
-    anchor_lang::prelude::*,
+    anchor_lang::prelude::{
+        borsh::BorshSchema,
+        *,
+    },
 };
 
 pub type FeedId = [u8; 32];
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, BorshSchema)]
 pub struct TemporalNumericValue {
     pub timestamp_ns: u64,
     pub quantized_value: i128,
@@ -16,6 +19,7 @@ impl TemporalNumericValue {
 }
 
 #[account]
+#[derive(BorshSchema)]
 pub struct TemporalNumericValueFeed {
     pub id: FeedId,
     pub latest_value: TemporalNumericValue,
