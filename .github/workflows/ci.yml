@@ -133,13 +133,30 @@ jobs:
           path: |
             ~/.cargo/bin/anchor
             ~/.cargo/bin/avm
+            ~/.avm
           key: ${{ runner.os }}-anchor-${{ hashFiles('.github/workflows/ci.yml') }}
 
       - name: Install Anchor CLI
         run: |
-          [ -f ~/.cargo/bin/avm ] || cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install latest
-          avm use latest
+          if ! command -v avm &> /dev/null; then
+            cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          fi
+          if ! command -v anchor &> /dev/null; then
+            avm install latest
+            avm use latest
+          fi
+
+      - name: Cache Anchor build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./contracts/solana/target/
+            ./contracts/solana/target/types/
+            ./contracts/solana/target/idl/
+            ./contracts/solana/target/deploy/
+          key: ${{ runner.os }}-anchor-build-${{ hashFiles('contracts/solana/**/Cargo.toml', 'contracts/solana/**/Cargo.lock', 'contracts/solana/**/src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-anchor-build-
 
       - name: Build programs
         run: |
