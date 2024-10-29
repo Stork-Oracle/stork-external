@@ -1,9 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-ignition-ethers";
 
 require("@openzeppelin/hardhat-upgrades");
 
-import './tasks/deploy';
 import './tasks/get_latest_round_data';
 
 const config: HardhatUserConfig = {

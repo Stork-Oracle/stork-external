@@ -1,1 +1,0 @@
-@storknetwork/stork_chainlink_adapter/=node_modules/@storknetwork/stork_chainlink_adapter

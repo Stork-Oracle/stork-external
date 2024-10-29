@@ -3,15 +3,16 @@ This is a very simple hardhat project to show how you would use the Stork Chainl
 
 ## Deploy locally
 1. Deploy a local version of the [Stork contract](../../contracts/evm) and write some data to it for your desired asset id
-2. Compile the contract:
+2. Update the [ignition module](ignition/modules/stork_chainlink_adapter.ts) to pass your local Stork contract's address as an argument
+3. Compile the contract:
 ```
 npx hardhat compile
 ```
-3. Deploy the contract locally and record the address
+4. Deploy the contract locally and record the address
 ```
-npx hardhat --network localhost deploy --stork-address YOUR_LOCAL_STORK_CONTRACT_ADDRESS --price-id YOUR_PRICE_ID
+npx hardhat --network localhost ignition deploy ignition/modules/stork_chainlink_adapter.ts
 ```
-4. Get the latest data from your contract:
+5. Get the latest data from your contract:
 ```
  npx hardhat --network localhost get_latest_round_data --example-contract-address YOUR_LOCAL_EXAMPLE_CONTRACT_ADDRESS   
 ```
