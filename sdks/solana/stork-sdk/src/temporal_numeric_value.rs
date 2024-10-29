@@ -1,5 +1,5 @@
 use {
-    crate::{check, error::GetTemporalNumericValueError},
+    crate::error::GetTemporalNumericValueError,
     anchor_lang::prelude::*,
 };
 
@@ -25,14 +25,12 @@ impl TemporalNumericValueFeed {
     // 32 for the id
     // doubled to leave space for future fields
     pub const LEN: usize = 2 * (32 + TemporalNumericValue::LEN);
-}
 
-impl TemporalNumericValueFeed {
     pub fn get_latest_canonical_temporal_numeric_value_unchecked(
         &self,
         feed_id: &FeedId,
-    ) -> std::result::Result<TemporalNumericValue, GetTemporalNumericValueError> {
-        check!(
+    ) -> Result<TemporalNumericValue> {
+        require!(
             self.id == *feed_id,
             GetTemporalNumericValueError::InvalidFeedId
         );
