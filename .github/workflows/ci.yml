@@ -76,6 +76,11 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+      - name: Setup Solana
+        run: |
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
       - name: Install Anchor CLI
         run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           && avm install latest
