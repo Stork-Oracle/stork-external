@@ -20,13 +20,15 @@ assets:
 
 See `sample.asset-config.yaml` for an example.
 
-2. Create a `private-key.secret` file. This file should contain the private key of the user's wallet. This is needed to pay gas/transaction fees.
+2. **For EVM chains:** Create a `private-key.secret` file. This file should contain the private key of the user's wallet. This is needed to pay gas/transaction fees.
+**For Solana**: Create a `keypair.json` file, this file should contain the Solana wallet keypair.
 
 3. Run the pusher with your desired configurations
 
 For full explanation of the flags, run:
+**EVM**:
 ```
-go run . evm-push --help
+go run . evm --help
 ```
 
 ```
@@ -39,11 +41,44 @@ go run ./cmd/chain_pusher/main.go evm \
     -m <private-key-file>
 ```
 
+**Solana**:
+```
+go run . solana --help
+```
+```
+go run ./cmd/chain_pusher/main.go solana \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -c <chain-rpc-url> \
+    -u <chain-ws-url> \
+    -x <contract-address>
+    -f <asset-config-file> \
+    -k <keypair-file>
+```
+
 ## Development
 
-Generate the contract bindings
+
+**EVM**:
+1. Download abigen
+```
+go install github.com/ethereum/go-ethereum/cmd/abigen@latest
+```
+2. Generate the contract bindings
 ```
 abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go
+```
+
+**Solana**:
+1. Download and build solana-anchor-go
+```
+git clone https://github.com/HenryMBaldwin/solana-anchor-go
+cd solana-anchor-go
+go build
+```
+2. Generate the contract bindings
+```
+./solana-anchor-go src=../contracts/solana/programs/stork/src/target/idl
 ```
 
 ## Running on ec2
