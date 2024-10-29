@@ -160,6 +160,7 @@ jobs:
 
       - name: Build programs
         run: |
+          avm use latest
           anchor build
         working-directory: ./contracts/solana/programs/stork
 
