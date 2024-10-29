@@ -56,3 +56,46 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
 
+  test-solana:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.17.0/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          && avm install latest
+          && avm use latest
+
+      - name: Build programs
+        run: |
+          anchor build
+        working-directory: ./contracts/solana/programs/stork
+
+      - name: Run rust tests
+        run: |
+          cargo test
+        working-directory: ./contracts/solana/programs/stork
+
+      - name: Run anchor tests
+        run: |
+          anchor test
+        working-directory: ./contracts/solana/programs/stork
