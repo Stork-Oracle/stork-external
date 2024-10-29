@@ -30,6 +30,9 @@ type SolanaContractInteracter struct {
 	pollingFrequencySec int
 }
 
+// this is a limit imposed by the Solana blockchain and the size of the instruction
+const MAX_BATCH_SIZE = 4
+
 func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger) (*SolanaContractInteracter, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
@@ -195,22 +198,31 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(priceUpdates))
 
+	priceUpdatesBatch := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+	i := 0
 	for encodedAssetId, priceUpdate := range priceUpdates {
-		wg.Add(1)
-		go func(encodedAssetId InternalEncodedAssetId, priceUpdate AggregatedSignedPrice) {
-			defer wg.Done()
-
-			err := limiter.Wait(context.Background())
-			if err != nil {
-				errChan <- fmt.Errorf("rate limiter error: %w", err)
-				return
+		priceUpdatesBatch[encodedAssetId] = priceUpdate
+		i++
+		if len(priceUpdatesBatch) == MAX_BATCH_SIZE || i == len(priceUpdates) {
+			batchCopy := make(map[InternalEncodedAssetId]AggregatedSignedPrice, len(priceUpdatesBatch))
+			for k, v := range priceUpdatesBatch {
+				batchCopy[k] = v
 			}
-
-			err = sci.pushSingleUpdateToContract(encodedAssetId, priceUpdate)
-			if err != nil {
-				errChan <- fmt.Errorf("failed to push update for asset %x: %w", encodedAssetId, err)
-			}
-		}(encodedAssetId, priceUpdate)
+			wg.Add(1)
+			go func(priceUpdateBatch map[InternalEncodedAssetId]AggregatedSignedPrice) {
+				defer wg.Done()
+				err := limiter.Wait(context.Background())
+				if err != nil {
+					errChan <- fmt.Errorf("rate limiter error: %w", err)
+					return
+				}
+				err = sci.pushLimitedBatchUpdateToContract(priceUpdateBatch)
+				if err != nil {
+					errChan <- fmt.Errorf("failed to push batch: %w", err)
+				}
+			}(batchCopy)
+			priceUpdatesBatch = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+		}
 	}
 
 	wg.Wait()
@@ -388,6 +400,172 @@ func (sci *SolanaContractInteracter) pushSingleUpdateToContract(encodedAssetId I
 		Str("assetId", hex.EncodeToString(encodedAssetId[:])).
 		Uint8("treasuryId", treasuryId).
 		Msg("Pushed new value to contract")
+
+	return nil
+}
+
+func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
+
+	if len(priceUpdates) > MAX_BATCH_SIZE {
+		sci.logger.Error().Msg("Batch size exceeds limit, skipping update")
+		return nil
+	}
+
+	configAccount, _, err := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("stork_config"),
+		},
+		sci.contractAddr,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to derive PDA for config account: %w", err)
+	}
+
+	instructions := []solana.Instruction{}
+	assetIds := []string{}
+	treasuryIds := []uint8{}
+
+	for encodedAssetId, priceUpdate := range priceUpdates {
+		var assetId [32]uint8
+		copy(assetId[:], encodedAssetId[:])
+		assetIds = append(assetIds, hex.EncodeToString(encodedAssetId[:]))
+
+		feedAccount, _, err := solana.FindProgramAddress(
+			[][]byte{
+				[]byte("stork_feed"),
+				encodedAssetId[:],
+			},
+			sci.contractAddr,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to derive PDA for feed account: %w", err)
+		}
+		randomId, err := rand.Int(rand.Reader, big.NewInt(256))
+		if err != nil {
+			return fmt.Errorf("failed to generate random treasury ID: %w", err)
+		}
+
+		treasuryId := uint8(randomId.Uint64())
+		treasuryIds = append(treasuryIds, treasuryId)
+
+		treasuryAccount, _, err := solana.FindProgramAddress(
+			[][]byte{
+				[]byte("stork_treasury"),
+				{treasuryId},
+			},
+			sci.contractAddr,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to derive PDA for treasury account: %w", err)
+		}
+
+		//convert the quantized price to bin.Int128
+		quantizedPriceBigInt := new(big.Int)
+		quantizedPriceBigInt.SetString(string(priceUpdate.StorkSignedPrice.QuantizedPrice), 10)
+
+		quantizedPrice := bin.Int128{
+			Lo: quantizedPriceBigInt.Uint64(),
+			Hi: quantizedPriceBigInt.Rsh(quantizedPriceBigInt, 64).Uint64(),
+		}
+
+		publisherMerkleRootBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+		if err != nil {
+			return fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
+		}
+		var publisherMerkleRoot [32]uint8
+		copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
+
+		valueComputeAlgHashBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+		if err != nil {
+			return fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
+		}
+
+		var valueComputeAlgHash [32]uint8
+		copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
+
+		rBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
+		if err != nil {
+			return fmt.Errorf("failed to convert R: %w", err)
+		}
+		var r [32]uint8
+		copy(r[:], rBytes)
+
+		sBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
+		if err != nil {
+			return fmt.Errorf("failed to convert S: %w", err)
+		}
+		var s [32]uint8
+		copy(s[:], sBytes)
+
+		vBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
+		if err != nil {
+			return fmt.Errorf("failed to convert V: %w", err)
+		}
+		v := uint8(vBytes[0])
+
+		updateData := contract.TemporalNumericValueEvmInput{
+			TemporalNumericValue: contract.TemporalNumericValue{
+				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
+				QuantizedValue: quantizedPrice,
+			},
+			Id:                  assetId,
+			PublisherMerkleRoot: publisherMerkleRoot,
+			ValueComputeAlgHash: valueComputeAlgHash,
+			R:                   r,
+			S:                   s,
+			V:                   v,
+			TreasuryId:          treasuryId,
+		}
+
+		instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
+			updateData,
+			configAccount,
+			treasuryAccount,
+			feedAccount,
+			sci.payer.PublicKey(),
+			solana.SystemProgramID,
+		).ValidateAndBuild()
+		if err != nil {
+			return fmt.Errorf("failed to build instruction: %w", err)
+		}
+		instructions = append(instructions, instruction)
+	}
+
+	recentBlockHash, err := sci.client.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
+	if err != nil {
+		return fmt.Errorf("failed to get recent blockhash: %w", err)
+	}
+
+	tx, err := solana.NewTransaction(
+		instructions,
+		recentBlockHash.Value.Blockhash,
+		solana.TransactionPayer(sci.payer.PublicKey()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create transaction: %w", err)
+	}
+
+	_, err = tx.Sign(
+		func(key solana.PublicKey) *solana.PrivateKey {
+			if key == sci.payer.PublicKey() {
+				return &sci.payer
+			}
+			return nil
+		})
+	if err != nil {
+		return fmt.Errorf("failed to sign transaction: %w", err)
+	}
+
+	sig, err := confirm.SendAndConfirmTransaction(context.Background(), sci.client, sci.wsClient, tx)
+	if err != nil {
+		return fmt.Errorf("failed to send and confirm transaction: %w", err)
+	}
+
+	sci.logger.Info().
+		Str("signature", sig.String()).
+		Strs("assetIds", assetIds).
+		Uints8("treasuryIds", treasuryIds).
+		Msg("Pushed batch update to contract")
 
 	return nil
 }
