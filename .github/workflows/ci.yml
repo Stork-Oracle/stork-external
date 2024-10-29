@@ -115,7 +115,7 @@ jobs:
           path: |
             ~/.local/share/solana/install
             ~/.config/solana/id.json
-          key: ${{ runner.os }}-solana-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-solana
 
       - name: Install Solana CLI
         run: |
@@ -134,7 +134,7 @@ jobs:
             ~/.cargo/bin/anchor
             ~/.cargo/bin/avm
             ~/.avm
-          key: ${{ runner.os }}-anchor-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-anchor
 
       - name: Install Anchor CLI
         run: |
