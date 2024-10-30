@@ -20,6 +20,8 @@ func init() {
 	SolanapushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
 	SolanapushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
 	SolanapushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	SolanapushCmd.Flags().IntP(LimitPerSecondFlag, "l", 40, LimitPerSecondDesc)
+	SolanapushCmd.Flags().IntP(BurstLimitFlag, "r", 10, BurstLimitDesc)
 
 	SolanapushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
 	SolanapushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
@@ -39,10 +41,12 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
 	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	limitPerSecond, _ := cmd.Flags().GetInt(LimitPerSecondFlag)
+	burstLimit, _ := cmd.Flags().GetInt(BurstLimitFlag)
 
 	logger := SolanaPusherLogger(chainRpcUrl, contractAddress)
 
-	solanaInteracter, err := NewSolanaContractInteracter(chainRpcUrl, chainWsUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
+	solanaInteracter, err := NewSolanaContractInteracter(chainRpcUrl, chainWsUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger, limitPerSecond, burstLimit)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Solana contract interacter")
 	}

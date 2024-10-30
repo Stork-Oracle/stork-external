@@ -25,17 +25,23 @@ type SolanaContractInteracter struct {
 	client              *rpc.Client
 	wsClient            *ws.Client
 	contractAddr        solana.PublicKey
-	feedAccounts        []solana.PublicKey
+	feedAccounts        map[InternalEncodedAssetId]solana.PublicKey
+	treasuryAccounts    map[uint8]solana.PublicKey
+	configAccount       solana.PublicKey
 	payer               solana.PrivateKey
+	limiter             *rate.Limiter
 	pollingFrequencySec int
 }
 
 // this is a limit imposed by the Solana blockchain and the size of the instruction
 const MAX_BATCH_SIZE = 4
 
-func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger) (*SolanaContractInteracter, error) {
+func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int) (*SolanaContractInteracter, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
+	//calculate the time between requests bases on limitPerSecond
+	timeBetweenRequestsMs := 1000 / limitPerSecond
+	limiter := rate.NewLimiter(rate.Every(time.Duration(timeBetweenRequestsMs)*time.Millisecond), burstLimit)
 	client := rpc.New(rpcUrl)
 	wsClient, err := ws.Connect(context.Background(), wsUrl)
 	if err != nil {
@@ -61,8 +67,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 
-	feedAccounts := make([]solana.PublicKey, len(assetConfig.Assets))
-	i := 0
+	feedAccounts := make(map[InternalEncodedAssetId]solana.PublicKey)
 	for _, asset := range assetConfig.Assets {
 		encodedAssetIdBytes, err := hexStringToByteArray(string(asset.EncodedAssetId))
 		if err != nil {
@@ -81,8 +86,27 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to derive PDA for feed account")
 			return nil, err
 		}
-		feedAccounts[i] = feedAccount
-		i++
+
+		encodedAssetId := InternalEncodedAssetId(encodedAssetIdBytes)
+		feedAccounts[encodedAssetId] = feedAccount
+	}
+
+	treasuryAccounts := make(map[uint8]solana.PublicKey)
+	for i := 0; i < 256; i++ {
+		treasuryAccount, _, err := solana.FindProgramAddress(
+			[][]byte{[]byte("stork_treasury"), {uint8(i)}}, contractPubKey)
+		if err != nil {
+			logger.Fatal().Err(err).Uint8("treasuryId", uint8(i)).Msg("Failed to derive PDA for treasury account")
+			return nil, err
+		}
+		treasuryAccounts[uint8(i)] = treasuryAccount
+	}
+
+	configAccount, _, err := solana.FindProgramAddress(
+		[][]byte{[]byte("stork_config")}, contractPubKey)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to derive PDA for config account")
+		return nil, err
 	}
 
 	contract.SetProgramID(contractPubKey)
@@ -92,7 +116,10 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		wsClient:            wsClient,
 		contractAddr:        contractPubKey,
 		feedAccounts:        feedAccounts,
+		treasuryAccounts:    treasuryAccounts,
+		configAccount:       configAccount,
 		payer:               payer,
+		limiter:             limiter,
 		pollingFrequencySec: pollingFreqSec,
 	}, nil
 }
@@ -191,38 +218,25 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 }
 
 func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-	// Create a rate limiter: 40 requests per 10 seconds (4 per second)
-	// with a burst of 10 to stay well within the limits
-	limiter := rate.NewLimiter(rate.Every(250*time.Millisecond), 10)
 
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(priceUpdates))
 
-	priceUpdatesBatch := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
-	i := 0
-	for encodedAssetId, priceUpdate := range priceUpdates {
-		priceUpdatesBatch[encodedAssetId] = priceUpdate
-		i++
-		if len(priceUpdatesBatch) == MAX_BATCH_SIZE || i == len(priceUpdates) {
-			batchCopy := make(map[InternalEncodedAssetId]AggregatedSignedPrice, len(priceUpdatesBatch))
-			for k, v := range priceUpdatesBatch {
-				batchCopy[k] = v
+	priceUpdatesBatches := sci.batchPriceUpdates(priceUpdates)
+	for _, priceUpdateBatch := range priceUpdatesBatches {
+		wg.Add(1)
+		go func(priceUpdateBatch map[InternalEncodedAssetId]AggregatedSignedPrice) {
+			defer wg.Done()
+			err := sci.limiter.Wait(context.Background())
+			if err != nil {
+				errChan <- fmt.Errorf("rate limiter error: %w", err)
+				return
 			}
-			wg.Add(1)
-			go func(priceUpdateBatch map[InternalEncodedAssetId]AggregatedSignedPrice) {
-				defer wg.Done()
-				err := limiter.Wait(context.Background())
-				if err != nil {
-					errChan <- fmt.Errorf("rate limiter error: %w", err)
-					return
-				}
-				err = sci.pushLimitedBatchUpdateToContract(priceUpdateBatch)
-				if err != nil {
-					errChan <- fmt.Errorf("failed to push batch: %w", err)
-				}
-			}(batchCopy)
-			priceUpdatesBatch = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
-		}
+			err = sci.pushLimitedBatchUpdateToContract(priceUpdateBatch)
+			if err != nil {
+				errChan <- fmt.Errorf("failed to push batch: %w", err)
+			}
+		}(priceUpdateBatch)
 	}
 
 	wg.Wait()
@@ -246,6 +260,27 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 	return nil
 }
 
+func (sci *SolanaContractInteracter) batchPriceUpdates(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) []map[InternalEncodedAssetId]AggregatedSignedPrice {
+	priceUpdatesBatches := []map[InternalEncodedAssetId]AggregatedSignedPrice{}
+
+	priceUpdatesBatch := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+	i := 0
+	for encodedAssetId, priceUpdate := range priceUpdates {
+		priceUpdatesBatch[encodedAssetId] = priceUpdate
+		i++
+		if len(priceUpdatesBatch) == MAX_BATCH_SIZE || i == len(priceUpdates) {
+			batchCopy := make(map[InternalEncodedAssetId]AggregatedSignedPrice, len(priceUpdatesBatch))
+			for k, v := range priceUpdatesBatch {
+				batchCopy[k] = v
+			}
+			priceUpdatesBatches = append(priceUpdatesBatches, batchCopy)
+			priceUpdatesBatch = make(map[InternalEncodedAssetId]AggregatedSignedPrice)
+		}
+	}
+
+	return priceUpdatesBatches
+}
+
 func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 
 	if len(priceUpdates) > MAX_BATCH_SIZE {
@@ -253,27 +288,13 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		return nil
 	}
 
-	configAccount, _, err := solana.FindProgramAddress(
-		[][]byte{
-			[]byte("stork_config"),
-		},
-		sci.contractAddr,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to derive PDA for config account: %w", err)
-	}
-
 	randomId, err := rand.Int(rand.Reader, big.NewInt(256))
+	if err != nil {
+		return fmt.Errorf("failed to generate random ID: %w", err)
+	}
 	treasuryId := uint8(randomId.Uint64())
 
-	treasuryAccount, _, err := solana.FindProgramAddress(
-		[][]byte{
-			[]byte("stork_treasury"),
-			{treasuryId},
-		},
-		sci.contractAddr,
-	)
-
+	treasuryAccount := sci.treasuryAccounts[treasuryId]
 	instructions := []solana.Instruction{}
 	assetIds := []string{}
 
@@ -282,16 +303,7 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		copy(assetId[:], encodedAssetId[:])
 		assetIds = append(assetIds, hex.EncodeToString(encodedAssetId[:]))
 
-		feedAccount, _, err := solana.FindProgramAddress(
-			[][]byte{
-				[]byte("stork_feed"),
-				encodedAssetId[:],
-			},
-			sci.contractAddr,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to derive PDA for feed account: %w", err)
-		}
+		feedAccount := sci.feedAccounts[encodedAssetId]
 
 		//convert the quantized price to bin.Int128
 		quantizedPriceBigInt := new(big.Int)
@@ -353,7 +365,7 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 
 		instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
 			updateData,
-			configAccount,
+			sci.configAccount,
 			treasuryAccount,
 			feedAccount,
 			sci.payer.PublicKey(),
@@ -366,7 +378,8 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 
 	}
 
-	recentBlockHash, err := sci.client.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
+	recentBlockHash, err := sci.client.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
+
 	if err != nil {
 		return fmt.Errorf("failed to get recent blockhash: %w", err)
 	}
