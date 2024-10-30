@@ -10,7 +10,6 @@ example = "FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra"
 
 [programs.testnet]
 stork = "2TSL7JwuTu9co7yUizwuh8EVdd4d96vDo9JykQCw8SHi"
-example = "FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra"
 
 [registry]
 url = "https://api.apr.dev"
