@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use stork_sdk::{
     pda::STORK_FEED_SEED,
-    temporal_numeric_value::{FeedId, TemporalNumericValueFeed},
+    temporal_numeric_value::TemporalNumericValueFeed,
 };
 
 declare_id!("FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra");
@@ -11,7 +11,7 @@ pub mod example {
     use super::*;
 
     // This instruction reads the latest price from a Stork feed
-    pub fn read_price(ctx: Context<ReadPrice>, feed_id: FeedId) -> Result<()> {
+    pub fn read_price(ctx: Context<ReadPrice>, feed_id: [u8; 32]) -> Result<()> {
         let feed = &ctx.accounts.feed;
 
         let latest_value = feed.get_latest_canonical_temporal_numeric_value_unchecked(&feed_id)?;
@@ -34,7 +34,7 @@ pub mod example {
 }
 
 #[derive(Accounts)]
-#[instruction(feed_id: FeedId)]
+#[instruction(feed_id: [u8; 32])]
 pub struct ReadPrice<'info> {
     // This account holds the price feed data
     #[account(
