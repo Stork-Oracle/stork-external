@@ -56,3 +56,24 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
 
+  test-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './contracts/evm/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts/evm
+
+      - name: Run hardhat tests
+        run: npx hardhat test
+        working-directory: ./contracts/evm
