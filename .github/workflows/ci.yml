@@ -76,7 +76,7 @@ jobs:
         run: |
           # Generate a random 32-byte (64 character) hex string prefixed with 0x
           RANDOM_KEY=$(openssl rand -hex 32)
-          echo "Using generated private key: 0x$RANDOM_KEY"
-          npx hardhat vars set PRIVATE_KEY="0x$RANDOM_KEY"
+          echo "Using generated private key: $RANDOM_KEY"
+          npx hardhat vars set PRIVATE_KEY $RANDOM_KEY
           npx hardhat test
         working-directory: ./contracts/evm
