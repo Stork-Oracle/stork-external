@@ -5,12 +5,18 @@ go 1.22.0
 require (
 	github.com/NethermindEth/juno v0.11.7
 	github.com/consensys/gnark-crypto v0.13.0
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ethereum/go-ethereum v1.14.8
+	github.com/gagliardetto/binary v0.8.0
+	github.com/gagliardetto/gofuzz v1.2.2
+	github.com/gagliardetto/solana-go v1.11.0
+	github.com/gagliardetto/treeout v0.1.4
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
+	golang.org/x/time v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -24,17 +30,12 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
-	github.com/gagliardetto/binary v0.8.0 // indirect
-	github.com/gagliardetto/gofuzz v1.2.2 // indirect
-	github.com/gagliardetto/solana-go v1.11.0 // indirect
-	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gorilla/rpc v1.2.0 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
@@ -69,7 +70,6 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
