@@ -125,48 +125,52 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 }
 
 func (sci *SolanaContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
-		sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
+		wg.Add(1)
+		go sci.listenSingleContractEvent(ch, feedAccount, &wg)
+	}
+	// Wait indefinitely
+	wg.Wait()
+}
+
+func (sci *SolanaContractInteracter) listenSingleContractEvent(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+	defer wg.Done()
+	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
+	if err != nil {
+		sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to subscribe to feed account")
+		return
+	}
+	defer sub.Unsubscribe()
+
+	for {
+		msg, err := sub.Recv()
 		if err != nil {
-			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to subscribe to feed account")
+			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Error receiving contract events")
+			return
+		}
+
+		data := msg.Value.Data.GetBinary()
+
+		decoder := bin.NewBorshDecoder(data)
+
+		account := &contract.TemporalNumericValueFeedAccount{}
+
+		err = account.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			sci.logger.Error().Err(err).Msg("Error getting account from message")
 			continue
 		}
-		defer sub.Unsubscribe()
 
-		go func(sub *ws.AccountSubscription, feedAccount solana.PublicKey) {
-			for {
-				msg, err := sub.Recv()
-				if err != nil {
-					sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Error receiving contract events")
-					return
-				}
+		latestValue := account.LatestValue
+		tv := InternalStorkStructsTemporalNumericValue{
+			QuantizedValue: latestValue.QuantizedValue.BigInt(),
+			TimestampNs:    latestValue.TimestampNs,
+		}
 
-				data := msg.Value.Data.GetBinary()
-
-				decoder := bin.NewBorshDecoder(data)
-
-				account := &contract.TemporalNumericValueFeedAccount{}
-
-				err = account.UnmarshalWithDecoder(decoder)
-
-				if err != nil {
-					sci.logger.Error().Err(err).Msg("Error getting account from message")
-					continue
-				}
-
-				latestValue := account.LatestValue
-				tv := InternalStorkStructsTemporalNumericValue{
-					QuantizedValue: latestValue.QuantizedValue.BigInt(),
-					TimestampNs:    latestValue.TimestampNs,
-				}
-
-				ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{account.Id: tv}
-			}
-		}(sub, feedAccount)
+		ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{account.Id: tv}
 	}
 
-	// Wait indefinitely
-	select {}
 }
 
 func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
