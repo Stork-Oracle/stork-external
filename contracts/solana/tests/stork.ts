@@ -126,8 +126,6 @@ describe("Stork", () => {
     });
   });
 
-
-
   describe("update_temporal_numeric_value_evm", () => {
     it("Creates feed with initial value", async () => {
       const id = hexStringToByteArray(
