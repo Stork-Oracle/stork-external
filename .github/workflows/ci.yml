@@ -124,10 +124,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./contracts/evm
-
-      - name: Install dependencies
-        run: npm install
         working-directory: ./contracts/solana
 
       - name: Set up Rust
