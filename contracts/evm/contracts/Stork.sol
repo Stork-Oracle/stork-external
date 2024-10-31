@@ -67,6 +67,17 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
         return numericValue;
     }
 
+    function getTemporalNumericValueUnsafeV1(
+        bytes32 id
+    ) public view returns (StorkStructs.TemporalNumericValue memory value) {
+        StorkStructs.TemporalNumericValue memory numericValue = latestCanonicalTemporalNumericValue(id);
+        if (numericValue.timestampNs == 0) {
+            revert StorkErrors.NotFound();
+        }
+
+        return numericValue;
+    }
+
     function verifyPublisherSignaturesV1(
         StorkStructs.PublisherSignature[] calldata signatures,
         bytes32 merkleRoot
