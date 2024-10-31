@@ -19,6 +19,7 @@ const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
+  defaultNetwork: "inMemoryNode",
   networks: {
     inMemoryNode: {
       url: "http://127.0.0.1:8545",
