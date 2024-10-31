@@ -23,10 +23,31 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install ARM64 gcc toolchain
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
@@ -86,3 +107,88 @@ jobs:
 
           npx hardhat test
         working-directory: ./contracts/evm
+        
+  test-solana:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './contracts/solana/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts/evm
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts/solana
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-solana-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-solana-
+
+      - name: Cache Solana CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.local/share/solana/install
+            ~/.config/solana/id.json
+          key: ${{ runner.os }}-solana
+
+      - name: Install Solana CLI
+        run: |
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Setup Solana
+        run: |
+          [ -f ~/.config/solana/id.json ] || solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
+      - name: Cache Anchor CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/anchor
+            ~/.cargo/bin/avm
+            ~/.avm
+          key: ${{ runner.os }}-anchor
+
+      - name: Install Anchor CLI
+        run: |
+          if ! command -v avm &> /dev/null; then
+            cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          fi
+          if ! command -v anchor &> /dev/null; then
+            avm install 0.30.1
+            avm use 0.30.1
+          fi
+
+      - name: Run rust tests
+        run: |
+          cargo test
+        working-directory: ./contracts/solana/programs/stork
+
+      - name: Run anchor tests
+        run: |
+          anchor test
+        working-directory: ./contracts/solana/programs/stork

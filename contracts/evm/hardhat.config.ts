@@ -19,6 +19,7 @@ const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
+  defaultNetwork: "inMemoryNode",
   networks: {
     inMemoryNode: {
       url: "http://127.0.0.1:8545",
@@ -55,6 +56,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 5115,
     },
+    // this appears to be deprecated
     citreaDevnet: {
       url: "https://rpc.devnet.citrea.xyz",
       accounts: [PRIVATE_KEY],
@@ -120,11 +122,13 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 98864
     },
+    // upgrade seems to have broken ability to verify on this chain
     polygon: {
       url: "https://polygon.llamarpc.com",
       accounts: [PRIVATE_KEY],
       chainId: 137,
     },
+    // upgrade seems to have broken ability to verify on this chain
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -150,6 +154,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 5633311,
     },
+    // verification failure
     xlayerTestnet: {
       url: "https://xlayertestrpc.okx.com",
       accounts: [PRIVATE_KEY],
@@ -183,7 +188,6 @@ const config: HardhatUserConfig = {
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
       soneiumMinato: 'fake',
-      sonicTestnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -353,8 +357,8 @@ const config: HardhatUserConfig = {
         network: "zetachainTestnet",
         chainId: 7001,
         urls: {
-          apiURL: "https://zetachain-athens-3.blockscout.com/api",
-          browserURL: "https://zetachain-athens-3.blockscout.com/"
+          apiURL: "https://zetachain-testnet.blockscout.com/api",
+          browserURL: "https://zetachain-testnet.blockscout.com/"
         }
       }
     ],
