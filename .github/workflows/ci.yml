@@ -75,6 +75,39 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
 
+  test-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './contracts/evm/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts/evm
+
+      - name: Run hardhat tests
+        run: |
+          # Generate a random 32-byte (64 character) hex string prefixed with 0x
+          RANDOM_KEY=$(openssl rand -hex 32)
+          echo "Using generated private key: $RANDOM_KEY"
+          npx hardhat vars set PRIVATE_KEY $RANDOM_KEY
+          npx hardhat vars set ARBISCAN_API_KEY fake
+          npx hardhat vars set POLYGON_API_KEY fake
+          npx hardhat vars set ETHERSCAN_API_KEY fake
+          npx hardhat vars set CORE_TESTNET_API_KEY fake
+          npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
+
+          npx hardhat --network hardhat test
+        working-directory: ./contracts/evm
+        
   test-solana:
     runs-on: ubuntu-latest
 
