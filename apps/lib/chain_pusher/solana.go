@@ -31,14 +31,18 @@ type SolanaContractInteracter struct {
 	payer               solana.PrivateKey
 	limiter             *rate.Limiter
 	pollingFrequencySec int
+	batchSize           int
 }
 
 // this is a limit imposed by the Solana blockchain and the size of the instruction
 const MAX_BATCH_SIZE = 4
 
-func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int) (*SolanaContractInteracter, error) {
+func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteracter, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
+	if 0 < batchSize && batchSize < MAX_BATCH_SIZE {
+		logger.Fatal().Msgf("Batch size must be between 1 and %d", MAX_BATCH_SIZE)
+	}
 	//calculate the time between requests bases on limitPerSecond
 	timeBetweenRequestsMs := 1000 / limitPerSecond
 	limiter := rate.NewLimiter(rate.Every(time.Duration(timeBetweenRequestsMs)*time.Millisecond), burstLimit)
@@ -121,6 +125,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		payer:               payer,
 		limiter:             limiter,
 		pollingFrequencySec: pollingFreqSec,
+		batchSize:           batchSize,
 	}, nil
 }
 
@@ -272,7 +277,7 @@ func (sci *SolanaContractInteracter) batchPriceUpdates(priceUpdates map[Internal
 	for encodedAssetId, priceUpdate := range priceUpdates {
 		priceUpdatesBatch[encodedAssetId] = priceUpdate
 		i++
-		if len(priceUpdatesBatch) == MAX_BATCH_SIZE || i == len(priceUpdates) {
+		if len(priceUpdatesBatch) == sci.batchSize || i == len(priceUpdates) {
 			batchCopy := make(map[InternalEncodedAssetId]AggregatedSignedPrice, len(priceUpdatesBatch))
 			for k, v := range priceUpdatesBatch {
 				batchCopy[k] = v
@@ -408,10 +413,26 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		return fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	sig, err := confirm.SendAndConfirmTransaction(context.Background(), sci.client, sci.wsClient, tx)
+	// sig, err := confirm.SendAndConfirmTransaction(context.Background(), sci.client, sci.wsClient, tx)
+	//simulate transaction
+	// result, err := sci.client.SimulateTransaction(context.Background(), tx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to simulate transaction: %w", err)
+	// }
+	// if result.Value.Err != nil {
+	// 	return fmt.Errorf("transaction simulation failed: %w", result.Value.Err)
+	// }
+
+	// dont confirm on chain, just wait for the tx to be sent
+	// opts := rpc.TransactionOpts{
+	// 	SkipPreflight: true,
+	// }
+	sig, err := sci.client.SendTransaction(context.Background(), tx)
 	if err != nil {
-		return fmt.Errorf("failed to send and confirm transaction: %w", err)
+		return fmt.Errorf("failed to send transaction: %w", err)
 	}
+	// check for confirmation without blocking
+	go sci.confirmTransaction(sig)
 
 	sci.logger.Info().
 		Str("signature", sig.String()).
@@ -420,6 +441,13 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		Msg("Pushed batch update to contract")
 
 	return nil
+}
+
+func (sci *SolanaContractInteracter) confirmTransaction(sig solana.Signature) {
+	_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
+	if err != nil {
+		sci.logger.Error().Str("signature", sig.String()).Err(err).Msg("failed to confirm transaction")
+	}
 }
 
 func hexStringToByteArray(hexString string) ([]byte, error) {
