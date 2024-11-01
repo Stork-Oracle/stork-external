@@ -43,6 +43,12 @@ pub mod stork {
             feed.id = update_data.id;
         }
 
+        // if the new value is older than the latest value, do nothing
+        // this does not throw an error to account for multiple instructions per tx
+        if feed.latest_value.timestamp_ns >= update_data.temporal_numeric_value.timestamp_ns {
+            return Ok(());
+        }
+
         if !verify_stork_evm_signature(
             &config.stork_evm_public_key,
             update_data.id,
@@ -56,12 +62,6 @@ pub mod stork {
         ) {
             return err!(StorkError::InvalidSignature);
         }
-
-        require_gte!(
-            update_data.temporal_numeric_value.timestamp_ns,
-            feed.latest_value.timestamp_ns,
-            StorkError::NoFreshUpdate
-        );
 
         let amount_to_pay = config.single_update_fee_in_lamports;
         if payer.lamports()
@@ -213,10 +213,6 @@ impl StorkConfig {
 pub enum StorkError {
     #[msg("Insufficient funds")]
     InsufficientFunds,
-    #[msg("No fresh update")]
-    NoFreshUpdate,
-    #[msg("Bad input")]
-    BadInput,
     #[msg("Invalid signature")]
     InvalidSignature,
     #[msg("Unauthorized")]
