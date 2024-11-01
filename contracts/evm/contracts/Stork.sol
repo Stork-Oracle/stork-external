@@ -67,6 +67,17 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
         return numericValue;
     }
 
+    function getTemporalNumericValueUnsafeV1(
+        bytes32 id
+    ) public view returns (StorkStructs.TemporalNumericValue memory value) {
+        StorkStructs.TemporalNumericValue memory numericValue = latestCanonicalTemporalNumericValue(id);
+        if (numericValue.timestampNs == 0) {
+            revert StorkErrors.NotFound();
+        }
+
+        return numericValue;
+    }
+
     function verifyPublisherSignaturesV1(
         StorkStructs.PublisherSignature[] calldata signatures,
         bytes32 merkleRoot
@@ -95,7 +106,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.0.1";
     }
 
     function getTotalFee(

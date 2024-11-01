@@ -1,7 +1,10 @@
 [package]
 name = "stork-sdk"
-version = "0.1.0"
+version = "0.0.2"
 edition = "2021"
+description = "A Solana SDK for Stork Protocol"
+license = "Apache-2.0"
+repository = "https://github.com/Stork-Oracle/stork-external"
 
 
 [lib]
@@ -10,4 +13,3 @@ name = "stork_sdk"
 
 [dependencies]
 anchor-lang = "0.30.1"
-solana-program = ">=1.16.0"

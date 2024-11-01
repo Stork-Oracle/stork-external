@@ -75,6 +75,39 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/apps
 
+  test-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './contracts/evm/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./contracts/evm
+
+      - name: Run hardhat tests
+        run: |
+          # Generate a random 32-byte (64 character) hex string prefixed with 0x
+          RANDOM_KEY=$(openssl rand -hex 32)
+          echo "Using generated private key: $RANDOM_KEY"
+          npx hardhat vars set PRIVATE_KEY $RANDOM_KEY
+          npx hardhat vars set ARBISCAN_API_KEY fake
+          npx hardhat vars set POLYGON_API_KEY fake
+          npx hardhat vars set ETHERSCAN_API_KEY fake
+          npx hardhat vars set CORE_TESTNET_API_KEY fake
+          npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
+
+          npx hardhat --network hardhat test
+        working-directory: ./contracts/evm
+        
   test-solana:
     runs-on: ubuntu-latest
 
@@ -115,7 +148,7 @@ jobs:
           path: |
             ~/.local/share/solana/install
             ~/.config/solana/id.json
-          key: ${{ runner.os }}-solana-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-solana
 
       - name: Install Solana CLI
         run: |
@@ -132,37 +165,13 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/anchor
-            ~/.cargo/bin/avm
-            ~/.avm
-          key: ${{ runner.os }}-anchor-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-anchor-0.30.1
 
       - name: Install Anchor CLI
         run: |
-          if ! command -v avm &> /dev/null; then
-            cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          fi
           if ! command -v anchor &> /dev/null; then
-            avm install latest
-            avm use latest
+            cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli
           fi
-
-      - name: Cache Anchor build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./contracts/solana/target/
-            ./contracts/solana/target/types/
-            ./contracts/solana/target/idl/
-            ./contracts/solana/target/deploy/
-          key: ${{ runner.os }}-anchor-build-${{ hashFiles('contracts/solana/**/Cargo.toml', 'contracts/solana/**/Cargo.lock', 'contracts/solana/**/src/**') }}
-          restore-keys: |
-            ${{ runner.os }}-anchor-build-
-
-      - name: Build programs
-        run: |
-          avm use latest
-          anchor build
-        working-directory: ./contracts/solana/programs/stork
 
       - name: Run rust tests
         run: |

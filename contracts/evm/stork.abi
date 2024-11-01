@@ -195,6 +195,37 @@
         "type": "bytes32"
       }
     ],
+    "name": "getTemporalNumericValueUnsafeV1",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "timestampNs",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int192",
+            "name": "quantizedValue",
+            "type": "int192"
+          }
+        ],
+        "internalType": "struct StorkStructs.TemporalNumericValue",
+        "name": "value",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "id",
+        "type": "bytes32"
+      }
+    ],
     "name": "getTemporalNumericValueV1",
     "outputs": [
       {

@@ -5,10 +5,12 @@ const allowedCommands = [
   "version",
   "updateTemporalNumericValuesV1",
   "getTemporalNumericValueV1",
+  "getTemporalNumericValueUnsafeV1",
   "updateValidTimePeriodSeconds",
   "validTimePeriodSeconds",
   "updateSingleUpdateFeeInWei",
-  "singleUpdateFeeInWei",,
+  "singleUpdateFeeInWei",
+  ,
   "updateStorkPublicKey",
   "storkPublicKey",
 ];
@@ -43,6 +45,8 @@ async function main(command: AllowedCommands, args: any) {
     deployer // Interact with the contract on behalf of this wallet
   );
 
+  let encoded;
+
   let returnVal;
   switch (command) {
     case "version":
@@ -50,15 +54,61 @@ async function main(command: AllowedCommands, args: any) {
       console.log(`Contract version: ${version}`);
       break;
     case "updateTemporalNumericValuesV1":
-      const payload = JSON.parse(args);
-      await contract.updateTemporalNumericValuesV1([payload], {
-        value: 1,
+      const split = args.split(" ");
+
+      const assetIds = split[0];
+      const endpoint = split[1];
+      const authKey = split[2];
+
+      const response = await fetch(
+        `${endpoint}/v1/prices/latest?assets=${assetIds}`,
+        {
+          headers: {
+            Authorization: `Basic ${authKey}`,
+          },
+        }
+      );
+
+      const rawJson = await response.text();
+      const safeJsonText = rawJson.replace(
+        /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
+        (match: any) => `"${match}"` // Convert large numbers to strings
+      );
+
+      const responseData = JSON.parse(safeJsonText);
+
+      const updates = Object.keys(responseData.data).map((key: any) => {
+        const data = responseData.data[key];
+
+        return {
+          temporalNumericValue: {
+            timestampNs: data.stork_signed_price.timestamped_signature.timestamp,
+            quantizedValue: data.stork_signed_price.price,
+          },
+          id: data.stork_signed_price.encoded_asset_id,
+          publisherMerkleRoot: data.stork_signed_price.publisher_merkle_root,
+          valueComputeAlgHash: "0x"+ data.stork_signed_price.calculation_alg.checksum,
+          r: data.stork_signed_price.timestamped_signature.signature.r,
+          s: data.stork_signed_price.timestamped_signature.signature.s,
+          v: data.stork_signed_price.timestamped_signature.signature.v,
+        };
       });
+
+      const updateResult = await contract.updateTemporalNumericValuesV1(updates, {
+        value: updates.length,
+      });
+
       break;
     case "getTemporalNumericValueV1":
       // @ts-expect-error
-      const encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
+      encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
       returnVal = await contract.getTemporalNumericValueV1(encoded);
+      console.log(returnVal);
+      break;
+    case "getTemporalNumericValueUnsafeV1":
+      // @ts-expect-error
+      encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
+      returnVal = await contract.getTemporalNumericValueUnsafeV1(encoded);
       console.log(returnVal);
       break;
     case "updateValidTimePeriodSeconds":

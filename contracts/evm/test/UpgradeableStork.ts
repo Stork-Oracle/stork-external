@@ -24,7 +24,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.0");
+      expect(await deployed.version()).to.equal("1.0.1");
     });
 
     it("Should return owner", async function () {
@@ -64,7 +64,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.0");
+      expect(await upgraded.version()).to.equal("1.0.1");
     });
 
     it("Should revert if not owner", async function () {
@@ -559,6 +559,39 @@ describe("UpgradeableStork", function() {
       });
 
       expect(await deployed.getTemporalNumericValueV1(ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")))).to.deep.equal([
+        1720722087644999936n,
+        60000000000000000000000n
+      ]);
+    });
+  });
+
+  describe("getTemporalNumericValueUnsafeV1", function () {
+    it("Should revert if never updated value", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      await expect(deployed.getTemporalNumericValueV1(ethers.encodeBytes32String("BTCUSD"))).to.be.revertedWithCustomError(deployed, "NotFound");
+    });
+
+    it("Should succeed if value is stale", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      // values pulled from sample publisher call
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+
+      expect(await deployed.getTemporalNumericValueUnsafeV1(ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")))).to.deep.equal([
         1720722087644999936n,
         60000000000000000000000n
       ]);
