@@ -182,20 +182,8 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 
 	for _, encodedAssetId := range encodedAssetIds {
-		// Derive the PDA for this asset
-		feedAccount, _, err := solana.FindProgramAddress(
-			[][]byte{
-				[]byte("stork_feed"),
-				encodedAssetId[:],
-			},
-			sci.contractAddr,
-		)
-		if err != nil {
-			sci.logger.Error().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to derive PDA for feed account in PullValues")
-			continue
-		}
 
-		// Fetch the account data
+		feedAccount := sci.feedAccounts[encodedAssetId]
 		accountInfo, err := sci.client.GetAccountInfo(context.Background(), feedAccount)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to get account info")
@@ -207,7 +195,6 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 			continue
 		}
 
-		// Decode the account data
 		decoder := bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary())
 		account := &contract.TemporalNumericValueFeedAccount{}
 		err = account.UnmarshalWithDecoder(decoder)
@@ -216,7 +203,6 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 			continue
 		}
 
-		// Convert to internal format
 		polledVals[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
 			QuantizedValue: account.LatestValue.QuantizedValue.BigInt(),
 			TimestampNs:    account.LatestValue.TimestampNs,
@@ -257,7 +243,6 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 		errs = append(errs, err)
 	}
 
-	// If there were any errors, return them combined
 	if len(errs) > 0 {
 		return fmt.Errorf("batch push encountered %d errors: %v", len(errs), errs)
 	}
@@ -413,20 +398,6 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		return fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	// sig, err := confirm.SendAndConfirmTransaction(context.Background(), sci.client, sci.wsClient, tx)
-	//simulate transaction
-	// result, err := sci.client.SimulateTransaction(context.Background(), tx)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to simulate transaction: %w", err)
-	// }
-	// if result.Value.Err != nil {
-	// 	return fmt.Errorf("transaction simulation failed: %w", result.Value.Err)
-	// }
-
-	// dont confirm on chain, just wait for the tx to be sent
-	// opts := rpc.TransactionOpts{
-	// 	SkipPreflight: true,
-	// }
 	sig, err := sci.client.SendTransaction(context.Background(), tx)
 	if err != nil {
 		return fmt.Errorf("failed to send transaction: %w", err)
