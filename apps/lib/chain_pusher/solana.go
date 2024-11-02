@@ -140,8 +140,6 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 	numWorkers := int(math.Ceil(math.Ceil(float64(len(assetConfig.Assets))/float64(sci.batchSize)) * avgBlockTime.Seconds()))
-	//add 1 for safety
-	numWorkers += 1
 	go sci.runUnboundedConfirmationBuffer(confirmationOutChan)
 	sci.startConfirmationWorkers(confirmationOutChan, numWorkers)
 
