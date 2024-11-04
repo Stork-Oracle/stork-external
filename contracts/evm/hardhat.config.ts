@@ -15,6 +15,7 @@ const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
 const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
 const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
+const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
 const config: HardhatUserConfig = {
@@ -67,6 +68,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.test.btcs.network",
       accounts: [PRIVATE_KEY],
       chainId: 1115,
+    },
+    coreMainnet: {
+      url: "https://rpc.coredao.org/",
+      accounts: [PRIVATE_KEY],
+      chainId: 1116,
     },
     filecoinCalibration: {
       url: "https://rpc.ankr.com/filecoin_testnet",
@@ -176,6 +182,7 @@ const config: HardhatUserConfig = {
       bobSepolia: 'fake',
       citreaTestnet: 'fake',
       coreTestnet: CORE_TESTNET_API_KEY,
+      coreMainnet: CORE_MAINNET_API_KEY,
       glueTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       lorenzoTestnet: 'fake',
@@ -256,6 +263,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.test.btcs.network/api",
           browserURL: "https://scan.test.btcs.network/"
+        }
+      },
+      {
+        network: "coreMainnet",
+        chainId: 1116,
+        urls: {
+          apiURL: "https://openapi.coredao.org/api",
+          browserURL: "https://scan.coredao.org/"
         }
       },
       {

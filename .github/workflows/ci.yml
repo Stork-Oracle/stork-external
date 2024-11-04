@@ -103,6 +103,7 @@ jobs:
           npx hardhat vars set POLYGON_API_KEY fake
           npx hardhat vars set ETHERSCAN_API_KEY fake
           npx hardhat vars set CORE_TESTNET_API_KEY fake
+          npx hardhat vars set CORE_MAINNET_API_KEY fake
           npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
 
           npx hardhat --network hardhat test
