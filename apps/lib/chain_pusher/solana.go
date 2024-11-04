@@ -38,7 +38,7 @@ type SolanaContractInteracter struct {
 // this is a limit imposed by the Solana blockchain and the size of the instruction
 const MAX_BATCH_SIZE = 4
 
-const NUM_CONFIRMATION_WORKERS = 4
+const NUM_CONFIRMATION_WORKERS = 10
 
 func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteracter, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
