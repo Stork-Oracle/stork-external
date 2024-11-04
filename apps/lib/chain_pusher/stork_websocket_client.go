@@ -26,7 +26,7 @@ type StorkAggregatorWebsocketClient struct {
 	reconnAttempts int
 }
 
-func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIds []AssetId, logger zerolog.Logger) StorkAggregatorWebsocketClient {
+func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIds []AssetId, logger *zerolog.Logger) StorkAggregatorWebsocketClient {
 	return StorkAggregatorWebsocketClient{
 		logger:       logger.With().Str("component", "stork-ws").Logger(),
 		baseEndpoint: baseEndpoint,

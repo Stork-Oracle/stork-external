@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"time"
 
+	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,10 +16,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type StorkContractInterfacer struct {
+type EvmContractInteracter struct {
 	logger zerolog.Logger
 
-	contract   *StorkContract
+	contract *contract.StorkContract
+
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
 
@@ -27,7 +28,7 @@ type StorkContractInterfacer struct {
 	verifyPublishers    bool
 }
 
-func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int, verifyPublishers bool, logger zerolog.Logger) *StorkContractInterfacer {
+func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int, verifyPublishers bool, logger zerolog.Logger) *EvmContractInteracter {
 	logger.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
@@ -46,12 +47,12 @@ func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, polli
 	}
 
 	contractAddress := common.HexToAddress(contractAddr)
-	contract, err := NewStorkContract(contractAddress, client)
+	contract, err := contract.NewStorkContract(contractAddress, client)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract")
 	}
 
-	return &StorkContractInterfacer{
+	return &EvmContractInteracter{
 		logger: logger,
 
 		contract:   contract,
@@ -63,12 +64,12 @@ func NewStorkContractInterfacer(rpcUrl, contractAddr, mnemonicFile string, polli
 	}
 }
 
-func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue) {
+func (sci *EvmContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
 	}
 
-	eventCh := make(chan *StorkContractValueUpdate)
+	eventCh := make(chan *contract.StorkContractValueUpdate)
 	sub, err := sci.contract.WatchValueUpdate(watchOpts, eventCh, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to watch contract events. Is the RPC URL a WebSocket endpoint?")
@@ -82,31 +83,17 @@ func (sci *StorkContractInterfacer) ListenContractEvents(ch chan map[InternalEnc
 			// TODO - handle restart
 			log.Fatal().Err(err).Msg("Error watching contract events")
 		case vLog := <-eventCh:
-			tv := StorkStructsTemporalNumericValue{
+			tv := InternalStorkStructsTemporalNumericValue{
 				QuantizedValue: vLog.QuantizedValue,
 				TimestampNs:    vLog.TimestampNs,
 			}
-			ch <- map[InternalEncodedAssetId]StorkStructsTemporalNumericValue{vLog.Id: tv}
+			ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{vLog.Id: tv}
 		}
 	}
 }
 
-func (sci *StorkContractInterfacer) Poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]StorkStructsTemporalNumericValue) {
-	sci.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
-	for _ = range time.Tick(time.Duration(sci.pollingFrequencySec) * time.Second) {
-		polledVals, err := sci.PullValues(encodedAssetIds)
-		if err != nil {
-			sci.logger.Error().Err(err).Msg("Failed to poll contract")
-			continue
-		}
-		if len(polledVals) > 0 {
-			ch <- polledVals
-		}
-	}
-}
-
-func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]StorkStructsTemporalNumericValue, error) {
-	polledVals := make(map[InternalEncodedAssetId]StorkStructsTemporalNumericValue)
+func (sci *EvmContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
 		if err != nil {
@@ -117,13 +104,13 @@ func (sci *StorkContractInterfacer) PullValues(encodedAssetIds []InternalEncoded
 			}
 			continue
 		}
-		polledVals[encodedAssetId] = storkStructsTemporalNumericValue
+		polledVals[encodedAssetId] = InternalStorkStructsTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
 	return polledVals, nil
 }
 
-func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]StorkStructsTemporalNumericValueInput, error) {
-	updates := make([]StorkStructsTemporalNumericValueInput, len(priceUpdates))
+func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]contract.StorkStructsTemporalNumericValueInput, error) {
+	updates := make([]contract.StorkStructsTemporalNumericValueInput, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
 
@@ -160,8 +147,8 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 			return nil, err
 		}
 
-		updates[i] = StorkStructsTemporalNumericValueInput{
-			TemporalNumericValue: StorkStructsTemporalNumericValue{
+		updates[i] = contract.StorkStructsTemporalNumericValueInput{
+			TemporalNumericValue: contract.StorkStructsTemporalNumericValue{
 				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
 				QuantizedValue: quantizedPriceBigInt,
 			},
@@ -178,13 +165,13 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 	return updates, nil
 }
 
-type VerifyPayload struct {
-	pubSigs    []StorkStructsPublisherSignature
+type verifyPayload struct {
+	pubSigs    []contract.StorkStructsPublisherSignature
 	merkleRoot [32]byte
 }
 
-func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]VerifyPayload, error) {
-	payloads := make([]VerifyPayload, len(priceUpdates))
+func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]verifyPayload, error) {
+	payloads := make([]verifyPayload, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
 		merkleRootBytes, err := stringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
@@ -192,8 +179,8 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 			return nil, err
 		}
 
-		payloads[i] = VerifyPayload{
-			pubSigs:    make([]StorkStructsPublisherSignature, len(priceUpdate.SignedPrices)),
+		payloads[i] = verifyPayload{
+			pubSigs:    make([]contract.StorkStructsPublisherSignature, len(priceUpdate.SignedPrices)),
 			merkleRoot: merkleRootBytes,
 		}
 		j := 0
@@ -221,7 +208,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 				return nil, err
 			}
 
-			payloads[i].pubSigs[j] = StorkStructsPublisherSignature{
+			payloads[i].pubSigs[j] = contract.StorkStructsPublisherSignature{
 				PubKey:         pubKeyBytes,
 				AssetPairId:    signedPrice.ExternalAssetId,
 				Timestamp:      uint64(signedPrice.TimestampedSignature.Timestamp) / 1000000000,
@@ -238,7 +225,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 	return payloads, nil
 }
 
-func (sci *StorkContractInterfacer) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
+func (sci *EvmContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	if sci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {

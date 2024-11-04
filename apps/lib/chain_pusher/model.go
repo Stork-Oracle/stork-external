@@ -1,6 +1,7 @@
 package chain_pusher
 
 import (
+	"math/big"
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -88,3 +89,8 @@ type OraclePricesMessage struct {
 
 // Internal types
 type InternalEncodedAssetId [32]byte
+
+type InternalStorkStructsTemporalNumericValue struct {
+	TimestampNs    uint64
+	QuantizedValue *big.Int
+}

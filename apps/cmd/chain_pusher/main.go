@@ -40,6 +40,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
 	rootCmd.AddCommand(chain_pusher.EvmpushCmd)
+	rootCmd.AddCommand(chain_pusher.SolanapushCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

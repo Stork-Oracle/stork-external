@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package chain_pusher
+package contract_bindings_evm 
 
 import (
 	"errors"

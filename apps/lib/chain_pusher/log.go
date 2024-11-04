@@ -27,3 +27,13 @@ func EvmPusherLogger(
 		Str("contractAddress", contractAddress).
 		Logger()
 }
+
+func SolanaPusherLogger(
+	chainRpcUrl string,
+	contractAddress string,
+) zerolog.Logger {
+	return AppLogger("solana").With().
+		Str("chainRpcUrl", chainRpcUrl).
+		Str("contractAddress", contractAddress).
+		Logger()
+}
