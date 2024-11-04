@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math"
 	"math/big"
 	"strings"
 	"sync"
@@ -38,6 +37,8 @@ type SolanaContractInteracter struct {
 
 // this is a limit imposed by the Solana blockchain and the size of the instruction
 const MAX_BATCH_SIZE = 4
+
+const NUM_CONFIRMATION_WORKERS = 4
 
 func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteracter, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
@@ -134,61 +135,10 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		confirmationInChan:  confirmationInChan,
 	}
 
-	avgBlockTime, err := sci.getRecentAvgBlockTime()
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to get recent average block time")
-		return nil, err
-	}
-	numWorkers := int(math.Ceil(math.Ceil(float64(len(assetConfig.Assets))/float64(sci.batchSize)) * avgBlockTime.Seconds()))
 	go sci.runUnboundedConfirmationBuffer(confirmationOutChan)
-	sci.startConfirmationWorkers(confirmationOutChan, numWorkers)
+	sci.startConfirmationWorkers(confirmationOutChan, NUM_CONFIRMATION_WORKERS)
 
 	return sci, nil
-}
-
-func (sci *SolanaContractInteracter) getRecentAvgBlockTime() (time.Duration, error) {
-	sci.limiter.Wait(context.Background())
-	slot, err := sci.client.GetSlot(context.Background(), rpc.CommitmentFinalized)
-	if err != nil {
-		return 0, err
-	}
-	//get the last 40 blocks to comply with rate limit
-	sci.limiter.Wait(context.Background())
-	blocks, err := sci.client.GetBlocks(context.Background(), slot-40, &slot, rpc.CommitmentFinalized)
-	if err != nil {
-		return 0, err
-	}
-
-	sci.limiter.Wait(context.Background())
-	blockTime, err := sci.client.GetBlockTime(context.Background(), blocks[0])
-	previousBlockTime := blockTime.Time()
-	if err != nil {
-		return 0, err
-	}
-	blocks = blocks[1:]
-	blockTimes := []time.Duration{}
-	for _, block := range blocks {
-		sci.limiter.Wait(context.Background())
-		currentBlock, err := sci.client.GetBlockTime(context.Background(), block)
-		if err != nil {
-			return 0, err
-		}
-		currentBlockTime := currentBlock.Time()
-		blockTimes = append(blockTimes, currentBlockTime.Sub(previousBlockTime))
-		previousBlockTime = currentBlockTime
-	}
-	var totalTime time.Duration
-	for _, blockTime := range blockTimes {
-		totalTime += blockTime
-	}
-
-	if len(blockTimes) == 0 {
-		return 0, fmt.Errorf("no block times available")
-	}
-
-	averageBlockTime := totalTime / time.Duration(len(blockTimes))
-	sci.logger.Debug().Dur("averageBlockTime", averageBlockTime).Msg("Average block time")
-	return averageBlockTime, nil
 }
 
 func (sci *SolanaContractInteracter) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
