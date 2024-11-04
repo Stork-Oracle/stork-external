@@ -1,8 +1,8 @@
 # Chain Pusher
 
-## Usage
+## Configuration
 
-1. Create an `asset-config.yaml` file. This file should be structured as follows:
+Create an `asset-config.yaml` file. This file should be structured as follows:
 
 ```yaml
 assets:
@@ -18,20 +18,21 @@ assets:
         percent_change_threshold: 1
 ```
 
-See `sample.asset-config.yaml` for an example.
+See [sample.asset-config.yaml](../sample.asset-config.yaml) for an example.
 
-2. **For EVM chains:** Create a `private-key.secret` file. This file should contain the private key of the user's wallet. This is needed to pay gas/transaction fees.
-**For Solana**: Create a `keypair.json` file, this file should contain the Solana wallet keypair.
+## EVM Chain Setup
 
-3. Run the pusher with your desired configurations
+### Wallet Setup
+Create a `private-key.secret` file containing the private key of your wallet. This is needed to pay gas/transaction fees.
 
+### Running the EVM Pusher
 For full explanation of the flags, run:
-**EVM**:
-```
+```bash
 go run . evm --help
 ```
 
-```
+Basic usage:
+```bash
 go run ./cmd/chain_pusher/main.go evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
@@ -41,58 +42,63 @@ go run ./cmd/chain_pusher/main.go evm \
     -m <private-key-file>
 ```
 
-**Solana**:
+### EVM Development Setup
+1. Download abigen
+```bash
+go install github.com/ethereum/go-ethereum/cmd/abigen@latest
 ```
+
+2. Generate the contract bindings
+```bash
+abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go
+```
+
+## Solana Chain Setup
+
+### Wallet Setup
+Create a `keypair.json` file containing your Solana wallet keypair. This file is needed to sign transactions.
+
+### Running the Solana Pusher
+For full explanation of the flags, run:
+```bash
 go run . solana --help
 ```
-```
+
+Basic usage:
+```bash
 go run ./cmd/chain_pusher/main.go solana \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
     -u <chain-ws-url> \
-    -x <contract-address>
+    -x <contract-address> \
     -f <asset-config-file> \
     -k <keypair-file>
 ```
 
-## Development
-
-
-**EVM**:
-1. Download abigen
-```
-go install github.com/ethereum/go-ethereum/cmd/abigen@latest
-```
-2. Generate the contract bindings
-```
-abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go
-```
-
-**Solana**:
+### Solana Development Setup
 1. Download and build solana-anchor-go
-```
+```bash
 git clone https://github.com/HenryMBaldwin/solana-anchor-go
 cd solana-anchor-go
 go build
 ```
+
 2. Generate the contract bindings
-```
+```bash
 ./solana-anchor-go src=../contracts/solana/programs/stork/src/target/idl
 ```
 
-## Running on ec2
+## Deployment
 
+### Running on EC2
 The pusher runs on a per chain basis. This example assumes that the log driver is AWS Cloudwatch.
 
-## Deploy
-
 1. Install docker
+2. Setup `.asset-config.yaml` and wallet files in user home directory, e.g. `/home/ec2-user`
+3. Run the appropriate docker command for your chain
 
-2. Setup `.asset-config.yaml` and `.secret` files in user home directory, e.g. `/home/ec2-user`
-
-3. Run the docker command (polygon testnet example below, replace with the correct values)
-
+#### EVM Chain Example (Polygon Testnet)
 ```bash
 docker run \
     -e AWS_REGION=ap-northeast-1 \
