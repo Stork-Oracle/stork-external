@@ -381,7 +381,7 @@ func (sci *SolanaContractInteracter) batchPriceUpdates(priceUpdates map[Internal
 func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) (solana.Signature, error) {
 
 	if len(priceUpdates) > MAX_BATCH_SIZE {
-		return solana.Signature{}, fmt.Errorf("Batch size exceeds limit, skipping update")
+		return solana.Signature{}, fmt.Errorf("batch size exceeds limit, skipping update")
 	}
 
 	randomId, err := rand.Int(rand.Reader, big.NewInt(256))
@@ -395,69 +395,12 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 	assetIds := []string{}
 
 	for encodedAssetId, priceUpdate := range priceUpdates {
-		var assetId [32]uint8
-		copy(assetId[:], encodedAssetId[:])
-		assetIds = append(assetIds, hex.EncodeToString(encodedAssetId[:]))
+		updateData, err := sci.priceUpdateToTemporalNumericValueEvmInput(priceUpdate, encodedAssetId, treasuryId)
+		if err != nil {
+			return solana.Signature{}, fmt.Errorf("failed to convert price update to TemporalNumericValueEvmInput: %w", err)
+		}
 
 		feedAccount := sci.feedAccounts[encodedAssetId]
-
-		//convert the quantized price to bin.Int128
-		quantizedPriceBigInt := new(big.Int)
-		quantizedPriceBigInt.SetString(string(priceUpdate.StorkSignedPrice.QuantizedPrice), 10)
-
-		quantizedPrice := bin.Int128{
-			Lo: quantizedPriceBigInt.Uint64(),
-			Hi: quantizedPriceBigInt.Rsh(quantizedPriceBigInt, 64).Uint64(),
-		}
-
-		publisherMerkleRootBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
-		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
-		}
-		var publisherMerkleRoot [32]uint8
-		copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
-
-		valueComputeAlgHashBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
-		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
-		}
-
-		var valueComputeAlgHash [32]uint8
-		copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
-
-		rBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
-		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert R: %w", err)
-		}
-		var r [32]uint8
-		copy(r[:], rBytes)
-
-		sBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
-		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert S: %w", err)
-		}
-		var s [32]uint8
-		copy(s[:], sBytes)
-
-		vBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
-		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert V: %w", err)
-		}
-		v := uint8(vBytes[0])
-
-		updateData := contract.TemporalNumericValueEvmInput{
-			TemporalNumericValue: contract.TemporalNumericValue{
-				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
-				QuantizedValue: quantizedPrice,
-			},
-			Id:                  assetId,
-			PublisherMerkleRoot: publisherMerkleRoot,
-			ValueComputeAlgHash: valueComputeAlgHash,
-			R:                   r,
-			S:                   s,
-			V:                   v,
-			TreasuryId:          treasuryId,
-		}
 
 		instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
 			updateData,
@@ -514,6 +457,74 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 		Msg("Pushed batch update to contract")
 
 	return sig, nil
+}
+
+func (sci *SolanaContractInteracter) priceUpdateToTemporalNumericValueEvmInput(priceUpdate AggregatedSignedPrice, encodedAssetId InternalEncodedAssetId, treasuryId uint8) (contract.TemporalNumericValueEvmInput, error) {
+
+	var assetId [32]uint8
+	copy(assetId[:], encodedAssetId[:])
+
+	quantizedPrice := sci.quantizedPriceToInt128(priceUpdate.StorkSignedPrice.QuantizedPrice)
+
+	publisherMerkleRootBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+	if err != nil {
+		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
+	}
+	var publisherMerkleRoot [32]uint8
+	copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
+
+	valueComputeAlgHashBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+	if err != nil {
+		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
+	}
+	var valueComputeAlgHash [32]uint8
+	copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
+
+	rBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
+	if err != nil {
+		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert R: %w", err)
+	}
+	var r [32]uint8
+	copy(r[:], rBytes)
+
+	sBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
+	if err != nil {
+		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert S: %w", err)
+	}
+	var s [32]uint8
+	copy(s[:], sBytes)
+
+	vBytes, err := hexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
+	if err != nil {
+		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert V: %w", err)
+	}
+	v := uint8(vBytes[0])
+
+	return contract.TemporalNumericValueEvmInput{
+		TemporalNumericValue: contract.TemporalNumericValue{
+			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
+			QuantizedValue: quantizedPrice,
+		},
+		Id:                  assetId,
+		PublisherMerkleRoot: publisherMerkleRoot,
+		ValueComputeAlgHash: valueComputeAlgHash,
+		R:                   r,
+		S:                   s,
+		V:                   v,
+		TreasuryId:          treasuryId,
+	}, nil
+}
+
+func (sci *SolanaContractInteracter) quantizedPriceToInt128(quantizedPrice QuantizedPrice) bin.Int128 {
+	quantizedPriceBigInt := new(big.Int)
+	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
+
+	quantizedPrice128 := bin.Int128{
+		Lo: quantizedPriceBigInt.Uint64(),
+		Hi: quantizedPriceBigInt.Rsh(quantizedPriceBigInt, 64).Uint64(),
+	}
+
+	return quantizedPrice128
 }
 
 func hexStringToByteArray(hexString string) ([]byte, error) {
