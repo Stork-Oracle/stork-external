@@ -40,4 +40,21 @@ impl TemporalNumericValueFeed {
         );
         Ok(self.latest_value.clone())
     }
+
+}
+
+impl<'info> TryFrom<&AccountInfo<'info>> for TemporalNumericValueFeed {
+    type Error = anchor_lang::error::Error;
+    fn try_from(info: &AccountInfo<'info>) -> Result<Self> {
+        let data: &[u8] = &info.data.borrow();
+        Self::try_deserialize(&mut data.as_ref()).map_err(|e| GetTemporalNumericValueError::DeserializationError.into())
+    }
+}
+
+impl<'info> TryFrom<AccountInfo<'info>> for TemporalNumericValueFeed {
+    type Error = anchor_lang::error::Error;
+    fn try_from(info: AccountInfo<'info>) -> Result<Self> {
+        let data: &[u8] = &info.data.borrow();
+        Self::try_deserialize(&mut data.as_ref()).map_err(|_| GetTemporalNumericValueError::DeserializationError.into())
+    }
 }
