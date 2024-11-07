@@ -1,143 +1,171 @@
-import { task } from "hardhat/config";
-import { loadContractDeploymentAddress } from "./utils/helpers";
+import { scope } from 'hardhat/config';
+import { loadContractDeploymentAddress } from './utils/helpers';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-const allowedCommands = [
-  "version",
-  "updateTemporalNumericValuesV1",
-  "getTemporalNumericValueV1",
-  "getTemporalNumericValueUnsafeV1",
-  "updateValidTimePeriodSeconds",
-  "validTimePeriodSeconds",
-  "updateSingleUpdateFeeInWei",
-  "singleUpdateFeeInWei",
-  ,
-  "updateStorkPublicKey",
-  "storkPublicKey",
-];
+const initializeContract = async (hre: HardhatRuntimeEnvironment) => {
+    const contractAddress = await loadContractDeploymentAddress();
+    if (!contractAddress) {
+        throw new Error('Contract address not found. Please deploy the contract first.');
+    }
 
-type AllowedCommands = (typeof allowedCommands)[number];
+    // @ts-expect-error ethers is loaded in hardhat/config
+    const [deployer] = await ethers.getSigners();
 
-// An example of a script to interact with the contract
-async function main(command: AllowedCommands, args: any) {
-  if (!allowedCommands.includes(command)) {
-    throw new Error(`Invalid command: ${command}`);
-  }
+    // @ts-expect-error artifacts is loaded in hardhat/config
+    const contractArtifact = await artifacts.readArtifact('UpgradeableStork');
 
-  const contractAddress = await loadContractDeploymentAddress();
-  if (!contractAddress) {
-    throw new Error(
-      "Contract address not found. Please deploy the contract first."
-    );
-  }
-  console.log(`Contract: ${contractAddress}`);
+    // @ts-expect-error ethers is loaded in hardhat/config
+    const contract = new ethers.Contract(contractAddress, contractArtifact.abi, deployer);
 
-  // @ts-expect-error ethers is loaded in hardhat/config
-  const [deployer] = await ethers.getSigners();
+    console.log(`Network: ${hre.network.name} - ${hre.network.config.chainId}`);
+    console.log(`Contract: ${contractAddress}`);
 
-  // @ts-expect-error artifacts is loaded in hardhat/config
-  const contractArtifact = await artifacts.readArtifact("UpgradeableStork");
+    return contract;
+};
 
-  // @ts-expect-error ethers is loaded in hardhat/config
-  // Initialize contract instance for interaction
-  const contract = new ethers.Contract(
-    contractAddress,
-    contractArtifact.abi,
-    deployer // Interact with the contract on behalf of this wallet
-  );
+const interactScope = scope('interact', 'interact with the contract');
 
-  let encoded;
+interactScope.task('version', 'Get the contract version').setAction(async (_: any, hre: HardhatRuntimeEnvironment) => {
+    const contract = await initializeContract(hre);
+    const version = await contract.version();
+    console.log(`Contract version: ${version}`);
+});
 
-  let returnVal;
-  switch (command) {
-    case "version":
-      const version = await contract.version();
-      console.log(`Contract version: ${version}`);
-      break;
-    case "updateTemporalNumericValuesV1":
-      const split = args.split(" ");
+interactScope
+    .task('verifyStorkSignatureV1', 'Verify a stork signature')
+    .addPositionalParam<string>('assetId', 'The asset id to verify')
+    .addPositionalParam<string>('endpoint', 'The endpoint to get the latest update data from')
+    .addPositionalParam<string>('authKey', 'The auth key to use to get the latest update data')
+    .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const storkPubKey = await contract.storkPublicKey();
+        const [verify] = await getLatestUpdateData(args.endpoint, args.authKey, args.assetId);
+        const returnVal = await contract.verifyStorkSignatureV1(
+            storkPubKey,
+            verify.id,
+            verify.temporalNumericValue.timestampNs,
+            verify.temporalNumericValue.quantizedValue,
+            verify.publisherMerkleRoot,
+            verify.valueComputeAlgHash,
+            verify.r,
+            verify.s,
+            verify.v
+        );
+        console.log(returnVal);
+    });
 
-      const assetIds = split[0];
-      const endpoint = split[1];
-      const authKey = split[2];
+interactScope
+    .task('updateTemporalNumericValuesV1', 'Update the temporal numeric values')
+    .addPositionalParam<string>('assetIds', 'The asset ids to update')
+    .addPositionalParam<string>('endpoint', 'The endpoint to get the latest update data from')
+    .addPositionalParam<string>('authKey', 'The auth key to use to get the latest update data')
+    .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const updates = await getLatestUpdateData(args.endpoint, args.authKey, args.assetIds);
+        await contract.updateTemporalNumericValuesV1(updates, {
+            value: updates.length,
+        });
+    });
 
-      const response = await fetch(
-        `${endpoint}/v1/prices/latest?assets=${assetIds}`,
-        {
-          headers: {
+interactScope
+    .task('getTemporalNumericValueV1', 'Get the temporal numeric value')
+    .addPositionalParam<string>('assetId', 'The asset id to get the value for')
+    .setAction(async ({ assetId }: { assetId: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        // @ts-expect-error ethers is loaded in hardhat/config
+        const encoded = ethers.keccak256(ethers.toUtf8Bytes(assetId));
+        const returnVal = await contract.getTemporalNumericValueV1(encoded);
+        console.log(returnVal);
+    });
+
+interactScope
+    .task('getTemporalNumericValueUnsafeV1', 'Get the temporal numeric value (unsafe)')
+    .addPositionalParam<string>('assetId', 'The asset id to get the value for')
+    .setAction(async ({ assetId }: { assetId: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        // @ts-expect-error ethers is loaded in hardhat/config
+        const encoded = ethers.keccak256(ethers.toUtf8Bytes(assetId));
+        const returnVal = await contract.getTemporalNumericValueUnsafeV1(encoded);
+        console.log(returnVal);
+    });
+
+interactScope
+    .task('updateValidTimePeriodSeconds', 'Update the valid time period seconds')
+    .addPositionalParam<string>('seconds', 'The number of seconds to update the valid time period to')
+    .setAction(async ({ seconds }: { seconds: number }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        await contract.updateValidTimePeriodSeconds(seconds);
+    });
+
+interactScope
+    .task('updateSingleUpdateFeeInWei', 'Update the single update fee in wei')
+    .addPositionalParam<number>('fee', 'The fee to update the single update fee to')
+    .setAction(async ({ fee }: { fee: number }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        await contract.updateSingleUpdateFeeInWei(fee);
+    });
+
+interactScope
+    .task('updateStorkPublicKey', 'Update the stork public key')
+    .addPositionalParam<string>('key', 'The new stork public key')
+    .setAction(async ({ key }: { key: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        await contract.updateStorkPublicKey(key);
+    });
+
+interactScope
+    .task('validTimePeriodSeconds', 'Get the valid time period seconds')
+    .setAction(async (_: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const returnVal = await contract.validTimePeriodSeconds();
+        console.log(returnVal);
+    });
+
+interactScope
+    .task('singleUpdateFeeInWei', 'Get the single update fee in wei')
+    .setAction(async (_: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const returnVal = await contract.singleUpdateFeeInWei();
+        console.log(returnVal);
+    });
+
+interactScope
+    .task('storkPublicKey', 'Get the stork public key')
+    .setAction(async (_: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const returnVal = await contract.storkPublicKey();
+        console.log(returnVal);
+    });
+
+const getLatestUpdateData = async (endpoint: string, authKey: string, assetIds: string) => {
+    const response = await fetch(`${endpoint}/v1/prices/latest?assets=${assetIds}`, {
+        headers: {
             Authorization: `Basic ${authKey}`,
-          },
-        }
-      );
+        },
+    });
 
-      const rawJson = await response.text();
-      const safeJsonText = rawJson.replace(
+    const rawJson = await response.text();
+    const safeJsonText = rawJson.replace(
         /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
         (match: any) => `"${match}"` // Convert large numbers to strings
-      );
+    );
 
-      const responseData = JSON.parse(safeJsonText);
+    const responseData = JSON.parse(safeJsonText);
 
-      const updates = Object.keys(responseData.data).map((key: any) => {
+    return Object.keys(responseData.data).map((key: any) => {
         const data = responseData.data[key];
 
         return {
-          temporalNumericValue: {
-            timestampNs: data.stork_signed_price.timestamped_signature.timestamp,
-            quantizedValue: data.stork_signed_price.price,
-          },
-          id: data.stork_signed_price.encoded_asset_id,
-          publisherMerkleRoot: data.stork_signed_price.publisher_merkle_root,
-          valueComputeAlgHash: "0x"+ data.stork_signed_price.calculation_alg.checksum,
-          r: data.stork_signed_price.timestamped_signature.signature.r,
-          s: data.stork_signed_price.timestamped_signature.signature.s,
-          v: data.stork_signed_price.timestamped_signature.signature.v,
+            temporalNumericValue: {
+                timestampNs: data.stork_signed_price.timestamped_signature.timestamp,
+                quantizedValue: data.stork_signed_price.price,
+            },
+            id: data.stork_signed_price.encoded_asset_id,
+            publisherMerkleRoot: data.stork_signed_price.publisher_merkle_root,
+            valueComputeAlgHash: '0x' + data.stork_signed_price.calculation_alg.checksum,
+            r: data.stork_signed_price.timestamped_signature.signature.r,
+            s: data.stork_signed_price.timestamped_signature.signature.s,
+            v: data.stork_signed_price.timestamped_signature.signature.v,
         };
-      });
-
-      const updateResult = await contract.updateTemporalNumericValuesV1(updates, {
-        value: updates.length,
-      });
-
-      break;
-    case "getTemporalNumericValueV1":
-      // @ts-expect-error
-      encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
-      returnVal = await contract.getTemporalNumericValueV1(encoded);
-      console.log(returnVal);
-      break;
-    case "getTemporalNumericValueUnsafeV1":
-      // @ts-expect-error
-      encoded = ethers.keccak256(ethers.toUtf8Bytes(args));
-      returnVal = await contract.getTemporalNumericValueUnsafeV1(encoded);
-      console.log(returnVal);
-      break;
-    case "updateValidTimePeriodSeconds":
-      returnVal = await contract.updateValidTimePeriodSeconds(parseInt(args));
-      break;
-    case "updateSingleUpdateFeeInWei":
-      returnVal = await contract.updateSingleUpdateFeeInWei(parseInt(args));
-      break;
-    case "updateStorkPublicKey":
-      returnVal = await contract.updateStorkPublicKey(args);
-      break;
-    case "validTimePeriodSeconds":
-    case "singleUpdateFeeInWei":
-    case "storkPublicKey":
-      returnVal = await contract[command]();
-      console.log(returnVal);
-      break;
-    default:
-      throw new Error(`Invalid command: ${command}`);
-  }
-}
-
-task("interact", "A task to interact with the proxy contract")
-  .addPositionalParam<AllowedCommands>("command", "The command to run")
-  .addPositionalParam<string>(
-    "args",
-    "The arguments for the command",
-    undefined,
-    undefined,
-    true
-  )
-  .setAction(async (taskArgs) => await main(taskArgs.command, taskArgs.args));
+    });
+};
