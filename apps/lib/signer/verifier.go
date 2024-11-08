@@ -5,6 +5,7 @@ package signer
 */
 import "C"
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -13,6 +14,35 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
+
+func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, string string) error {
+	switch signatureType {
+	case EvmSignatureType:
+		var evmSignature EvmSignature
+		err := json.Unmarshal([]byte(string), &evmSignature)
+		if err != nil {
+			return fmt.Errorf("invalid evm signature format: %w", err)
+		}
+		err = VerifyEvmPublisherPrice(timestamp, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
+		if err != nil {
+			return fmt.Errorf("invalid evm auth signature: %w", err)
+		}
+		return nil
+	case StarkSignatureType:
+		var starkSignature StarkSignature
+		err := json.Unmarshal([]byte(string), &starkSignature)
+		if err != nil {
+			return fmt.Errorf("invalid stark signature format: %w", err)
+		}
+		err = VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAssetId, StorkMagicNumber, publicKey, starkSignature)
+		if err != nil {
+			return fmt.Errorf("invalid stark auth signature: %w", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("invalid signature type: %s", signatureType)
+	}
+}
 
 func VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signatureType SignatureType, signature interface{}) error {
 	switch signatureType {

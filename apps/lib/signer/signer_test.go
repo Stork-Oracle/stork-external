@@ -47,6 +47,28 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 }
 
+func TestSigner_SignAuth_Evm(t *testing.T) {
+	signer, err := NewEvmAuthSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	if err != nil {
+		t.Fatalf("error creating signer: %v", err)
+	}
+	expectedAuthSignature := "{\"r\":\"0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf\",\"s\":\"0x06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a\",\"v\":\"0x1b\"}"
+	signedAuth, err := signer.SignAuth(1710191092123456789)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedAuthSignature, signedAuth)
+}
+
+func TestSigner_SignAuth_Stark(t *testing.T) {
+	signer, err := NewStarkAuthSigner("0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a", "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06", zerolog.Logger{})
+	if err != nil {
+		t.Fatalf("error creating signer: %v", err)
+	}
+	expectedAuthSignature := "{\"r\":\"0x6d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a7\",\"s\":\"0x296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2\"}"
+	signedPriceUpdate, err := signer.SignAuth(1708940577123456789)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedAuthSignature, signedPriceUpdate)
+}
+
 func BenchmarkSigner_SignPublisherPrice_Evm(b *testing.B) {
 	signer, err := NewEvmSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
 	if err != nil {
