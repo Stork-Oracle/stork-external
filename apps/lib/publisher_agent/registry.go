@@ -3,7 +3,6 @@ package publisher_agent
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
@@ -11,16 +10,16 @@ import (
 )
 
 type RegistryClient struct {
-	baseUrl   string
-	authToken AuthToken
-	logger    zerolog.Logger
+	baseUrl         string
+	storkAuthSigner signer.StorkAuthSigner
+	logger          zerolog.Logger
 }
 
-func NewRegistryClient(baseUrl string, authToken AuthToken, logger zerolog.Logger) *RegistryClient {
+func NewRegistryClient(baseUrl string, storkAuthSigner signer.StorkAuthSigner, logger zerolog.Logger) *RegistryClient {
 	return &RegistryClient{
-		baseUrl:   baseUrl,
-		authToken: authToken,
-		logger:    logger,
+		baseUrl:         baseUrl,
+		storkAuthSigner: storkAuthSigner,
+		logger:          logger,
 	}
 }
 
@@ -28,8 +27,11 @@ func (c *RegistryClient) GetBrokersForPublisher(publisherKey signer.PublisherKey
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))
-	authHeader := http.Header{"Authorization": []string{"Basic " + string(c.authToken)}}
-	response, err := RestQuery("GET", brokerEndpoint, queryParams, nil, authHeader)
+	authHeaders, err := c.storkAuthSigner.GetAuthHeaders()
+	if err != nil {
+		return nil, fmt.Errorf("error getting auth header: %v", err)
+	}
+	response, err := RestQuery("GET", brokerEndpoint, queryParams, nil, authHeaders)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get broker list: %v", err)
 	}

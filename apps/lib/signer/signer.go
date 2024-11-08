@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/NethermindEth/juno/core/felt"
@@ -26,6 +28,11 @@ const StorkMagicNumber = "103109111114107119111114108100"
 const StorkAuthAssetId = "STORKAUTH"
 const StarkEncodedStorkAssetId = "0x53544f524b41555448000000000000007361757468"
 const StorkAuthOracleId = "sauth"
+
+const publicKeyHeader = "X-PUBLIC-KEY"
+const timestampHeader = "X-TIMESTAMP"
+const signatureHeader = "X-SIGNATURE"
+const signatureTypeHeader = "X-SIGNATURE-TYPE"
 
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
@@ -194,6 +201,7 @@ func (s *StarkSigner) GetSignatureType() SignatureType {
 
 type StorkAuthSigner interface {
 	SignAuth(publishTimestamp int64) (string, error)
+	GetAuthHeaders() (http.Header, error)
 }
 
 type EvmAuthSigner struct {
@@ -220,6 +228,24 @@ func (s *EvmAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
 	return string(sigBytes), err
 }
 
+func (s *EvmAuthSigner) getAuthHeaders() (http.Header, error) {
+	publicKey := s.evmSigner.GetPublisherKey()
+	signatureType := s.evmSigner.GetSignatureType()
+	timestamp := time.Now().UnixNano()
+	signature, err := s.SignAuth(timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign auth header: %v", err)
+	}
+	signatureStr, err := json.Marshal(signature)
+	header := http.Header{
+		publicKeyHeader:     []string{string(publicKey)},
+		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
+		signatureHeader:     []string{string(signatureStr)},
+		signatureTypeHeader: []string{string(signatureType)},
+	}
+	return header, nil
+}
+
 type StarkAuthSigner struct {
 	starkSigner *StarkSigner
 }
@@ -242,6 +268,24 @@ func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
 		return "", fmt.Errorf("failed to convert signature to string: %v", err)
 	}
 	return string(sigBytes), err
+}
+
+func (s *StarkAuthSigner) getAuthHeaders() (http.Header, error) {
+	publicKey := s.starkSigner.GetPublisherKey()
+	signatureType := s.starkSigner.GetSignatureType()
+	timestamp := time.Now().UnixNano()
+	signature, err := s.SignAuth(timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign auth header: %v", err)
+	}
+	signatureStr, err := json.Marshal(signature)
+	header := http.Header{
+		publicKeyHeader:     []string{string(publicKey)},
+		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
+		signatureHeader:     []string{string(signatureStr)},
+		signatureTypeHeader: []string{string(signatureType)},
+	}
+	return header, nil
 }
 
 func convertHexToECDSA(privateKey EvmPrivateKey) (*ecdsa.PrivateKey, error) {

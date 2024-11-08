@@ -3,8 +3,8 @@ package publisher_agent
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"runtime"
 	"time"
@@ -37,7 +37,7 @@ type PublisherMetadataReporter struct {
 	signatureType            signer.SignatureType
 	reportPeriod             time.Duration
 	publisherMetadataBaseUrl string
-	storkAuth                AuthToken
+	storkAuthSigner          signer.StorkAuthSigner
 	logger                   zerolog.Logger
 }
 
@@ -46,7 +46,7 @@ func NewPublisherMetadataReporter(
 	signatureType signer.SignatureType,
 	reportPeriod time.Duration,
 	publisherMetadataBaseUrl string,
-	storkAuth AuthToken,
+	storkAuthSigner signer.StorkAuthSigner,
 	logger zerolog.Logger,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
@@ -54,7 +54,7 @@ func NewPublisherMetadataReporter(
 		signatureType:            signatureType,
 		reportPeriod:             reportPeriod,
 		publisherMetadataBaseUrl: publisherMetadataBaseUrl,
-		storkAuth:                storkAuth,
+		storkAuthSigner:          storkAuthSigner,
 		logger:                   logger,
 	}
 }
@@ -76,12 +76,15 @@ func (p *PublisherMetadataReporter) report() error {
 	metadata := p.getMetadata()
 	metadataJson, err := json.Marshal(metadata)
 	if err != nil {
-		p.logger.Info().Err(err).Msgf("Error marshaling publisher metadata")
+		return fmt.Errorf("error marshaling publisher metadata: %v", err)
 	}
-	authHeader := http.Header{"Authorization": []string{"Basic " + string(p.storkAuth)}}
-	_, err = RestQuery("POST", p.publisherMetadataBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeader)
+	authHeaders, err := p.storkAuthSigner.GetAuthHeaders()
 	if err != nil {
-		p.logger.Info().Err(err).Msgf("Error reporting publisher metadata")
+		return fmt.Errorf("error getting auth headers: %v", err)
+	}
+	_, err = RestQuery("POST", p.publisherMetadataBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeaders)
+	if err != nil {
+		return fmt.Errorf("error reporting publisher metadata: %v", err)
 	}
 
 	p.logger.Info().Msgf("Reported publisher metadata: %v", metadata)

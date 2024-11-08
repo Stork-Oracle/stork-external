@@ -274,7 +274,6 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		brokerReconnectDelayDuration,
 		publisherMetadataBaseUrl,
 		publisherMetadataUpdateDuration,
-		keys.StorkAuth,
 		configFile.PullBasedWsUrl,
 		keys.PullBasedAuth,
 		configFile.PullBasedWsSubscriptionRequest,
@@ -298,7 +297,6 @@ type StorkPublisherAgentConfig struct {
 	ChangeThresholdProportion       float64 // 0-1
 	OracleId                        OracleId
 	StorkRegistryBaseUrl            string
-	StorkAuth                       AuthToken
 	StorkRegistryRefreshInterval    time.Duration
 	BrokerReconnectDelay            time.Duration
 	PublisherMetadataBaseUrl        string
@@ -327,7 +325,6 @@ func NewStorkPublisherAgentConfig(
 	brokerReconnectDelay time.Duration,
 	publisherMetadataBaseUrl string,
 	publisherMetadataUpdateInterval time.Duration,
-	storkAuth AuthToken,
 	pullBasedWsUrl string,
 	pullBasedAuth AuthToken,
 	pullBasedWsSubscriptionRequest string,
@@ -351,7 +348,6 @@ func NewStorkPublisherAgentConfig(
 		BrokerReconnectDelay:            brokerReconnectDelay,
 		PublisherMetadataBaseUrl:        publisherMetadataBaseUrl,
 		PublisherMetadataUpdateInterval: publisherMetadataUpdateInterval,
-		StorkAuth:                       storkAuth,
 		PullBasedWsUrl:                  pullBasedWsUrl,
 		PullBasedAuth:                   pullBasedAuth,
 		PullBasedWsSubscriptionRequest:  pullBasedWsSubscriptionRequest,

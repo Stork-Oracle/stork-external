@@ -1,7 +1,6 @@
 package publisher_agent
 
 import (
-	"net/http"
 	"sync"
 	"time"
 
@@ -21,18 +20,20 @@ type PublisherAgentRunner[T signer.Signature] struct {
 	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock     sync.RWMutex
 	signer                      signer.Signer[T]
+	storkAuthSigner             signer.StorkAuthSigner
 	publisherMetadataReporter   *PublisherMetadataReporter
 }
 
 func NewPublisherAgentRunner[T signer.Signature](
 	config StorkPublisherAgentConfig,
 	signer signer.Signer[T],
+	storkAuthSigner signer.StorkAuthSigner,
 	signatureType signer.SignatureType,
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
 	registryClient := NewRegistryClient(
 		config.StorkRegistryBaseUrl,
-		config.StorkAuth,
+		storkAuthSigner,
 		logger,
 	)
 
@@ -41,7 +42,6 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signatureType,
 		config.PublisherMetadataUpdateInterval,
 		config.PublisherMetadataBaseUrl,
-		config.StorkAuth,
 		logger,
 	)
 
@@ -56,6 +56,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
 		signer:                      signer,
+		storkAuthSigner:             storkAuthSigner,
 		publisherMetadataReporter:   publisherMetadataReporter,
 	}
 }
@@ -65,7 +66,8 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// query Stork Registry for brokers
 
-	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(r.signer.GetPublisherKey())
+	publicKey := r.signer.GetPublisherKey()
+	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(publicKey)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
 		return
@@ -79,7 +81,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			outgoingConnection.UpdateAssets(newAssetIdMap)
 		} else {
 			// create connection
-			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap, r.config.StorkAuth)
+			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap)
 		}
 		r.assetsByBroker[brokerUrl] = newAssetIdMap
 	}
@@ -137,13 +139,13 @@ func (r *PublisherAgentRunner[T]) Run() {
 	processor.Run()
 }
 
-func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}, authToken AuthToken) {
+func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}) {
 	for {
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
-		var headers http.Header
-		if len(authToken) > 0 {
-			headers = http.Header{"Authorization": []string{"Basic " + string(authToken)}}
+		headers, err := r.storkAuthSigner.GetAuthHeaders()
+		if err != nil {
+			r.logger.Error().Err(err).Msgf("Failed to get auth headers for outgoing WebSocket: %v", err)
 		}
 
 		conn, _, err := websocket.DefaultDialer.Dial(string(url), headers)
