@@ -112,7 +112,25 @@ pub mod stork {
 
     pub fn transfer_ownership(ctx: Context<AdminUpdate>, new_owner: Pubkey) -> Result<()> {
         let config = &mut ctx.accounts.config;
-        config.owner = new_owner;
+        config.pending_owner = Some(new_owner);
+        Ok(())
+    }
+
+    pub fn accept_ownership(ctx: Context<AcceptOwnership>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        
+        if ctx.accounts.new_owner.key() != config.pending_owner.ok_or(StorkError::NoPendingTransfer)? {
+            return err!(StorkError::Unauthorized);
+        }
+        
+        config.owner = ctx.accounts.new_owner.key();
+        config.pending_owner = None;
+        Ok(())
+    }
+
+    pub fn cancel_ownership_transfer(ctx: Context<CancelOwnershipTransfer>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.pending_owner = None;
         Ok(())
     }
 }
@@ -190,12 +208,41 @@ pub struct AdminUpdate<'info> {
     pub owner: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct AcceptOwnership<'info> {
+    #[account(
+        mut,
+        seeds = [STORK_CONFIG_SEED],
+        bump
+    )]
+    pub config: Account<'info, StorkConfig>,
+    pub new_owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CancelOwnershipTransfer<'info> {
+    #[account(
+        mut,
+        seeds = [STORK_CONFIG_SEED],
+        bump
+    )]
+    pub config: Account<'info, StorkConfig>,
+    #[account(
+        constraint = (
+            owner.key() == config.owner ||
+            Some(owner.key()) == config.pending_owner
+        ) @ StorkError::Unauthorized
+    )]
+    pub owner: Signer<'info>,
+}
+
 #[account]
 pub struct StorkConfig {
     pub stork_sol_public_key: Pubkey,
     pub stork_evm_public_key: EvmPubkey,
     pub single_update_fee_in_lamports: u64,
     pub owner: Pubkey,
+    pub pending_owner: Option<Pubkey>,
 }
 
 impl StorkConfig {
@@ -204,9 +251,10 @@ impl StorkConfig {
     // 8 is the length of the u64
     // 8 is the length of the u64
     // 32 is the length of the pubkey
-    // 32 + 8 + 8 + 8 + 32 = 80
+    // 33 is the length of the Option<Pubkey>
+    // 32 + 8 + 8 + 8 + 32 + 33 = 113
     // doubled to leave space for future fields
-    pub const LEN: usize = 160;
+    pub const LEN: usize = 226;
 }
 
 #[error_code]
@@ -217,4 +265,6 @@ pub enum StorkError {
     InvalidSignature,
     #[msg("Unauthorized")]
     Unauthorized,
+    #[msg("No pending transfer")]
+    NoPendingTransfer,
 }
