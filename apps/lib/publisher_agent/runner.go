@@ -42,6 +42,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signatureType,
 		config.PublisherMetadataUpdateInterval,
 		config.PublisherMetadataBaseUrl,
+		storkAuthSigner,
 		logger,
 	)
 

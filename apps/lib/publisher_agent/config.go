@@ -13,7 +13,6 @@ import (
 )
 
 var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)
-var StorkAuthRegex = regexp.MustCompile(`^[A-Za-z0-9+/]+={0,2}$`)
 
 const DefaultClockUpdatePeriod = "500ms"
 const DefaultDeltaUpdatePeriod = "10ms"
@@ -50,7 +49,6 @@ type Keys struct {
 	StarkPrivateKey signer.StarkPrivateKey
 	StarkPublicKey  signer.StarkPublisherKey
 	OracleId        OracleId
-	StorkAuth       AuthToken
 	PullBasedAuth   AuthToken
 }
 
@@ -76,10 +74,7 @@ func (k *Keys) updateFromEnvVars() {
 	if oracleId != "" {
 		k.OracleId = OracleId(oracleId)
 	}
-	storkAuth := os.Getenv("STORK_AUTH")
-	if storkAuth != "" {
-		k.StorkAuth = AuthToken(storkAuth)
-	}
+
 	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
 	if pullBasedAuth != "" {
 		k.PullBasedAuth = AuthToken(pullBasedAuth)
@@ -151,10 +146,6 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		default:
 			return nil, fmt.Errorf("invalid signature type: %s", signatureType)
 		}
-	}
-
-	if !StorkAuthRegex.MatchString(string(keys.StorkAuth)) {
-		return nil, errors.New("stork auth token must a non-empty base64 string")
 	}
 
 	if len(keys.OracleId) != 5 {

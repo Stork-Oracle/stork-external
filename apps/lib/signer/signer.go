@@ -7,7 +7,6 @@ import "C"
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -31,7 +30,9 @@ const StorkAuthOracleId = "sauth"
 
 const publicKeyHeader = "X-PUBLIC-KEY"
 const timestampHeader = "X-TIMESTAMP"
-const signatureHeader = "X-SIGNATURE"
+const signatureRHeader = "X-SIGNATURE-R"
+const signatureSHeader = "X-SIGNATURE-S"
+const signatureVHeader = "X-SIGNATURE-V"
 const signatureTypeHeader = "X-SIGNATURE-TYPE"
 
 type Signer[T Signature] interface {
@@ -200,7 +201,7 @@ func (s *StarkSigner) GetSignatureType() SignatureType {
 }
 
 type StorkAuthSigner interface {
-	SignAuth(publishTimestamp int64) (string, error)
+	SignAuth(publishTimestamp int64) (string, string, string, error)
 	GetAuthHeaders() (http.Header, error)
 }
 
@@ -216,31 +217,30 @@ func NewEvmAuthSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmA
 	return &EvmAuthSigner{evmSigner: evmSigner}, nil
 }
 
-func (s *EvmAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
+func (s *EvmAuthSigner) SignAuth(publishTimestamp int64) (string, string, string, error) {
 	timestampedSignature, _, err := s.evmSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign auth: %v", err)
+		return "", "", "", fmt.Errorf("failed to sign auth: %v", err)
 	}
-	sigBytes, err := json.Marshal(timestampedSignature.Signature)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert signature to string: %v", err)
-	}
-	return string(sigBytes), err
+	signature := timestampedSignature.Signature
+
+	return signature.R, signature.S, signature.V, nil
 }
 
-func (s *EvmAuthSigner) getAuthHeaders() (http.Header, error) {
+func (s *EvmAuthSigner) GetAuthHeaders() (http.Header, error) {
 	publicKey := s.evmSigner.GetPublisherKey()
 	signatureType := s.evmSigner.GetSignatureType()
 	timestamp := time.Now().UnixNano()
-	signature, err := s.SignAuth(timestamp)
+	signatureR, signatureS, signatureV, err := s.SignAuth(timestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
-	signatureStr, err := json.Marshal(signature)
 	header := http.Header{
 		publicKeyHeader:     []string{string(publicKey)},
 		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureHeader:     []string{string(signatureStr)},
+		signatureRHeader:    []string{signatureR},
+		signatureSHeader:    []string{signatureS},
+		signatureVHeader:    []string{signatureV},
 		signatureTypeHeader: []string{string(signatureType)},
 	}
 	return header, nil
@@ -258,31 +258,29 @@ func NewStarkAuthSigner(privateKeyStr StarkPrivateKey, publicKeyStr string, logg
 	return &StarkAuthSigner{starkSigner: starkSigner}, nil
 }
 
-func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
+func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, string, string, error) {
 	timestampedSignature, _, err := s.starkSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign auth: %v", err)
+		return "", "", "", fmt.Errorf("failed to sign auth: %v", err)
 	}
-	sigBytes, err := json.Marshal(timestampedSignature.Signature)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert signature to string: %v", err)
-	}
-	return string(sigBytes), err
+	signature := timestampedSignature.Signature
+	return signature.R, signature.S, "", nil
+
 }
 
-func (s *StarkAuthSigner) getAuthHeaders() (http.Header, error) {
+func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
 	publicKey := s.starkSigner.GetPublisherKey()
 	signatureType := s.starkSigner.GetSignatureType()
 	timestamp := time.Now().UnixNano()
-	signature, err := s.SignAuth(timestamp)
+	signatureR, signatureS, _, err := s.SignAuth(timestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
-	signatureStr, err := json.Marshal(signature)
 	header := http.Header{
 		publicKeyHeader:     []string{string(publicKey)},
 		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureHeader:     []string{string(signatureStr)},
+		signatureRHeader:    []string{signatureR},
+		signatureSHeader:    []string{signatureS},
 		signatureTypeHeader: []string{string(signatureType)},
 	}
 	return header, nil

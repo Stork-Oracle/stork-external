@@ -5,7 +5,6 @@ package signer
 */
 import "C"
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -15,26 +14,25 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, string string) error {
+func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, signatureR string, signatureS string, signatureV string) error {
 	switch signatureType {
 	case EvmSignatureType:
-		var evmSignature EvmSignature
-		err := json.Unmarshal([]byte(string), &evmSignature)
-		if err != nil {
-			return fmt.Errorf("invalid evm signature format: %w", err)
+		evmSignature := EvmSignature{
+			R: signatureR,
+			S: signatureS,
+			V: signatureV,
 		}
-		err = VerifyEvmPublisherPrice(timestamp, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
+		err := VerifyEvmPublisherPrice(timestamp, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
 		if err != nil {
 			return fmt.Errorf("invalid evm auth signature: %w", err)
 		}
 		return nil
 	case StarkSignatureType:
-		var starkSignature StarkSignature
-		err := json.Unmarshal([]byte(string), &starkSignature)
-		if err != nil {
-			return fmt.Errorf("invalid stark signature format: %w", err)
+		starkSignature := StarkSignature{
+			R: signatureR,
+			S: signatureS,
 		}
-		err = VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAssetId, StorkMagicNumber, publicKey, starkSignature)
+		err := VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAssetId, StorkMagicNumber, publicKey, starkSignature)
 		if err != nil {
 			return fmt.Errorf("invalid stark auth signature: %w", err)
 		}
