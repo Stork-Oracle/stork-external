@@ -25,7 +25,7 @@ import (
 // gmorkworld in ascii
 const StorkMagicNumber = "103109111114107119111114108100"
 const StorkAuthAssetId = "STORKAUTH"
-const StarkEncodedStorkAssetId = "0x53544f524b41555448000000000000007361757468"
+const StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
 const StorkAuthOracleId = "sauth"
 
 const publicKeyHeader = "X-PUBLIC-KEY"

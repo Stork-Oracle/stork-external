@@ -32,7 +32,7 @@ func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType Signature
 			R: signatureR,
 			S: signatureS,
 		}
-		err := VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAssetId, StorkMagicNumber, publicKey, starkSignature)
+		err := VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAuthAssetId, StorkMagicNumber, publicKey, starkSignature)
 		if err != nil {
 			return fmt.Errorf("invalid stark auth signature: %w", err)
 		}
