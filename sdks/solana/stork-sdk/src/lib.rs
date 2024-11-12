@@ -5,5 +5,5 @@ pub mod pda;
 pub mod temporal_numeric_value;
 pub mod program;
 
-pub const PROGRAM_ID: Pubkey = pubkey!("2TSL7JwuTu9co7yUizwuh8EVdd4d96vDo9JykQCw8SHi");
+pub const PROGRAM_ID: Pubkey = pubkey!("stork1JUZMKYgjNagHiK2KdMmb42iTnYe9bYUCDUk8n");
 declare_id!(PROGRAM_ID);
