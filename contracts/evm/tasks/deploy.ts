@@ -5,7 +5,7 @@ const STORK_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44"
 const VALID_TIMEOUT_SECONDS = 3600;
 const UPDATE_FEE_IN_WEI = 1;
 
-async function main() {
+async function main({storkPublicKey} : { storkPublicKey: string }) {
   // @ts-expect-error ethers is loaded in hardhat/config
   const [deployer] = await ethers.getSigners();
 
@@ -17,7 +17,7 @@ async function main() {
   // @ts-expect-error upgrades is loaded in hardhat/config
   const upgradeableStork = await upgrades.deployProxy(
     UpgradeableStork,
-    [deployer.address, STORK_PUBLIC_KEY, VALID_TIMEOUT_SECONDS, UPDATE_FEE_IN_WEI],
+    [deployer.address, storkPublicKey ?? STORK_PUBLIC_KEY, VALID_TIMEOUT_SECONDS, UPDATE_FEE_IN_WEI],
     {
       initializer: "initialize",
       kind: "uups",
@@ -34,4 +34,5 @@ async function main() {
 }
 
 task("deploy", "A task to deploy the contract")
+  .addOptionalPositionalParam("storkPublicKey", "The public key of the Stork contract")
   .setAction(main);
