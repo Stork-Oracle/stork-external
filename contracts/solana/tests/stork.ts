@@ -60,7 +60,7 @@ describe("Stork", () => {
   }
 
   describe("initialize", () => {
-    it("fails admin tasks before initialization", async () => {
+    it("Fails admin tasks before initialization", async () => {
       try {
         await program.methods
           .updateSingleUpdateFeeInLamports(new anchor.BN(120))
@@ -79,7 +79,7 @@ describe("Stork", () => {
       }
     });
 
-    it("initializes successfully", async () => {
+    it("Initializes successfully", async () => {
       await initializeStork(deployerKeypair);
 
       const [configPda, _] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -111,7 +111,7 @@ describe("Stork", () => {
       );
     });
 
-    it("fails if already initialized", async () => {
+    it("Fails if already initialized", async () => {
       try {
         await initializeStork(nonAdminKeypair);
 
@@ -234,6 +234,63 @@ describe("Stork", () => {
         );
       }
     });
+
+    it("Fails with malicious treasury account", async () => {
+      const maliciousKeypair = anchor.web3.Keypair.generate();
+      const treasuryId = 1;
+      const updateData = {
+        temporalNumericValue: {
+          timestampNs: new anchor.BN("1722632569208762117"),
+          quantizedValue: new anchor.BN("62507457175499998000000"),
+        },
+        id: hexStringToByteArray("7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de"),
+        publisherMerkleRoot: hexStringToByteArray("e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318"),
+        valueComputeAlgHash: hexStringToByteArray("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"),
+        r: hexStringToByteArray("b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741"),
+        s: hexStringToByteArray("16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758"),
+        v: 28,
+        treasuryId,
+      };
+
+      // Request airdrop for malicious keypair to create their own account
+      const airdropSignature = await provider.connection.requestAirdrop(
+        maliciousKeypair.publicKey,
+        LAMPORTS_PER_SOL
+      );
+      await provider.connection.confirmTransaction(airdropSignature);
+
+      // Create a regular account owned by the malicious keypair
+      const maliciousAccount = anchor.web3.Keypair.generate();
+      const createAccountTx = new anchor.web3.Transaction().add(
+        anchor.web3.SystemProgram.createAccount({
+          fromPubkey: maliciousKeypair.publicKey,
+          newAccountPubkey: maliciousAccount.publicKey,
+          space: 0,
+          lamports: await provider.connection.getMinimumBalanceForRentExemption(0),
+          programId: maliciousKeypair.publicKey, // This account will be owned by the malicious keypair
+        })
+      );
+
+      await anchor.web3.sendAndConfirmTransaction(
+        provider.connection,
+        createAccountTx,
+        [maliciousKeypair, maliciousAccount]
+      );
+
+      try {
+        await program.methods
+          .updateTemporalNumericValueEvm(updateData)
+          .accounts({
+            payer: provider.wallet.publicKey,
+            treasury: maliciousAccount.publicKey
+          })
+          .rpc();
+
+        assert.fail("Expected update to fail with incorrect treasury account");
+      } catch (error) {
+        assert.ok(error instanceof anchor.AnchorError, "Expected AnchorError");
+      }
+    });
   });
 
   describe("update_single_update_fee_in_lamports", () => {
@@ -349,52 +406,6 @@ describe("Stork", () => {
       try {
         await program.methods
           .updateStorkEvmPublicKey(newStorkEvmPublicKey)
-          .accounts({
-            owner: nonAdminKeypair.publicKey,
-          })
-          .signers([nonAdminKeypair])
-          .rpc();
-
-        assert.fail("Expected update to fail, but it succeeded");
-      } catch (error) {
-        assert.ok(error instanceof anchor.AnchorError, "Expected AnchorError");
-        assert.strictEqual(
-          error.error.errorCode.code,
-          "Unauthorized",
-          "Expected Unauthorized error"
-        );
-      }
-    });
-  });
-
-  describe("transfer_ownership", () => {
-    const newOwner = anchor.web3.Keypair.generate();
-
-    it("Transfers ownership", async () => {
-      await program.methods
-        .transferOwnership(newOwner.publicKey)
-        .accounts({
-          owner: deployerKeypair.publicKey,
-        })
-        .signers([deployerKeypair])
-        .rpc();
-
-      const [configPda, _] = anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("stork_config")],
-        program.programId
-      );
-      const configAccount = await program.account.storkConfig.fetch(configPda);
-      assert.strictEqual(
-        configAccount.owner.toBase58(),
-        newOwner.publicKey.toBase58(),
-        "Owner not updated correctly"
-      );
-    });
-
-    it("Fails if not owner", async () => {
-      try {
-        await program.methods
-          .transferOwnership(newOwner.publicKey)
           .accounts({
             owner: nonAdminKeypair.publicKey,
           })

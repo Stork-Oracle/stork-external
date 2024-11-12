@@ -110,11 +110,6 @@ pub mod stork {
         Ok(())
     }
 
-    pub fn transfer_ownership(ctx: Context<AdminUpdate>, new_owner: Pubkey) -> Result<()> {
-        let config = &mut ctx.accounts.config;
-        config.owner = new_owner;
-        Ok(())
-    }
 }
 
 #[derive(Accounts)]
@@ -190,6 +185,7 @@ pub struct AdminUpdate<'info> {
     pub owner: Signer<'info>,
 }
 
+
 #[account]
 pub struct StorkConfig {
     pub stork_sol_public_key: Pubkey,
@@ -204,9 +200,9 @@ impl StorkConfig {
     // 8 is the length of the u64
     // 8 is the length of the u64
     // 32 is the length of the pubkey
-    // 32 + 8 + 8 + 8 + 32 = 80
-    // doubled to leave space for future fields
-    pub const LEN: usize = 160;
+    // 32 + 8 + 8 + 32  = 80 
+    // quadruple to leave space for future fields
+    pub const LEN: usize = 320;
 }
 
 #[error_code]
