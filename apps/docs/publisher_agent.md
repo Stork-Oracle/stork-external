@@ -38,7 +38,7 @@ The available environment variables are:
 | STORK_STARK_PRIVATE_KEY |
 | STORK_STARK_PUBLIC_KEY |
 | STORK_ORACLE_ID |
-| STORK_PULL_BASE_AUTH |
+| STORK_PULL_BASED_AUTH |
 
 **You'll need to send your Public keys to Stork before running your publisher agent so that we can whitelist them. NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.**
 
