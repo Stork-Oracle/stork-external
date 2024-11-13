@@ -28,12 +28,12 @@ const StorkAuthAssetId = "STORKAUTH"
 const StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
 const StorkAuthOracleId = "sauth"
 
-const publicKeyHeader = "X-PUBLIC-KEY"
-const timestampHeader = "X-TIMESTAMP"
-const signatureHeader = "X-SIGNATURE"
-const signatureTypeHeader = "X-SIGNATURE-TYPE"
+const publicKeyHeader = "X-Public-Key"
+const timestampHeader = "X-Timestamp"
+const signatureHeader = "X-Signature"
+const signatureTypeHeader = "X-Signature-Type"
 
-const encodedAuthHeader = "X-ENCODED-AUTH"
+const encodedAuthHeader = "X-Encoded-Auth"
 
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
@@ -236,12 +236,12 @@ func (s *EvmAuthSigner) GetAuthHeaders() (http.Header, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
-	header := http.Header{
-		publicKeyHeader:     []string{string(publicKey)},
-		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureHeader:     []string{signatureString},
-		signatureTypeHeader: []string{string(signatureType)},
-	}
+	header := http.Header{}
+	header.Set(publicKeyHeader, string(publicKey))
+	header.Set(timestampHeader, fmt.Sprintf("%d", timestamp))
+	header.Set(signatureHeader, signatureString)
+	header.Set(signatureTypeHeader, string(signatureType))
+
 	return header, nil
 }
 
@@ -276,12 +276,11 @@ func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
-	header := http.Header{
-		publicKeyHeader:     []string{string(publicKey)},
-		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureHeader:     []string{signatureString},
-		signatureTypeHeader: []string{string(signatureType)},
-	}
+	header := http.Header{}
+	header.Set(publicKeyHeader, string(publicKey))
+	header.Set(timestampHeader, fmt.Sprintf("%d", timestamp))
+	header.Set(signatureHeader, signatureString)
+	header.Set(signatureTypeHeader, string(signatureType))
 	return header, nil
 }
 
