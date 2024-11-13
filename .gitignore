@@ -1,1 +1,4 @@
 .DS_Store
+.lib
+.bin
+.env.local

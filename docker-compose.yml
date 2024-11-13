@@ -1,0 +1,46 @@
+services:
+  publisher-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: "publisher_agent"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/pull_config.json",
+        "-k",
+        "/etc/keys.json",
+      ]
+    volumes:
+      - "./path-to-pull-config.json:/etc/pull_config.json"
+      - "./path-to-keys.json:/etc/keys.json"
+
+  evm-pusher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: "chain_pusher"
+    command:
+      [
+        "evm",
+        "-w",
+        "wss://api.jp.stork-oracle.network",
+        "-a",
+        "your-stork-api-key",
+        "-c",
+        "https://test-rpc.plumenetwork.xyz",
+        "-x",
+        "0xacc0a0cf13571d30b4b8637996f5d6d774d4fd62",
+        "-f",
+        "/etc/asset-config.yaml",
+        "-m",
+        "/etc/private-key.secret",
+        "-b",
+        "5",
+      ]
+    volumes:
+      - "./path-to-asset-config.yaml:/etc/asset-config.yaml"
+      - "./path-to-private-key.secret:/etc/private-key.secret"
