@@ -33,11 +33,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-
       - name: Cache Rust dependencies
         uses: actions/cache@v3
         with:
@@ -49,31 +44,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install ARM64 gcc toolchain
-        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
-
-      - name: Install necessary targets
-        run: rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
-
-      - name: Build Rust binary
-        run: |
-          cargo build --release --target=x86_64-unknown-linux-gnu
-          cargo build --release --target=aarch64-unknown-linux-gnu
-        working-directory: ./apps/lib/signer/rust/stork
-
-      - name: Run Go tests for amd64 architecture
-        run: |
-          cp ./apps/lib/signer/rust/stork/target/x86_64-unknown-linux-gnu/release/libstork.so ./apps/
-          cd ./apps && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/apps" go test -v ./lib/...
-        env:
-          LD_LIBRARY_PATH: ${{ github.workspace }}/apps
-
-      - name: Run Go tests for arm64 architecture
-        run: |
-          cp ./apps/lib/signer/rust/stork/target/aarch64-unknown-linux-gnu/release/libstork.so ./apps/
-          cd ./apps && CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/apps" go test -v ./lib/...
-        env:
-          LD_LIBRARY_PATH: ${{ github.workspace }}/apps
+      - name: Run tests
+        run: make test
 
   test-evm:
     runs-on: ubuntu-latest
