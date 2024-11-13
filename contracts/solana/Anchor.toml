@@ -6,7 +6,6 @@ skip-lint = false
 
 [programs.localnet]
 stork = "stork1JUZMKYgjNagHiK2KdMmb42iTnYe9bYUCDUk8n"
-example = "FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra"
 
 [registry]
 url = "https://api.apr.dev"
