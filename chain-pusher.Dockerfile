@@ -14,8 +14,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code from the lib and cmd directories into the container
-COPY apps/lib ./lib/
-COPY apps/cmd/chain_pusher ./cmd/chain_pusher/
+COPY apps/lib ./apps/lib/
+COPY apps/cmd/chain_pusher ./apps/cmd/chain_pusher/
 
 ARG TARGETPLATFORM
 RUN case "$TARGETPLATFORM" in \
@@ -23,17 +23,11 @@ RUN case "$TARGETPLATFORM" in \
         "linux/arm64")  export GOARCH="arm64" && export CC="aarch64-linux-gnu-gcc";; \
         *) echo "Unsupported platform: $TARGETPLATFORM" ; exit 1 ;; \
     esac && \
-    CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH CC=$CC go build -o /stork cmd/chain_pusher/main.go
+    GOOS=linux GOARCH=$GOARCH CC=$CC go build -o /stork ./apps/cmd/chain_pusher/main.go
 
 # Stage 3: Create the final image
 FROM debian:bookworm-slim
 
-COPY --from=go-build /stork /usr/local/bin/stork-chain-pusher
-ENV LD_LIBRARY_PATH=/usr/local/lib
+COPY --from=go-build /stork /usr/local/bin/stork-chain-push
 
-RUN apt-get update && apt-get install -y \
-    libc6 \
-    libpthread-stubs0-dev \
-    ca-certificates
-
-ENTRYPOINT ["/usr/local/bin/stork-chain-pusher"]
+ENTRYPOINT ["/usr/local/bin/stork-chain-push"]

@@ -112,7 +112,7 @@ docker run \
     --log-opt awslogs-stream=polygon-testnet \
     --log-opt mode=non-blocking \
     --log-opt max-buffer-size=4m \
-    storknetwork/chain-pusher:v1.0.0 evm \
+    storknetwork/chain-pusher:v1.0.1 evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c https://rpc-amoy.polygon.technology \
