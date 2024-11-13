@@ -1,5 +1,5 @@
 
-/*! [![stork logo](https://raw.githubusercontent.com/Stork-Oracle/stork-external/refs/heads/main/public/stork-logo.png)](https://stork.network)
+/*! [![stork logo](https://raw.githubusercontent.com/Stork-Oracle/stork-external/refs/heads/main/public/stork-logo-slim.png)](https://stork.network)
 
 This is a Rust SDK to build Solana programs that consume Stork price feeds. This crate is maintained by [Stork Labs](https://stork.network).
 
