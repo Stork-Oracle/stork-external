@@ -45,6 +45,20 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// long asset name
+	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
+		Timestamp: 1708940577123456789,
+		MsgHash:   "0x7acab52851a7b006dbf5d350f8dda7438f843204a3612030b7b0178ff93b37b",
+		Signature: &StarkSignature{
+			R: "0x3fbe61ab618ed32e4d7a9cb3e9c9be8f4a64128eba6ddd12cd6058bdae546c4",
+			S: "0x31a930c2989244043c86b138ea75ba2bbb18f51012c6b00fe8e4d93ce03c030",
+		},
+	}
+	signedPriceUpdate, assetId, err = signer.SignPublisherPrice(1708940577123456789, "DJTWINYESUSDTWAP480", "3335950349880000000")
+	assert.NoError(t, err)
+	assert.Equal(t, "0x444a5457494e59455355534454574150343830637a6f7778", assetId)
+	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 }
 
 func TestSigner_SignAuth_Evm(t *testing.T) {
