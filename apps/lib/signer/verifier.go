@@ -14,13 +14,20 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, signatureR string, signatureS string, signatureV string) error {
+const signatureDelimiter = "|"
+
+func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, signature string) error {
+	signatureTerms := strings.Split(signature, signatureDelimiter)
+
 	switch signatureType {
 	case EvmSignatureType:
+		if len(signatureTerms) != 3 {
+			return fmt.Errorf("invalid EVM signature string - expect R, S, V separated by %s", signatureDelimiter)
+		}
 		evmSignature := EvmSignature{
-			R: signatureR,
-			S: signatureS,
-			V: signatureV,
+			R: signatureTerms[0],
+			S: signatureTerms[1],
+			V: signatureTerms[2],
 		}
 		err := VerifyEvmPublisherPrice(timestamp, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
 		if err != nil {
@@ -28,9 +35,12 @@ func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType Signature
 		}
 		return nil
 	case StarkSignatureType:
+		if len(signatureTerms) != 2 {
+			return fmt.Errorf("invalid Stark signature string - expect R, S separated by %s", signatureDelimiter)
+		}
 		starkSignature := StarkSignature{
-			R: signatureR,
-			S: signatureS,
+			R: signatureTerms[0],
+			S: signatureTerms[1],
 		}
 		err := VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAuthAssetId, StorkMagicNumber, publicKey, starkSignature)
 		if err != nil {

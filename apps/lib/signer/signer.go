@@ -30,10 +30,10 @@ const StorkAuthOracleId = "sauth"
 
 const publicKeyHeader = "X-PUBLIC-KEY"
 const timestampHeader = "X-TIMESTAMP"
-const signatureRHeader = "X-SIGNATURE-R"
-const signatureSHeader = "X-SIGNATURE-S"
-const signatureVHeader = "X-SIGNATURE-V"
+const signatureHeader = "X-SIGNATURE"
 const signatureTypeHeader = "X-SIGNATURE-TYPE"
+
+const encodedAuthHeader = "X-ENCODED-AUTH"
 
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
@@ -232,15 +232,14 @@ func (s *EvmAuthSigner) GetAuthHeaders() (http.Header, error) {
 	signatureType := s.evmSigner.GetSignatureType()
 	timestamp := time.Now().UnixNano()
 	signatureR, signatureS, signatureV, err := s.SignAuth(timestamp)
+	signatureString := signatureR + "|" + signatureS + "|" + signatureV
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
 	header := http.Header{
 		publicKeyHeader:     []string{string(publicKey)},
 		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureRHeader:    []string{signatureR},
-		signatureSHeader:    []string{signatureS},
-		signatureVHeader:    []string{signatureV},
+		signatureHeader:     []string{signatureString},
 		signatureTypeHeader: []string{string(signatureType)},
 	}
 	return header, nil
@@ -273,14 +272,14 @@ func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
 	signatureType := s.starkSigner.GetSignatureType()
 	timestamp := time.Now().UnixNano()
 	signatureR, signatureS, _, err := s.SignAuth(timestamp)
+	signatureString := signatureR + "|" + signatureS
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign auth header: %v", err)
 	}
 	header := http.Header{
 		publicKeyHeader:     []string{string(publicKey)},
 		timestampHeader:     []string{fmt.Sprintf("%d", timestamp)},
-		signatureRHeader:    []string{signatureR},
-		signatureSHeader:    []string{signatureS},
+		signatureHeader:     []string{signatureString},
 		signatureTypeHeader: []string{string(signatureType)},
 	}
 	return header, nil

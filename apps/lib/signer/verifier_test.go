@@ -161,16 +161,12 @@ func TestStarkVerifier_VerifyPublisherPriceLongAssetId(t *testing.T) {
 
 func TestVerifyEvmAuth(t *testing.T) {
 	pubKey := PublisherKey("0x99e295e85cb07c16b7bb62a44df532a7f2620237")
-	signatureR := "0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf"
-	signatureS := "0x06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a"
-	signatureV := "0x1b"
+	signature := "0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf|0x06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a|0x1b"
 	err := VerifyAuth(
 		1710191092123456789,
 		pubKey,
 		EvmSignatureType,
-		signatureR,
-		signatureS,
-		signatureV,
+		signature,
 	)
 	assert.NoError(t, err)
 
@@ -179,25 +175,29 @@ func TestVerifyEvmAuth(t *testing.T) {
 		1710191093123456789,
 		pubKey,
 		EvmSignatureType,
-		signatureR,
-		signatureS,
-		signatureV,
+		signature,
 	)
 	assert.ErrorContains(t, err, "invalid evm auth signature")
+
+	// badly formatted signature string fails
+	err = VerifyAuth(
+		1710191092123456789,
+		pubKey,
+		EvmSignatureType,
+		"0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf|0x06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a",
+	)
+	assert.ErrorContains(t, err, "expect R, S, V separated by")
+
 }
 
 func TestVerifyStarkAuth(t *testing.T) {
 	pubKey := PublisherKey("0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06")
-	signatureR := "0x6d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a7"
-	signatureS := "0x296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2"
-	signatureV := ""
+	signature := "0x6d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a7|0x296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2"
 	err := VerifyAuth(
 		1708940577123456789,
 		pubKey,
 		StarkSignatureType,
-		signatureR,
-		signatureS,
-		signatureV,
+		signature,
 	)
 	assert.NoError(t, err)
 
@@ -206,9 +206,15 @@ func TestVerifyStarkAuth(t *testing.T) {
 		1710191093123456789,
 		pubKey,
 		StarkSignatureType,
-		signatureR,
-		signatureS,
-		signatureV,
+		signature,
 	)
 	assert.ErrorContains(t, err, "invalid stark auth signature")
+
+	err = VerifyAuth(
+		1708940577123456789,
+		pubKey,
+		StarkSignatureType,
+		"0x6d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a7|0x296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2|",
+	)
+	assert.ErrorContains(t, err, "expect R, S separated by")
 }
