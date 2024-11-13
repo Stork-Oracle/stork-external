@@ -100,7 +100,7 @@ The pusher runs on a per chain basis. This example assumes that the log driver i
 
 #### EVM Chain Example (Polygon Testnet)
 ```bash
-docker run evm \
+docker run \
     -e AWS_REGION=ap-northeast-1 \
     --pull always \
     --name evm-polygon-testnet \
