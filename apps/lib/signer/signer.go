@@ -33,8 +33,6 @@ const timestampHeader = "X-Timestamp"
 const signatureHeader = "X-Signature"
 const signatureTypeHeader = "X-Signature-Type"
 
-const encodedAuthHeader = "X-Encoded-Auth"
-
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
 	GetPublisherKey() PublisherKey
