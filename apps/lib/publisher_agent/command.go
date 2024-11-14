@@ -72,7 +72,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create Stark signer: %v", err)
 			}
-			starkAuthSigner, err := signer.NewEvmAuthSigner(config.EvmPrivateKey, logger)
+			starkAuthSigner, err := signer.NewStarkAuthSigner(config.StarkPrivateKey, string(config.StarkPublicKey), logger)
 			if err != nil {
 				return fmt.Errorf("failed to create Stark auth signer: %v", err)
 			}
