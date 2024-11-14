@@ -66,11 +66,9 @@ func TestSigner_SignAuth_Evm(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
-	signatureR, signatureS, signatureV, err := signer.SignAuth(1710191092123456789)
+	signatureStr, err := signer.SignAuth(1710191092123456789)
 	assert.NoError(t, err)
-	assert.Equal(t, "0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf", signatureR)
-	assert.Equal(t, "0x06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a", signatureS)
-	assert.Equal(t, "0x1b", signatureV)
+	assert.Equal(t, "0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a1b", signatureStr)
 }
 
 func TestSigner_SignAuth_Stark(t *testing.T) {
@@ -78,11 +76,9 @@ func TestSigner_SignAuth_Stark(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
-	signatureR, signatureS, signatureV, err := signer.SignAuth(1708940577123456789)
+	signatureStr, err := signer.SignAuth(1708940577123456789)
 	assert.NoError(t, err)
-	assert.Equal(t, "0x6d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a7", signatureR)
-	assert.Equal(t, "0x296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2", signatureS)
-	assert.Equal(t, "", signatureV)
+	assert.Equal(t, "0x06d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a70296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2", signatureStr)
 }
 
 func BenchmarkSigner_SignPublisherPrice_Evm(b *testing.B) {
