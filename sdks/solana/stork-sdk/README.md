@@ -14,21 +14,9 @@ On Solana, Stork price feeds exist as on-chain accounts. These accounts are inst
 
 ## Example
 
-The following is an example of how to use the Stork Solana SDK to consume Stork price updates, available [here](https://github.com/Stork-Oracle/stork-external/tree/main/examples/solana).
+The following is a snippet from an example of how to use the Stork Solana SDK to consume Stork price updates, available [here](https://github.com/Stork-Oracle/stork-external/tree/main/examples/solana).
 
-```rust
-use anchor_lang::prelude::*;
-use stork_sdk::{
-    pda::STORK_FEED_SEED,
-    temporal_numeric_value::TemporalNumericValueFeed,
-};
-
-declare_id!("FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra");
-
-#[program]
-pub mod example {
-    use super::*;
-
+```rust 
     // This instruction reads the latest price from a Stork feed
     pub fn read_price(ctx: Context<ReadPrice>, feed_id: [u8; 32]) -> Result<()> {
         let feed = &ctx.accounts.feed;
@@ -38,13 +26,6 @@ pub mod example {
         // Get the latest timestamp and value from the feed
         let timestamp = latest_value.timestamp_ns;
         let value = latest_value.quantized_value;
-        
-        msg!(
-            "Feed {} - Latest value: {}, Timestamp: {}", 
-            hex::encode(feed_id),
-            value,
-            timestamp
-        );
 
         // You can do something with the price here...
         
