@@ -91,7 +91,7 @@ anchor build
 #### Initializing contract
 
 ```
-ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=~/.config/solana/id.json npx ts-node ./app/admin.ts initialize <asset_id> <value>
+ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=~/.config/solana/id.json npx ts-node ./app/admin.ts initialize
 ```
 
 #### Deploying contract on-chain
