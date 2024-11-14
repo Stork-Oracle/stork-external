@@ -14,6 +14,47 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+func VerifyAuth(timestamp int64, publicKey PublisherKey, signatureType SignatureType, signature string) error {
+	strippedSignature := strip0x(signature)
+
+	switch signatureType {
+	case EvmSignatureType:
+		if len(strippedSignature) != 130 {
+			return errors.New("invalid EVM signature length")
+		}
+		r := "0x" + strippedSignature[:64]
+		s := "0x" + strippedSignature[64:128]
+		v := "0x" + strippedSignature[128:]
+		evmSignature := EvmSignature{
+			R: r,
+			S: s,
+			V: v,
+		}
+		err := VerifyEvmPublisherPrice(timestamp, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
+		if err != nil {
+			return fmt.Errorf("invalid evm auth signature: %w", err)
+		}
+		return nil
+	case StarkSignatureType:
+		if len(strippedSignature) != 128 {
+			return errors.New("invalid Stark signature length")
+		}
+		r := "0x" + strippedSignature[:64]
+		s := "0x" + strippedSignature[64:128]
+		starkSignature := StarkSignature{
+			R: r,
+			S: s,
+		}
+		err := VerifyStarkPublisherPrice(timestamp, StarkEncodedStorkAuthAssetId, StorkMagicNumber, publicKey, starkSignature)
+		if err != nil {
+			return fmt.Errorf("invalid stark auth signature: %w", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("invalid signature type: %s", signatureType)
+	}
+}
+
 func VerifyPublisherPrice(publishTimestamp int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signatureType SignatureType, signature interface{}) error {
 	switch signatureType {
 	case EvmSignatureType:

@@ -10,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/NethermindEth/juno/core/felt"
@@ -19,6 +21,17 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 )
+
+// gmorkworld in ascii
+const StorkMagicNumber = "103109111114107119111114108100"
+const StorkAuthAssetId = "STORKAUTH"
+const StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
+const StorkAuthOracleId = "sauth"
+
+const publicKeyHeader = "X-Public-Key"
+const timestampHeader = "X-Timestamp"
+const signatureHeader = "X-Signature"
+const signatureTypeHeader = "X-Signature-Type"
 
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
@@ -122,10 +135,10 @@ func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, q
 	assetHex := hex.EncodeToString([]byte(asset))
 	assetHexPadded := assetHex
 	if len(assetHex) < 34 {
-		assetHexPadded = "0x" + assetHex + strings.Repeat("0", 32-len(assetHex))
+		assetHexPadded = assetHex + strings.Repeat("0", 32-len(assetHex))
 	}
 
-	assetInt, _ := new(big.Int).SetString(strip0x(assetHexPadded), 16)
+	assetInt, _ := new(big.Int).SetString(assetHexPadded, 16)
 	priceInt, _ := new(big.Int).SetString(quantizedValue, 10)
 	timestampInt := new(big.Int).SetInt64(publishTimestamp / 1_000_000_000)
 
@@ -172,7 +185,7 @@ func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, q
 		Timestamp: publishTimestamp,
 		MsgHash:   msgHash,
 	}
-	externalAssetId := assetHexPadded + s.oracleNameInt.Text(16)
+	externalAssetId := "0x" + assetHexPadded + s.oracleNameInt.Text(16)
 
 	return &timestampedSignature, externalAssetId, nil
 }
@@ -183,6 +196,94 @@ func (s *StarkSigner) GetPublisherKey() PublisherKey {
 
 func (s *StarkSigner) GetSignatureType() SignatureType {
 	return StarkSignatureType
+}
+
+type StorkAuthSigner interface {
+	SignAuth(publishTimestamp int64) (string, error)
+	GetAuthHeaders() (http.Header, error)
+}
+
+type EvmAuthSigner struct {
+	evmSigner *EvmSigner
+}
+
+func NewEvmAuthSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmAuthSigner, error) {
+	evmSigner, err := NewEvmSigner(privateKeyStr, logger)
+	if err != nil {
+		return nil, err
+	}
+	return &EvmAuthSigner{evmSigner: evmSigner}, nil
+}
+
+func (s *EvmAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
+	timestampedSignature, _, err := s.evmSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign auth: %v", err)
+	}
+	signature := timestampedSignature.Signature
+	rHex := fmt.Sprintf("%064s", strip0x(signature.R))
+	sHex := fmt.Sprintf("%064s", strip0x(signature.S))
+	vHex := fmt.Sprintf("%02s", strip0x(signature.V))
+	signatureStr := "0x" + rHex + sHex + vHex
+	return signatureStr, nil
+}
+
+func (s *EvmAuthSigner) GetAuthHeaders() (http.Header, error) {
+	publicKey := s.evmSigner.GetPublisherKey()
+	signatureType := s.evmSigner.GetSignatureType()
+	timestamp := time.Now().UnixNano()
+	signatureString, err := s.SignAuth(timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign auth header: %v", err)
+	}
+	header := http.Header{}
+	header.Set(publicKeyHeader, string(publicKey))
+	header.Set(timestampHeader, fmt.Sprintf("%d", timestamp))
+	header.Set(signatureHeader, signatureString)
+	header.Set(signatureTypeHeader, string(signatureType))
+
+	return header, nil
+}
+
+type StarkAuthSigner struct {
+	starkSigner *StarkSigner
+}
+
+func NewStarkAuthSigner(privateKeyStr StarkPrivateKey, publicKeyStr string, logger zerolog.Logger) (*StarkAuthSigner, error) {
+	starkSigner, err := NewStarkSigner(privateKeyStr, publicKeyStr, StorkAuthOracleId, logger)
+	if err != nil {
+		return nil, err
+	}
+	return &StarkAuthSigner{starkSigner: starkSigner}, nil
+}
+
+func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
+	timestampedSignature, _, err := s.starkSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign auth: %v", err)
+	}
+	signature := timestampedSignature.Signature
+	rHex := fmt.Sprintf("%064s", strip0x(signature.R))
+	sHex := fmt.Sprintf("%064s", strip0x(signature.S))
+	signatureStr := "0x" + rHex + sHex
+	return signatureStr, nil
+
+}
+
+func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
+	publicKey := s.starkSigner.GetPublisherKey()
+	signatureType := s.starkSigner.GetSignatureType()
+	timestamp := time.Now().UnixNano()
+	signatureString, err := s.SignAuth(timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign auth header: %v", err)
+	}
+	header := http.Header{}
+	header.Set(publicKeyHeader, string(publicKey))
+	header.Set(timestampHeader, fmt.Sprintf("%d", timestamp))
+	header.Set(signatureHeader, signatureString)
+	header.Set(signatureTypeHeader, string(signatureType))
+	return header, nil
 }
 
 func convertHexToECDSA(privateKey EvmPrivateKey) (*ecdsa.PrivateKey, error) {

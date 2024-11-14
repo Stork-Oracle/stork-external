@@ -57,6 +57,7 @@ RUN if [ -z "$SERVICE" ]; then echo "SERVICE argument is not defined"; exit 1; f
 COPY --from=builder /app/.bin/${SERVICE} /app/
 
 COPY docker-entrypoint.sh /app/
+COPY version.txt /app/
 RUN chmod +x /app/docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD []

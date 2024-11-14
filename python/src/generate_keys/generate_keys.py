@@ -24,15 +24,6 @@ def main():
                         nargs='+',
                         choices=["stark", "evm"],
                         help='The signature types you want to use for this publisher agent, space separated')
-    parser.add_argument('--stork-user-name',
-                        required=False,
-                        help="The Stork user's username, e.g. myusername (must also set stork password)")
-    parser.add_argument('--stork-password',
-                        required=False,
-                        help="The Stork user's password e.g. mypassword (must also set stork user name)")
-    parser.add_argument('--stork-auth-token',
-                        required=False,
-                        help="The Stork user's base64 encoded username:password, e.g. bXl1c2VybmFtZTpteXBhc3N3b3Jk")
     parser.add_argument('--pull-based-auth',
                         required=False,
                         help='The auth token for your pull-based price source, if using')
@@ -45,19 +36,8 @@ def main():
     if len(args.oracle_id) != 5:
         parser.error('oracle id  must be exactly 5 characters long')
 
-    stork_auth_token = None
-    if args.stork_user_name is not None and args.stork_password is not None:
-        user_password = f"{args.stork_user_name}:{args.stork_password}"
-        stork_auth_token = base64.b64encode(user_password.encode()).decode()
-    else:
-        if args.stork_auth_token is not None:
-            stork_auth_token = args.stork_auth_token
-        else:
-            parser.error('must either set (stork user name and stork password) or (stork auth token)')
-
     keys_dict = {
         "OracleId": args.oracle_id,
-        "StorkAuth": stork_auth_token,
     }
     if args.pull_based_auth:
         keys_dict["PullBasedAuth"] = args.pull_based_auth

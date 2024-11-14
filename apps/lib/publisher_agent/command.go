@@ -58,7 +58,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create EVM signer: %v", err)
 			}
-			evmRunner = NewPublisherAgentRunner[*signer.EvmSignature](*config, thisSigner, signatureType, logger)
+			evmAuthSigner, err := signer.NewEvmAuthSigner(config.EvmPrivateKey, logger)
+			if err != nil {
+				return fmt.Errorf("failed to create EVM auth signer: %v", err)
+			}
+			evmRunner = NewPublisherAgentRunner[*signer.EvmSignature](*config, thisSigner, evmAuthSigner, signatureType, logger)
 			valueUpdateChannels = append(valueUpdateChannels, evmRunner.ValueUpdateCh)
 			go evmRunner.Run()
 		case StarkSignatureType:
@@ -66,9 +70,13 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			logger := RunnerLogger(signatureType)
 			thisSigner, err := signer.NewStarkSigner(config.StarkPrivateKey, string(config.StarkPublicKey), string(config.OracleId), logger)
 			if err != nil {
-				return fmt.Errorf("failed to create EVM signer: %v", err)
+				return fmt.Errorf("failed to create Stark signer: %v", err)
 			}
-			starkRunner = NewPublisherAgentRunner[*signer.StarkSignature](*config, thisSigner, signatureType, logger)
+			starkAuthSigner, err := signer.NewStarkAuthSigner(config.StarkPrivateKey, string(config.StarkPublicKey), logger)
+			if err != nil {
+				return fmt.Errorf("failed to create Stark auth signer: %v", err)
+			}
+			starkRunner = NewPublisherAgentRunner[*signer.StarkSignature](*config, thisSigner, starkAuthSigner, signatureType, logger)
 			valueUpdateChannels = append(valueUpdateChannels, starkRunner.ValueUpdateCh)
 			go starkRunner.Run()
 		default:
