@@ -3,10 +3,15 @@ import "@nomicfoundation/hardhat-toolbox";
 
 require("@openzeppelin/hardhat-upgrades");
 
+import "@matterlabs/hardhat-zksync-upgradable";
+// import "@matterlabs/hardhat-zksync-verify";
+
 import './tasks/deploy';
 import './tasks/upgrade';
 import './tasks/interact';
 import './tasks/print-abi';
+import './tasks/deploy-zk';
+import './tasks/upgrade-zk';
 
 import { vars } from "hardhat/config";
 
@@ -18,8 +23,17 @@ const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
 const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
+const SOPHON_TEST_PK = vars.get("SOPHON_TEST_PK");
+
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
+  zksolc: {
+    version: "latest",
+    settings: {
+      // find all available options in the official documentation
+      // https://era.zksync.io/docs/tools/hardhat/hardhat-zksync-solc.html#configuration
+    },
+  },
   defaultNetwork: "inMemoryNode",
   networks: {
     hardhat: {},
@@ -155,6 +169,14 @@ const config: HardhatUserConfig = {
       url: "https://rpc.testnet.soniclabs.com",
       accounts: [PRIVATE_KEY],
       chainId: 64165,
+    },
+    sophonTestnet: {
+      url: "https://rpc.testnet.sophon.xyz",
+      ethNetwork: "sepolia",
+      accounts: [SOPHON_TEST_PK],
+      chainId: 531050104,
+      zksync: true,
+      verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
