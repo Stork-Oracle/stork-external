@@ -2,11 +2,11 @@ module stork::admin {
 
     // === Structs ===
 
-    public struct AdminCap has key, store{
+    public struct AdminCap has key{
         id: UID,
     }
 
-    // === Init Function ===
+    // === Init ===
 
     fun init(ctx: &mut TxContext) {
         transfer::transfer(
@@ -14,4 +14,8 @@ module stork::admin {
             ctx.sender()
         );
     }
+
+    // === Public Functions ===
+
+    
 }
