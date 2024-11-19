@@ -31,6 +31,10 @@ module stork::temporal_numeric_value {
         value.quantized_value
     }
 
+    // === Test Imports ===
+
+    #[test_only] use stork::i128;
+
     // === Tests ===
 
     #[test]

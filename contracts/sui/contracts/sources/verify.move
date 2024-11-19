@@ -31,9 +31,8 @@ module stork::verify {
         );
         
         let signature = get_rsv_signature_from_parts(&r, &s, v);
-        let recoverable_message = get_recoverable_message_hash(&message);
         
-        verify_ecdsa_signature(stork_evm_public_key, &recoverable_message, &signature)
+        verify_ecdsa_signature(stork_evm_public_key, &message, &signature)
     }
 
     // === Private Functions ===
@@ -87,27 +86,68 @@ module stork::verify {
         if (signature.length() != 65) {
             return false
         };
+        
+        let message_hash = get_recoverable_message_hash(message);
+
+        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&message_hash, signature);
+        if (recovered_pubkey_option == option::none()) {
+            return false
+        };
+        
+        let recovered_pubkey = recovered_pubkey_option.extract();
+
+        let evm_pubkey = get_eth_pubkey(&recovered_pubkey);
+        
+        evm_pubkey == *pubkey
+    }
+
+    fun recover_secp256k1_pubkey(message: &vector<u8>, signature: &vector<u8>): Option<vector<u8>> {
         let v = signature[64];
         let recovery_id = match (v) {
             27 => 0,
             28 => 1,
-            _ => return false,
+            _ => return option::none(),
         };
         let recovered_pubkey = ecdsa_k1::secp256k1_ecrecover(signature, message, recovery_id);
-        
-        // Get last 20 bytes of keccak hash of recovered pubkey
-        let hashed = hash::keccak256(&recovered_pubkey);
+        option::some(recovered_pubkey)
+    }
+
+    fun get_eth_pubkey(pubkey: &vector<u8>): EvmPubkey {
+        let hashed = hash::keccak256(pubkey);
         let mut eth_address = vector::empty<u8>();
         let mut i = 12;
         while (i < 32) {
             vector::push_back(&mut eth_address, *vector::borrow(&hashed, i));
             i = i + 1;
         };
-        
-        eth_address == evm_pubkey::get_bytes(pubkey)
+        evm_pubkey::from_bytes(eth_address)
     }
 
     // === Tests ===
+    #[test]
+    fun test_verify_stork_evm_signature() {
+        let stork_public_key = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
+        let id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let recv_time = 1722632569208762117;
+        let quantized_value = i128::from_u128(62507457175499998000000);
+        let publisher_merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let value_compute_alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        assert!(verify_stork_evm_signature(
+            &stork_public_key,
+            id,
+            recv_time,
+            quantized_value,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v,
+        ));
+    }
 
     #[test]
     fun test_verify_ecdsa_signature() {
@@ -156,22 +196,18 @@ module stork::verify {
         
         assert!(message_hash == x"bfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272");
     }
-
+    
     #[test]
-    fun test_recover_and_verify_pubkey() {
+    fun test_recover_secp256k1_pubkey() {
         let message = x"bfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272";
         let signature = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd24074116fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a71497581c";
         
-        let recovered_pubkey = ecdsa_k1::secp256k1_ecrecover(&message, &signature);
-        let hashed = hash::keccak256(&recovered_pubkey);
+        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&message, &signature);
+        assert!(option::is_some(&recovered_pubkey_option));
         
-        let eth_address = vector::empty<u8>();
-        let i = 12;
-        while (i < 32) {
-            vector::push_back(&mut eth_address, *vector::borrow(&hashed, i));
-            i = i + 1;
-        };
+        let recovered_pubkey = recovered_pubkey_option.extract();
+        let eth_pubkey = get_eth_pubkey(&recovered_pubkey);
         
-        assert!(eth_address == x"0a803f9b1cce32e2773e0d2e98b37e0775ca5d44");
+        assert!(eth_pubkey == evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44"));
     }
 }
