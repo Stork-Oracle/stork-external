@@ -74,6 +74,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1116,
     },
+    crossFiMainnet: {
+      url: "https://rpc.mainnet.ms/",
+      accounts: [PRIVATE_KEY],
+      chainId: 4158,
+    },
     filecoinCalibration: {
       url: "https://rpc.ankr.com/filecoin_testnet",
       accounts: [PRIVATE_KEY],
