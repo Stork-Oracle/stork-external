@@ -23,8 +23,6 @@ const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
 const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
-const SOPHON_TEST_PK = vars.get("SOPHON_TEST_PK");
-
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
   zksolc: {
@@ -173,7 +171,7 @@ const config: HardhatUserConfig = {
     sophonTestnet: {
       url: "https://rpc.testnet.sophon.xyz",
       ethNetwork: "sepolia",
-      accounts: [SOPHON_TEST_PK],
+      accounts: [PRIVATE_KEY],
       chainId: 531050104,
       zksync: true,
       verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",

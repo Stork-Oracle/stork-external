@@ -34,7 +34,7 @@ async function main({ storkPublicKey, paymasterAddress }: { storkPublicKey: stri
     // @ts-expect-error zkUpgrades is loaded in hardhat/config
     const upgradeableStork = await zkUpgrades.deployProxy(
         UpgradeableStork,
-        [deployer.address, storkPublicKey ?? STORK_PUBLIC_KEY, VALID_TIMEOUT_SECONDS, UPDATE_FEE_IN_WEI],
+        [deployer.address, storkPublicKey ?? STORK_PUBLIC_KEY, VALID_TIMEOUT_SECONDS, paymasterAddress ? 0 : UPDATE_FEE_IN_WEI],
         {
             initializer: 'initialize',
             kind: 'uups',
