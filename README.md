@@ -14,4 +14,4 @@ Tooling used to interface with Stork's services and on-chain contracts.
 
 #### [Contracts](contracts)
 
-All contracts developed by Stork will be managed in this repository.
+All contracts developed by Stork are managed in this repository.
