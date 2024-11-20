@@ -3,8 +3,8 @@ import "@nomicfoundation/hardhat-toolbox";
 
 require("@openzeppelin/hardhat-upgrades");
 
+import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-upgradable";
-// import "@matterlabs/hardhat-zksync-verify";
 
 import './tasks/deploy';
 import './tasks/upgrade';
@@ -173,8 +173,8 @@ const config: HardhatUserConfig = {
       ethNetwork: "sepolia",
       accounts: [PRIVATE_KEY],
       chainId: 531050104,
-      zksync: true,
       verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
+      zksync: true,
     },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
