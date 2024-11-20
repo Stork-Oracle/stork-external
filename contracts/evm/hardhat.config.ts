@@ -194,6 +194,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
+    // enabled: false, // uncomment this for Sophon verification
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
