@@ -22,7 +22,7 @@ while true; do
   start_time=$(date +%s)
 
   # Run the command
-  npx hardhat --network sophonTestnet interact updateTemporalNumericValuesV1 $FEEDS https://rest.jp.stork-oracle.network $AUTH_TOKEN --paymaster-address 0x98546B226dbbA8230cf620635a1e4ab01F6A99B2
+  npx hardhat --network sophonMainnet interact updateTemporalNumericValuesV1 $FEEDS https://rest.jp.stork-oracle.network $AUTH_TOKEN --paymaster-address 0x98546B226dbbA8230cf620635a1e4ab01F6A99B2
 
   # Capture the end time
   end_time=$(date +%s)
