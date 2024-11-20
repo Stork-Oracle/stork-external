@@ -3,10 +3,15 @@ import "@nomicfoundation/hardhat-toolbox";
 
 require("@openzeppelin/hardhat-upgrades");
 
+import "@matterlabs/hardhat-zksync";
+import "@matterlabs/hardhat-zksync-upgradable";
+
 import './tasks/deploy';
 import './tasks/upgrade';
 import './tasks/interact';
 import './tasks/print-abi';
+import './tasks/deploy-zk';
+import './tasks/upgrade-zk';
 
 import { vars } from "hardhat/config";
 
@@ -20,6 +25,13 @@ const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
+  zksolc: {
+    version: "latest",
+    settings: {
+      // find all available options in the official documentation
+      // https://era.zksync.io/docs/tools/hardhat/hardhat-zksync-solc.html#configuration
+    },
+  },
   defaultNetwork: "inMemoryNode",
   networks: {
     hardhat: {},
@@ -161,6 +173,22 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 64165,
     },
+    sophonTestnet: {
+      url: "https://rpc.testnet.sophon.xyz",
+      ethNetwork: "sepolia",
+      accounts: [PRIVATE_KEY],
+      chainId: 531050104,
+      verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
+      zksync: true,
+    },
+    sophonMainnet: {
+      url: "https://rpc.sophon.xyz",
+      ethNetwork: "mainnet",
+      accounts: [PRIVATE_KEY],
+      chainId: 50104,
+      verifyURL: "https://verification-explorer.sophon.xyz/contract_verification",
+      zksync: true,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -179,6 +207,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
+    // enabled: false, // uncomment this for Sophon verification
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',

@@ -1,6 +1,7 @@
 import { scope } from 'hardhat/config';
 import { loadContractDeploymentAddress } from './utils/helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { utils } from 'zksync-ethers';
 
 const initializeContract = async (hre: HardhatRuntimeEnvironment) => {
     const contractAddress = await loadContractDeploymentAddress();
@@ -49,21 +50,42 @@ interactScope
             verify.valueComputeAlgHash,
             verify.r,
             verify.s,
-            verify.v
+            verify.v,
         );
         console.log(returnVal);
     });
+
+const getCustomData = (paymasterAddress: string) => {
+    if (!paymasterAddress) {
+        return {};
+    }
+
+    const params = utils.getPaymasterParams(paymasterAddress, {
+        type: 'General',
+        innerInput: new Uint8Array(),
+    });
+
+    return {
+        gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+        paymasterParams: params,
+    };
+};
 
 interactScope
     .task('updateTemporalNumericValuesV1', 'Update the temporal numeric values')
     .addPositionalParam<string>('assetIds', 'The asset ids to update')
     .addPositionalParam<string>('endpoint', 'The endpoint to get the latest update data from')
     .addPositionalParam<string>('authKey', 'The auth key to use to get the latest update data')
+    .addOptionalParam<string>('paymasterAddress', 'The paymaster to use to update the values')
     .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
         const contract = await initializeContract(hre);
         const updates = await getLatestUpdateData(args.endpoint, args.authKey, args.assetIds);
-        await contract.updateTemporalNumericValuesV1(updates, {
-            value: updates.length,
+
+        const customData = getCustomData(args.paymasterAddress);
+
+        await contract.updateTemporalNumericValuesV1.send(updates, {
+            value: Object.keys(customData).length === 0 ? updates.length : 0,
+            customData,
         });
     });
 
@@ -147,7 +169,7 @@ const getLatestUpdateData = async (endpoint: string, authKey: string, assetIds: 
     const rawJson = await response.text();
     const safeJsonText = rawJson.replace(
         /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
-        (match: any) => `"${match}"` // Convert large numbers to strings
+        (match: any) => `"${match}"`, // Convert large numbers to strings
     );
 
     const responseData = JSON.parse(safeJsonText);
