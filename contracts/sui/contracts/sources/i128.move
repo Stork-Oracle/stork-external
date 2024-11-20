@@ -3,6 +3,7 @@ module stork::i128 {
     // === Errors ===
 
     const EMagnitudeTooLarge: u64 = 0;
+    const EInvalidSign: u64 = 1;
 
     // === Constants ===
     
@@ -46,12 +47,12 @@ module stork::i128 {
     }
 
     public fun get_magnitude_if_negative(i128: &I128): u128 {
-        assert!(is_negative(i128), 0);
+        assert!(is_negative(i128), EInvalidSign);
         i128.magnitude
     }
 
     public fun get_magnitude_if_positive(i128: &I128): u128 {
-        assert!(!is_negative(i128), 0);
+        assert!(!is_negative(i128), EInvalidSign);
         i128.magnitude
     }
 
@@ -63,8 +64,8 @@ module stork::i128 {
             // if positive, keep the value as is
             new(value, false)
         } else {
-            // if negative, take twos complement
-            let neg_value = value ^ 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF + 1;
+            // if negative, convert from twos complement
+            let neg_value = (value ^ 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) + 1;
             new(neg_value, true)
         }
     }
@@ -73,8 +74,7 @@ module stork::i128 {
     public fun to_bytes(value: I128): vector<u8> {
         let mut bytes = vector::empty<u8>();
         let mut_value = if (value.negative) {
-            // Two's complement: -(x) = ~(x) + 1 = ~(x-1)
-            // Using XOR with all 1s instead of ! operator
+            // convert to twos complement
             (value.magnitude - 1) ^ 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         } else {
             value.magnitude
@@ -82,7 +82,7 @@ module stork::i128 {
         
         // Convert to big-endian bytes
         let mut i = 15; // Start from most significant byte (16 bytes total)
-        while (i >= 0) {
+        while (i > 0) {
             let byte = ((mut_value >> (i * 8)) & 0xFF as u8);
             vector::push_back(&mut bytes, byte);
             i = i - 1;
@@ -128,21 +128,35 @@ module stork::i128 {
     }
 
     #[test]
-    fun test_get_magnitude_if_negative() {
+    fun test_get_magnitude_if_negative_negative() {
         assert!(get_magnitude_if_negative(&new(1, true)) == 1, 1);
-        assert!(get_magnitude_if_negative(&new(1, false)) == 0, 1);
     }
 
     #[test]
-    fun test_get_magnitude_if_positive() {
+    #[expected_failure(abort_code = 1)]
+    fun test_get_magnitude_if_negative_positive() {
+        get_magnitude_if_negative(&new(1, false));
+    }
+
+    #[test]
+    fun test_get_magnitude_if_positive_positive() {
         assert!(get_magnitude_if_positive(&new(1, false)) == 1, 1);
-        assert!(get_magnitude_if_positive(&new(1, true)) == 0, 1);
     }
 
     #[test]
-    fun test_from_u128() {
+    #[expected_failure(abort_code = 1)]
+    fun test_get_magnitude_if_positive_negative() {
+        get_magnitude_if_positive(&new(1, true));
+    }
+
+    #[test]
+    fun test_from_u128_positive() {
         assert!(&new(1, false) == &from_u128(1), 1);
-        assert!(&new(1, true) == &from_u128(1<<127), 1);
+    }
+
+    #[test]
+    fun test_from_u128_negative() {
+        assert!(&new(1, true) == &from_u128(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF), 1);
     }
 
     #[test]
@@ -160,6 +174,7 @@ module stork::i128 {
     fun test_to_bytes_positive() {
         let value = new(1, false); // Positive 1
         let bytes = to_bytes(value);
+        std::debug::print(&bytes);
         assert!(bytes == x"00000000000000000000000000000000", 0);
         
         let value = new(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, false); // Max positive

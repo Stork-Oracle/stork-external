@@ -123,8 +123,8 @@ module stork::state {
     }
 
     // === Admin Functions ===
-
-    public(package) fun update_single_update_fee_in_mist(
+    entry 
+    public fun update_single_update_fee_in_mist(
         _: &AdminCap,
         state: &mut StorkState,
         new_single_update_fee_in_mist: u64,
@@ -133,7 +133,7 @@ module stork::state {
         state.single_update_fee_in_mist = new_single_update_fee_in_mist;
     }
 
-    public(package) fun update_stork_sui_public_key(
+    public fun update_stork_sui_public_key(
         _: &AdminCap,
         state: &mut StorkState,
         new_stork_sui_public_key: address,
@@ -142,7 +142,7 @@ module stork::state {
         state.stork_sui_public_key = new_stork_sui_public_key;
     }
 
-    public(package) fun update_stork_evm_public_key(
+    public fun update_stork_evm_public_key(
         _: &AdminCap,
         state: &mut StorkState,
         new_stork_evm_public_key: vector<u8>,
@@ -151,7 +151,7 @@ module stork::state {
         state.stork_evm_public_key = evm_pubkey::from_bytes(new_stork_evm_public_key);  
     }
 
-    entry fun withdraw_fees(
+    public fun withdraw_fees(
         _: &AdminCap,
         state: &mut StorkState,
         ctx: &mut TxContext,
