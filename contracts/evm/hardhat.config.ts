@@ -176,6 +176,14 @@ const config: HardhatUserConfig = {
       verifyURL: "https://api-explorer-verify.testnet.sophon.xyz/contract_verification",
       zksync: true,
     },
+    sophonMainnet: {
+      url: "https://rpc.sophon.xyz",
+      ethNetwork: "mainnet",
+      accounts: [PRIVATE_KEY],
+      chainId: 50104,
+      verifyURL: "https://verification-explorer.sophon.xyz/contract_verification",
+      zksync: true,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
