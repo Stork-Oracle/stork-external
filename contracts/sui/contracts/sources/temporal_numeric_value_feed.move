@@ -60,8 +60,7 @@ module stork::temporal_numeric_value_feed {
     fun test_get_asset_id() {
         let feed = create_zeroed_feed();
         let asset_id = get_asset_id(&feed);
-        std::debug::print(&asset_id.get_bytes());
-        assert!(asset_id.get_bytes() == b"00000000000000000000000000000000");
+        assert!(asset_id.get_bytes() == x"0000000000000000000000000000000000000000000000000000000000000000");
         destroy(feed)
     }
 
