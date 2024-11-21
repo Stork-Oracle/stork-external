@@ -13,9 +13,9 @@ npm i @storknetwork/stork_pyth_adapter
 import "@storknetwork/stork_pyth_adapter/contracts/StorkPythAdapter.sol";
 ```
 
-3. Create one StorkPythAdapter for each asset whose price you want to track. This object takes in the contract address of Stork's contract on this chain, and the bytes32-formatted price id for this asset:
+3. Create a StorkPythAdapter contract. This object takes in the contract address of Stork's contract on this chain:
 ```
-storkPythAdapter = new StorkPythAdapter(storkContract, priceId);
+storkPythAdapter = new StorkPythAdapter(storkContract);
 ```
 
 You can see a simple working example of a Solidity contract using this [here](../../examples/stork_pyth_adapter).
