@@ -1,0 +1,28 @@
+{
+  "name": "@storknetwork/stork_pyth_adapter",
+  "private": false,
+  "version": "0.0.8",
+  "description": "Solidity Contracts to get Stork data on chain in the same format as Pyth",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stork-Oracle/stork-external.git"
+  },
+  "author": "Stork",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Stork-Oracle/stork-external/issues"
+  },
+  "homepage": "https://github.com/Stork-Oracle/stork-external#readme",
+  "main": "index.js",
+  "keywords": [
+    "stork",
+    "oracle",
+    "pyth"
+  ],
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.7"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
+  }
+}
