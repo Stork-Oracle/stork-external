@@ -50,7 +50,7 @@ go install github.com/ethereum/go-ethereum/cmd/abigen@latest
 
 2. Generate the contract bindings
 ```bash
-abigen --abi ../contracts/evm/stork.abi --pkg main --type StorkContract --out stork_contract.go
+abigen --abi ../contracts/evm/stork.abi --pkg contract_bindings_evm --type StorkContract --out lib/chain_pusher/contract_bindings/evm/stork_evm_contract.go
 ```
 
 ## Solana Chain Setup
