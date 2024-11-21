@@ -29,7 +29,6 @@ contract StorkPythAdapter is IPyth {
 
     /// @notice Returns the price.
     /// @dev Note that confidence intervals are not supported
-    /// @param id The Stork External Asset ID of which to fetch the price.
     /// @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
     function getPrice(
         bytes32 id
@@ -39,7 +38,7 @@ contract StorkPythAdapter is IPyth {
             convertInt192ToInt64(temporalNumericValue.quantizedValue),
             confidenceInterval,
             exponent,
-            temporalNumericValue.timestampNs
+            temporalNumericValue.timestampNs / 1000000000
         );
     }
 
@@ -54,7 +53,7 @@ contract StorkPythAdapter is IPyth {
             convertInt192ToInt64(temporalNumericValue.quantizedValue),
             confidenceInterval,
             exponent,
-            temporalNumericValue.timestampNs
+            temporalNumericValue.timestampNs / 1000000000
         );
     }
 
@@ -75,7 +74,7 @@ contract StorkPythAdapter is IPyth {
             convertInt192ToInt64(temporalNumericValue.quantizedValue),
             confidenceInterval,
             exponent,
-            temporalNumericValue.timestampNs
+            temporalNumericValue.timestampNs / 1000000000
         );
     }
 
@@ -155,9 +154,6 @@ interface IStork {
     ) external view returns (StorkStructs.TemporalNumericValue memory value);
 
     function validTimePeriodSeconds() external view returns (uint);
-
-
-    function singleUpdateFeeInWei() external view returns (uint);
 }
 
 contract StorkStructs {

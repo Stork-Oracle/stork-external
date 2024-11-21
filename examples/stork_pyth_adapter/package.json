@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "@storknetwork/stork_pyth_adapter": "^0.0.8"
+    "@storknetwork/stork_pyth_adapter": "^0.0.9"
   }
 }
