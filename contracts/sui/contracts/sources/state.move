@@ -155,7 +155,7 @@ module stork::state {
         _: &AdminCap,
         state: &mut StorkState,
         ctx: &mut TxContext,
-    ) {
+    ): Coin<SUI> {
         assert!(state.version == VERSION, EIncorrectVersion);
         let treasury = dynamic_object_field::borrow_mut<vector<u8>, Coin<SUI>>(
             &mut state.id,
@@ -163,8 +163,7 @@ module stork::state {
         );
         assert!(treasury.value() > 0, ENoFeesToWithdraw);
         let treasury_value = treasury.value();
-        let withdrawn_coin = coin::split(treasury, treasury_value, ctx);
-        transfer::public_transfer<Coin<SUI>>(withdrawn_coin, ctx.sender());
+        coin::split(treasury, treasury_value, ctx)
     }
 
     entry fun migrate(
