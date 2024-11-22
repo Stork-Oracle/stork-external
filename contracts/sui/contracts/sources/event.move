@@ -3,10 +3,11 @@ module stork::event {
     // === Imports ===
 
     use sui::event;
-
+    use stork::temporal_numeric_value::TemporalNumericValue;
+    use stork::encoded_asset_id::EncodedAssetId; 
     // === Structs ===
 
-    public struct StorkInitializationEvent has copy, drop, store {
+    public struct StorkInitializationEvent has copy, drop {
         stork_sui_public_key: address,
         stork_evm_public_key: vector<u8>,
         single_update_fee: u64,
@@ -15,11 +16,13 @@ module stork::event {
     }
 
     public struct FeeWithdrawalEvent has copy, drop{
-        asset_id: vector<u8>,
         amount: u64,
     }
 
-    public struct PriceFeedUpdateEvent {}
+    public struct TemporalNumericValueFeedUpdateEvent has copy, drop {
+        asset_id: EncodedAssetId,
+        value: TemporalNumericValue,
+    }
 
     // === Functions ===
 
@@ -42,9 +45,15 @@ module stork::event {
     }
 
     public(package) fun emit_fee_withdrawal_event(
-        asset_id: vector<u8>,
         amount: u64,
     ) {
-        event::emit(FeeWithdrawalEvent { asset_id, amount });
+        event::emit(FeeWithdrawalEvent {amount });
+    }
+
+    public(package) fun emit_temporal_numeric_value_feed_update_event(
+        asset_id: EncodedAssetId,
+        value: TemporalNumericValue,
+    ) {
+        event::emit(TemporalNumericValueFeedUpdateEvent {asset_id, value});
     }
 }
