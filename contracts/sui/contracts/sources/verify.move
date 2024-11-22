@@ -6,7 +6,6 @@ module stork::verify {
     use stork::i128::{Self, I128};
     use sui::hash;
     use sui::ecdsa_k1;
-    use sui::bcs;
 
     // === Public Functions ===
 
@@ -37,7 +36,7 @@ module stork::verify {
 
     // === Private Functions ===
 
-    fun get_stork_message_hash(
+    fun get_stork_message(
         stork_evm_public_key: &EvmPubkey,
         id: vector<u8>,
         recv_time: u64,
@@ -52,7 +51,13 @@ module stork::verify {
         // Left pad with 24 zero bytes
         vector::append(&mut data, vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         
-        let recv_time_bytes = bcs::to_bytes(&recv_time);
+        
+        let mut recv_time_bytes = vector::empty<u8>();
+        let mut i = 8;
+        while (i > 0) {
+            i = i - 1;
+            vector::push_back(&mut recv_time_bytes, ((recv_time >> (i * 8)) & 0xFF as u8));
+        };
         vector::append(&mut data, recv_time_bytes);
         
         // Left pad with 16 zero bytes
@@ -62,16 +67,35 @@ module stork::verify {
         vector::append(&mut data, value_bytes);
         vector::append(&mut data, publisher_merkle_root);
         vector::append(&mut data, value_compute_alg_hash);
-        
-        hash::keccak256(&data)
+        data
+    }
+
+    fun get_stork_message_hash(
+        stork_evm_public_key: &EvmPubkey,
+        id: vector<u8>,
+        recv_time: u64,
+        quantized_value: I128,
+        publisher_merkle_root: vector<u8>,
+        value_compute_alg_hash: vector<u8>,
+    ): vector<u8> {
+        hash::keccak256(&get_stork_message(stork_evm_public_key, id, recv_time, quantized_value, publisher_merkle_root, value_compute_alg_hash))
     }
 
     fun get_recoverable_message_hash(message: &vector<u8>): vector<u8> {
-        let prefix = b"\x19Ethereum Signed Message:\n32";
+        hash::keccak256(&get_recoverable_message(message))
+    }
+
+    fun get_recoverable_message(message: &vector<u8>): vector<u8> {
+        // Create the prefix "\x19Ethereum Signed Message:\n32"
+        let mut prefix = vector[
+            0x19, // The byte 0x19, not the characters '\x19'
+        ];
+        vector::append(&mut prefix, b"Ethereum Signed Message:\n32");
+        
         let mut data = vector::empty<u8>();
         vector::append(&mut data, prefix);
         vector::append(&mut data, *message);
-        hash::keccak256(&data)
+        data
     }
 
     fun get_rsv_signature_from_parts(r: &vector<u8>, s: &vector<u8>, v: u8): vector<u8> {
@@ -87,9 +111,10 @@ module stork::verify {
             return false
         };
         
-        let message_hash = get_recoverable_message_hash(message);
+        // let message_hash = get_recoverable_message_hash(message);
+        let recoverable_message = get_recoverable_message(message);
 
-        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&message_hash, signature);
+        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&recoverable_message, signature);
         if (recovered_pubkey_option == option::none()) {
             return false
         };
@@ -97,7 +122,6 @@ module stork::verify {
         let recovered_pubkey = recovered_pubkey_option.extract();
 
         let evm_pubkey = get_eth_pubkey(&recovered_pubkey);
-        
         evm_pubkey == *pubkey
     }
 
@@ -108,8 +132,14 @@ module stork::verify {
             28 => 1,
             _ => return option::none(),
         };
-        let recovered_pubkey = ecdsa_k1::secp256k1_ecrecover(signature, message, recovery_id);
-        option::some(recovered_pubkey)
+        let mut signature_copy = *signature;
+        signature_copy.pop_back();
+        signature_copy.push_back(recovery_id);
+
+        let recovered_pubkey = ecdsa_k1::secp256k1_ecrecover(&signature_copy, message, 0);
+        let mut decompressed_pubkey = ecdsa_k1::decompress_pubkey(&recovered_pubkey);
+        decompressed_pubkey.remove(0);
+        option::some(decompressed_pubkey)
     }
 
     fun get_eth_pubkey(pubkey: &vector<u8>): EvmPubkey {
@@ -124,6 +154,7 @@ module stork::verify {
     }
 
     // === Tests ===
+
     #[test]
     fun test_verify_stork_evm_signature() {
         let stork_public_key = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
@@ -199,10 +230,11 @@ module stork::verify {
     
     #[test]
     fun test_recover_secp256k1_pubkey() {
-        let message = x"bfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272";
+        let message = x"3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084";
+        let recoverable_message = get_recoverable_message(&message);
         let signature = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd24074116fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a71497581c";
         
-        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&message, &signature);
+        let mut recovered_pubkey_option = recover_secp256k1_pubkey(&recoverable_message, &signature);
         assert!(option::is_some(&recovered_pubkey_option));
         
         let recovered_pubkey = recovered_pubkey_option.extract();
