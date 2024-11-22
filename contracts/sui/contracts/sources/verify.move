@@ -81,10 +81,6 @@ module stork::verify {
         hash::keccak256(&get_stork_message(stork_evm_public_key, id, recv_time, quantized_value, publisher_merkle_root, value_compute_alg_hash))
     }
 
-    fun get_recoverable_message_hash(message: &vector<u8>): vector<u8> {
-        hash::keccak256(&get_recoverable_message(message))
-    }
-
     fun get_recoverable_message(message: &vector<u8>): vector<u8> {
         // Create the prefix "\x19Ethereum Signed Message:\n32"
         let mut prefix = vector[
@@ -111,7 +107,6 @@ module stork::verify {
             return false
         };
         
-        // let message_hash = get_recoverable_message_hash(message);
         let recoverable_message = get_recoverable_message(message);
 
         let mut recovered_pubkey_option = recover_secp256k1_pubkey(&recoverable_message, signature);
@@ -221,11 +216,10 @@ module stork::verify {
     }
 
     #[test]
-    fun test_get_recoverable_message_hash() {
+    fun test_get_recoverable_message() {
         let message = x"3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084";
-        let message_hash = get_recoverable_message_hash(&message);
-        
-        assert!(message_hash == x"bfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272");
+        let recoverable_message = get_recoverable_message(&message);
+        assert!(recoverable_message == x"19457468657265756d205369676e6564204d6573736167653a0a33323102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084");
     }
     
     #[test]
