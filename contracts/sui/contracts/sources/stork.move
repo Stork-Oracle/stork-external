@@ -4,14 +4,14 @@ module stork::stork {
 
     use stork::admin::AdminCap;
     use stork::state::{Self, StorkState};
-    use stork::temporal_numeric_value_feed;
+    use stork::temporal_numeric_value_feed::{Self, TemporalNumericValueFeed};
     use stork::temporal_numeric_value::TemporalNumericValue;
-    use stork::encoded_asset_id;
+    use stork::encoded_asset_id::{Self, EncodedAssetId};
     use stork::verify::verify_stork_evm_signature;
+    use stork::event::Self;
     use sui::sui::SUI;
     use sui::coin::Coin;
-    use stork::event::Self;
-
+    use sui::object_table::ObjectTable;
     // === Errors ===
 
     const EInvalidSignature: u64 = 0;
@@ -37,7 +37,7 @@ module stork::stork {
         v: u8,
     }
 
-    // === Functions ===
+    // === Entry Functions ===
 
     entry fun init_stork(
         // admin capability
@@ -64,6 +64,8 @@ module stork::stork {
             stork_state_version
         );
     }
+
+    // === Public Functions ===
 
     // updates the price feed for an asset 
     // input data is an assets update data signed with Storks EVM public key
@@ -104,15 +106,7 @@ module stork::stork {
             update_data.v,
         ), EInvalidSignature);
 
-        if (!feed_registry.contains(feed_id)) {
-            let feed = temporal_numeric_value_feed::new(feed_id, update_data.temporal_numeric_value, ctx);
-            // temporal_numeric_value_feed::share(feed);
-            feed_registry.add(feed_id, feed);
-        };
-
-        let feed = feed_registry.borrow_mut(feed_id);
-        feed.set_latest_value(update_data.temporal_numeric_value);
-        event::emit_temporal_numeric_value_feed_update_event(feed_id, update_data.temporal_numeric_value);
+        create_or_update_temporal_numeric_value_feed(feed_registry, feed_id, update_data, ctx);
     }
 
     public fun update_multiple_temporal_numeric_values_evm(
@@ -153,14 +147,7 @@ module stork::stork {
                 update.v,
             ), EInvalidSignature);
 
-            // create tvn feed account if it doesn't exist
-            if (!feed_registry.contains(feed_id)) {
-                feed_registry.add(feed_id, temporal_numeric_value_feed::new(feed_id, update.temporal_numeric_value, ctx));
-            };
-
-            let feed = feed_registry.borrow_mut(feed_id);
-            feed.set_latest_value(update.temporal_numeric_value);
-            event::emit_temporal_numeric_value_feed_update_event(feed_id, update.temporal_numeric_value);
+            create_or_update_temporal_numeric_value_feed(feed_registry, feed_id, update, ctx);
             num_updates = num_updates + 1;
         };
         let required_fee = stork_state.get_total_fees_in_mist(num_updates);
@@ -178,4 +165,23 @@ module stork::stork {
         feed.get_latest_canonical_temporal_numeric_value_unchecked()
     }
 
+    // === Private Functions ===
+
+    // updates feed if it exists, or creates it with update if it doesn't
+    fun create_or_update_temporal_numeric_value_feed(
+        feed_registry: &mut ObjectTable<EncodedAssetId, TemporalNumericValueFeed>,
+        feed_id: EncodedAssetId,
+        update_data: UpdateTemporalNumericValueEvmInput,
+        ctx: &mut TxContext,
+    ) {
+         if (!feed_registry.contains(feed_id)) {
+            let feed = temporal_numeric_value_feed::new(feed_id, update_data.temporal_numeric_value, ctx);
+            feed_registry.add(feed_id, feed);
+        }
+        else {
+            let feed = feed_registry.borrow_mut(feed_id);
+            feed.set_latest_value(update_data.temporal_numeric_value);
+        };
+        event::emit_temporal_numeric_value_feed_update_event(feed_id, update_data.temporal_numeric_value);
+    }
 }
