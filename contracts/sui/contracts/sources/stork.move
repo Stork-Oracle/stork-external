@@ -112,6 +112,7 @@ module stork::stork {
 
         let feed = feed_registry.borrow_mut(feed_id);
         feed.set_latest_value(update_data.temporal_numeric_value);
+        event::emit_temporal_numeric_value_feed_update_event(feed_id, update_data.temporal_numeric_value);
     }
 
     public fun update_multiple_temporal_numeric_values_evm(
@@ -159,7 +160,7 @@ module stork::stork {
 
             let feed = feed_registry.borrow_mut(feed_id);
             feed.set_latest_value(update.temporal_numeric_value);
-
+            event::emit_temporal_numeric_value_feed_update_event(feed_id, update.temporal_numeric_value);
             num_updates = num_updates + 1;
         };
         let required_fee = stork_state.get_total_fees_in_mist(num_updates);
