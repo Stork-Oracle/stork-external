@@ -22,10 +22,6 @@ module stork::temporal_numeric_value_feed {
             latest_value,
         }
     }
-    
-    // public(package) fun share(feed: TemporalNumericValueFeed) {
-    //     transfer::share_object(feed)
-    // }
 
     public fun get_latest_canonical_temporal_numeric_value_unchecked(feed: &TemporalNumericValueFeed): TemporalNumericValue {
         feed.latest_value
