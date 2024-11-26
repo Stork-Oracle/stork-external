@@ -6,9 +6,9 @@ import * as fs from 'fs';
 import { fromBase64 } from "@mysten/sui/utils";
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 
-const DEFAULT_RPC_URL = process.env.RPC_URL;
+const DEFAULT_RPC_URL = getFullnodeUrl(process.env.RPC_ALIAS as 'mainnet' | 'testnet' | 'devnet' | 'localnet');
 
-const client = new SuiClient({ url: getFullnodeUrl(DEFAULT_RPC_URL as 'mainnet' | 'testnet' | 'devnet' | 'localnet') });
+const client = new SuiClient({ url: DEFAULT_RPC_URL });
 
 const STORK_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const DEFAULT_KEYSTORE_PATH = `${process.env.HOME}/.sui/sui_config/sui.keystore`;
