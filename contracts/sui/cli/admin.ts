@@ -13,7 +13,7 @@ const client = new SuiClient({ url: DEFAULT_RPC_URL });
 const STORK_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const DEFAULT_KEYSTORE_PATH = `${process.env.HOME}/.sui/sui_config/sui.keystore`;
 const DEFAULT_ALIASES_PATH = `${process.env.HOME}/.sui/sui_config/sui.aliases`;
-const DEFAULT_KEY_ALIAS = 'main';
+const SUI_KEY_ALIAS = process.env.SUI_KEY_ALIAS || 'main';
 const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
 const DEFAULT_UPDATE_FEE_IN_MIST = 1;
 
@@ -29,13 +29,13 @@ type UpdateTemporalNumericValueEvmInputRaw = {
     vs: number[],
 }
 
-function loadKeypairFromKeystore(alias: string = DEFAULT_KEY_ALIAS): Ed25519Keypair {
+function loadKeypairFromKeystore(): Ed25519Keypair {
     const aliasesContent = fs.readFileSync(DEFAULT_ALIASES_PATH, 'utf-8');
     const aliases = JSON.parse(aliasesContent);
     
-    const aliasIndex = aliases.findIndex((entry: any) => entry.alias === alias);
+    const aliasIndex = aliases.findIndex((entry: any) => entry.alias === SUI_KEY_ALIAS);
     if (aliasIndex === -1) {
-        throw new Error(`Alias "${alias}" not found in aliases file`);
+        throw new Error(`Alias "${SUI_KEY_ALIAS}" not found in aliases file`);
     }
 
     const keystoreContent = fs.readFileSync(DEFAULT_KEYSTORE_PATH, 'utf-8');
@@ -43,7 +43,7 @@ function loadKeypairFromKeystore(alias: string = DEFAULT_KEY_ALIAS): Ed25519Keyp
     
     const privateKeyBase64 = keystore[aliasIndex];
     if (!privateKeyBase64) {
-        throw new Error(`No private key found for alias "${alias}" at index ${aliasIndex}`);
+        throw new Error(`No private key found for alias "${SUI_KEY_ALIAS}" at index ${aliasIndex}`);
     }
 
     const privateKeyBytes = fromBase64(privateKeyBase64);
@@ -107,9 +107,8 @@ cliProgram
     .command("initialize")
     .description("Initialize the Stork program")
     .argument("[stork_contract_address]", "The Stork contract address", (value) => value, STORK_CONTRACT_ADDRESS)
-    .option("-k, --key-alias <alias>", "Key alias from sui keystore", DEFAULT_KEY_ALIAS)
-    .action(async (stork_contract_address: string, options: { keyAlias: string }) => {
-        const keypair = loadKeypairFromKeystore(options.keyAlias);
+    .action(async (stork_contract_address: string) => {
+        const keypair = loadKeypairFromKeystore();
         const tx = new Transaction();
         const stork_initialize_function = `${stork_contract_address}::stork::init_stork`;
 
@@ -151,7 +150,7 @@ cliProgram
     .option("-r, --report", "Report the results", false)
     .action(async (asset_pairs: string, endpoint: string, auth_key: string, options: { report: boolean }) => {
         console.log(`Writing to feeds: ${asset_pairs}`);
-        const keypair = loadKeypairFromKeystore(DEFAULT_KEY_ALIAS);
+        const keypair = loadKeypairFromKeystore();
         // try {
             const result = await fetch(
                 `${endpoint}/v1/prices/latest\?assets\=${asset_pairs}`,
