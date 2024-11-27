@@ -75,4 +75,19 @@ module stork::update_temporal_numeric_value_evm_input {
     public fun get_v(self: &UpdateTemporalNumericValueEvmInput): u8 {
         self.v
     }   
+
+    // === Tests ===
+
+    #[test]
+    fun test_temporal_numeric_value_evm_input() {
+        let input = new(x"0000000000000000000000000000000000000000000000000000000000000000", 0, 0, false, x"", x"", x"", x"", 0);
+        assert!(input.id.get_bytes() == x"0000000000000000000000000000000000000000000000000000000000000000");
+        assert!(input.temporal_numeric_value.get_timestamp_ns() == 0);
+        assert!(input.temporal_numeric_value.get_quantized_value() == i128::from_u128(0));
+        assert!(input.publisher_merkle_root == x"");
+        assert!(input.value_compute_alg_hash == x"");
+        assert!(input.r == x"");
+        assert!(input.s == x"");
+        assert!(input.v == 0);
+    }
 }
