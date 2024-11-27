@@ -4,7 +4,6 @@ import { Transaction, TransactionResult } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import * as fs from 'fs';
 import { fromBase64 } from "@mysten/sui/utils";
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 
 const DEFAULT_RPC_URL = getFullnodeUrl(process.env.RPC_ALIAS as 'mainnet' | 'testnet' | 'devnet' | 'localnet');
 
@@ -29,13 +28,13 @@ type UpdateTemporalNumericValueEvmInputRaw = {
     vs: number[],
 }
 
-function loadKeypairFromKeystore(): Ed25519Keypair {
+function loadKeypairFromKeystore(key_alias: string = SUI_KEY_ALIAS): Ed25519Keypair {
     const aliasesContent = fs.readFileSync(DEFAULT_ALIASES_PATH, 'utf-8');
     const aliases = JSON.parse(aliasesContent);
     
-    const aliasIndex = aliases.findIndex((entry: any) => entry.alias === SUI_KEY_ALIAS);
+    const aliasIndex = aliases.findIndex((entry: any) => entry.alias === key_alias);
     if (aliasIndex === -1) {
-        throw new Error(`Alias "${SUI_KEY_ALIAS}" not found in aliases file`);
+        throw new Error(`Alias "${key_alias}" not found in aliases file`);
     }
 
     const keystoreContent = fs.readFileSync(DEFAULT_KEYSTORE_PATH, 'utf-8');
@@ -43,7 +42,7 @@ function loadKeypairFromKeystore(): Ed25519Keypair {
     
     const privateKeyBase64 = keystore[aliasIndex];
     if (!privateKeyBase64) {
-        throw new Error(`No private key found for alias "${SUI_KEY_ALIAS}" at index ${aliasIndex}`);
+        throw new Error(`No private key found for alias "${key_alias}" at index ${aliasIndex}`);
     }
 
     const privateKeyBytes = fromBase64(privateKeyBase64);
@@ -83,9 +82,14 @@ async function getStorkStateId(): Promise<string> {
     let events: any = await client.queryEvents({
         query: eventFilter,
         limit: 1,
+        order: 'ascending',
     });
-
+    
     return events.data[0].parsedJson.stork_state_id;
+}
+
+function byteArrayToHexString(byteArray: number[]) {
+    return "0x" + Buffer.from(byteArray).toString('hex');
 }
 
 function hexStringToByteArray(hexString: string) {
@@ -226,16 +230,156 @@ cliProgram
                     coin,
                 ]
             });
-            tx.setGasBudget(1000000000);
             const txResult = await client.signAndExecuteTransaction({
                 signer: keypair,
                 transaction: tx,
             });
-            console.log(`Transaction result: ${txResult}`);
+            console.log(`Transaction result: ${txResult.digest}`);
 
         // } catch (error) {
         //     console.error(`Error: ${error}`);
         // }
     });
 
+cliProgram
+    .command("get-state-info")
+    .description("Get all StorkState information")
+    .action(async () => {
+        const storkState = await getStorkStateId();
+        const result = await client.getObject({
+            id: storkState,
+            options: { showContent: true }
+        });
+        
+        if (result.data?.content?.dataType !== 'moveObject') {
+            throw new Error("Could not fetch StorkState data");
+        }
+        
+        const fields = result.data.content.fields;
+        const evmPubkey = byteArrayToHexString(fields['stork_evm_public_key'].fields.bytes);
+        console.log({
+            stork_sui_public_key: fields['stork_sui_public_key'],
+            stork_evm_public_key: evmPubkey,
+            single_update_fee_in_mist: fields['single_update_fee_in_mist'],
+            version: fields['version']
+        });
+    });
+
+cliProgram
+    .command("update-fee")
+    .description("Update the single update fee")
+    .argument("<new_fee>", "New fee in MIST")
+    .action(async (new_fee: string) => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::update_single_update_fee_in_mist`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+                tx.pure.u64(BigInt(new_fee)),
+            ]
+        });
+        
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("Fee updated:", result);
+    });
+
+cliProgram
+    .command("update-sui-key")
+    .description("Update the Stork SUI public key")
+    .argument("<new_key>", "New SUI public key address")
+    .action(async (new_key: string) => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_sui_public_key`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+                tx.pure.address(new_key),
+            ]
+        });
+        
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("SUI public key updated:", result);
+    });
+
+cliProgram
+    .command("update-evm-key")
+    .description("Update the Stork EVM public key")
+    .argument("<new_key>", "New EVM public key (hex format)")
+    .action(async (new_key: string) => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_evm_public_key`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+                tx.pure.vector('u8', hexStringToByteArray(new_key)),
+            ]
+        });
+        
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("EVM public key updated:", result);
+    });
+
+cliProgram
+    .command("withdraw-fees")
+    .description("Withdraw accumulated fees")
+    .action(async () => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        
+        const tx = new Transaction();
+        const [coin] = tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::withdraw_fees`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+            ]
+        });
+
+        tx.transferObjects([coin], keypair.getPublicKey().toSuiAddress());
+        
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("Fees withdrawn:", result);
+    });
+
 cliProgram.parse();
+
+
+
+
+
+
+
+
+
+
+
+
+
