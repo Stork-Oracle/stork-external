@@ -16,6 +16,7 @@ module stork::state {
 
     const EIncorrectVersion: u64 = 0;
     const ENoFeesToWithdraw: u64 = 1;
+
     // === Constants ===
 
     const VERSION: u64 = 1;
@@ -124,7 +125,7 @@ module stork::state {
     }
 
     // === Admin Functions ===
-    entry 
+
     public fun update_single_update_fee_in_mist(
         _: &AdminCap,
         state: &mut StorkState,

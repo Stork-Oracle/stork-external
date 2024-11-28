@@ -93,6 +93,7 @@ module stork::stork {
         create_or_update_temporal_numeric_value_feed(feed_registry, feed_id, update_data, ctx);
     }
 
+    // updates multiple price feeds for assets
     public fun update_multiple_temporal_numeric_values_evm(
         stork_state: &mut StorkState,
         // the input data
