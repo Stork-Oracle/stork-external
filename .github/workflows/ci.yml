@@ -183,3 +183,31 @@ jobs:
         run: |
           anchor test
         working-directory: ./contracts/solana/programs/stork
+
+  test-sui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache Sui CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.sui
+          key: ${{ runner.os }}-sui-0.37.1
+
+      - name: Install Sui
+        run: |
+          if ! command -v sui &> /dev/null; then
+            wget https://github.com/MystenLabs/sui/releases/download/mainnet-v1.19.1/sui-ubuntu-latest.tgz
+            tar -xf sui-ubuntu-latest.tgz
+            sudo mv sui /usr/local/bin/
+          fi
+          sui --version
+
+      - name: Run Sui tests
+        run: |
+          sui move test
+        working-directory: ./contracts/sui/contracts
