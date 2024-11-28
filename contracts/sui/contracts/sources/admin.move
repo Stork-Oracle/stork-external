@@ -15,7 +15,11 @@ module stork::admin {
         );
     }
 
-    // === Public Functions ===
+    // === Test Helpers ===
 
+    #[test_only]
+    public(package) fun test_init(ctx: &mut TxContext) {
+        init(ctx);
+    }
     
 }
