@@ -191,19 +191,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Cache Sui CLI
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
         uses: actions/cache@v3
         with:
           path: |
-            ~/.sui
-          key: ${{ runner.os }}-sui-0.37.1
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-sui-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-sui-
 
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            wget https://github.com/MystenLabs/sui/releases/download/mainnet-v1.19.1/sui-ubuntu-latest.tgz
-            tar -xf sui-ubuntu-latest.tgz
-            sudo mv sui /usr/local/bin/
+            cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui --features tracing
           fi
           sui --version
 
