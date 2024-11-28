@@ -81,11 +81,11 @@ module stork::i128 {
         };
         
         // Convert to big-endian bytes
-        let mut i = 15; // Start from most significant byte (16 bytes total)
+        let mut i = 16; // Start from most significant byte (16 bytes total)
         while (i > 0) {
+            i = i - 1;
             let byte = ((mut_value >> (i * 8)) & 0xFF as u8);
             vector::push_back(&mut bytes, byte);
-            i = i - 1;
         };
 
         bytes
@@ -174,8 +174,7 @@ module stork::i128 {
     fun test_to_bytes_positive() {
         let value = new(1, false); // Positive 1
         let bytes = to_bytes(value);
-        std::debug::print(&bytes);
-        assert!(bytes == x"00000000000000000000000000000000", 0);
+        assert!(bytes == x"00000000000000000000000000000001", 0);
         
         let value = new(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, false); // Max positive
         let bytes = to_bytes(value);
@@ -187,7 +186,6 @@ module stork::i128 {
         let value = new(1, true); // Negative 1
         let bytes = to_bytes(value);
         assert!(bytes == x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 0);
-        
         let value = new(0x80000000000000000000000000000000, true); // Max negative
         let bytes = to_bytes(value);
         assert!(bytes == x"80000000000000000000000000000000", 0);

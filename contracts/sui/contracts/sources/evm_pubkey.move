@@ -9,6 +9,7 @@ module stork::evm_pubkey {
     const EVM_PUBKEY_LENGTH: u64 = 20;
 
     // === Structs ===
+    
     public struct EvmPubkey has copy, drop, store {
         bytes: vector<u8>,
     }
