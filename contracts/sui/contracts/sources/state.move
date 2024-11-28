@@ -7,6 +7,7 @@ module stork::state {
     use stork::encoded_asset_id::EncodedAssetId;
     use sui::dynamic_object_field;
     use sui::object_table::{Self, ObjectTable};
+    use stork::event::Self;
     use stork::temporal_numeric_value_feed::TemporalNumericValueFeed;
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
@@ -163,7 +164,9 @@ module stork::state {
         );
         assert!(treasury.value() > 0, ENoFeesToWithdraw);
         let treasury_value = treasury.value();
-        coin::split(treasury, treasury_value, ctx)
+        let withdrawn_coins = coin::split(treasury, treasury_value, ctx);
+        event::emit_fee_withdrawal_event(treasury_value);
+        withdrawn_coins
     }
 
     entry fun migrate(
