@@ -5,51 +5,130 @@
 package contract_bindings_sui
 
 import (
-	_ "github.com/block-vision/sui-go-sdk/constant"
-	_ "github.com/block-vision/sui-go-sdk/models"
-	_ "github.com/block-vision/sui-go-sdk/signer"
-	_ "github.com/block-vision/sui-go-sdk/sui"
-	_ "github.com/block-vision/sui-go-sdk/utils"
+	"context"
+	"math/big"
+
+	"github.com/coming-chat/go-sui/v2/account"
+	"github.com/coming-chat/go-sui/v2/client"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 )
 
 type StorkContract struct {
-	client *client.Client
-	address string
+	client           *client.Client
+	account          *account.Account
+	contract_address sui_types.SuiAddress
+	state            StorkState
 }
 
-func NewStorkContract(rpcUrl string) (*StorkContract, error) {}
+type MultipleUpdateData struct {
+	Ids                              [][]byte
+	TemporalNumericValueTimestampNss []big.Int
+	TemporalNumericValueMagnitudes   []big.Int
+	TemporalNumericValueNegatives    []bool
+	PublisherMerkleRoots             [][]byte
+	ValueComputeAlgHashes            [][]byte
+	Rs                               [][]byte
+	SS                               [][]byte
+	Vs                               []byte
+}
+
+type StorkState struct {
+	Id                    sui_types.SuiAddress
+	StorkSuiPublicKey     sui_types.SuiAddress
+	StorkEvmPublicKey     string
+	SingleUpdateFeeInMist uint64
+	Version               uint64
+}
+
+func NewStorkContract(rpcUrl string, contractAddress string, key string) (*StorkContract, error) {
+	client, err := client.Dial(rpcUrl)
+	if err != nil {
+		return nil, err
+	}
+	account, err := account.NewAccountWithKeystore(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StorkContract{client: client, account: account, contract_address: contractAddress, state: getStorkState()}, nil
+}
+
+func NewMultipleUpdateData(
+	Ids [][]byte,
+	TemporalNumericValueTimestampNss []big.Int,
+	TemporalNumericValueMagnitudes []big.Int,
+	TemporalNumericValueNegatives []bool,
+	PublisherMerkleRoots [][]byte,
+	ValueComputeAlgHashes [][]byte,
+	Rs [][]byte,
+	SS [][]byte,
+	Vs []byte,
+) MultipleUpdateData {
+	return MultipleUpdateData{
+		Ids:                              Ids,
+		TemporalNumericValueTimestampNss: TemporalNumericValueTimestampNss,
+		TemporalNumericValueMagnitudes:   TemporalNumericValueMagnitudes,
+		TemporalNumericValueNegatives:    TemporalNumericValueNegatives,
+		PublisherMerkleRoots:             PublisherMerkleRoots,
+		ValueComputeAlgHashes:            ValueComputeAlgHashes,
+		Rs:                               Rs,
+		SS:                               SS,
+		Vs:                               Vs,
+	}
+}
 
 // Listens for any events emitted by the Stork contract
-func (sc *StorkContract) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {}
+func (sc *StorkContract) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 
-// stork functions
-func (sc *StorkContract) InitStork(adminCap AdminCap, storkSuiPublicKey address, storkEvmPublicKey []byte) {}
+}
 
-func (sc *StorkContract) update_single_temporal_numeric_value_evm(updateData UpdateTemporalNumericValueEvmInput) {}
+func (sc *StorkContract) UpdateMultipleTemporalNumericValueEvm(updateData MultipleUpdateData) {
 
-func (sc *StorkContract) update_multiple_temporal_numeric_value_evm(updateData [UpdateTemporalNumericValueEvmInputVec) {}
-
-// State functions
-func (sc *StorkContract) get_stork_evm_public_key() []byte {}
-
-func (sc *StorkContract) get_stork_sui_public_key() address {}
-
-func (sc *StorkContract) get_single_update_fee_in_mist() uint64 {}
-
-func (sc *StorkContract) get_version() uint64 {}
-
-// state admin functions
-func (sc *StorkContract) update_single_update_fee_in_mist(newSingleUpdateFeeInMist uint64) {}
-
-func (sc *StorkContract) update_stork_sui_public_key(newStorkSuiPublicKey address) {}
-
-func (sc *StorkContract) update_stork_evm_public_key(newStorkEvmPublicKey []byte) {}
-
-func (sc *StorkContract) withdraw_fees(adminCap AdminCap) {}
-
-func (sc *StorkContract) migrate(adminCap AdminCap) {}
+}
 
 // utility functions
-func (sc *StorkContract) get_stork_state() StorkState {}
+func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) (StorkState, error) {
+	eventFilter := types.EventFilter{
+		MoveModule: &struct {
+			Package sui_types.ObjectID `json:"package"`
+			Module  string             `json:"module"`
+		}{
+			Package: contractAddress,
+			Module:  "stork",
+		},
+	}
+	limit := uint32(1)
+	event, err := client.QueryEvents(context.Background(), eventFilter, nil, &limit, false)
+	if err != nil {
+		return StorkState{}, err
+	}
 
-func (sc *StorkContract) get_admin_cap() AdminCap {}
+	stork_state_id_hex := event.Data[0].ParsedJson.(map[string]interface{})["stork_state_id"].(string)
+	stork_state_id, err := sui_types.NewAddressFromHex(stork_state_id_hex)
+	if err != nil {
+		return StorkState{}, err
+	}
+
+	options := &types.SuiObjectDataOptions{
+		ShowContent: true,
+	}
+	object, err := client.GetObject(context.Background(), *stork_state_id, options)
+	if err != nil {
+		return StorkState{}, err
+	}
+	fields := object.Data.Content.Data.MoveObject.Fields.(map[string]interface{})
+	stork_evm_public_key := fields["stork_evm_public_key"].(map[string]interface{})["bytes"].(string)
+	stork_sui_public_key_string := fields["stork_sui_public_key"].(map[string]interface{})["address"].(string)
+	stork_sui_public_key, err := sui_types.NewAddressFromHex(stork_sui_public_key_string)
+	if err != nil {
+		return StorkState{}, err
+	}
+	single_update_fee_in_mist := uint64(fields["single_update_fee_in_mist"].(float64))
+	version, err := getVersion(*stork_state_id, client)
+	if err != nil {
+		return StorkState{}, err
+	}
+
+	return StorkState{Id: *stork_state_id, StorkEvmPublicKey: stork_evm_public_key, StorkSuiPublicKey: *stork_sui_public_key, SingleUpdateFeeInMist: single_update_fee_in_mist, Version: version}, nil
+}
