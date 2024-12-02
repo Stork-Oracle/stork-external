@@ -130,7 +130,6 @@ cliProgram
             ]
         });
 
-        tx.setGasBudget(1000000000);
         let result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
