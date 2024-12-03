@@ -151,6 +151,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 164
     },
+    openCampusTestnet: {
+      url: "https://rpc.open-campus-codex.gelato.digital",
+      accounts: [PRIVATE_KEY],
+      chainId: 656476
+    },
     ozeanTestnet: {
       url: "https://ozean-testnet.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -242,6 +247,7 @@ const config: HardhatUserConfig = {
       molten: 'fake',
       monadDevnet: 'fake',
       omniOmega: 'fake',
+      openCampusTestnet: 'fake',
       ozeanTestnet: 'fake',
       plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
@@ -395,6 +401,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
           browserURL: "https://omega.omniscan.network"
+        }
+      },
+      {
+        network: "openCampusTestnet",
+        chainId: 656476,
+        urls: {
+          apiURL: "https://edu-chain-testnet.blockscout.com/api",
+          browserURL: "https://edu-chain-testnet.blockscout.com/"
         }
       },
       {
