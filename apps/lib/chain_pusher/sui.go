@@ -63,10 +63,14 @@ func (sci *SuiContractInteracter) PullValues(encodedAssetIds []InternalEncodedAs
 	if err != nil {
 		return nil, err
 	}
+	sci.logger.Info().Msgf("successfully pulled %d values from contract", len(values))
+
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
 	result := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
-		result[encodedAssetId] = temporalNumericValueToInternal(values[contract.EncodedAssetId(encodedAssetId)])
+		if value, ok := values[contract.EncodedAssetId(encodedAssetId)]; ok {
+			result[encodedAssetId] = temporalNumericValueToInternal(value)
+		}
 	}
 	return result, nil
 }
@@ -81,7 +85,13 @@ func (sci *SuiContractInteracter) BatchPushToContract(priceUpdates map[InternalE
 		}
 		updateData = append(updateData, update)
 	}
-	return sci.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
+	err := sci.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
+	if err != nil {
+		sci.logger.Error().Err(err).Msg("failed to update multiple temporal numeric values")
+		return err
+	}
+	sci.logger.Info().Msg("successfully updated multiple temporal numeric values")
+	return nil
 }
 
 func temporalNumericValueToInternal(value contract.TemporalNumericValue) InternalStorkStructsTemporalNumericValue {
