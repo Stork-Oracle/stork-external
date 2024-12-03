@@ -193,6 +193,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 64165,
     },
+    sonicBlazeTestnet: {
+      url: "https://rpc.blaze.soniclabs.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 57054,
+    },
     sophonTestnet: {
       url: "https://rpc.testnet.sophon.xyz",
       ethNetwork: "sepolia",
