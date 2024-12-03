@@ -106,6 +106,16 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 17000
     },
+    lightlinkPegasusTestnet: {
+      url: "https://replicator.pegasus.lightlink.io/rpc/v1",
+      accounts: [PRIVATE_KEY],
+      chainId: 1891
+    },
+    lightlinkPhoenixMainnet: {
+      url: "https://replicator.phoenix.lightlink.io/rpc/v1",
+      accounts: [PRIVATE_KEY],
+      chainId: 1890
+    },
     lorenzoTestnet: {
       url: "https://rpc-testnet.lorenzo-protocol.xyz",
       accounts: [PRIVATE_KEY],
@@ -219,6 +229,8 @@ const config: HardhatUserConfig = {
       coreMainnet: CORE_MAINNET_API_KEY,
       glueTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
+      lightlinkPegasusTestnet: 'fake',
+      lightlinkPhoenixMainnet: 'fake',
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
@@ -361,6 +373,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/164_4/etherscan",
           browserURL: "https://omega.omniscan.network"
+        }
+      },
+      {
+        network: "lightlinkPegasusTestnet",
+        chainId: 1891,
+        urls: {
+          apiURL: "https://pegasus.lightlink.io/api",
+          browserURL: "https://pegasus.lightlink.io/"
+        }
+      },
+      {
+        network: "lightlinkPhoenixMainnet",
+        chainId: 1890,
+        urls: {
+          apiURL: "https://phoenix.lightlink.io/api",
+          browserURL: "https://phoenix.lightlink.io/"
         }
       },
       {
