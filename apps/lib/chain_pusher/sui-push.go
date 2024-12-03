@@ -16,8 +16,8 @@ func init() {
 	SuipushCmd.Flags().StringP(ChainRpcUrlFlag, "c", "", ChainRpcUrlDesc)
 	SuipushCmd.Flags().StringP(ContractAddressFlag, "x", "", ContractAddressDesc)
 	SuipushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
-	SuipushCmd.Flags().StringP(KeyFileFlag, "k", "", KeyFileDesc)
-	SuipushCmd.Flags().StringP(BatchingWindowFlag, "b", "5", BatchingWindowDesc)
+	SuipushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
+	SuipushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
 	SuipushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
 
 	SuipushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
@@ -25,7 +25,7 @@ func init() {
 	SuipushCmd.MarkFlagRequired(ChainRpcUrlFlag)
 	SuipushCmd.MarkFlagRequired(ContractAddressFlag)
 	SuipushCmd.MarkFlagRequired(AssetConfigFileFlag)
-	SuipushCmd.MarkFlagRequired(KeyFileFlag)
+	SuipushCmd.MarkFlagRequired(PrivateKeyFileFlag)
 
 }
 
@@ -35,13 +35,13 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	chainRpcUrl, _ := cmd.Flags().GetString(ChainRpcUrlFlag)
 	contractAddress, _ := cmd.Flags().GetString(ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
-	keyFile, _ := cmd.Flags().GetString(KeyFileFlag)
+	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
 	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
 
 	logger := SuiPusherLogger(chainRpcUrl, contractAddress)
 
-	suiInteracter, err := NewSuiContractInteracter(chainRpcUrl, contractAddress, keyFile, logger)
+	suiInteracter, err := NewSuiContractInteracter(chainRpcUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interacter")
 	}

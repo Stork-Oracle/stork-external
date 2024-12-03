@@ -85,3 +85,8 @@ func loadPrivateKey(mnemonicFile string) (*ecdsa.PrivateKey, error) {
 	}
 	return privateKey, nil
 }
+
+func hexStringToByteArray(hexString string) ([]byte, error) {
+	hexString = strings.TrimPrefix(hexString, "0x")
+	return hex.DecodeString(hexString)
+}

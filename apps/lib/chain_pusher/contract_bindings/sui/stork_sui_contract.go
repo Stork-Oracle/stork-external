@@ -7,9 +7,11 @@ package contract_bindings_sui
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/coming-chat/go-sui/v2/account"
 	"github.com/coming-chat/go-sui/v2/client"
@@ -58,6 +60,7 @@ type StorkState struct {
 	SingleUpdateFeeInMist uint64
 	Version               uint64
 	FeedRegistry          FeedRegistry
+	InitialSharedVersion  uint64
 }
 
 type FeedRegistry struct {
@@ -75,6 +78,10 @@ type EncodedAssetId [32]byte
 type I128 struct {
 	Magnitude *big.Int
 	Negative  bool
+}
+
+type U128 struct {
+	Value []byte
 }
 
 func NewStorkContract(rpcUrl string, contractAddress string, key string) (*StorkContract, error) {
@@ -145,12 +152,22 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []Enc
 
 	for _, feed := range feeds {
 		var id EncodedAssetId
-		copy(id[:], feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})["asset_id"].([]byte))
+		slice := feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})["asset_id"].(map[string]interface{})["fields"].(map[string]interface{})["bytes"]
+		idBytes, err := interfaceSliceToBytes(slice)
+		if err != nil {
+			return nil, err
+		}
+		copy(id[:], idBytes)
 
-		latestValueFields := feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})["latest_value"]
-		timestampNs := latestValueFields.(map[string]interface{})["timestamp_ns"].(uint64)
-		magnitude := latestValueFields.(map[string]interface{})["quantized_value"].(map[string]interface{})["magnitude"].(big.Int)
-		negative := latestValueFields.(map[string]interface{})["quantized_value"].(map[string]interface{})["negative"].(bool)
+		latestValueFields := feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})["latest_value"].(map[string]interface{})["fields"]
+		timestampNs, err := strconv.ParseUint(latestValueFields.(map[string]interface{})["timestamp_ns"].(string), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		magnitude := big.Int{}
+		temp := latestValueFields.(map[string]interface{})["quantized_value"].(map[string]interface{})["fields"].(map[string]interface{})["magnitude"].(string)
+		magnitude.SetString(temp, 10)
+		negative := latestValueFields.(map[string]interface{})["quantized_value"].(map[string]interface{})["fields"].(map[string]interface{})["negative"].(bool)
 
 		quantizedValue := I128{
 			Magnitude: &magnitude,
@@ -162,11 +179,10 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []Enc
 		}
 		result[id] = latestValue
 	}
-
 	return result, nil
 }
 
-func (sc *StorkContract) UpdateMultipleTemporalNumericValueEvm(updateData []UpdateData) error {
+func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) error {
 	ptb := sui_types.NewProgrammableTransactionBuilder()
 
 	// fee
@@ -215,7 +231,17 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValueEvm(updateData []Upda
 	if err != nil {
 		return err
 	}
-	magnitudesArg, err := ptb.Pure(temporalNumericValueMagnitudes)
+
+	magnitudeBytes := make([]bcs.Uint128, len(temporalNumericValueMagnitudes))
+	for i, magnitude := range temporalNumericValueMagnitudes {
+		u128val, err := bcs.NewUint128FromBigInt(magnitude)
+		if err != nil {
+			return err
+		}
+		magnitudeBytes[i] = *u128val
+	}
+
+	magnitudesArg, err := ptb.Pure(magnitudeBytes)
 	if err != nil {
 		return err
 	}
@@ -273,15 +299,15 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValueEvm(updateData []Upda
 			Mutable              bool
 		}{
 			Id:                   sc.State.Id,
-			InitialSharedVersion: sc.State.Version,
-			Mutable:              false,
+			InitialSharedVersion: sc.State.InitialSharedVersion,
+			Mutable:              true,
 		},
 	})
 	if err != nil {
 		return err
 	}
 
-	//stork::update_multiple_temporal_numeric_values_evm
+	// stork::update_multiple_temporal_numeric_values_evm
 	ptb.Command(
 		sui_types.Command{
 			MoveCall: &sui_types.ProgrammableMoveCall{
@@ -369,21 +395,31 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) 
 
 	options := &types.SuiObjectDataOptions{
 		ShowContent: true,
+		ShowOwner:   true,
 	}
 	object, err := client.GetObject(context.Background(), *storkStateId, options)
 	if err != nil {
 		return StorkState{}, err
 	}
 	fields := object.Data.Content.Data.MoveObject.Fields.(map[string]interface{})
-	storkEvmPublicKey := fields["stork_evm_public_key"].(map[string]interface{})["bytes"].(string)
-	storkSuiPublicKeyString := fields["stork_sui_public_key"].(map[string]interface{})["address"].(string)
+	storkEvmPublicKeyBytes := fields["stork_evm_public_key"].(map[string]interface{})["fields"].(map[string]interface{})["bytes"]
+	byteSlice, err := interfaceSliceToBytes(storkEvmPublicKeyBytes)
+	if err != nil {
+		return StorkState{}, fmt.Errorf("failed to convert public key bytes: %w", err)
+	}
+
+	storkEvmPublicKey := hex.EncodeToString(byteSlice)
+	storkSuiPublicKeyString := fields["stork_sui_public_key"].(string)
 	storkSuiPublicKey, err := sui_types.NewAddressFromHex(storkSuiPublicKeyString)
 	if err != nil {
 		return StorkState{}, err
 	}
-	singleUpdateFeeInMist := uint64(fields["single_update_fee_in_mist"].(float64))
+	singleUpdateFeeInMist, err := strconv.ParseUint(fields["single_update_fee_in_mist"].(string), 10, 64)
+	if err != nil {
+		return StorkState{}, err
+	}
 	version := object.Data.Version.Uint64()
-
+	initialSharedVersion := uint64(*object.Data.Owner.Shared.InitialSharedVersion)
 	// registry
 	stateDynamicFields, err := client.GetDynamicFields(context.Background(), *storkStateId, nil, nil)
 	if err != nil {
@@ -391,7 +427,11 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) 
 	}
 	registryId := sui_types.SuiAddress{}
 	for _, dynamicField := range stateDynamicFields.Data {
-		if bytes.Equal(dynamicField.Name.Value.([]byte), []byte("temporal_numeric_value_feed_registry")) {
+		nameBytes, err := interfaceSliceToBytes(dynamicField.Name.Value)
+		if err != nil {
+			return StorkState{}, fmt.Errorf("failed to convert name bytes: %w", err)
+		}
+		if bytes.Equal(nameBytes, []byte("temporal_numeric_value_feed_registry")) {
 			registryId = dynamicField.ObjectId
 			break
 		}
@@ -405,7 +445,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) 
 
 	registry := FeedRegistry{Id: registryId, Entries: feedIds}
 
-	return StorkState{Id: *storkStateId, StorkEvmPublicKey: storkEvmPublicKey, StorkSuiPublicKey: *storkSuiPublicKey, SingleUpdateFeeInMist: singleUpdateFeeInMist, Version: version, FeedRegistry: registry}, nil
+	return StorkState{Id: *storkStateId, StorkEvmPublicKey: storkEvmPublicKey, StorkSuiPublicKey: *storkSuiPublicKey, SingleUpdateFeeInMist: singleUpdateFeeInMist, Version: version, InitialSharedVersion: initialSharedVersion, FeedRegistry: registry}, nil
 }
 
 func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransaction) (uint64, error) {
@@ -451,7 +491,11 @@ func (sc *StorkContract) getFeedIds(feedIds []EncodedAssetId) (map[EncodedAssetI
 
 	for _, feedId := range feedIds {
 		for _, entry := range registryEntries.Data {
-			if bytes.Equal(entry.Name.Value.([]byte), feedId[:]) {
+			nameBytes, err := interfaceSliceToBytes(entry.Name.Value.(map[string]interface{})["bytes"])
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert name2 bytes: %w", err)
+			}
+			if bytes.Equal(nameBytes, feedId[:]) {
 				feedObjectId := entry.ObjectId
 				feedIdsMap[feedId] = feedObjectId
 				break
@@ -460,4 +504,21 @@ func (sc *StorkContract) getFeedIds(feedIds []EncodedAssetId) (map[EncodedAssetI
 	}
 
 	return feedIdsMap, nil
+}
+
+func interfaceSliceToBytes(slice interface{}) ([]byte, error) {
+	interfaceSlice, ok := slice.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("input is not a slice of interfaces, but a %T", slice)
+	}
+
+	byteSlice := make([]byte, len(interfaceSlice))
+	for i, v := range interfaceSlice {
+		floatVal, ok := v.(float64)
+		if !ok {
+			return nil, fmt.Errorf("element at index %d is not a float64", i)
+		}
+		byteSlice[i] = byte(floatVal)
+	}
+	return byteSlice, nil
 }
