@@ -1,0 +1,130 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x7D06cc8210228365896A3cc8Aac88c5551529112",
+      "txHash": "0xf8c90684ef8f841ae22a1b5c0f603e3dec2ebb7ccfcd35e1b9a5f10aedfdc59c",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "58fc1eb192db94ff16e4a9d6656b9f42f2a0315dd36426a74b6e1ea4d83d098b": {
+      "address": "0xbB4105F349072B15e300f3dAeB701EF986ae5372",
+      "txHash": "0xa485bd776cbe74642aa4c14b5850ec444fdd62199c3a6475d290ffec4b224238",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "_state",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_struct(State)1936_storage",
+            "contract": "StorkState",
+            "src": "contracts/StorkState.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_int192": {
+            "label": "int192",
+            "numberOfBytes": "24"
+          },
+          "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1948_storage)": {
+            "label": "mapping(bytes32 => struct StorkStructs.TemporalNumericValue)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(State)1936_storage": {
+            "label": "struct StorkStorage.State",
+            "members": [
+              {
+                "label": "storkPublicKey",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "singleUpdateFeeInWei",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "validTimePeriodSeconds",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "latestCanonicalTemporalNumericValues",
+                "type": "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1948_storage)",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(TemporalNumericValue)1948_storage": {
+            "label": "struct StorkStructs.TemporalNumericValue",
+            "members": [
+              {
+                "label": "timestampNs",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "quantizedValue",
+                "type": "t_int192",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

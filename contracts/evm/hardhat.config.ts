@@ -214,6 +214,12 @@ const config: HardhatUserConfig = {
       verifyURL: "https://verification-explorer.sophon.xyz/contract_verification",
       zksync: true,
     },
+    taraxaMainnet: {
+      url: "https://841.rpc.thirdweb.com/fake/anotherfake",
+      accounts: [PRIVATE_KEY],
+      chainId: 841,
+      hardfork: 'berlin',
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -259,6 +265,7 @@ const config: HardhatUserConfig = {
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
       soneiumMinato: 'fake',
+      taraxaMainnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -446,6 +453,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-testnet.soneium.org/api/",
           browserURL: "https://explorer-testnet.soneium.org/"
+        }
+      },
+      {
+        network: "taraxaMainnet",
+        chainId: 841,
+        urls: {
+          apiURL: "https://tara.to/api",
+          browserURL: "https://tara.to"
         }
       },
       {
