@@ -229,6 +229,7 @@ cliProgram
                     coin,
                 ]
             });
+            
             const txResult = await client.signAndExecuteTransaction({
                 signer: keypair,
                 transaction: tx,
