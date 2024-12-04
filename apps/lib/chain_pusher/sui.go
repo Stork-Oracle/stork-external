@@ -33,8 +33,8 @@ func NewSuiContractInteracter(rpcUrl, contractAddr, privateKeyFile string, asset
 			break
 		}
 	}
-	if privateKey == "" {
-		return nil, fmt.Errorf("private key not found in key file")
+	if privateKey == "" && len(lines) == 1 {
+		privateKey = strings.TrimSpace(lines[0])
 	}
 	contract, err := contract.NewStorkContract(rpcUrl, contractAddr, privateKey)
 	if err != nil {
