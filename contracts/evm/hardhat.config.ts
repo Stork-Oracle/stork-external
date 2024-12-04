@@ -193,6 +193,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1946
     },
+    sonicMainnet: {
+      url: "https://rpc.soniclabs.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 146,
+    },
     sonicTestnet: {
       url: "https://rpc.testnet.soniclabs.com",
       accounts: [PRIVATE_KEY],
