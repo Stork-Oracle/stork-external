@@ -219,6 +219,11 @@ const config: HardhatUserConfig = {
       verifyURL: "https://verification-explorer.sophon.xyz/contract_verification",
       zksync: true,
     },
+    storyOdysseyTestnet: {
+      url: "https://rpc.odyssey.storyrpc.io",
+      accounts: [PRIVATE_KEY],
+      chainId: 1516,
+    },
     taraxaMainnet: {
       url: "https://841.rpc.thirdweb.com/fake/anotherfake",
       accounts: [PRIVATE_KEY],
@@ -271,6 +276,7 @@ const config: HardhatUserConfig = {
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
       soneiumMinato: 'fake',
+      storyOdysseyTestnet: 'fake',
       taraxaMainnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
@@ -467,6 +473,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-testnet.soneium.org/api/",
           browserURL: "https://explorer-testnet.soneium.org/"
+        }
+      },
+      {
+        network: "storyOdysseyTestnet",
+        chainId: 1516,
+        urls: {
+          apiURL: "https://odyssey.storyscan.xyz/api",
+          browserURL: "https://odyssey.storyscan.xyz/"
         }
       },
       {
