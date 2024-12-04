@@ -148,6 +148,19 @@ func shouldUpdateAsset(latestValue InternalStorkStructsTemporalNumericValue, lat
 	difference := new(big.Float).Sub(quantizedVal, quantizedCurrVal)
 	absDifference := new(big.Float).Abs(difference)
 
+	if absDifference.Sign() == 0 {
+		return false
+	}
+
+	if quantizedCurrVal.Cmp(big.NewFloat(0)) == 0 {
+		return true
+		// or set to 1 with corresponding sign
+		quantizedCurrVal.Set(big.NewFloat(1))
+		if difference.Sign() < 0 {
+			quantizedCurrVal.Neg(quantizedCurrVal)
+		}
+	}
+
 	// Calculate the ratio
 	ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
 
