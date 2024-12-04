@@ -186,7 +186,12 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	ptb := sui_types.NewProgrammableTransactionBuilder()
 
 	// fee
-	feeArg, err := ptb.Pure(sc.State.SingleUpdateFeeInMist)
+	totalFeeAmount := sc.State.SingleUpdateFeeInMist * uint64(len(updateData))
+	address, err := sui_types.NewAddressFromHex(sc.Account.Address)
+	if err != nil {
+		return err
+	}
+	feeArg, err := ptb.Pure(totalFeeAmount)
 	if err != nil {
 		return err
 	}
@@ -324,16 +329,13 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	)
 
 	pt := ptb.Finish()
-	gasBudget, err := sc.getGasBudgetFromDryRun(&pt)
-	if err != nil {
-		return err
-	}
-	totalFeeAmount := sc.State.SingleUpdateFeeInMist * uint64(len(updateData))
-	address, err := sui_types.NewAddressFromHex(sc.Account.Address)
-	if err != nil {
-		return err
-	}
+
 	coins, err := sc.Client.GetCoins(context.Background(), *address, nil, nil, 100)
+	if err != nil {
+		return err
+	}
+
+	gasBudget, err := sc.getGasBudgetFromDryRun(&pt)
 	if err != nil {
 		return err
 	}
@@ -457,7 +459,7 @@ func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransa
 		*address,
 		nil,
 		*pt,
-		1000000000,
+		uint64(10e9),
 		sc.ReferenceGasPrice,
 	)
 

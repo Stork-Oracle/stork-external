@@ -50,7 +50,7 @@ func NewSuiContractInteracter(rpcUrl, contractAddr, privateKeyFile string, asset
 // unfortunately, Sui doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Sui re-adds websocket support
 func (sci *SuiContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
-	sci.logger.Warn().Msg("Sui does not support listening to events from a contract, ignoring")
+	sci.logger.Warn().Msg("Sui does not currently support listening to events via websocket, falling back to polling")
 }
 
 func (sci *SuiContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
@@ -63,7 +63,7 @@ func (sci *SuiContractInteracter) PullValues(encodedAssetIds []InternalEncodedAs
 	if err != nil {
 		return nil, err
 	}
-	sci.logger.Info().Msgf("successfully pulled %d values from contract", len(values))
+	sci.logger.Debug().Msgf("successfully pulled %d values from contract", len(values))
 
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
 	result := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
