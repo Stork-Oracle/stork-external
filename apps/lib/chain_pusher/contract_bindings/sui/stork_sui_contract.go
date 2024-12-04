@@ -127,7 +127,6 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []Enc
 	if err != nil {
 		return nil, err
 	}
-	// feedIDsMap = append(feedIdsMap, resolvedFeedIDs...)
 	for feedId, feedObjectId := range resolvedFeedIDs {
 		feedIdsMap[feedId] = feedObjectId
 	}
