@@ -91,6 +91,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 4158,
     },
+    expchainTestnet: {
+      url: "https://rpc0-testnet.expchain.ai",
+      accounts: [PRIVATE_KEY],
+      chainId: 18880,
+    },
     filecoinCalibration: {
       url: "https://rpc.ankr.com/filecoin_testnet",
       accounts: [PRIVATE_KEY],
@@ -248,6 +253,7 @@ const config: HardhatUserConfig = {
       citreaTestnet: 'fake',
       coreTestnet: CORE_TESTNET_API_KEY,
       coreMainnet: CORE_MAINNET_API_KEY,
+      expchainTestnet: 'fake',
       glueTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       lightlinkPegasusTestnet: 'fake',
@@ -341,6 +347,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://openapi.coredao.org/api",
           browserURL: "https://scan.coredao.org/"
+        }
+      },
+      {
+        network: "expchainTestnet",
+        chainId: 18880,
+        urls: {
+          apiURL: "https://blockscout-testnet.expchain.ai/api",
+          browserURL: "https://blockscout-testnet.expchain.a"
         }
       },
       {
