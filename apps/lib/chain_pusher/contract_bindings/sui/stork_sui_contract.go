@@ -22,11 +22,10 @@ import (
 )
 
 type StorkContract struct {
-	Client            *client.Client
-	Account           *account.Account
-	ContractAddress   sui_types.SuiAddress
-	State             StorkState
-	ReferenceGasPrice uint64
+	Client          *client.Client
+	Account         *account.Account
+	ContractAddress sui_types.SuiAddress
+	State           StorkState
 }
 
 type MultipleUpdateData struct {
@@ -102,17 +101,15 @@ func NewStorkContract(rpcUrl string, contractAddress string, key string) (*Stork
 		return nil, err
 	}
 
-	referenceGasPriceResult, err := client.GetReferenceGasPrice(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	referenceGasPrice := referenceGasPriceResult.Uint64()
-
-	return &StorkContract{Client: client, Account: account, ContractAddress: *contractAddr, State: state, ReferenceGasPrice: referenceGasPrice}, nil
+	return &StorkContract{Client: client, Account: account, ContractAddress: *contractAddr, State: state}, nil
 }
 
-func (sc *StorkContract) SetReferenceGasPrice(referenceGasPrice uint64) {
-	sc.ReferenceGasPrice = referenceGasPrice
+func (sc *StorkContract) getReferenceGasPrice() (uint64, error) {
+	referenceGasPriceResult, err := sc.Client.GetReferenceGasPrice(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	return referenceGasPriceResult.Uint64(), nil
 }
 
 // gets multiple temporal numeric values at a time to save on RPC calls
@@ -184,6 +181,12 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []Enc
 
 func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) error {
 	ptb := sui_types.NewProgrammableTransactionBuilder()
+
+	// get reference gas price
+	referenceGasPrice, err := sc.getReferenceGasPrice()
+	if err != nil {
+		return err
+	}
 
 	// fee
 	totalFeeAmount := sc.State.SingleUpdateFeeInMist * uint64(len(updateData))
@@ -335,7 +338,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 		return err
 	}
 
-	gasBudget, err := sc.getGasBudgetFromDryRun(&pt)
+	gasBudget, err := sc.getGasBudgetFromDryRun(&pt, referenceGasPrice)
 	if err != nil {
 		return err
 	}
@@ -355,7 +358,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 		pickedCoins.CoinRefs(),
 		pt,
 		gasBudget,
-		sc.ReferenceGasPrice,
+		referenceGasPrice,
 	)
 	txBytes, err := bcs.Marshal(tx)
 	if err != nil {
@@ -450,7 +453,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) 
 	return StorkState{Id: *storkStateId, StorkEvmPublicKey: storkEvmPublicKey, StorkSuiPublicKey: *storkSuiPublicKey, SingleUpdateFeeInMist: singleUpdateFeeInMist, Version: version, InitialSharedVersion: initialSharedVersion, FeedRegistry: registry}, nil
 }
 
-func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransaction) (uint64, error) {
+func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransaction, referenceGasPrice uint64) (uint64, error) {
 	address, err := sui_types.NewAddressFromHex(sc.Account.Address)
 	if err != nil {
 		return 0, err
@@ -460,7 +463,7 @@ func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransa
 		nil,
 		*pt,
 		uint64(10e9),
-		sc.ReferenceGasPrice,
+		referenceGasPrice,
 	)
 
 	txBytes, err := bcs.Marshal(tx)
