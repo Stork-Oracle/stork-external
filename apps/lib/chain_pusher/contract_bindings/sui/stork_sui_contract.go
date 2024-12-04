@@ -178,24 +178,24 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []Enc
 	return result, nil
 }
 
-func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) error {
+func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
 	ptb := sui_types.NewProgrammableTransactionBuilder()
 
 	// get reference gas price
 	referenceGasPrice, err := sc.getReferenceGasPrice()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// fee
 	totalFeeAmount := sc.State.SingleUpdateFeeInMist * uint64(len(updateData))
 	address, err := sui_types.NewAddressFromHex(sc.Account.Address)
 	if err != nil {
-		return err
+		return "", err
 	}
 	feeArg, err := ptb.Pure(totalFeeAmount)
 	if err != nil {
-		return err
+		return "", err
 	}
 	splitCoinResult := ptb.Command(
 		sui_types.Command{
@@ -232,49 +232,49 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	}
 	idsArg, err := ptb.Pure(ids)
 	if err != nil {
-		return err
+		return "", err
 	}
 	timestampNssArg, err := ptb.Pure(temporalNumericValueTimestampNss)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	magnitudeBytes := make([]bcs.Uint128, len(temporalNumericValueMagnitudes))
 	for i, magnitude := range temporalNumericValueMagnitudes {
 		u128val, err := bcs.NewUint128FromBigInt(magnitude)
 		if err != nil {
-			return err
+			return "", err
 		}
 		magnitudeBytes[i] = *u128val
 	}
 
 	magnitudesArg, err := ptb.Pure(magnitudeBytes)
 	if err != nil {
-		return err
+		return "", err
 	}
 	negativesArg, err := ptb.Pure(temporalNumericValueNegatives)
 	if err != nil {
-		return err
+		return "", err
 	}
 	publisherMerkleRootsArg, err := ptb.Pure(publisherMerkleRoots)
 	if err != nil {
-		return err
+		return "", err
 	}
 	valueComputeAlgHashesArg, err := ptb.Pure(valueComputeAlgHashes)
 	if err != nil {
-		return err
+		return "", err
 	}
 	rsArg, err := ptb.Pure(rs)
 	if err != nil {
-		return err
+		return "", err
 	}
 	ssArg, err := ptb.Pure(ss)
 	if err != nil {
-		return err
+		return "", err
 	}
 	vsArg, err := ptb.Pure(vs)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	//update_temporal_numeric_value_evm_input_vec::new
@@ -311,7 +311,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 		},
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// stork::update_multiple_temporal_numeric_values_evm
@@ -334,12 +334,12 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 
 	coins, err := sc.Client.GetCoins(context.Background(), *address, nil, nil, 100)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	gasBudget, err := sc.getGasBudgetFromDryRun(&pt, referenceGasPrice)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	pickedCoins, err := types.PickupCoins(
@@ -350,7 +350,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 		10,
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 	tx := sui_types.NewProgrammable(
 		*address,
@@ -361,18 +361,20 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	)
 	txBytes, err := bcs.Marshal(tx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	signatures, err := sc.Account.SignSecureWithoutEncode(txBytes, sui_types.DefaultIntent())
 	if err != nil {
-		return err
+		return "", err
 	}
-	_, err = sc.Client.ExecuteTransactionBlock(context.Background(), txBytes, []any{signatures}, nil, types.TxnRequestTypeWaitForEffectsCert)
+	txResponse, err := sc.Client.ExecuteTransactionBlock(context.Background(), txBytes, []any{signatures}, nil, types.TxnRequestTypeWaitForEffectsCert)
+	digest := txResponse.Digest.String()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+
+	return digest, nil
 }
 
 func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) (StorkState, error) {

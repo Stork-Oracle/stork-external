@@ -85,12 +85,15 @@ func (sci *SuiContractInteracter) BatchPushToContract(priceUpdates map[InternalE
 		}
 		updateData = append(updateData, update)
 	}
-	err := sci.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
+	digest, err := sci.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
 	if err != nil {
 		sci.logger.Error().Err(err).Msg("failed to update multiple temporal numeric values")
 		return err
 	}
-	sci.logger.Info().Msg("successfully updated multiple temporal numeric values")
+	sci.logger.Info().
+		Int("numUpdates", len(priceUpdates)).
+		Str("txnDigest", digest).
+		Msg("Successfully pushed batch update to contract")
 	return nil
 }
 
