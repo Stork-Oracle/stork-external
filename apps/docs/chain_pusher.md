@@ -112,7 +112,7 @@ go run ./cmd/chain_pusher/main.go sui \
 ```
 
 ### Sui Development Setup
-At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found in [contract_bindings/sui](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
+At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
 ## Deployment
 
 ### Running on EC2
