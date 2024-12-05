@@ -19,6 +19,11 @@ sui move test
 ```bash
 RUST_LOG="off,sui_node=info" sui start --with-faucet --force-regenesis
 ```
+#### Test
+
+```bash
+sui move test
+```
 
 #### Deploy
 
@@ -33,11 +38,7 @@ sui move publish
 sui move build
 sui move publish
 ```
+#### Note
 
-
-#### Test
-
-```bash
-sui move test
-```
+Sui packages are capable of automatically handling addresses via the Move.lock file. This allows for easy inclusion as a dependency via a github url without having to manually specify the deployed address. Because of this, the Move.lock file must be checked into version control, and must be pushed to the remote repository whenever the package address changes. The Move.lock file should not be updated manually.
 
