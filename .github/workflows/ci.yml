@@ -182,10 +182,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-sui-
 
+      - name: Cache Sui CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/sui
+          key: ${{ runner.os }}-sui-cli
+
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui --features tracing
+            cargo install --locked --git https://github.com/MystenLabs/sui.git sui --features tracing
           fi
           sui --version
 
