@@ -19,7 +19,7 @@ module stork::state {
 
     // === Constants ===
 
-    const VERSION: u64 = 1;
+    const VERSION: u64 = 4;
     const TNV_FEEDS_REGISTRY_NAME: vector<u8> = b"temporal_numeric_value_feed_registry";
     const TREASURY_NAME: vector<u8> = b"treasury";
 
@@ -179,6 +179,14 @@ module stork::state {
         assert!(state.version == VERSION - 1, EIncorrectVersion);
         state.stork_sui_public_key = stork_sui_public_key;
         state.version = version;
+        // as of now this is not useful for reversing the state id from the upgraded contract as several Sui RPC methods are currently broken
+        event::emit_stork_initialization_event(
+            stork_sui_public_key,
+            state.stork_evm_public_key.get_bytes(),
+            state.single_update_fee_in_mist,
+            object::id(state),
+            state.version,
+        );
     }
 
 }

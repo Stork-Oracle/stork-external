@@ -10,9 +10,13 @@ module stork::admin {
 
     fun init(ctx: &mut TxContext) {
         transfer::transfer(
-            AdminCap { id: object::new(ctx) },
+            new(ctx),
             ctx.sender()
         );
+    }
+
+    fun new(ctx: &mut TxContext): AdminCap {
+        AdminCap { id: object::new(ctx) }
     }
 
     // === Test Helpers ===
@@ -21,5 +25,4 @@ module stork::admin {
     public(package) fun test_init(ctx: &mut TxContext) {
         init(ctx);
     }
-    
 }

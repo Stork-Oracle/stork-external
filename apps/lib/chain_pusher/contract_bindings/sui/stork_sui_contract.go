@@ -14,7 +14,7 @@ import (
 	"strconv"
 
 	"github.com/coming-chat/go-sui/v2/account"
-	"github.com/coming-chat/go-sui/v2/client"
+	sui_client "github.com/coming-chat/go-sui/v2/client"
 	"github.com/coming-chat/go-sui/v2/lib"
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
@@ -22,7 +22,7 @@ import (
 )
 
 type StorkContract struct {
-	Client          *client.Client
+	Client          *sui_client.Client
 	Account         *account.Account
 	ContractAddress sui_types.SuiAddress
 	State           StorkState
@@ -84,7 +84,7 @@ type U128 struct {
 }
 
 func NewStorkContract(rpcUrl string, contractAddress string, key string) (*StorkContract, error) {
-	client, err := client.Dial(rpcUrl)
+	client, err := sui_client.Dial(rpcUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -377,13 +377,36 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	return digest, nil
 }
 
-func getStorkState(contractAddress sui_types.SuiAddress, client *client.Client) (StorkState, error) {
+func getOriginalContractAddress(contractAddress sui_types.SuiAddress, client *sui_client.Client) (sui_types.SuiAddress, error) {
+	method := sui_client.SuiMethod("getNormalizedMoveModulesByPackage")
+	var result interface{}
+	err := client.CallContext(
+		context.Background(),
+		&result,
+		method, // This is the constant defined in method.go
+		contractAddress,
+	)
+	if err != nil {
+		return sui_types.SuiAddress{}, err
+	}
+	addressString := result.(map[string]interface{})["admin"].(map[string]interface{})["address"].(string)
+	address, err := sui_types.NewAddressFromHex(addressString)
+	if err != nil {
+		return sui_types.SuiAddress{}, err
+	}
+	return sui_types.SuiAddress(*address), nil
+}
+func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Client) (StorkState, error) {
+	originalContractAddress, err := getOriginalContractAddress(contractAddress, client)
+	if err != nil {
+		return StorkState{}, err
+	}
 	eventFilter := types.EventFilter{
 		MoveModule: &struct {
 			Package sui_types.ObjectID `json:"package"`
 			Module  string             `json:"module"`
 		}{
-			Package: contractAddress,
+			Package: originalContractAddress,
 			Module:  "stork",
 		},
 	}
