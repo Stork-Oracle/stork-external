@@ -179,6 +179,14 @@ module stork::state {
         assert!(state.version == VERSION - 1, EIncorrectVersion);
         state.stork_sui_public_key = stork_sui_public_key;
         state.version = version;
+        // as of now this is not useful for reversing the state id from the upgraded contract as several Sui RPC methods are currently broken
+        event::emit_stork_initialization_event(
+            stork_sui_public_key,
+            state.stork_evm_public_key.get_bytes(),
+            state.single_update_fee_in_mist,
+            object::id(state),
+            state.version,
+        );
     }
 
 }

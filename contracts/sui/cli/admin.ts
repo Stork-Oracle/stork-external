@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { SuiClient, getFullnodeUrl, PaginatedObjectsResponse, SuiObjectData, SuiEventFilter } from "@mysten/sui/client";
+import { SuiClient, getFullnodeUrl, PaginatedObjectsResponse, SuiObjectData, SuiEventFilter, SuiMoveNormalizedModules, SuiMoveNormalizedModule } from "@mysten/sui/client";
 import { Transaction, TransactionResult } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import * as fs from 'fs';
@@ -59,9 +59,9 @@ async function getAdminCap(keypair: Ed25519Keypair): Promise<SuiObjectData> {
             showContent: true,
         }
     });
-
+    const originalContractId = await getOrigionalContractId();
     const adminCap = objects.data.find((obj: any) => {
-        return obj.data?.content?.type === `${STORK_CONTRACT_ADDRESS}::admin::AdminCap`;
+        return obj.data?.content?.type === `${originalContractId}::admin::AdminCap`;
     });
 
     if (!adminCap) {
@@ -71,10 +71,20 @@ async function getAdminCap(keypair: Ed25519Keypair): Promise<SuiObjectData> {
     return adminCap.data;
 }
 
+async function getOrigionalContractId(): Promise<string> {
+    const modules: SuiMoveNormalizedModules = await client.getNormalizedMoveModulesByPackage({
+        package: STORK_CONTRACT_ADDRESS
+    });
+
+    const adminModule: SuiMoveNormalizedModule = modules[`admin`];
+    return adminModule.address;
+}
+
 async function getStorkStateId(): Promise<string> {
+    const originalContractId = await getOrigionalContractId();
     const eventFilter: SuiEventFilter = {
         MoveModule: {
-            package: STORK_CONTRACT_ADDRESS,
+            package: originalContractId,
             module: "stork",
         }
     };
@@ -111,7 +121,8 @@ cliProgram
     .command("initialize")
     .description("Initialize the Stork program")
     .argument("[stork_contract_address]", "The Stork contract address", (value) => value, STORK_CONTRACT_ADDRESS)
-    .action(async (stork_contract_address: string) => {
+    .argument("<version>", "The version of the Stork state", (value) => value)
+    .action(async (stork_contract_address: string, version: string ) => {
         const keypair = loadKeypairFromKeystore();
         const tx = new Transaction();
         const stork_initialize_function = `${stork_contract_address}::stork::init_stork`;
@@ -126,11 +137,10 @@ cliProgram
                 tx.pure.address(STORK_CONTRACT_ADDRESS),
                 tx.pure.vector('u8', hexStringToByteArray(DEFAULT_STORK_EVM_PUBLIC_KEY)),
                 tx.pure.u64(DEFAULT_UPDATE_FEE_IN_MIST),
-                tx.pure.u64(1),
+                tx.pure.u64(BigInt(version)),
             ]
         });
 
-        tx.setGasBudget(1000000000);
         let result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
@@ -230,6 +240,7 @@ cliProgram
                     coin,
                 ]
             });
+            
             const txResult = await client.signAndExecuteTransaction({
                 signer: keypair,
                 transaction: tx,
@@ -369,6 +380,32 @@ cliProgram
         console.log("Fees withdrawn:", result);
     });
 
+//this command 
+cliProgram
+    .command("migrate-state")
+    .description("Migrate the Stork state to the new version")
+    .argument("<version>", "The new version of the Stork state", (value) => value)
+    .action(async (version: string) => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::migrate`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+                tx.pure.u64(BigInt(version)),
+                tx.pure.address(STORK_CONTRACT_ADDRESS),
+            ]
+        });
+
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("State migrated:", result);
+    });
 cliProgram.parse();
 
 
