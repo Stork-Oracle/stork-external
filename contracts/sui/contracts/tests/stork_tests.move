@@ -12,10 +12,10 @@ module stork::stork_tests {
     use stork::update_temporal_numeric_value_evm_input;
     use stork::update_temporal_numeric_value_evm_input_vec;
     use sui::test_utils::Self;
+
     // === Constants ===
 
     const DEPLOYER: address = @0x26;
-    const NON_ADMIN: address = @0x42;
     const STORK_SUI_PUBLIC_KEY: address = @0x42;
     const SINGLE_UPDATE_FEE: u64 = 1000;
     const VERSION: u64 = 1;
@@ -30,9 +30,7 @@ module stork::stork_tests {
     const VALID_S: vector<u8> = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
     const VALID_V: u8 = 28;
 
-    // === Errors ===
-
-    const ENotImplemented: u64 = 0;
+    // === Tests ===
 
     #[test]
     fun test_admin_init() {

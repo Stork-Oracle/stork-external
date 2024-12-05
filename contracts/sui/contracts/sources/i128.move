@@ -56,6 +56,10 @@ module stork::i128 {
         i128.magnitude
     }
 
+    public fun get_magnitude(i128: &I128): u128 {
+        i128.magnitude
+    }
+
     // from u128 to i128, assumes value is in twos complement representation
     public fun from_u128(value: u128): I128 {
         // Check the MSB for sign
@@ -91,6 +95,8 @@ module stork::i128 {
         bytes
     }
 
+    // === Tests ===
+
     #[test]
     fun test_max_positive_magnitude() {
         let max_positive_magnitude = new(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, false);
@@ -100,7 +106,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 0)]
+    #[expected_failure(abort_code = EMagnitudeTooLarge)]
     fun test_magnitude_too_large_positive() {
         let magnitude_too_large_positive = 0x80000000000000000000000000000000;
         new(magnitude_too_large_positive, false);
@@ -115,7 +121,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 0)]
+    #[expected_failure(abort_code = EMagnitudeTooLarge)]
     fun test_magnitude_too_large_negative() {
         let magnitude_too_large_negative = 0x80000000000000000000000000000001;
         new(magnitude_too_large_negative, true);
@@ -133,7 +139,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 1)]
+    #[expected_failure(abort_code = EInvalidSign)]
     fun test_get_magnitude_if_negative_positive() {
         get_magnitude_if_negative(&new(1, false));
     }
@@ -144,9 +150,15 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 1)]
+    #[expected_failure(abort_code = EInvalidSign)]
     fun test_get_magnitude_if_positive_negative() {
         get_magnitude_if_positive(&new(1, true));
+    }
+
+    #[test]
+    fun test_get_magnitude() {
+        assert!(get_magnitude(&new(1, false)) == 1, 0);
+        assert!(get_magnitude(&new(1, true)) == 1, 0);
     }
 
     #[test]
