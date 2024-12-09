@@ -27,7 +27,7 @@ module stork::stork {
         // admin capability
         _: &AdminCap,
         // the address of the Stork program
-        stork_sui_public_key: address,
+        stork_sui_address: address,
         // Storks EVM public key
         stork_evm_public_key: vector<u8>,
         // the fee to update a value
@@ -37,11 +37,11 @@ module stork::stork {
         // context
         ctx: &mut TxContext,
     ) {
-        let state = state::new(stork_sui_public_key, stork_evm_public_key, single_update_fee, stork_state_version, ctx);
+        let state = state::new(stork_sui_address, stork_evm_public_key, single_update_fee, stork_state_version, ctx);
         let state_id = object::id(&state);
         state::share(state);
         event::emit_stork_initialization_event(
-            stork_sui_public_key,
+            stork_sui_address,
             stork_evm_public_key,
             single_update_fee,
             state_id,
