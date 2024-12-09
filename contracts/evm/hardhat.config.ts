@@ -103,6 +103,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 314159,
     },
+    goatTestnet: {
+      url: "https://rpc.testnet3.goat.network/",
+      accounts: [PRIVATE_KEY],
+      chainId: 48816,
+    },
     glueTestnet: {
       url: "https://testnet-ws-1.server-1.glue.net/",
       accounts: [PRIVATE_KEY],
@@ -272,6 +277,7 @@ const config: HardhatUserConfig = {
       coreMainnet: CORE_MAINNET_API_KEY,
       expchainTestnet: 'fake',
       glueTestnet: 'fake',
+      goatTestnet: 'fake',
       holesky: ETHERSCAN_API_KEY,
       lightlinkPegasusTestnet: 'fake',
       lightlinkPhoenixMainnet: 'fake',
@@ -374,6 +380,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://blockscout-testnet.expchain.ai/api",
           browserURL: "https://blockscout-testnet.expchain.a"
+        }
+      },
+      {
+        network: "goatTestnet",
+        chainId: 48816,
+        urls: {
+          apiURL: "https://explorer.testnet3.goat.network/api",
+          browserURL: "https://explorer.testnet3.goat.network/"
         }
       },
       {
