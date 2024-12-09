@@ -37,3 +37,13 @@ func SolanaPusherLogger(
 		Str("contractAddress", contractAddress).
 		Logger()
 }
+
+func SuiPusherLogger(
+	chainRpcUrl string,
+	contractAddress string,
+) zerolog.Logger {
+	return AppLogger("sui").With().
+		Str("chainRpcUrl", chainRpcUrl).
+		Str("contractAddress", contractAddress).
+		Logger()
+}
