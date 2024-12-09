@@ -28,7 +28,7 @@ module stork::state {
     public struct StorkState has key {
         id: UID,
         // the address of the Stork program
-        stork_sui_public_key: address,
+        stork_sui_address: address,
         // Storks EVM public key
         stork_evm_public_key: EvmPubkey,
         // the fee to update a value
@@ -40,7 +40,7 @@ module stork::state {
     // === Functions ===
     
     public(package) fun new(
-        stork_sui_public_key: address,
+        stork_sui_address: address,
         stork_evm_public_key: vector<u8>,
         single_update_fee_in_mist: u64,
         version: u64,
@@ -69,7 +69,7 @@ module stork::state {
 
         StorkState {
             id: uid,
-            stork_sui_public_key,
+            stork_sui_address,
             stork_evm_public_key: evm_pubkey,
             single_update_fee_in_mist,
             version,
@@ -100,9 +100,9 @@ module stork::state {
         stork_state.single_update_fee_in_mist
     }
 
-    public fun get_stork_sui_public_key(stork_state: &StorkState): address {
+    public fun get_stork_sui_address(stork_state: &StorkState): address {
         assert!(stork_state.version == VERSION, EIncorrectVersion);
-        stork_state.stork_sui_public_key
+        stork_state.stork_sui_address
     }
 
     public fun get_version(stork_state: &StorkState): u64 {
@@ -135,13 +135,13 @@ module stork::state {
         state.single_update_fee_in_mist = new_single_update_fee_in_mist;
     }
 
-    public fun update_stork_sui_public_key(
+    public fun update_stork_sui_address(
         _: &AdminCap,
         state: &mut StorkState,
-        new_stork_sui_public_key: address,
+        new_stork_sui_address: address,
     ) {
         assert!(state.version == VERSION, EIncorrectVersion);
-        state.stork_sui_public_key = new_stork_sui_public_key;
+        state.stork_sui_address = new_stork_sui_address;
     }
 
     public fun update_stork_evm_public_key(
@@ -174,14 +174,14 @@ module stork::state {
         _: &AdminCap,
         state: &mut StorkState,
         version: u64,
-        stork_sui_public_key: address,
+        stork_sui_address: address,
     ) {
         assert!(state.version == VERSION - 1, EIncorrectVersion);
-        state.stork_sui_public_key = stork_sui_public_key;
+        state.stork_sui_address = stork_sui_address;
         state.version = version;
         // as of now this is not useful for reversing the state id from the upgraded contract as several Sui RPC methods are currently broken
         event::emit_stork_initialization_event(
-            stork_sui_public_key,
+            stork_sui_address,
             state.stork_evm_public_key.get_bytes(),
             state.single_update_fee_in_mist,
             object::id(state),

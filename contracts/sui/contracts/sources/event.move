@@ -9,7 +9,7 @@ module stork::event {
     // === Structs ===
 
     public struct StorkInitializationEvent has copy, drop {
-        stork_sui_public_key: address,
+        stork_sui_address: address,
         stork_evm_public_key: vector<u8>,
         single_update_fee: u64,
         stork_state_id: ID,
@@ -28,7 +28,7 @@ module stork::event {
     // === Functions ===
 
     public(package) fun emit_stork_initialization_event(
-        stork_sui_public_key: address,
+        stork_sui_address: address,
         stork_evm_public_key: vector<u8>,
         single_update_fee: u64,
         stork_state_id: ID,
@@ -36,7 +36,7 @@ module stork::event {
     ) {
         event::emit(
             StorkInitializationEvent {
-                stork_sui_public_key,
+                stork_sui_address,
                 stork_evm_public_key,
                 single_update_fee,
                 stork_state_id,
