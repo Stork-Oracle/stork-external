@@ -22,6 +22,8 @@ const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
 const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
+const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
+const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -193,6 +195,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1946
     },
+    soneiumMainnet: {
+      url: SONEIUM_MAINNET_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 1868
+    },
     sonicMainnet: {
       url: "https://rpc.soniclabs.com",
       accounts: [PRIVATE_KEY],
@@ -280,6 +287,7 @@ const config: HardhatUserConfig = {
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
+      soneiumMainnet: 'fake',
       soneiumMinato: 'fake',
       storyOdysseyTestnet: 'fake',
       taraxaMainnet: 'fake',
@@ -470,6 +478,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://rootstock-testnet.blockscout.com/api/",
           browserURL: "https://rootstock-testnet.blockscout.com/"
+        }
+      },
+      {
+        network: "soneiumMainnet",
+        chainId: 1868,
+        urls: {
+          apiURL: `${SONEIUM_MAINNET_BLOCKSCOUT_URL}/api`,
+          browserURL: SONEIUM_MAINNET_BLOCKSCOUT_URL
         }
       },
       {
