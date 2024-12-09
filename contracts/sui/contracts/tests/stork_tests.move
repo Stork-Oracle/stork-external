@@ -80,7 +80,7 @@ module stork::stork_tests {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         {
             let state = test_scenario::take_shared<state::StorkState>(&scenario);
-            assert!(state.get_stork_sui_public_key() == STORK_SUI_PUBLIC_KEY);
+            assert!(state.get_stork_sui_address() == STORK_SUI_PUBLIC_KEY);
             assert!(state.get_stork_evm_public_key().get_bytes() == STORK_EVM_PUBLIC_KEY);
             assert!(state.get_single_update_fee_in_mist() == SINGLE_UPDATE_FEE);
             assert!(state.get_version() == VERSION);
@@ -123,8 +123,8 @@ module stork::stork_tests {
 
             // Test update SUI public key
             let new_sui_key = @0x99;
-            state::update_stork_sui_public_key(&admin_cap, &mut state, new_sui_key);
-            assert!(state.get_stork_sui_public_key() == new_sui_key, 0);
+            state::update_stork_sui_address(&admin_cap, &mut state, new_sui_key);
+            assert!(state.get_stork_sui_address() == new_sui_key, 0);
 
             // Test update EVM public key
             let new_evm_key = x"1111111111111111111111111111111111111111";
