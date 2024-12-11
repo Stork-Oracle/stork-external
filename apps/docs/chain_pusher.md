@@ -89,6 +89,30 @@ go build
 ./solana-anchor-go src=../contracts/solana/programs/stork/src/target/idl
 ```
 
+## Sui Chain Setup
+
+### Wallet Setup
+Creat a `.key` file containing your Sui wallet keypair. This file is needed to sign transactions.
+
+### Running the Sui Pusher
+For full explanation of the flags, run:
+```bash
+go run . sui --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/chain_pusher/main.go sui \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -c <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -k <keypair-file>
+```
+
+### Sui Development Setup
+At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
 ## Deployment
 
 ### Running on EC2
