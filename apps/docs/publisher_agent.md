@@ -31,14 +31,14 @@ You can also generate your own keys and build your own `keys.json` file - it fol
 The keys.json file can be substituted or combined with environment variables if preferred. If the same property has a value set in both the keys.json and environment variable, the environment variable takes priority.
 
 The available environment variables are:
-| Key |
-|---------|
-| STORK_EVM_PRIVATE_KEY |
-| STORK_EVM_PUBLIC_KEY |
-| STORK_STARK_PRIVATE_KEY |
-| STORK_STARK_PUBLIC_KEY |
-| STORK_ORACLE_ID |
-| STORK_PULL_BASED_AUTH |
+| Key | Description | Type |
+|---------| --------- | --------- |
+| STORK_EVM_PRIVATE_KEY | EVM Private Key | hex string |
+| STORK_EVM_PUBLIC_KEY | EVM Public Key | hex string |
+| STORK_STARK_PRIVATE_KEY | Stark Private Key | hex string |
+| STORK_STARK_PUBLIC_KEY | Stark Public Key | hex string |
+| STORK_ORACLE_ID | Oracle ID | string |
+| STORK_PULL_BASED_AUTH | Pull-based websocket auth token | string |
 
 **You'll need to send your Public keys to Stork before running your publisher agent so that we can whitelist them. NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.**
 
