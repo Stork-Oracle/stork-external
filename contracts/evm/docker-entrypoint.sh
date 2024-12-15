@@ -11,6 +11,7 @@ npx hardhat vars set ETHERSCAN_API_KEY fake
 npx hardhat vars set CORE_TESTNET_API_KEY fake
 npx hardhat vars set CORE_MAINNET_API_KEY fake
 npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
+npx hardhat vars set SCROLL_MAINNET_API_KEY fake
 npx hardhat vars set SONEIUM_MAINNET_RPC_URL fake
 npx hardhat vars set SONEIUM_MAINNET_BLOCKSCOUT_URL fake
 

@@ -22,6 +22,7 @@ const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
 const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
+const SCROLL_MAINNET_API_KEY = vars.get("SCROLL_MAINNET_API_KEY");
 const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
 const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
 
@@ -143,6 +144,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 686868
     },
+    mitosisTestnet: {
+      url: "https://rpc.badnet.mitosis.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 124864
+    },
     molten: {
       url: "https://molten.calderachain.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -195,6 +201,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 31,
     },
+    scrollMainnet: {
+      url: "https://rpc.scroll.io/",
+      accounts: [PRIVATE_KEY],
+      chainId: 534352
+    },
     soneiumMinato: {
       url: "https://rpc.minato.soneium.org",
       accounts: [PRIVATE_KEY],
@@ -241,6 +252,12 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1516,
     },
+    // testnet
+    tacTurin: {
+      url: "https://turin.rpc.tac.build",
+      accounts: [PRIVATE_KEY],
+      chainId: 2390
+    },
     taraxaMainnet: {
       url: "https://841.rpc.thirdweb.com/fake/anotherfake",
       accounts: [PRIVATE_KEY],
@@ -284,6 +301,7 @@ const config: HardhatUserConfig = {
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
+      mitosisTestnet: 'fake',
       molten: 'fake',
       monadDevnet: 'fake',
       omniOmega: 'fake',
@@ -293,9 +311,12 @@ const config: HardhatUserConfig = {
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
+      scrollSepolia: 'fake',
+      scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
       soneiumMinato: 'fake',
       storyOdysseyTestnet: 'fake',
+      tacTurin: 'fake',
       taraxaMainnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
@@ -439,6 +460,14 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "mitosisTestnet",
+        chainId: 124864,
+        urls: {
+          apiURL: "https://blockscout.badnet.mitosis.org/api",
+          browserURL: "https://blockscout.badnet.mitosis.org/"
+        }
+      },
+      {
         network: "molten",
         chainId: 360,
         urls: {
@@ -495,6 +524,14 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "scrollMainnet",
+        chainId: 534352,
+        urls: {
+          apiURL: "https://api.scrollscan.com/api",
+          browserURL: "https://scrollscan.com/"
+        }
+      },
+      {
         network: "soneiumMainnet",
         chainId: 1868,
         urls: {
@@ -516,6 +553,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://odyssey.storyscan.xyz/api",
           browserURL: "https://odyssey.storyscan.xyz/"
+        }
+      },
+      {
+        network: "tacTurin",
+        chainId: 2390,
+        urls: {
+          apiURL: "https://turin.explorer.tac.build/api",
+          browserURL: "https://turin.explorer.tac.build/"
         }
       },
       {
