@@ -201,11 +201,6 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 31,
     },
-    scrollSepolia: {
-      url: "https://sepolia-rpc.scroll.io/",
-      accounts: [PRIVATE_KEY],
-      chainId: 534351
-    },
     scrollMainnet: {
       url: "https://rpc.scroll.io/",
       accounts: [PRIVATE_KEY],
