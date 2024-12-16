@@ -16,7 +16,11 @@ async function main() {
   // Upgrade the proxy to the new implementation
   const upgraded = await upgrades.upgradeProxy(
     contractAddress,
-    UpgradeableStork
+    UpgradeableStork,
+    {
+      pollingInterval: 1000,
+      timeout: 60000,
+    }
   );
 
   console.log("UpgradeableStork upgraded to:", await upgraded.getAddress());

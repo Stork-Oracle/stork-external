@@ -23,3 +23,6 @@ ignition/deployments/chain-31337
 # zksync artifacts
 artifacts-zk
 cache-zk
+
+upgrade_success.log
+upgrade_error.log

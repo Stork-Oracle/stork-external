@@ -48,6 +48,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 421614,
     },
+    // you might need to use a custom RPC URL for this chain, get one from quicknode
     berachainTestnet: {
       url: "https://bartio.rpc.berachain.com/",
       accounts: [PRIVATE_KEY],
@@ -73,12 +74,6 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 5115,
     },
-    // this appears to be deprecated
-    citreaDevnet: {
-      url: "https://rpc.devnet.citrea.xyz",
-      accounts: [PRIVATE_KEY],
-      chainId: 62298,
-    },
     coreTestnet: {
       url: "https://rpc.test.btcs.network",
       accounts: [PRIVATE_KEY],
@@ -94,6 +89,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 4158,
     },
+    // not currently deployed, seems to have been reset
     expchainTestnet: {
       url: "https://rpc0-testnet.expchain.ai",
       accounts: [PRIVATE_KEY],
@@ -184,13 +180,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 98864
     },
-    // upgrade seems to have broken ability to verify on this chain
     polygon: {
       url: "https://polygon.llamarpc.com",
       accounts: [PRIVATE_KEY],
       chainId: 137,
     },
-    // upgrade seems to have broken ability to verify on this chain
     polygonAmoy: {
       url: "https://rpc-amoy.polygon.technology/",
       accounts: [PRIVATE_KEY],
@@ -269,7 +263,6 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 5633311,
     },
-    // verification failure
     xlayerTestnet: {
       url: "https://xlayertestrpc.okx.com",
       accounts: [PRIVATE_KEY],
@@ -344,7 +337,7 @@ const config: HardhatUserConfig = {
         chainId: 11503,
         urls: {
           apiURL: "https://scan-testnet-api.bevm.io/api",
-          browserURL: "https://bevm.io"
+          browserURL: "https://scan-testnet.bevm.io/"
         }
       },
       {
@@ -372,14 +365,6 @@ const config: HardhatUserConfig = {
         }
       },
       {
-        network: "citreaDevnet",
-        chainId: 62298,
-        urls: {
-          apiURL: "https://explorer.devnet.citrea.xyz/api",
-          browserURL: "https://explorer.devnet.citrea.xyz/"
-        }
-      },
-      {
         network: "coreTestnet",
         chainId: 1115,
         urls: {
@@ -400,7 +385,7 @@ const config: HardhatUserConfig = {
         chainId: 18880,
         urls: {
           apiURL: "https://blockscout-testnet.expchain.ai/api",
-          browserURL: "https://blockscout-testnet.expchain.a"
+          browserURL: "https://blockscout-testnet.expchain.ai"
         }
       },
       {

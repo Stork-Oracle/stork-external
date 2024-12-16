@@ -3,14 +3,14 @@
   "proxies": [
     {
       "address": "0xacC0a0cF13571d30B4b8637996F5D6D774d4fd62",
-      "txHash": "0x0c53854f1e9b6db8f3e6ff50b023607a52b4c26bda5bf663b643d4094ea6a2ff",
+      "txHash": "0x46255ecfdc8de740e71ca2b68d9dd011b2f3c848de080e0f94ef297a1b774311",
       "kind": "uups"
     }
   ],
   "impls": {
-    "db46386acc746ba0e7ff562cad863f11151d7b07d1f61502f4bfabe28e740bda": {
+    "e4fae672689e006984b7251d139ee25529fc5ef3bed28b6bb5ddf2347836a2d4": {
       "address": "0xF89CEf90CF229c564596cf105D19bc92e17b98C4",
-      "txHash": "0xca86577e24284da5fa2cf23a13df0755703269dfbd3d6d98a7cd34d659c8892f",
+      "txHash": "0x3660fbfffa737685c7097d546ed92eb53126e7f887ff4c792f99c0f30b5b3e98",
       "layout": {
         "solcVersion": "0.8.24",
         "storage": [
@@ -18,7 +18,7 @@
             "label": "_state",
             "offset": 0,
             "slot": "0",
-            "type": "t_struct(State)1905_storage",
+            "type": "t_struct(State)1936_storage",
             "contract": "StorkState",
             "src": "contracts/StorkState.sol:23"
           }
@@ -28,44 +28,6 @@
             "label": "address",
             "numberOfBytes": "20"
           },
-          "t_bool": {
-            "label": "bool",
-            "numberOfBytes": "1"
-          },
-          "t_struct(InitializableStorage)65_storage": {
-            "label": "struct Initializable.InitializableStorage",
-            "members": [
-              {
-                "label": "_initialized",
-                "type": "t_uint64",
-                "offset": 0,
-                "slot": "0"
-              },
-              {
-                "label": "_initializing",
-                "type": "t_bool",
-                "offset": 8,
-                "slot": "0"
-              }
-            ],
-            "numberOfBytes": "32"
-          },
-          "t_struct(OwnableStorage)14_storage": {
-            "label": "struct OwnableUpgradeable.OwnableStorage",
-            "members": [
-              {
-                "label": "_owner",
-                "type": "t_address",
-                "offset": 0,
-                "slot": "0"
-              }
-            ],
-            "numberOfBytes": "32"
-          },
-          "t_uint64": {
-            "label": "uint64",
-            "numberOfBytes": "8"
-          },
           "t_bytes32": {
             "label": "bytes32",
             "numberOfBytes": "32"
@@ -74,11 +36,11 @@
             "label": "int192",
             "numberOfBytes": "24"
           },
-          "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1917_storage)": {
+          "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1948_storage)": {
             "label": "mapping(bytes32 => struct StorkStructs.TemporalNumericValue)",
             "numberOfBytes": "32"
           },
-          "t_struct(State)1905_storage": {
+          "t_struct(State)1936_storage": {
             "label": "struct StorkStorage.State",
             "members": [
               {
@@ -101,14 +63,14 @@
               },
               {
                 "label": "latestCanonicalTemporalNumericValues",
-                "type": "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1917_storage)",
+                "type": "t_mapping(t_bytes32,t_struct(TemporalNumericValue)1948_storage)",
                 "offset": 0,
                 "slot": "3"
               }
             ],
             "numberOfBytes": "128"
           },
-          "t_struct(TemporalNumericValue)1917_storage": {
+          "t_struct(TemporalNumericValue)1948_storage": {
             "label": "struct StorkStructs.TemporalNumericValue",
             "members": [
               {
@@ -129,6 +91,13 @@
           "t_uint256": {
             "label": "uint256",
             "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_bool": {
+            "label": "bool"
           }
         },
         "namespaces": {
@@ -137,9 +106,7 @@
               "contract": "OwnableUpgradeable",
               "label": "_owner",
               "type": "t_address",
-              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
-              "offset": 0,
-              "slot": "0"
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24"
             }
           ],
           "erc7201:openzeppelin.storage.Initializable": [
@@ -147,17 +114,13 @@
               "contract": "Initializable",
               "label": "_initialized",
               "type": "t_uint64",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
-              "offset": 0,
-              "slot": "0"
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69"
             },
             {
               "contract": "Initializable",
               "label": "_initializing",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
-              "offset": 8,
-              "slot": "0"
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73"
             }
           ]
         }

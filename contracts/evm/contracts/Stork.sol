@@ -106,7 +106,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.1";
+        return "1.0.2";
     }
 
     function getTotalFee(
