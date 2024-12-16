@@ -7,6 +7,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Stork.sol";
 
 contract UpgradeableStork is Initializable, UUPSUpgradeable, OwnableUpgradeable, Stork {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address initialOwner, address storkPublicKey, uint validTimePeriodSeconds, uint singleUpdateFeeInWei) initializer public {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
