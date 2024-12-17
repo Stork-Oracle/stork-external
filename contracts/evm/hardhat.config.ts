@@ -140,6 +140,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 686868
     },
+    mitosisPrivateTestnet: {
+      url: "https://rpc.testnet.mitosis.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 124832
+    },
     mitosisTestnet: {
       url: "https://rpc.badnet.mitosis.org",
       accounts: [PRIVATE_KEY],
@@ -199,6 +204,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.scroll.io/",
       accounts: [PRIVATE_KEY],
       chainId: 534352
+    },
+    scrollSepolia: {
+      url: "https://sepolia-rpc.scroll.io/",
+      accounts: [PRIVATE_KEY],
+      chainId: 534351
     },
     soneiumMinato: {
       url: "https://rpc.minato.soneium.org",
@@ -295,6 +305,7 @@ const config: HardhatUserConfig = {
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
       mitosisTestnet: 'fake',
+      mitosisPrivateTestnet: 'fake',
       molten: 'fake',
       monadDevnet: 'fake',
       omniOmega: 'fake',
@@ -304,7 +315,6 @@ const config: HardhatUserConfig = {
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
       rootstockTestnet: 'fake',
-      scrollSepolia: 'fake',
       scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
       soneiumMinato: 'fake',
@@ -450,6 +460,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://blockscout.badnet.mitosis.org/api",
           browserURL: "https://blockscout.badnet.mitosis.org/"
+        }
+      },
+      {
+        network: "mitosisPrivateTestnet",
+        chainId: 124832,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/124832/etherscan",
+          browserURL: "https://testnet.mitosiscan.xyz"
         }
       },
       {
