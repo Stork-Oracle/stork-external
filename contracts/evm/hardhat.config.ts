@@ -180,6 +180,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 7849306
     },
+    plume: {
+      url: "https://phoenix-rpc.plumenetwork.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 98865
+    },
     plumeDevnet: {
       url: "https://test-rpc.plumenetwork.xyz",
       accounts: [PRIVATE_KEY],
@@ -311,6 +316,7 @@ const config: HardhatUserConfig = {
       omniOmega: 'fake',
       openCampusTestnet: 'fake',
       ozeanTestnet: 'fake',
+      plume: 'fake',
       plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
@@ -511,11 +517,19 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "plume",
+        chainId: 98865,
+        urls: {
+          apiURL: "https://phoenix-explorer.plumenetwork.xyz/api",
+          browserURL: "https://phoenix-explorer.plumenetwork.xyz/"
+        }
+      },
+      {
         network: "plumeDevnet",
         chainId: 98864,
         urls: {
-          apiURL: "https://plume-testnet.explorer.caldera.xyz/api",
-          browserURL: "https://plume-testnet.explorer.caldera.xyz/"
+          apiURL: "https://test-explorer.plumenetwork.xyz/api",
+          browserURL: "https://test-explorer.plumenetwork.xyz/"
         }
       },
       {
