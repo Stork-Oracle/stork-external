@@ -43,6 +43,14 @@ const config: HardhatUserConfig = {
       chainId: 31337,
       loggingEnabled: true,
     },
+    abstractTestnet: {
+      url: "https://api.testnet.abs.xyz",
+      ethNetwork: "sepolia",
+      accounts: [PRIVATE_KEY],
+      chainId: 11124,
+      verifyURL: "https://api-explorer-verify.testnet.abs.xyz/contract_verification",
+      zksync: true,
+    },
     arbitrumSepolia: {
       url: "https://sepolia-rollup.arbitrum.io/rpc",
       accounts: [PRIVATE_KEY],
@@ -290,7 +298,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    // enabled: false, // uncomment this for Sophon verification
+    // enabled: false, // uncomment this for ZKSync verifications
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
