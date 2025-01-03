@@ -1,6 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-
+import "@nomicfoundation/hardhat-verify";
 require("@openzeppelin/hardhat-upgrades");
 
 import "@matterlabs/hardhat-zksync";
@@ -71,6 +71,11 @@ const config: HardhatUserConfig = {
       url: "https://testnet-rpc.bitlayer.org/",
       accounts: [PRIVATE_KEY],
       chainId: 200810,
+    },
+    bitlayerMainnet: {
+      url: "https://rpc.bitlayer.org/",
+      accounts: [PRIVATE_KEY],
+      chainId: 200901,
     },
     bobSepolia: {
       url: "https://bob-sepolia.rpc.gobob.xyz/",
@@ -304,6 +309,7 @@ const config: HardhatUserConfig = {
       berachainTestnet: 'fake',
       bevmTestnet: 'fake',
       bitlayerTestnet: 'fake',
+      bitlayerMainnet: 'fake',
       bobSepolia: 'fake',
       citreaTestnet: 'fake',
       coreTestnet: CORE_TESTNET_API_KEY,
@@ -362,6 +368,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://scan-testnet-api.bevm.io/api",
           browserURL: "https://scan-testnet.bevm.io/"
+        }
+      },
+      {
+        network: "bitlayerMainnet",
+        chainId: 200901,
+        urls: {
+          apiURL: "https://api.btrscan.com/scan/api",
+          browserURL: "https://www.btrscan.com"
         }
       },
       {
