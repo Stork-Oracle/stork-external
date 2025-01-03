@@ -160,3 +160,43 @@ jobs:
         run: |
           anchor test
         working-directory: ./contracts/solana/programs/stork
+
+  test-sui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-sui-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-sui-
+
+      - name: Cache Sui CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/sui
+          key: ${{ runner.os }}-sui-cli
+
+      - name: Install Sui
+        run: |
+          if ! command -v sui &> /dev/null; then
+            cargo install --locked --git https://github.com/MystenLabs/sui.git sui --features tracing
+          fi
+          sui --version
+
+      - name: Run Sui tests
+        run: |
+          sui move test
+        working-directory: ./contracts/sui/contracts
