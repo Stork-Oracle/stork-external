@@ -2,23 +2,19 @@ module stork::stork {
 
     // === Imports ===
 
-    use stork::state::{Self, StorkState};
+    use stork::state;
     use stork::event::{emit_stork_initialization_event};
     use stork::encoded_asset_id::{Self, EncodedAssetId};
-    use stork::temporal_numeric_value_feed_registry::{Self, TemporalNumericValueFeedRegistry};
-    use stork::temporal_numeric_value_evm_update::{Self, TemporalNumericValueEVMUpdate};
+    use stork::temporal_numeric_value_feed_registry;
+    use stork::temporal_numeric_value_evm_update;
     use stork::temporal_numeric_value::{Self, TemporalNumericValue};
-    use stork::evm_pubkey::{Self, EvmPubKey};
+    use stork::evm_pubkey;
     use stork::verify;
     use stork::i128;
-    use aptos_std::table;
-    use aptos_std::primary_fungible_store;
     use aptos_std::vector;
-    use aptos_std::event;
     use aptos_std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_framework::coin::{Self, Coin};
-    use std::string;
+    use aptos_framework::coin;
 
     // === Errors ===
 
@@ -56,27 +52,27 @@ module stork::stork {
 
     /// Updates a single temporal numeric value using EVM signature for verification
     public entry fun update_single_temporal_numeric_value_evm(
-        /// The signer of the transaction to pay the fee
+        // The signer of the transaction to pay the fee
         signer: &signer,
-        /// The asset id
+        // The asset id
         asset_id: vector<u8>,
-        /// The temporal numeric value
+        // The temporal numeric value
         temporal_numeric_value_timestamp_ns: u64,
-        /// The temporal numeric value
+        // The temporal numeric value
         temporal_numeric_value_quantized_value: u128,
-        /// The publisher's merkle root
+        // The publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        /// The value compute algorithm hash
+        // The value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        /// The signature r
+        // The signature r
         r: vector<u8>,
-        /// The signature s
+        // The signature s
         s: vector<u8>,
-        /// The signature v
+        // The signature v
         v: u8,
     ) {
         let evm_pubkey = state::get_stork_evm_public_key();
-        let fee = state::get_single_update_fee();
+        let fee = state::get_single_update_fee_in_octas();
         let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
         // recency
         if (!is_recent(encoded_asset_id, temporal_numeric_value_timestamp_ns)) {
@@ -109,27 +105,27 @@ module stork::stork {
     /// For each update, the position in the vectors corresponds to the position in the updates vector
     /// i.e ids[0] corresponds to timestamps_ns[0], quantized_values[0], etc.
     public entry fun update_multiple_temporal_numeric_values_evm(
-        /// The signer of the transaction to pay the fee
+        // The signer of the transaction to pay the fee
         signer: &signer,
-        /// The asset ids
+        // The asset ids
         ids: vector<vector<u8>>,
-        /// The timestamps in nanoseconds
+        // The timestamps in nanoseconds
         timestamps_ns: vector<u64>,
-        /// The quantized values
+        // The quantized values
         quantized_values: vector<u128>,
-        /// The publisher's merkle roots
+        // The publisher's merkle roots
         publisher_merkle_roots: vector<vector<u8>>,
-        /// The value compute algorithm hashes
+        // The value compute algorithm hashes
         value_compute_alg_hashes: vector<vector<u8>>,
-        /// The signatures r
+        // The signatures r
         rs: vector<vector<u8>>,
-        /// The signatures s
+        // The signatures s
         ss: vector<vector<u8>>,
-        /// The signatures v
+        // The signatures v
         vs: vector<u8>,
     ) {
         let evm_pubkey = state::get_stork_evm_public_key();
-        let fee = state::get_single_update_fee();
+        let fee = state::get_single_update_fee_in_octas();
         let updates = temporal_numeric_value_evm_update::from_vectors(ids, timestamps_ns, quantized_values, publisher_merkle_roots, value_compute_alg_hashes, rs, ss, vs);
 
         let num_updates = 0;
@@ -167,7 +163,7 @@ module stork::stork {
     #[view]
     /// Returns the latest temporal numeric value for an asset id
     public fun get_temporal_numeric_value_unchecked(
-        /// The asset id
+        // The asset id
         asset_id: vector<u8>,
     ): TemporalNumericValue {
         let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
@@ -260,7 +256,7 @@ module stork::stork {
         let user = account::create_account_for_test(USER);
         
         setup_test(&stork);
-        let fee = state::get_single_update_fee();
+        let fee = state::get_single_update_fee_in_octas();
         setup_test_with_coins(&stork, &user, fee);
 
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
@@ -294,7 +290,7 @@ module stork::stork {
         let user = account::create_account_for_test(USER);
         
         setup_test(&stork);
-        let fee = state::get_single_update_fee() * 2; 
+        let fee = state::get_single_update_fee_in_octas() * 2; 
         setup_test_with_coins(&stork, &user, fee);
 
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
@@ -348,7 +344,7 @@ module stork::stork {
         let user = account::create_account_for_test(USER);
         
         setup_test(&stork);
-        let fee = state::get_single_update_fee();
+        let fee = state::get_single_update_fee_in_octas();
         setup_test_with_coins(&stork, &user, fee);
 
         let initial_user_balance = coin::balance<AptosCoin>(USER);
@@ -378,7 +374,7 @@ module stork::stork {
         let user = account::create_account_for_test(USER);
         
         setup_test(&stork);
-        let fee = state::get_single_update_fee();
+        let fee = state::get_single_update_fee_in_octas();
         setup_test_with_coins(&stork, &user, fee);
 
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";

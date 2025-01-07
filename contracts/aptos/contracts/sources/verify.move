@@ -13,23 +13,23 @@ module stork::verify {
 
     /// Verifies an EVM signature of a stork signed update
     public fun verify_evm_signature(
-        /// The EVM public key
+        // The EVM public key
         stork_evm_public_key: &EvmPubKey,
-        /// The asset id
+        // The asset id
         asset_id: vector<u8>,
-        /// The timestamp
+        // The timestamp
         recv_time: u64,
-        /// The quantized value
+        // The quantized value
         quantized_value: I128,
-        /// The publisher's merkle root
+        // The publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        /// The value compute algorithm hash
+        // The value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        /// The signature r
+        // The signature r
         r: vector<u8>,
-        /// The signature s
+        // The signature s
         s: vector<u8>,
-        /// The signature v
+        // The signature v
         v: u8,
     ): bool {
         let message = get_stork_message_hash(
@@ -236,7 +236,6 @@ module stork::verify {
     #[test]
     fun test_verify_ecdsa_signature() {
         let pubkey = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
-        let pubkey = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
         let message = x"3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084";
         let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
         let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
@@ -248,7 +247,7 @@ module stork::verify {
     }
 
     #[test]
-    #[expected_failure(abort_code = 0)]
+    #[expected_failure(abort_code = 0, location = stork::verify)]
     fun test_verify_evm_signature_fails_with_wrong_value() {
         let stork_public_key = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";

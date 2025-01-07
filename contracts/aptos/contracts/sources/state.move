@@ -12,13 +12,13 @@ module stork::state {
 
     /// State object for the Stork contract
     struct StorkState has key {
-        /// The address of the Stork contract
+        // The address of the Stork contract
         stork_address: address,
-        /// Stork's EVM public key
+        // Stork's EVM public key
         stork_evm_public_key: EvmPubKey,
-        /// The fee for a single update
-        single_update_fee: u64,
-        /// The owner of the Stork contract
+        // The fee for a single update
+        single_update_fee_in_octas: u64,
+        // The owner of the Stork contract
         owner: address,
     }
 
@@ -27,13 +27,13 @@ module stork::state {
     /// Creates a new StorkState
     public fun new(
         stork_evm_public_key: EvmPubKey,
-        single_update_fee: u64,
+        single_update_fee_in_octas: u64,
         owner: address,
     ): StorkState {
         StorkState {
             stork_address: @stork,
             stork_evm_public_key,
-            single_update_fee,
+            single_update_fee_in_octas,
             owner,
         }
     }
@@ -49,8 +49,8 @@ module stork::state {
     }
 
     /// Returns the fee for a single update
-    public fun get_single_update_fee(): u64 acquires StorkState {
-        borrow_global<StorkState>(@stork).single_update_fee
+    public fun get_single_update_fee_in_octas(): u64 acquires StorkState {
+        borrow_global<StorkState>(@stork).single_update_fee_in_octas
     }
 
     /// Returns the address of the Stork contract
@@ -75,13 +75,13 @@ module stork::state {
     }
 
     /// Sets the fee for a single update
-    public fun set_single_update_fee(signer: &signer, new_fee: u64) acquires StorkState {
+    public fun set_single_update_fee_in_octas(signer: &signer, new_fee_in_octas: u64) acquires StorkState {
         let state = borrow_global_mut<StorkState>(@stork);
         assert!(
             signer::address_of(signer) == state.owner,
             E_NOT_OWNER
         );
-        state.single_update_fee = new_fee;
+        state.single_update_fee_in_octas = new_fee_in_octas;
     }
 
     // === Test Imports ===
@@ -110,7 +110,7 @@ module stork::state {
         move_state(state, &owner);
         
         assert!(state_exists(), 0);
-        assert!(get_single_update_fee() == fee, 1);
+        assert!(get_single_update_fee_in_octas() == fee, 1);
         assert!(get_stork_address() == @stork, 2);
         assert!(get_stork_evm_public_key() == pubkey, 3);
     }
@@ -134,9 +134,9 @@ module stork::state {
         move_state(state, &owner);
         
         let new_fee = 200;
-        set_single_update_fee(&owner, new_fee);
+        set_single_update_fee_in_octas(&owner, new_fee);
         
-        assert!(get_single_update_fee() == new_fee, 0);
+        assert!(get_single_update_fee_in_octas() == new_fee, 0);
     }
 
     #[test]
@@ -160,6 +160,6 @@ module stork::state {
         let state = new(pubkey, 100, OWNER);
         move_state(state, &owner);
         
-        set_single_update_fee(&non_owner, 200);
+        set_single_update_fee_in_octas(&non_owner, 200);
     }
 }

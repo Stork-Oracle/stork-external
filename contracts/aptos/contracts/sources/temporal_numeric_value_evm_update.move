@@ -36,19 +36,19 @@ module stork::temporal_numeric_value_evm_update {
 
     /// Creates a new update temporal numeric value EVM input   
     public fun new(
-        /// The asset id
+        // The asset id
         id: EncodedAssetId,
-        /// The temporal numeric value
+        // The temporal numeric value
         temporal_numeric_value: TemporalNumericValue,
-        /// The publisher's merkle root
+        // The publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        /// The value compute algorithm hash
+        // The value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        /// The signature r
+        // The signature r
         r: vector<u8>,
-        /// The signature s
+        // The signature s
         s: vector<u8>,
-        /// The signature v
+        // The signature v
         v: u8,
     ): TemporalNumericValueEVMUpdate { 
         TemporalNumericValueEVMUpdate {
@@ -64,21 +64,21 @@ module stork::temporal_numeric_value_evm_update {
 
     /// Creates a vector of temporal numeric value EVM updates from vectors of the individual fields
     public fun from_vectors(
-        /// The asset ids
+        // The asset ids
         ids: vector<vector<u8>>,
-        /// The timestamps in nanoseconds
+        // The timestamps in nanoseconds
         timestamps_ns: vector<u64>,
-        /// The quantized values
+        // The quantized values
         quantized_values: vector<u128>,
-        /// The publisher's merkle roots
+        // The publisher's merkle roots
         publisher_merkle_roots: vector<vector<u8>>,
-        /// The value compute algorithm hashes
+        // The value compute algorithm hashes
         value_compute_alg_hashes: vector<vector<u8>>,
-        /// The signatures r
+        // The signatures r
         rs: vector<vector<u8>>,
-        /// The signatures s
+        // The signatures s
         ss: vector<vector<u8>>,
-        /// The signatures v
+        // The signatures v
         vs: vector<u8>,
     ): vector<TemporalNumericValueEVMUpdate> {
         let num_updates = ids.length();
