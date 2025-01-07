@@ -1,10 +1,5 @@
 module stork::evm_pubkey {
 
-
-    // === Imports ===
-
-    use std::vector;
-
     // === Errors ===
 
     /// The EVM public key length is invalid
@@ -35,6 +30,11 @@ module stork::evm_pubkey {
     public fun get_bytes(self: &EvmPubKey): vector<u8> {
         self.bytes
     }
+
+    // === Test Imports ===
+
+    #[test_only]
+    use std::vector;
 
     // === Tests ===
 

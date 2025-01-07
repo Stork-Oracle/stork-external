@@ -11,7 +11,6 @@ module stork::stork {
     use stork::evm_pubkey;
     use stork::verify;
     use stork::i128;
-    use aptos_std::vector;
     use aptos_std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin;
@@ -198,6 +197,8 @@ module stork::stork {
     use aptos_framework::account;
     #[test_only]
     use aptos_framework::aptos_coin;
+    #[test_only]
+    use std::vector;
 
     // === Test Constants ===
 

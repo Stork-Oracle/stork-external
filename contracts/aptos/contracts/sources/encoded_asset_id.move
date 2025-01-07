@@ -1,9 +1,5 @@
 module stork::encoded_asset_id {
 
-    // === Imports ===
-
-    use std::vector;
-
     // === Errors ===
 
     /// The encoded asset id length is invalid
@@ -35,6 +31,11 @@ module stork::encoded_asset_id {
     public fun get_bytes(self: &EncodedAssetId): vector<u8> {
         self.bytes
     }
+
+    // === Test Imports ===
+
+    #[test_only]
+    use std::vector;
 
     // === Tests ===
 
