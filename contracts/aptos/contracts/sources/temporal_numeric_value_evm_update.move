@@ -146,4 +146,111 @@ module stork::temporal_numeric_value_evm_update {
     public fun get_v(self: &TemporalNumericValueEVMUpdate): u8 {
         self.v
     }
+
+    // === Tests ===
+
+    #[test]
+    fun test_new() {
+        let id = encoded_asset_id::create_zeroed_asset_id();
+        let tnv = temporal_numeric_value::create_zeroed_temporal_numeric_value();
+        let publisher_merkle_root = vector::empty();
+        let value_compute_alg_hash = vector::empty();
+        let r = vector::empty();
+        let s = vector::empty();
+        let v = 0;
+
+        let update = new(
+            id,
+            tnv,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v
+        );
+
+        assert!(get_id(&update) == id, 0);
+        assert!(get_temporal_numeric_value(&update) == tnv, 1);
+        assert!(get_publisher_merkle_root(&update) == publisher_merkle_root, 2);
+        assert!(get_value_compute_alg_hash(&update) == value_compute_alg_hash, 3);
+        assert!(get_r(&update) == r, 4);
+        assert!(get_s(&update) == s, 5);
+        assert!(get_v(&update) == v, 6);
+    }
+
+    #[test]
+    fun test_from_vectors() {
+        let ids = vector::singleton(encoded_asset_id::get_bytes(&encoded_asset_id::create_zeroed_asset_id()));
+        let timestamps_ns = vector::singleton(0u64);
+        let quantized_values = vector::singleton(0u128);
+        let publisher_merkle_roots = vector::singleton(vector::empty());
+        let value_compute_alg_hashes = vector::singleton(vector::empty());
+        let rs = vector::singleton(vector::empty());
+        let ss = vector::singleton(vector::empty());
+        let vs = vector::singleton(0u8);
+
+        let updates = from_vectors(
+            ids,
+            timestamps_ns,
+            quantized_values,
+            publisher_merkle_roots,
+            value_compute_alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+
+        assert!(vector::length(&updates) == 1, 0);
+        
+        let update = vector::borrow(&updates, 0);
+        assert!(get_v(update) == 0, 1);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_NO_UPDATES)]
+    fun test_from_vectors_empty() {
+        let ids = vector::empty();
+        let timestamps_ns = vector::empty();
+        let quantized_values = vector::empty();
+        let publisher_merkle_roots = vector::empty();
+        let value_compute_alg_hashes = vector::empty();
+        let rs = vector::empty();
+        let ss = vector::empty();
+        let vs = vector::empty();
+
+        from_vectors(
+            ids,
+            timestamps_ns,
+            quantized_values,
+            publisher_merkle_roots,
+            value_compute_alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_INVALID_LENGTHS)]
+    fun test_from_vectors_mismatched_lengths() {
+        let ids = vector::singleton(encoded_asset_id::get_bytes(&encoded_asset_id::create_zeroed_asset_id()));
+        let timestamps_ns = vector::empty();  // Different length than ids
+        let quantized_values = vector::singleton(0u128);
+        let publisher_merkle_roots = vector::singleton(vector::empty());
+        let value_compute_alg_hashes = vector::singleton(vector::empty());
+        let rs = vector::singleton(vector::empty());
+        let ss = vector::singleton(vector::empty());
+        let vs = vector::singleton(0u8);
+
+        from_vectors(
+            ids,
+            timestamps_ns,
+            quantized_values,
+            publisher_merkle_roots,
+            value_compute_alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+    }
 }

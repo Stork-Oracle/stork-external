@@ -120,7 +120,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = EMagnitudeTooLarge)]
+    #[expected_failure(abort_code = E_MAGNITUDE_TOO_LARGE)]
     fun test_magnitude_too_large_positive() {
         let magnitude_too_large_positive = 0x80000000000000000000000000000000;
         new(magnitude_too_large_positive, false);
@@ -135,7 +135,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = EMagnitudeTooLarge)]
+    #[expected_failure(abort_code = E_MAGNITUDE_TOO_LARGE)]
     fun test_magnitude_too_large_negative() {
         let magnitude_too_large_negative = 0x80000000000000000000000000000001;
         new(magnitude_too_large_negative, true);
@@ -153,7 +153,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = EInvalidSign)]
+    #[expected_failure(abort_code = E_INVALID_SIGN)]
     fun test_get_magnitude_if_negative_positive() {
         get_magnitude_if_negative(&new(1, false));
     }
@@ -164,7 +164,7 @@ module stork::i128 {
     }
 
     #[test]
-    #[expected_failure(abort_code = EInvalidSign)]
+    #[expected_failure(abort_code = E_INVALID_SIGN)]
     fun test_get_magnitude_if_positive_negative() {
         get_magnitude_if_positive(&new(1, true));
     }

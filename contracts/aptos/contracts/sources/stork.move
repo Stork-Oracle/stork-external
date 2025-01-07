@@ -18,12 +18,12 @@ module stork::stork {
     use aptos_std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin::{Self, Coin};
+    use std::string;
 
     // === Errors ===
 
-    const E_NOT_OWNER: u64 = 0;
-    const E_ALREADY_INITIALIZED: u64 = 1;
-    const E_INVALID_SIGNATURE: u64 = 2;
+    const E_ALREADY_INITIALIZED: u64 = 0;
+    const E_INVALID_SIGNATURE: u64 = 1;
 
     // === Functions ===
 
@@ -79,11 +79,8 @@ module stork::stork {
         let fee = state::get_single_update_fee();
         let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
         // recency
-        if (temporal_numeric_value_feed_registry::contains(encoded_asset_id)) {
-            let existing_temporal_numeric_value = temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(encoded_asset_id);
-            if (temporal_numeric_value_timestamp_ns <= existing_temporal_numeric_value.get_timestamp_ns()) {
-                return;
-            };
+        if (!is_recent(encoded_asset_id, temporal_numeric_value_timestamp_ns)) {
+            return;
         };
 
         // verify signature
@@ -111,7 +108,7 @@ module stork::stork {
     /// Updates multiple temporal numeric values using EVM signature for verification
     /// For each update, the position in the vectors corresponds to the position in the updates vector
     /// i.e ids[0] corresponds to timestamps_ns[0], quantized_values[0], etc.
-    public entry fun update_temporal_numeric_values_evm(
+    public entry fun update_multiple_temporal_numeric_values_evm(
         /// The signer of the transaction to pay the fee
         signer: &signer,
         /// The asset ids
@@ -139,11 +136,8 @@ module stork::stork {
         while (updates.length() > 0) {
             let update = updates.pop_back();
             // recency
-            if (temporal_numeric_value_feed_registry::contains(update.get_id())) {
-                let existing_temporal_numeric_value = temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(update.get_id());
-                if (update.get_temporal_numeric_value().get_timestamp_ns() <= existing_temporal_numeric_value.get_timestamp_ns()) {
-                    continue;
-                };
+            if (!is_recent(update.get_id(), update.get_temporal_numeric_value().get_timestamp_ns())) {
+                continue;
             };
 
             // verify signature
@@ -190,5 +184,230 @@ module stork::stork {
         coin::deposit<AptosCoin>(@stork, coin);
     }
 
-    
+    fun is_recent(
+        asset_id: EncodedAssetId,
+        temporal_numeric_value_timestamp_ns: u64,
+    ): bool {
+        if (temporal_numeric_value_feed_registry::contains(asset_id)) {
+            let existing_temporal_numeric_value = temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(asset_id);
+            temporal_numeric_value_timestamp_ns > existing_temporal_numeric_value.get_timestamp_ns()
+        } else {
+            true
+        }
+    }
+
+    // === Test Imports ===
+
+    #[test_only]
+    use aptos_framework::account;
+    #[test_only]
+    use aptos_framework::aptos_coin;
+
+    // === Test Constants ===
+
+    #[test_only]
+    const OWNER: address = @stork;
+    #[test_only]
+    const USER: address = @0xFACE;
+
+    // === Test Helpers ===
+
+    #[test_only]
+    fun setup_test(stork: &signer) {
+        let pubkey = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
+        let fee = 1;
+        init_stork(evm_pubkey::get_bytes(&pubkey), fee, stork);
+    }
+
+    #[test_only]
+    fun setup_test_with_coins(stork: &signer, user: &signer, amount: u64) {
+        let framework_signer = account::create_account_for_test(@aptos_framework);
+        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(&framework_signer);
+        
+        // Register coin stores
+        coin::register<AptosCoin>(stork);
+        coin::register<AptosCoin>(user);
+        
+        // Fund user account
+        aptos_coin::mint(&framework_signer, signer::address_of(user), amount);
+
+        // Clean up capabilities
+        coin::destroy_burn_cap(burn_cap);
+        coin::destroy_mint_cap(mint_cap);
+    }
+ 
+    // === Tests ===
+
+    #[test]
+    fun test_init_stork() {
+        let stork = account::create_account_for_test(OWNER);
+        setup_test(&stork);
+        assert!(state::state_exists(), 0);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_ALREADY_INITIALIZED)]
+    fun test_init_stork_already_initialized() {
+        let stork = account::create_account_for_test(OWNER);
+        setup_test(&stork);
+        setup_test(&stork); 
+    }
+
+    #[test]
+    fun test_update_single_temporal_numeric_value_evm() {
+        // Setup accounts
+        let stork = account::create_account_for_test(OWNER);
+        let user = account::create_account_for_test(USER);
+        
+        setup_test(&stork);
+        let fee = state::get_single_update_fee();
+        setup_test_with_coins(&stork, &user, fee);
+
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let timestamp = 1722632569208762117;
+        let value = 62507457175499998000000;
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        update_single_temporal_numeric_value_evm(
+            &user,
+            asset_id,
+            timestamp,
+            value,
+            merkle_root,
+            alg_hash,
+            r,
+            s,
+            v
+        );
+
+        let stored_value = get_temporal_numeric_value_unchecked(asset_id);
+        assert!(temporal_numeric_value::get_timestamp_ns(&stored_value) == timestamp, 0);
+    }
+
+    #[test]
+    fun test_update_multiple_temporal_numeric_values_evm() {
+        let stork = account::create_account_for_test(OWNER);
+        let user = account::create_account_for_test(USER);
+        
+        setup_test(&stork);
+        let fee = state::get_single_update_fee() * 2; 
+        setup_test_with_coins(&stork, &user, fee);
+
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let ids = vector::singleton(asset_id);
+        vector::push_back(&mut ids, asset_id);
+        
+        let timestamps = vector::singleton(1722632569208762117u64);
+        vector::push_back(&mut timestamps, 1722632569208762117u64);
+        
+        let values = vector::singleton(62507457175499998000000u128);
+        vector::push_back(&mut values, 62507457175499998000000u128);
+        
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let merkle_roots = vector::singleton(merkle_root);
+        vector::push_back(&mut merkle_roots, merkle_root);
+        
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let alg_hashes = vector::singleton(alg_hash);
+        vector::push_back(&mut alg_hashes, alg_hash);
+        
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let rs = vector::singleton(r);
+        vector::push_back(&mut rs, r);
+        
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let ss = vector::singleton(s);
+        vector::push_back(&mut ss, s);
+        
+        let vs = vector::singleton(28u8);
+        vector::push_back(&mut vs, 28u8);
+
+        update_multiple_temporal_numeric_values_evm(
+            &user,
+            ids,
+            timestamps,
+            values,
+            merkle_roots,
+            alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+
+        let stored_value = get_temporal_numeric_value_unchecked(asset_id);
+        assert!(temporal_numeric_value::get_timestamp_ns(&stored_value) == 1722632569208762117, 0);
+    }
+
+    #[test]
+    fun test_fee_transfer() {
+        let stork = account::create_account_for_test(OWNER);
+        let user = account::create_account_for_test(USER);
+        
+        setup_test(&stork);
+        let fee = state::get_single_update_fee();
+        setup_test_with_coins(&stork, &user, fee);
+
+        let initial_user_balance = coin::balance<AptosCoin>(USER);
+        let initial_stork_balance = coin::balance<AptosCoin>(OWNER);
+
+        transfer_fee(&user, fee);
+
+        assert!(coin::balance<AptosCoin>(USER) == initial_user_balance - fee, 0);
+        assert!(coin::balance<AptosCoin>(OWNER) == initial_stork_balance + fee, 1);
+    }
+
+    #[test]
+    fun test_is_recent_no_existing_value() {
+        let stork = account::create_account_for_test(OWNER);
+        setup_test(&stork);
+
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
+        let timestamp = 1722632569208762117;
+
+        assert!(is_recent(encoded_asset_id, timestamp), 0);
+    }
+
+    #[test]
+    fun test_is_recent_with_existing_value() {
+        let stork = account::create_account_for_test(OWNER);
+        let user = account::create_account_for_test(USER);
+        
+        setup_test(&stork);
+        let fee = state::get_single_update_fee();
+        setup_test_with_coins(&stork, &user, fee);
+
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let timestamp = 1722632569208762117;
+        let value = 62507457175499998000000;
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        update_single_temporal_numeric_value_evm(
+            &user,
+            asset_id,
+            timestamp,
+            value,
+            merkle_root,
+            alg_hash,
+            r,
+            s,
+            v
+        );
+
+        let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
+
+        assert!(is_recent(encoded_asset_id, timestamp + 1), 0);
+        
+        assert!(!is_recent(encoded_asset_id, timestamp), 1);
+        
+        assert!(!is_recent(encoded_asset_id, timestamp - 1), 2);
+    }
 }

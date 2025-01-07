@@ -46,7 +46,7 @@ module stork::evm_pubkey {
     }
 
     #[test]
-    #[expected_failure(abort_code = EInvalidLength)]
+    #[expected_failure(abort_code = E_INVALID_LENGTH)]
     fun test_from_bytes_invalid_length() {
         let bytes = create_zeroed_byte_vector(EVM_PUBKEY_LENGTH + 1);
         from_bytes(bytes);
@@ -69,5 +69,11 @@ module stork::evm_pubkey {
             i = i + 1;
         };
         bytes
+    }
+
+    #[test_only]
+    package fun create_zeroed_evm_pubkey(): EvmPubKey {
+        let bytes = create_zeroed_byte_vector(EVM_PUBKEY_LENGTH);
+        from_bytes(bytes)
     }
 }
