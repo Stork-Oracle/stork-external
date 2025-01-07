@@ -18,13 +18,13 @@ const awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
 const versionFile = "version.txt"
 
 type PublisherMetadata struct {
-	PublisherKey          signer.PublisherKey  `json:"publisher_key"`
-	SignatureType         signer.SignatureType `json:"signature_type"`
-	PublisherAgentVersion string               `json:"publisher_agent_version"`
-	Architecture          string               `json:"architecture"`
-	PublicIp              string               `json:"public_ip"`
-	AwsMetadata           AwsMetadata          `json:"aws_metadata"`
-	ConfigJson            string               `json:"config_json"`
+	PublisherKey          signer.PublisherKey       `json:"publisher_key"`
+	SignatureType         signer.SignatureType      `json:"signature_type"`
+	PublisherAgentVersion string                    `json:"publisher_agent_version"`
+	Architecture          string                    `json:"architecture"`
+	PublicIp              string                    `json:"public_ip"`
+	AwsMetadata           AwsMetadata               `json:"aws_metadata"`
+	Config                StorkPublisherAgentConfig `json:"config"`
 }
 
 type AwsMetadata struct {
@@ -100,7 +100,6 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 	architecture := runtime.GOARCH
 	publicIp := getPublicIp()
 	version := getPublisherAgentVersion()
-	config := getRedactedConfigJson(p.config)
 
 	return PublisherMetadata{
 		PublisherKey:          p.publicKey,
@@ -109,25 +108,8 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 		Architecture:          architecture,
 		PublicIp:              publicIp,
 		AwsMetadata:           awsMetadata,
-		ConfigJson:            config,
+		Config:                p.config,
 	}
-}
-
-func getRedactedConfigJson(config StorkPublisherAgentConfig) string {
-	// copy the config so we're not mutating the underlying
-	configCopy := config
-
-	// redact
-	configCopy.StarkPrivateKey = ""
-	configCopy.EvmPrivateKey = ""
-	configCopy.PullBasedAuth = ""
-
-	redactedBytes, err := json.Marshal(configCopy)
-	if err != nil {
-		return ""
-	}
-
-	return string(redactedBytes)
 }
 
 func getPublicIp() string {
