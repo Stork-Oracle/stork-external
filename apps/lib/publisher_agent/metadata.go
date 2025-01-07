@@ -24,6 +24,7 @@ type PublisherMetadata struct {
 	Architecture          string               `json:"architecture"`
 	PublicIp              string               `json:"public_ip"`
 	AwsMetadata           AwsMetadata          `json:"aws_metadata"`
+	ConfigJson            string               `json:"config_json"`
 }
 
 type AwsMetadata struct {
@@ -39,6 +40,7 @@ type PublisherMetadataReporter struct {
 	publisherMetadataBaseUrl string
 	storkAuthSigner          signer.StorkAuthSigner
 	logger                   zerolog.Logger
+	config                   StorkPublisherAgentConfig
 }
 
 func NewPublisherMetadataReporter(
@@ -48,6 +50,7 @@ func NewPublisherMetadataReporter(
 	publisherMetadataBaseUrl string,
 	storkAuthSigner signer.StorkAuthSigner,
 	logger zerolog.Logger,
+	config StorkPublisherAgentConfig,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
 		publicKey:                publicKey,
@@ -56,6 +59,7 @@ func NewPublisherMetadataReporter(
 		publisherMetadataBaseUrl: publisherMetadataBaseUrl,
 		storkAuthSigner:          storkAuthSigner,
 		logger:                   logger,
+		config:                   config,
 	}
 }
 
@@ -96,6 +100,7 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 	architecture := runtime.GOARCH
 	publicIp := getPublicIp()
 	version := getPublisherAgentVersion()
+	config := getRedactedConfigJson(p.config)
 
 	return PublisherMetadata{
 		PublisherKey:          p.publicKey,
@@ -104,7 +109,25 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 		Architecture:          architecture,
 		PublicIp:              publicIp,
 		AwsMetadata:           awsMetadata,
+		ConfigJson:            config,
 	}
+}
+
+func getRedactedConfigJson(config StorkPublisherAgentConfig) string {
+	// copy the config so we're not mutating the underlying
+	configCopy := config
+
+	// redact
+	configCopy.StarkPrivateKey = ""
+	configCopy.EvmPrivateKey = ""
+	configCopy.PullBasedAuth = ""
+
+	redactedBytes, err := json.Marshal(configCopy)
+	if err != nil {
+		return ""
+	}
+
+	return string(redactedBytes)
 }
 
 func getPublicIp() string {
