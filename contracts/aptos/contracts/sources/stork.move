@@ -2,68 +2,86 @@ module stork::stork {
 
     // === Imports ===
 
-    use stork::state::{StorkState, new};
-    use stork::event::StorkInitializationEvent;
-    use stork::temporal_numeric_value_feed::TemporalNumericValueFeed;
-    use stork::encoded_asset_id::EncodedAssetId;
+    use stork::state::{Self, StorkState};
+    use stork::event::{emit_stork_initialization_event};
+    use stork::encoded_asset_id::{Self, EncodedAssetId};
+    use stork::temporal_numeric_value_feed_registry::{Self, TemporalNumericValueFeedRegistry};
+    use stork::temporal_numeric_value_evm_update::{Self, TemporalNumericValueEVMUpdate};
+    use stork::temporal_numeric_value::{Self, TemporalNumericValue};
+    use stork::evm_pubkey::{Self, EvmPubKey};
+    use stork::verify;
+    use stork::i128;
     use aptos_std::table;
-    use stork::temporal_numeric_value_feed_registry::TemporalNumericValueFeedRegistry;
-    use stork::temporal_numeric_value_evm_update::TemporalNumericValueEVMUpdate;
-    use stork::verify::verify_evm_signature;
+    use aptos_std::primary_fungible_store;
+    use aptos_std::vector;
+    use aptos_std::event;
+    use aptos_std::signer;
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_framework::coin::{Self, Coin};
 
     // === Errors ===
 
     const E_NOT_OWNER: u64 = 0;
     const E_ALREADY_INITIALIZED: u64 = 1;
     const E_INVALID_SIGNATURE: u64 = 2;
-    const E_FEED_NOT_FOUND: u64 = 3;
 
     // === Functions ===
 
     entry fun init_stork(
-        stork_evm_public_key: EvmPubKey,
+        stork_evm_public_key: vector<u8>,
         single_update_fee: u64,
-        owner: address,
+        owner: &signer,
     ) {
         assert!(
-            !exists<StorkState>(@stork),
+            !state::state_exists(),
             E_ALREADY_INITIALIZED
         );
-        let state = state::new(stork_evm_public_key, single_update_fee, owner);
-        move_to(@stork, state);
+        let evm_pubkey = evm_pubkey::from_bytes(stork_evm_public_key);
+        let state = state::new(evm_pubkey, single_update_fee, signer::address_of(owner));        
+        state.move_state(owner);
 
         // TNV feed table
-        let feed_table = temporal_numeric_value_feed_registry::new();
-        move_to(@stork, feed_table);
+        let feed_registry = temporal_numeric_value_feed_registry::new();
+        feed_registry.move_tnv_feed_registry(owner);
 
-        let stork_initialized_event = StorkInitializationEvent {
-            stork_address: @stork,
-            stork_evm_public_key,
+        emit_stork_initialization_event(
+            @stork,
+            evm_pubkey,
             single_update_fee,
-            owner,
-        };
-        event::emit(stork_initialized_event);
+            signer::address_of(owner),
+        );
     }
 
     // === Public Functions ===
 
-    /// Updates a single temporal numeric value
-    public entry fun update_single_temporal_numeric_value(
+    /// Updates a single temporal numeric value using EVM signature for verification
+    public entry fun update_single_temporal_numeric_value_evm(
         /// The signer of the transaction to pay the fee
         signer: &signer,
-        /// The update to the temporal numeric value
-        update: TemporalNumericValueEVMUpdate,
+        /// The asset id
+        asset_id: vector<u8>,
+        /// The temporal numeric value
+        temporal_numeric_value_timestamp_ns: u64,
+        /// The temporal numeric value
+        temporal_numeric_value_quantized_value: u128,
+        /// The publisher's merkle root
+        publisher_merkle_root: vector<u8>,
+        /// The value compute algorithm hash
+        value_compute_alg_hash: vector<u8>,
+        /// The signature r
+        r: vector<u8>,
+        /// The signature s
+        s: vector<u8>,
+        /// The signature v
+        v: u8,
     ) {
-        let state = borrow_global<StorkState>(@stork);
-        let fee = state::get_single_update_fee(&state);
-        let evm_pubkey = state::get_stork_evm_public_key(&state);
-        let feed_registry = borrow_global_mut<TemporalNumericValueFeedRegistry>(@stork);
-        let temporal_numeric_value = temporal_numeric_value_evm_update::get_temporal_numeric_value(&update);
-
+        let evm_pubkey = state::get_stork_evm_public_key();
+        let fee = state::get_single_update_fee();
+        let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
         // recency
-        if (table::contains(&feed_registry.feed_table, temporal_numeric_value_evm_update::get_id(&update))) {
-            let existing_temporal_numeric_value = table::borrow(&feed_registry.feed_table, temporal_numeric_value_evm_update::get_id(&update));
-            if (temporal_numeric_value.timestamp <= existing_temporal_numeric_value.timestamp) {
+        if (temporal_numeric_value_feed_registry::contains(encoded_asset_id)) {
+            let existing_temporal_numeric_value = temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(encoded_asset_id);
+            if (temporal_numeric_value_timestamp_ns <= existing_temporal_numeric_value.get_timestamp_ns()) {
                 return;
             };
         };
@@ -72,44 +90,58 @@ module stork::stork {
         assert!(
             verify::verify_evm_signature(
                 &evm_pubkey,
-                encoded_asset_id::get_bytes(&temporal_numeric_value_evm_update::get_id(&update)),
-                temporal_numeric_value::get_timestamp_ns(&temporal_numeric_value),
-                temporal_numeric_value::get_quantized_value(&temporal_numeric_value),
-                temporal_numeric_value_evm_update::get_publisher_merkle_root(&update),
-                temporal_numeric_value_evm_update::get_value_compute_alg_hash(&update),
-                temporal_numeric_value_evm_update::get_r(&update),
-                temporal_numeric_value_evm_update::get_s(&update),
-                temporal_numeric_value_evm_update::get_v(&update),
+                asset_id,
+                temporal_numeric_value_timestamp_ns,
+                i128::from_u128(temporal_numeric_value_quantized_value),
+                publisher_merkle_root,
+                value_compute_alg_hash,
+                r,
+                s,
+                v,
             ),
             E_INVALID_SIGNATURE
         );
-        
-        primary_fungible_store::transfer(signer, AptosCoin, @stork, fee);
-        temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(&mut feed_registry, temporal_numeric_value_evm_update::get_id(&update), temporal_numeric_value);
 
+        transfer_fee(signer, fee);
+
+        let temporal_numeric_value = temporal_numeric_value::new(temporal_numeric_value_timestamp_ns, i128::from_u128(temporal_numeric_value_quantized_value));
+        temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(encoded_asset_id, temporal_numeric_value);
     }
 
-    public entry fun update_multiple_temporal_numeric_values_EVM(
+    /// Updates multiple temporal numeric values using EVM signature for verification
+    /// For each update, the position in the vectors corresponds to the position in the updates vector
+    /// i.e ids[0] corresponds to timestamps_ns[0], quantized_values[0], etc.
+    public entry fun update_temporal_numeric_values_evm(
         /// The signer of the transaction to pay the fee
         signer: &signer,
-        /// The updates to the temporal numeric values
-        updates: vector<TemporalNumericValueEVMUpdate>, 
+        /// The asset ids
+        ids: vector<vector<u8>>,
+        /// The timestamps in nanoseconds
+        timestamps_ns: vector<u64>,
+        /// The quantized values
+        quantized_values: vector<u128>,
+        /// The publisher's merkle roots
+        publisher_merkle_roots: vector<vector<u8>>,
+        /// The value compute algorithm hashes
+        value_compute_alg_hashes: vector<vector<u8>>,
+        /// The signatures r
+        rs: vector<vector<u8>>,
+        /// The signatures s
+        ss: vector<vector<u8>>,
+        /// The signatures v
+        vs: vector<u8>,
     ) {
-        let state = borrow_global<StorkState>(@stork);
-        let evm_pubkey = state::get_stork_evm_public_key(&state);
-        let fee = state::get_single_update_fee(&state);
-        let feed_registry = borrow_global_mut<TemporalNumericValueFeedRegistry>(@stork);
+        let evm_pubkey = state::get_stork_evm_public_key();
+        let fee = state::get_single_update_fee();
+        let updates = temporal_numeric_value_evm_update::from_vectors(ids, timestamps_ns, quantized_values, publisher_merkle_roots, value_compute_alg_hashes, rs, ss, vs);
 
         let num_updates = 0;
-
-        while (updates.len() > 0) {
-            let update = vector::pop_back(&mut updates);
-            let temporal_numeric_value = temporal_numeric_value_evm_update::get_temporal_numeric_value(&update);
-
+        while (updates.length() > 0) {
+            let update = updates.pop_back();
             // recency
-            if (table::contains(&feed_registry.feed_table, temporal_numeric_value_evm_update::get_id(&update))) {
-                let existing_temporal_numeric_value = table::borrow(&feed_registry.feed_table, temporal_numeric_value_evm_update::get_id(&update));
-                if (temporal_numeric_value.timestamp <= existing_temporal_numeric_value.timestamp) {
+            if (temporal_numeric_value_feed_registry::contains(update.get_id())) {
+                let existing_temporal_numeric_value = temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(update.get_id());
+                if (update.get_temporal_numeric_value().get_timestamp_ns() <= existing_temporal_numeric_value.get_timestamp_ns()) {
                     continue;
                 };
             };
@@ -118,37 +150,44 @@ module stork::stork {
             assert!(
                 verify::verify_evm_signature(
                     &evm_pubkey,
-                    encoded_asset_id::get_bytes(&temporal_numeric_value_evm_update::get_id(&update)),
-                    temporal_numeric_value::get_timestamp_ns(&temporal_numeric_value),
-                    temporal_numeric_value::get_quantized_value(&temporal_numeric_value),
-                    temporal_numeric_value_evm_update::get_publisher_merkle_root(&update),
-                    temporal_numeric_value_evm_update::get_value_compute_alg_hash(&update),
-                    temporal_numeric_value_evm_update::get_r(&update),
-                    temporal_numeric_value_evm_update::get_s(&update),
-                    temporal_numeric_value_evm_update::get_v(&update),
+                    update.get_id().get_bytes(),
+                    update.get_temporal_numeric_value().get_timestamp_ns(),
+                    update.get_temporal_numeric_value().get_quantized_value(),
+                    update.get_publisher_merkle_root(),
+                    update.get_value_compute_alg_hash(),
+                    update.get_r(),
+                    update.get_s(),
+                    update.get_v(),
                 ),
                 E_INVALID_SIGNATURE
             );
 
-            temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(&mut feed_registry, temporal_numeric_value_evm_update::get_id(&update), temporal_numeric_value);
             num_updates = num_updates + 1;
+
+            temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(update.get_id(), update.get_temporal_numeric_value());
         };
 
-        primary_fungible_store::transfer(signer, AptosCoin, @stork, fee * num_updates);
+        transfer_fee(signer, fee * num_updates);
     }
 
     #[view]
     /// Returns the latest temporal numeric value for an asset id
-    public entry fun get_temporal_numeric_value_unchecked(
+    public fun get_temporal_numeric_value_unchecked(
         /// The asset id
-        asset_id: EncodedAssetId,
+        asset_id: vector<u8>,
     ): TemporalNumericValue {
-        let feed_registry = borrow_global<TemporalNumericValueFeedRegistry>(@stork);
-        assert!(
-            table::contains(&feed_registry.feed_table, asset_id),
-            E_FEED_NOT_FOUND
-        );
-        temporal_numeric_value_feed_registry::get_latest_temporal_numeric_value_unchecked(&feed_registry, asset_id)
+        let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
+        temporal_numeric_value_feed_registry::get_latest_canonical_temporal_numeric_value_unchecked(encoded_asset_id)
+    }
+
+    // === Private Functions ===
+
+    fun transfer_fee(
+        signer: &signer,
+        fee: u64,
+    ) {
+        let coin = coin::withdraw<AptosCoin>(signer, fee);
+        coin::deposit<AptosCoin>(@stork, coin);
     }
 
     

@@ -27,13 +27,13 @@ module stork::evm_pubkey {
 
     /// Creates a new EVM public key
     public fun from_bytes(bytes: vector<u8>): EvmPubKey {
-        assert!(vector::length(&bytes) == EVM_PUBKEY_LENGTH, E_INVALID_LENGTH);
+        assert!(bytes.length() == EVM_PUBKEY_LENGTH, E_INVALID_LENGTH);
         EvmPubKey { bytes }
     }
 
     /// Gets the bytes of the EVM public key
-    public fun get_bytes(evm_pubkey: &EvmPubKey): vector<u8> {
-        evm_pubkey.bytes
+    public fun get_bytes(self: &EvmPubKey): vector<u8> {
+        self.bytes
     }
 
     // === Tests ===
@@ -65,7 +65,7 @@ module stork::evm_pubkey {
         let i = 0;
         let bytes = vector::empty<u8>();
         while (i < length) {
-            vector::push_back(&mut bytes, zero);
+            bytes.push_back(zero);
             i = i + 1;
         };
         bytes

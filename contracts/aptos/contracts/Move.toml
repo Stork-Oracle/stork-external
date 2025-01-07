@@ -7,6 +7,7 @@ authors = []
 stork = "_"
 
 [dev-addresses]
+stork = "0x101"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-framework.git"

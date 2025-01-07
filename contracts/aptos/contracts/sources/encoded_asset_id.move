@@ -25,15 +25,15 @@ module stork::encoded_asset_id {
 
     /// Creates a new encoded asset id from bytes
     public fun from_bytes(bytes: vector<u8>): EncodedAssetId {
-        assert!(vector::length(&bytes) == ASSET_ID_LENGTH, E_INVALID_LENGTH);
+        assert!(bytes.length() == ASSET_ID_LENGTH, E_INVALID_LENGTH);
         EncodedAssetId {
             bytes,
         }
     }
 
     /// Gets the bytes of an encoded asset id
-    public fun get_bytes(encoded_asset_id: &EncodedAssetId): vector<u8> {
-        encoded_asset_id.bytes
+    public fun get_bytes(self: &EncodedAssetId): vector<u8> {
+        self.bytes
     }
 
     // === Tests ===
@@ -67,7 +67,7 @@ module stork::encoded_asset_id {
         let bytes = vector::empty<u8>();
         let i = 0;
         while (i < length) {
-            vector::push_back(&mut bytes, zero);
+            bytes.push_back(zero);
             i = i + 1;
         };
         bytes

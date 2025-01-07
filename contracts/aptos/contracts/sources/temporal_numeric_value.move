@@ -25,13 +25,13 @@ module stork::temporal_numeric_value {
     }
 
     /// Returns the timestamp in nanoseconds
-    public fun get_timestamp_ns(value: &TemporalNumericValue): u64 {
-        value.timestamp_ns
+    public fun get_timestamp_ns(self: &TemporalNumericValue): u64 {
+        self.timestamp_ns
     }
 
     /// Returns the quantized value
-    public fun get_quantized_value(value: &TemporalNumericValue): I128 {
-        value.quantized_value
+    public fun get_quantized_value(self: &TemporalNumericValue): I128 {
+        self.quantized_value
     }
 
     // === Test Imports ===

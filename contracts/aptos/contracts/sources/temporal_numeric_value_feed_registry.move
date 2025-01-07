@@ -3,12 +3,18 @@ module stork::temporal_numeric_value_feed_registry {
     // === Imports ===
 
     use aptos_std::table;
+    use aptos_std::event;
     use stork::temporal_numeric_value::TemporalNumericValue;
     use stork::encoded_asset_id::EncodedAssetId;
+    use stork::event::{emit_temporal_numeric_value_update_event};
+
+    // === Errors ===
+
+    const E_FEED_NOT_FOUND: u64 = 0;
 
     // === Structs ===
 
-    struct TemporalNumericValueFeedRegistry {
+    struct TemporalNumericValueFeedRegistry has key {
         feed_table: table::Table<EncodedAssetId, TemporalNumericValue>,
     }
 
@@ -20,25 +26,35 @@ module stork::temporal_numeric_value_feed_registry {
         }
     }
 
-    // === Public Functions ===
+    package fun move_tnv_feed_registry(self: TemporalNumericValueFeedRegistry, owner: &signer) {
+        move_to(owner, self);
+    }
 
-    package fun get_latest_temporal_numeric_value_unchecked(
-        feed_registry: &TemporalNumericValueFeedRegistry,
+    package fun get_latest_canonical_temporal_numeric_value_unchecked(
         asset_id: EncodedAssetId,
-    ): TemporalNumericValue {
-        table::borrow(&feed_registry.feed_table, asset_id)
+    ): TemporalNumericValue acquires TemporalNumericValueFeedRegistry {
+        let feed_registry = borrow_global<TemporalNumericValueFeedRegistry>(@stork);
+        assert!(
+            feed_registry.feed_table.contains(asset_id),
+            E_FEED_NOT_FOUND
+        );
+        *table::borrow(&feed_registry.feed_table, asset_id)
     }
 
     package fun update_latest_temporal_numeric_value(
-        feed_registry: &mut TemporalNumericValueFeedRegistry,
         asset_id: EncodedAssetId,
         temporal_numeric_value: TemporalNumericValue,
-    ) {
-        table::upsert(&mut feed_registry.feed_table, asset_id, temporal_numeric_value);
-        let event = event::TemporalNumericValueUpdateEvent { 
-            asset_id,
-            temporal_numeric_value,
-        };
-        event::emit(&event);
+    ) acquires TemporalNumericValueFeedRegistry {
+        let feed_registry = borrow_global_mut<TemporalNumericValueFeedRegistry>(@stork);
+        feed_registry.feed_table.upsert(asset_id, temporal_numeric_value);
+        emit_temporal_numeric_value_update_event(asset_id, temporal_numeric_value);
     }
+
+    package fun contains(
+        asset_id: EncodedAssetId,
+    ): bool acquires TemporalNumericValueFeedRegistry {
+        let feed_registry = borrow_global<TemporalNumericValueFeedRegistry>(@stork);
+        feed_registry.feed_table.contains(asset_id)
+    }
+
 }

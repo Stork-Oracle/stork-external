@@ -2,11 +2,12 @@ module stork::state {
     // === Imports ===  
     
     use stork::evm_pubkey::EvmPubKey;
-    
+    use aptos_std::signer;
+
     // === Errors ===
 
     const E_NOT_OWNER: u64 = 0;
-    
+
     // == Structs ==
 
     /// State object for the Stork contract
@@ -37,6 +38,11 @@ module stork::state {
         }
     }
 
+    /// Moves a StorkState to the given signer
+    public fun move_state(self: StorkState, signer: &signer) {
+        move_to(signer, self);
+    }
+
     /// Returns the Stork's EVM public key
     public fun get_stork_evm_public_key(): EvmPubKey acquires StorkState {
         borrow_global<StorkState>(@stork).stork_evm_public_key
@@ -50,6 +56,10 @@ module stork::state {
     /// Returns the address of the Stork contract
     public fun get_stork_address(): address acquires StorkState {
         borrow_global<StorkState>(@stork).stork_address
+    }
+
+    public fun state_exists(): bool {
+        exists<StorkState>(@stork)
     }
 
     /// === Admin Functions ===

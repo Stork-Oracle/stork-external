@@ -1,5 +1,12 @@
 module stork::event {
 
+    // === Imports ===
+
+    use aptos_std::event;
+    use stork::temporal_numeric_value::TemporalNumericValue;
+    use stork::encoded_asset_id::EncodedAssetId;
+    use stork::evm_pubkey::EvmPubKey;
+
     // === Events ===
 
     #[event]
@@ -16,6 +23,22 @@ module stork::event {
     struct TemporalNumericValueUpdateEvent has drop, store {
         asset_id: EncodedAssetId,
         temporal_numeric_value: TemporalNumericValue,
+    }
+
+    package fun emit_stork_initialization_event(
+        stork_address: address,
+        stork_evm_public_key: EvmPubKey,
+        single_update_fee: u64,
+        owner: address,
+    ) {
+        event::emit(StorkInitializationEvent { stork_address, stork_evm_public_key, single_update_fee, owner });
+    }
+
+    package fun emit_temporal_numeric_value_update_event(
+        asset_id: EncodedAssetId,
+        temporal_numeric_value: TemporalNumericValue,
+    ) {
+        event::emit(TemporalNumericValueUpdateEvent { asset_id, temporal_numeric_value });
     }
 
 }

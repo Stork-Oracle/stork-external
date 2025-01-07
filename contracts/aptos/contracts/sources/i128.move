@@ -53,25 +53,25 @@ module stork::i128 {
     }
 
     /// Checks if the i128 is negative
-    public fun is_negative(i128: &I128): bool {
-        i128.negative
+    public fun is_negative(self: &I128): bool {
+        self.negative
     }
 
     /// Gets the magnitude of the i128 if it is negative    
-    public fun get_magnitude_if_negative(i128: &I128): u128 {
-        assert!(is_negative(i128), E_INVALID_SIGN);
-        i128.magnitude
+    public fun get_magnitude_if_negative(self: &I128): u128 {
+        assert!(is_negative(self), E_INVALID_SIGN);
+        self.magnitude
     }
 
     /// Gets the magnitude of the i128 if it is positive
-    public fun get_magnitude_if_positive(i128: &I128): u128 {
-        assert!(!is_negative(i128), E_INVALID_SIGN);
-        i128.magnitude
+    public fun get_magnitude_if_positive(self: &I128): u128 {
+        assert!(!is_negative(self), E_INVALID_SIGN);
+        self.magnitude
     }
 
     /// Gets the magnitude of the i128
-    public fun get_magnitude(i128: &I128): u128 {
-        i128.magnitude
+    public fun get_magnitude(self: &I128): u128 {
+        self.magnitude
     }
 
     /// Converts a u128 to an i128, assumes value is in twos complement representation

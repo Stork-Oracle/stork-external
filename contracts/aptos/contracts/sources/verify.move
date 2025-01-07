@@ -2,10 +2,12 @@ module stork::verify {
 
     // === Imports ===
 
-    use stork::evm_pubkey::{self, EvmPubKey};
+    use stork::evm_pubkey::{Self, EvmPubKey};
     use stork::i128::{Self, I128};
-    use aptos_std::secp256k1::{Self, ECDSASignature, ECDSARawPubkey};
+    use aptos_std::secp256k1::{Self, ECDSASignature, ECDSARawPublicKey};
     use aptos_std::aptos_hash::keccak256;
+    use std::vector;
+    use std::option;
 
     // === Public Functions ===
 
@@ -39,7 +41,7 @@ module stork::verify {
             value_compute_alg_hash,
         );
 
-        let signature = get_rsv_signature_from_parts(&r, &s, v);
+        let signature = get_rsv_signature_from_parts(r, s, v);
 
         verify_ecdsa_signature(stork_evm_public_key, message, signature)
     }
@@ -56,27 +58,27 @@ module stork::verify {
         value_compute_alg_hash: vector<u8>,
     ): vector<u8> {
         let data = vector::empty();
-        vector::append(&mut data, evm_pubkey::get_bytes(&stork_evm_public_key));
-        vector::append(&mut data, asset_id);
+        data.append(evm_pubkey::get_bytes(stork_evm_public_key));
+        data.append(asset_id);
 
         // left pad with 24 0 bytes
-        vector::append(&mut data, vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        data.append(vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-        let recv_time_bytes = vector::empty();
-        let i = 8;
+        let recv_time_bytes = vector::empty<u8>();
+        let i: u8 = 8;
         while (i > 0) {
             i = i - 1;
-            vector::push_back(&mut recv_time_bytes, (recv_time >> (i * 8)) & 0xFF);
+            recv_time_bytes.push_back(((recv_time >> (i * 8)) & 0xFF) as u8);
         };
-        vector::append(&mut data, recv_time_bytes);
+        data.append(recv_time_bytes);
 
         //left pad with 16 0 bytes
-        vector::append(&mut data, vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        data.append(vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         let value_bytes = i128::to_bytes(quantized_value);
-        vector::append(&mut data, value_bytes);
-        vector::append(&mut data, publisher_merkle_root);
-        vector::append(&mut data, value_compute_alg_hash);
+        data.append(value_bytes);
+        data.append(publisher_merkle_root);
+        data.append(value_compute_alg_hash);
         data
     }
 
@@ -94,20 +96,22 @@ module stork::verify {
     fun get_recoverable_message(message: vector<u8>): vector<u8> {
         // create the prefix "\x19Ethereum Signed Message:\n32"
         let prefix = vector[0x19];
-        vector::append(&mut prefix, b"Ethereum Signed Message:\n32");
+        prefix.append(b"Ethereum Signed Message:\n32");
         let data = vector::empty<u8>();
-        vector::append(&mut data, prefix);
-        vector::append(&mut data, message);
+        data.append(prefix);
+        data.append(message);
         data
     }
 
     fun get_rsv_signature_from_parts(
-        r: &vector<u8>,
-        s: &vector<u8>,
+        r: vector<u8>,
+        s: vector<u8>,
         v: u8,
     ): ECDSASignature {
-        let signature_bytes = vector::append(&mut r, s);
-        signature_bytes = vector::push_back(&mut signature_bytes, v);
+        let signature_bytes = vector::empty();
+        signature_bytes.append(r);
+        signature_bytes.append(s);
+        signature_bytes.push_back(v);
         secp256k1::ecdsa_signature_from_bytes(signature_bytes)
     }
 
@@ -116,7 +120,7 @@ module stork::verify {
         message: vector<u8>,
         signature: ECDSASignature,
     ): bool {
-        let signature_bytes = secp256k1::ecdsa_signature_to_bytes(signature);
+        let signature_bytes = secp256k1::ecdsa_signature_to_bytes(&signature);
         let v = signature_bytes[64];
         let recovery_id: u8 = v - 27;
         let recovered_pubkey_option = secp256k1::ecdsa_recover(message, recovery_id, &signature);
@@ -125,19 +129,19 @@ module stork::verify {
             return false;
         };
 
-        let recovered_pubkey = option::extract(recovered_pubkey_option);
+        let recovered_pubkey = recovered_pubkey_option.extract();
         let evm_pubkey = get_evm_pubkey(recovered_pubkey);
         evm_pubkey == *pubkey
     }
 
-    fun get_evm_pubkey(pubkey: ECDSARawPubkey): EvmPubKey {
-        let hashed = keccak256(secp256k1::ecdsa_raw_pubkey_to_bytes(pubkey));
+    fun get_evm_pubkey(pubkey: ECDSARawPublicKey): EvmPubKey {
+        let hashed = keccak256(secp256k1::ecdsa_raw_public_key_to_bytes(&pubkey));
         let evm_address = vector::empty<u8>();
         let i = 12;
         while (i < 32) {
-            vector::push_back(&mut evm_address, &hashed[i]);
+            evm_address.push_back(hashed[i]);
             i = i + 1;
         };
-        evm_pubkey::from_bytes(&evm_address)
+        evm_pubkey::from_bytes(evm_address)
     }
 }
