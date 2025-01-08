@@ -23,9 +23,9 @@ module stork::stork {
     // === Functions ===
 
     entry fun init_stork(
+        owner: &signer,
         stork_evm_public_key: vector<u8>,
         single_update_fee: u64,
-        owner: &signer,
     ) {
         assert!(
             !state::state_exists(),
