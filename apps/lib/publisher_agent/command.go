@@ -34,7 +34,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	configFilePath, _ := cmd.Flags().GetString(ConfigFilePathFlag)
 	keysFilePath, _ := cmd.Flags().GetString(KeysFilePathFlag)
 
-	config, err := LoadConfig(configFilePath, keysFilePath)
+	config, secrets, err := LoadConfig(configFilePath, keysFilePath)
 	if err != nil {
 		return fmt.Errorf("error loading config: %v", err)
 	}
@@ -54,11 +54,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		case EvmSignatureType:
 			mainLogger.Info().Msg("Starting EVM runner")
 			logger := RunnerLogger(signatureType)
-			thisSigner, err := signer.NewEvmSigner(config.EvmPrivateKey, logger)
+			thisSigner, err := signer.NewEvmSigner(secrets.EvmPrivateKey, logger)
 			if err != nil {
 				return fmt.Errorf("failed to create EVM signer: %v", err)
 			}
-			evmAuthSigner, err := signer.NewEvmAuthSigner(config.EvmPrivateKey, logger)
+			evmAuthSigner, err := signer.NewEvmAuthSigner(secrets.EvmPrivateKey, logger)
 			if err != nil {
 				return fmt.Errorf("failed to create EVM auth signer: %v", err)
 			}
@@ -68,11 +68,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 		case StarkSignatureType:
 			mainLogger.Info().Msg("Starting Stark runner")
 			logger := RunnerLogger(signatureType)
-			thisSigner, err := signer.NewStarkSigner(config.StarkPrivateKey, string(config.StarkPublicKey), string(config.OracleId), logger)
+			thisSigner, err := signer.NewStarkSigner(secrets.StarkPrivateKey, string(config.StarkPublicKey), string(config.OracleId), logger)
 			if err != nil {
 				return fmt.Errorf("failed to create Stark signer: %v", err)
 			}
-			starkAuthSigner, err := signer.NewStarkAuthSigner(config.StarkPrivateKey, string(config.StarkPublicKey), logger)
+			starkAuthSigner, err := signer.NewStarkAuthSigner(secrets.StarkPrivateKey, string(config.StarkPublicKey), logger)
 			if err != nil {
 				return fmt.Errorf("failed to create Stark auth signer: %v", err)
 			}
@@ -86,7 +86,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 
 	if len(config.PullBasedWsUrl) > 0 {
 		incomingWsPuller := IncomingWebsocketPuller{
-			Auth:                config.PullBasedAuth,
+			Auth:                secrets.PullBasedAuth,
 			Url:                 config.PullBasedWsUrl,
 			SubscriptionRequest: config.PullBasedWsSubscriptionRequest,
 			ReconnectDelay:      config.PullBasedWsReconnectDelay,

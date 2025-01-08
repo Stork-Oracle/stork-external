@@ -32,9 +32,7 @@ func TestDeltaOnly(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 	config := NewStorkPublisherAgentConfig(
 		[]signer.SignatureType{EvmSignatureType},
-		evmPrivateKey,
 		evmPublicKey,
-		starkPrivateKey,
 		starkPublicKey,
 		time.Duration(0),
 		10*time.Millisecond,
@@ -45,7 +43,6 @@ func TestDeltaOnly(t *testing.T) {
 		time.Duration(0),
 		"",
 		time.Duration(0),
-		"",
 		"",
 		"",
 		time.Duration(0),
@@ -121,9 +118,7 @@ func TestZeroPrice(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 	config := NewStorkPublisherAgentConfig(
 		[]signer.SignatureType{EvmSignatureType},
-		evmPrivateKey,
 		evmPublicKey,
-		starkPrivateKey,
 		starkPublicKey,
 		time.Duration(0),
 		10*time.Millisecond,
@@ -134,7 +129,6 @@ func TestZeroPrice(t *testing.T) {
 		time.Duration(0),
 		"",
 		time.Duration(0),
-		"",
 		"",
 		"",
 		time.Duration(0),

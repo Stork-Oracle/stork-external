@@ -44,12 +44,12 @@ The available environment variables are:
 
 You can run the docker container like this using keys.json:
 ```bash
-docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/keys.json:/etc/keys.json -d --log-opt max-size=1g storknetwork/publisher-agent:v1.0.2 start -c /etc/config.json -k /etc/keys.json
+docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -v /home/ubuntu/keys.json:/etc/keys.json -d --log-opt max-size=1g storknetwork/publisher-agent:v1.0.3 start -c /etc/config.json -k /etc/keys.json
 ```
 
 or using environment variables:
 ```bash
-docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -e STORK_EVM_PRIVATE_KEY="0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de" -e STORK_EVM_PUBLIC_KEY="0x99e295e85cb07c16b7bb62a44df532a7f2620237" -e STORK_STARK_PRIVATE_KEY="0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a" -e STORK_STARK_PUBLIC_KEY="0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06" -e STORK_ORACLE_ID="czowx" -e -d --log-opt max-size=1g storknetwork/publisher-agent:v1.0.2 start -c /etc/config.
+docker run --platform linux/arm64 --pull always --restart always --name publisher-agent -p 5216:5216 -v /home/ubuntu/config.json:/etc/config.json -e STORK_EVM_PRIVATE_KEY="0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de" -e STORK_EVM_PUBLIC_KEY="0x99e295e85cb07c16b7bb62a44df532a7f2620237" -e STORK_STARK_PRIVATE_KEY="0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a" -e STORK_STARK_PUBLIC_KEY="0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06" -e STORK_ORACLE_ID="czowx" -e -d --log-opt max-size=1g storknetwork/publisher-agent:v1.0.3 start -c /etc/config.
 ```
 
 The command will pull the docker image from our registry and run it in detached mode. If the container crashes it will automatically restart. This example assumes your config files are located in `/home/ubuntu` and that you're using port 5216 for the incoming websocket.
