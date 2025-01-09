@@ -10,7 +10,9 @@
         "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
         "wsProviderUrl": "wss://eth-mainnet.g.alchemy.com/v2/",
         "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
+        "baseTokenIndex": 0,
         "baseTokenDecimals": 18,
+        "quoteTokenIndex": 1,
         "quoteTokenDecimals": 6
       }
     },
@@ -22,7 +24,9 @@
         "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
         "wsProviderUrl": "wss://eth-mainnet.g.alchemy.com/v2/",
         "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
+        "baseTokenIndex": 0,
         "baseTokenDecimals": 18,
+        "quoteTokenIndex": 1,
         "quoteTokenDecimals": 18
       }
     }

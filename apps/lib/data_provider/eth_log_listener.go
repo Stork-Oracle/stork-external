@@ -54,10 +54,14 @@ func (p *EthLogListenerDataSource) GetDataSourceId() DataSourceId {
 }
 
 type EthLogListenerConnector interface {
+	// returns the value you want to report
 	GetUpdateValue(contract *bind.BoundContract, valueId ValueId) (float64, error)
-	GetDataSourceId() DataSourceId
-	GetEthLogListenerConnectionId(config DataProviderSourceConfig) EthLogListenerConnectionId
+	// returns the id of the ethereum contract you're listening to
 	GetContractId() ethcommon.Address
+	// returns an EthLogListenerConnectionId which tells us how to connect to the ethereum contract
+	GetEthLogListenerConnectionId(config DataProviderSourceConfig) EthLogListenerConnectionId
+	// returns the DataSourceId of this integration
+	GetDataSourceId() DataSourceId
 }
 
 func (p *EthLogListenerDataSource) reconnect() error {

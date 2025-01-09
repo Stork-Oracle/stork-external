@@ -22,6 +22,8 @@ type uniswapDataSourceConfig struct {
 	WsProviderUrl        string `json:"wsProviderUrl"`
 	ProviderApiKeyEnvVar string `json:"providerApiKeyEnvVar"`
 	ContractAddress      string `json:"contractAddress"`
+	BaseTokenIndex       int8   `json:"baseTokenIndex"`
+	QuoteTokenIndex      int8   `json:"quoteTokenIndex"`
 	BaseTokenDecimals    int8   `json:"baseTokenDecimals,omitempty"`
 	QuoteTokenDecimals   int8   `json:"quoteTokenDecimals,omitempty"`
 }
@@ -58,7 +60,6 @@ func NewUniswapV2AlchemyConnector(uniswapConfig uniswapDataSourceConfig) *Uniswa
 func (c *UniswapV2AlchemyConnector) GetUpdateValue(contract *bind.BoundContract, valueId ValueId) (float64, error) {
 	// Get price from the contract
 	var result []interface{}
-
 	delay := BaseRetryDelay
 	var queryError error
 	for attempt := 0; attempt < MaxQueryAttempts; attempt++ {
@@ -77,21 +78,22 @@ func (c *UniswapV2AlchemyConnector) GetUpdateValue(contract *bind.BoundContract,
 		return -1, fmt.Errorf("failed to hit contract method %s for value id %s : %v", getUniswapV2ContractFunction, valueId, queryError)
 	}
 
-	return c.calculatePrice(result, valueId)
+	return c.calculatePrice(result)
 }
 
-func (c *UniswapV2AlchemyConnector) calculatePrice(result []interface{}, valueId ValueId) (float64, error) {
-	reserve0, ok := result[0].(*big.Int)
+// helper function to convert the result object to a useful price
+func (c *UniswapV2AlchemyConnector) calculatePrice(result []interface{}) (float64, error) {
+	reserveBase, ok := result[c.uniswapConfig.BaseTokenIndex].(*big.Int)
 	if !ok {
-		return -1, fmt.Errorf("failed to convert reserve0 size to big int: %v", ok)
+		return -1, fmt.Errorf("failed to convert reserveBase size to big int: %v", ok)
 	}
-	reserve1, ok := result[1].(*big.Int)
+	reserveQuote, ok := result[c.uniswapConfig.QuoteTokenIndex].(*big.Int)
 	if !ok {
-		return -1, fmt.Errorf("failed to convert reserve1 size to big int: %v", ok)
+		return -1, fmt.Errorf("failed to convert reserveQuote size to big int: %v", ok)
 	}
 
-	reserve0Float := new(big.Float).SetInt(reserve0)
-	reserve1Float := new(big.Float).SetInt(reserve1)
+	reserve0Float := new(big.Float).SetInt(reserveBase)
+	reserve1Float := new(big.Float).SetInt(reserveQuote)
 
 	tokenA := new(big.Float).Quo(reserve1Float, reserve0Float)
 	price, _ := tokenA.Float64()
@@ -103,10 +105,6 @@ func (c *UniswapV2AlchemyConnector) calculatePrice(result []interface{}, valueId
 	price = price * math.Pow(10, exponent)
 
 	return price, nil
-}
-
-func (c *UniswapV2AlchemyConnector) GetDataSourceId() DataSourceId {
-	return UniswapV2DataSourceId
 }
 
 func (c *UniswapV2AlchemyConnector) GetEthLogListenerConnectionId(config DataProviderSourceConfig) EthLogListenerConnectionId {
@@ -124,4 +122,8 @@ func (c *UniswapV2AlchemyConnector) GetEthLogListenerConnectionId(config DataPro
 
 func (c *UniswapV2AlchemyConnector) GetContractId() common.Address {
 	return common.HexToAddress(c.uniswapConfig.ContractAddress)
+}
+
+func (c *UniswapV2AlchemyConnector) GetDataSourceId() DataSourceId {
+	return UniswapV2DataSourceId
 }
