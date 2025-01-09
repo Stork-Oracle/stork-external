@@ -11,6 +11,7 @@ module stork::stork {
     use stork::evm_pubkey;
     use stork::verify;
     use stork::i128;
+    use stork::state_object_store;
     use aptos_std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin;
@@ -22,6 +23,8 @@ module stork::stork {
 
     // === Functions ===
 
+
+
     entry fun init_stork(
         owner: &signer,
         stork_evm_public_key: vector<u8>,
@@ -31,19 +34,24 @@ module stork::stork {
             !state::state_exists(),
             E_ALREADY_INITIALIZED
         );
+        
+        let state_object_signer = state_object_store::get_state_object_signer();
+
+        // Stork State resource
         let evm_pubkey = evm_pubkey::from_bytes(stork_evm_public_key);
         let state = state::new(evm_pubkey, single_update_fee, signer::address_of(owner));        
-        state.move_state(owner);
+        state.move_state(&state_object_signer);
 
-        // TNV feed table
+        // TNV feed table resource
         let feed_registry = temporal_numeric_value_feed_registry::new();
-        feed_registry.move_tnv_feed_registry(owner);
+        feed_registry.move_tnv_feed_registry(&state_object_signer);
 
         emit_stork_initialization_event(
             @stork,
             evm_pubkey,
             single_update_fee,
             signer::address_of(owner),
+            signer::address_of(&state_object_signer),
         );
     }
 
@@ -194,7 +202,7 @@ module stork::stork {
     // === Test Imports ===
 
     #[test_only]
-    use aptos_framework::account;
+    use aptos_framework::account::{Self, create_account_for_test};
     #[test_only]
     use aptos_framework::aptos_coin;
     #[test_only]
@@ -203,63 +211,62 @@ module stork::stork {
     // === Test Constants ===
 
     #[test_only]
-    const OWNER: address = @stork;
+    const STORK: address = @stork;
     #[test_only]
-    const USER: address = @0xFACE;
-
+    const DEPLOYER: address = @0xFACE;
+    #[test_only]
+    const USER: address = @0xCAFE;
+    
+    
     // === Test Helpers ===
 
     #[test_only]
-    fun setup_test(stork: &signer) {
+    fun setup_test(): (signer, signer) {
+        let stork_signer = create_account_for_test(STORK);
+        state_object_store::init_module_for_test(&stork_signer);
+        let deployer_signer = create_account_for_test(DEPLOYER);
         let pubkey = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
         let fee = 1;
-        init_stork(evm_pubkey::get_bytes(&pubkey), fee, stork);
-    }
+        init_stork(&deployer_signer, evm_pubkey::get_bytes(&pubkey), fee);
 
-    #[test_only]
-    fun setup_test_with_coins(stork: &signer, user: &signer, amount: u64) {
+        let user_signer = create_account_for_test(USER);
+        // coin stores
         let framework_signer = account::create_account_for_test(@aptos_framework);
         let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(&framework_signer);
-        
-        // Register coin stores
-        coin::register<AptosCoin>(stork);
-        coin::register<AptosCoin>(user);
-        
-        // Fund user account
-        aptos_coin::mint(&framework_signer, signer::address_of(user), amount);
+        coin::register<AptosCoin>(&stork_signer);
+        coin::register<AptosCoin>(&deployer_signer);
+        coin::register<AptosCoin>(&user_signer);
 
-        // Clean up capabilities
+        aptos_coin::mint(&framework_signer, USER, 50);
+        aptos_coin::mint(&framework_signer, DEPLOYER, 50);
+
+        // clean up capabilities
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
+
+        (deployer_signer, user_signer)
     }
- 
+    
     // === Tests ===
 
     #[test]
     fun test_init_stork() {
-        let stork = account::create_account_for_test(OWNER);
-        setup_test(&stork);
+        setup_test();
         assert!(state::state_exists(), 0);
     }
 
     #[test]
     #[expected_failure(abort_code = E_ALREADY_INITIALIZED)]
     fun test_init_stork_already_initialized() {
-        let stork = account::create_account_for_test(OWNER);
-        setup_test(&stork);
-        setup_test(&stork); 
+        let (deployer_signer, _) = setup_test();
+        init_stork(&deployer_signer, x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44", 1);
     }
 
     #[test]
     fun test_update_single_temporal_numeric_value_evm() {
         // Setup accounts
-        let stork = account::create_account_for_test(OWNER);
-        let user = account::create_account_for_test(USER);
+        let (_, user_signer) = setup_test();
         
-        setup_test(&stork);
-        let fee = state::get_single_update_fee_in_octas();
-        setup_test_with_coins(&stork, &user, fee);
-
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let timestamp = 1722632569208762117;
         let value = 62507457175499998000000;
@@ -270,7 +277,7 @@ module stork::stork {
         let v = 28;
 
         update_single_temporal_numeric_value_evm(
-            &user,
+            &user_signer,
             asset_id,
             timestamp,
             value,
@@ -287,13 +294,8 @@ module stork::stork {
 
     #[test]
     fun test_update_multiple_temporal_numeric_values_evm() {
-        let stork = account::create_account_for_test(OWNER);
-        let user = account::create_account_for_test(USER);
+        let (_, user_signer) = setup_test();
         
-        setup_test(&stork);
-        let fee = state::get_single_update_fee_in_octas() * 2; 
-        setup_test_with_coins(&stork, &user, fee);
-
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let ids = vector::singleton(asset_id);
         vector::push_back(&mut ids, asset_id);
@@ -324,7 +326,7 @@ module stork::stork {
         vector::push_back(&mut vs, 28u8);
 
         update_multiple_temporal_numeric_values_evm(
-            &user,
+            &user_signer,
             ids,
             timestamps,
             values,
@@ -341,26 +343,22 @@ module stork::stork {
 
     #[test]
     fun test_fee_transfer() {
-        let stork = account::create_account_for_test(OWNER);
-        let user = account::create_account_for_test(USER);
+        let (_, user_signer) = setup_test();
         
-        setup_test(&stork);
         let fee = state::get_single_update_fee_in_octas();
-        setup_test_with_coins(&stork, &user, fee);
 
         let initial_user_balance = coin::balance<AptosCoin>(USER);
-        let initial_stork_balance = coin::balance<AptosCoin>(OWNER);
+        let initial_state_object_balance = coin::balance<AptosCoin>(state_object_store::get_state_object_address());
 
-        transfer_fee(&user, fee);
+        transfer_fee(&user_signer, fee);
 
         assert!(coin::balance<AptosCoin>(USER) == initial_user_balance - fee, 0);
-        assert!(coin::balance<AptosCoin>(OWNER) == initial_stork_balance + fee, 1);
+        assert!(coin::balance<AptosCoin>(@stork) == initial_state_object_balance + fee, 1);
     }
 
     #[test]
     fun test_is_recent_no_existing_value() {
-        let stork = account::create_account_for_test(OWNER);
-        setup_test(&stork);
+        setup_test();
 
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
@@ -371,13 +369,8 @@ module stork::stork {
 
     #[test]
     fun test_is_recent_with_existing_value() {
-        let stork = account::create_account_for_test(OWNER);
-        let user = account::create_account_for_test(USER);
+        let (_, user_signer) = setup_test();
         
-        setup_test(&stork);
-        let fee = state::get_single_update_fee_in_octas();
-        setup_test_with_coins(&stork, &user, fee);
-
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let timestamp = 1722632569208762117;
         let value = 62507457175499998000000;
@@ -388,7 +381,7 @@ module stork::stork {
         let v = 28;
 
         update_single_temporal_numeric_value_evm(
-            &user,
+            &user_signer,
             asset_id,
             timestamp,
             value,
