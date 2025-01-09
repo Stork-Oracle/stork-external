@@ -13,23 +13,23 @@ module stork::verify {
 
     /// Verifies an EVM signature of a stork signed update
     public fun verify_evm_signature(
-        // The EVM public key
+        // EVM public key
         stork_evm_public_key: &EvmPubKey,
-        // The asset id
+        // asset id
         asset_id: vector<u8>,
-        // The timestamp
+        // timestamp
         recv_time: u64,
-        // The quantized value
+        // quantized value
         quantized_value: I128,
-        // The publisher's merkle root
+        // publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        // The value compute algorithm hash
+        // value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        // The signature r
+        // signature r
         r: vector<u8>,
-        // The signature s
+        // signature s
         s: vector<u8>,
-        // The signature v
+        // signature v
         v: u8,
     ): bool {
         let message = get_stork_message_hash(

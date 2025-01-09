@@ -16,19 +16,19 @@ module stork::temporal_numeric_value_evm_update {
 
     /// Struct representing the input for updating a temporal numeric value
     struct TemporalNumericValueEVMUpdate has copy, drop{
-        /// The asset id
+        // asset id
         id: EncodedAssetId,
-        /// The temporal numeric value
+        // temporal numeric value
         temporal_numeric_value: TemporalNumericValue,
-        /// The publisher's merkle root
+        // publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        /// The value compute algorithm hash
+        // value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        /// The signature r
+        // signature r
         r: vector<u8>,
-        /// The signature s
+        // signature s
         s: vector<u8>,
-        /// The signature v
+        // signature v
         v: u8,
     }
 
@@ -36,19 +36,19 @@ module stork::temporal_numeric_value_evm_update {
 
     /// Creates a new update temporal numeric value EVM input   
     public fun new(
-        // The asset id
+        // asset id
         id: EncodedAssetId,
-        // The temporal numeric value
+        // temporal numeric value
         temporal_numeric_value: TemporalNumericValue,
-        // The publisher's merkle root
+        // publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        // The value compute algorithm hash
+        // value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        // The signature r
+        // signature r
         r: vector<u8>,
-        // The signature s
+        // signature s
         s: vector<u8>,
-        // The signature v
+        // signature v
         v: u8,
     ): TemporalNumericValueEVMUpdate { 
         TemporalNumericValueEVMUpdate {
@@ -64,28 +64,31 @@ module stork::temporal_numeric_value_evm_update {
 
     /// Creates a vector of temporal numeric value EVM updates from vectors of the individual fields
     public fun from_vectors(
-        // The asset ids
+        // asset ids
         ids: vector<vector<u8>>,
-        // The timestamps in nanoseconds
+        // timestamps in nanoseconds
         timestamps_ns: vector<u64>,
-        // The quantized values
-        quantized_values: vector<u128>,
-        // The publisher's merkle roots
+        // temporal numeric value magnitudes
+        magnitudes: vector<u128>,
+        // temporal numeric value negatives
+        negatives: vector<bool>,
+        // publisher's merkle roots
         publisher_merkle_roots: vector<vector<u8>>,
-        // The value compute algorithm hashes
+        // value compute algorithm hashes
         value_compute_alg_hashes: vector<vector<u8>>,
-        // The signatures r
+        // signatures r
         rs: vector<vector<u8>>,
-        // The signatures s
+        // signatures s
         ss: vector<vector<u8>>,
-        // The signatures v
+        // signatures v
         vs: vector<u8>,
     ): vector<TemporalNumericValueEVMUpdate> {
         let num_updates = ids.length();
 
         assert!(num_updates > 0, E_NO_UPDATES);
         assert!(timestamps_ns.length() == num_updates, E_INVALID_LENGTHS);
-        assert!(quantized_values.length() == num_updates, E_INVALID_LENGTHS);
+        assert!(magnitudes.length() == num_updates, E_INVALID_LENGTHS);
+        assert!(negatives.length() == num_updates, E_INVALID_LENGTHS);
         assert!(publisher_merkle_roots.length() == num_updates, E_INVALID_LENGTHS);
         assert!(value_compute_alg_hashes.length() == num_updates, E_INVALID_LENGTHS);
         assert!(rs.length() == num_updates, E_INVALID_LENGTHS);
@@ -96,7 +99,8 @@ module stork::temporal_numeric_value_evm_update {
         while (ids.length() > 0) {
             let id = ids.pop_back();
             let timestamp_ns = timestamps_ns.pop_back();
-            let quantized_value = quantized_values.pop_back();
+            let magnitude = magnitudes.pop_back();
+            let negative = negatives.pop_back();
             let publisher_merkle_root = publisher_merkle_roots.pop_back();
             let value_compute_alg_hash = value_compute_alg_hashes.pop_back();
             let r = rs.pop_back();
@@ -104,7 +108,7 @@ module stork::temporal_numeric_value_evm_update {
             let v = vs.pop_back();
 
             let encoded_asset_id = encoded_asset_id::from_bytes(id);
-            let temporal_numeric_value = temporal_numeric_value::new(timestamp_ns, i128::from_u128(quantized_value));
+            let temporal_numeric_value = temporal_numeric_value::new(timestamp_ns, i128::new(magnitude, negative));
             let update = new(encoded_asset_id, temporal_numeric_value, publisher_merkle_root, value_compute_alg_hash, r, s, v);
             updates.push_back(update);
         };
@@ -182,7 +186,8 @@ module stork::temporal_numeric_value_evm_update {
     fun test_from_vectors() {
         let ids = vector::singleton(encoded_asset_id::get_bytes(&encoded_asset_id::create_zeroed_asset_id()));
         let timestamps_ns = vector::singleton(0u64);
-        let quantized_values = vector::singleton(0u128);
+        let magnitudes = vector::singleton(0u128);
+        let negatives = vector::singleton(false);
         let publisher_merkle_roots = vector::singleton(vector::empty());
         let value_compute_alg_hashes = vector::singleton(vector::empty());
         let rs = vector::singleton(vector::empty());
@@ -192,7 +197,8 @@ module stork::temporal_numeric_value_evm_update {
         let updates = from_vectors(
             ids,
             timestamps_ns,
-            quantized_values,
+            magnitudes,
+            negatives,
             publisher_merkle_roots,
             value_compute_alg_hashes,
             rs,
@@ -211,7 +217,8 @@ module stork::temporal_numeric_value_evm_update {
     fun test_from_vectors_empty() {
         let ids = vector::empty();
         let timestamps_ns = vector::empty();
-        let quantized_values = vector::empty();
+        let magnitudes = vector::empty();
+        let negatives = vector::empty();
         let publisher_merkle_roots = vector::empty();
         let value_compute_alg_hashes = vector::empty();
         let rs = vector::empty();
@@ -221,7 +228,8 @@ module stork::temporal_numeric_value_evm_update {
         from_vectors(
             ids,
             timestamps_ns,
-            quantized_values,
+            magnitudes,
+            negatives,
             publisher_merkle_roots,
             value_compute_alg_hashes,
             rs,
@@ -235,7 +243,8 @@ module stork::temporal_numeric_value_evm_update {
     fun test_from_vectors_mismatched_lengths() {
         let ids = vector::singleton(encoded_asset_id::get_bytes(&encoded_asset_id::create_zeroed_asset_id()));
         let timestamps_ns = vector::empty();  // Different length than ids
-        let quantized_values = vector::singleton(0u128);
+        let magnitudes = vector::singleton(0u128);
+        let negatives = vector::singleton(false);
         let publisher_merkle_roots = vector::singleton(vector::empty());
         let value_compute_alg_hashes = vector::singleton(vector::empty());
         let rs = vector::singleton(vector::empty());
@@ -245,7 +254,8 @@ module stork::temporal_numeric_value_evm_update {
         from_vectors(
             ids,
             timestamps_ns,
-            quantized_values,
+            magnitudes,
+            negatives,
             publisher_merkle_roots,
             value_compute_alg_hashes,
             rs,

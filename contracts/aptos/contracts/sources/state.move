@@ -13,13 +13,13 @@ module stork::state {
 
     /// State object for the Stork contract
     struct StorkState has key {
-        // The address of the Stork contract
+        // address of the Stork contract
         stork_address: address,
         // Stork's EVM public key
         stork_evm_public_key: EvmPubKey,
-        // The fee for a single update
+        // fee for a single update
         single_update_fee_in_octas: u64,
-        // The owner of the Stork contract
+        // owner of the Stork contract
         owner: address,
     }
 

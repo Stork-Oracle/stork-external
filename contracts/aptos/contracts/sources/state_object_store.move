@@ -34,6 +34,7 @@ module stork::state_object_store {
         }
     }
 
+    #[view]
     /// Returns the address of the state object
     public fun get_state_object_address(): address acquires StateObjectStore {
         let state_object_store = borrow_global<StateObjectStore>(@stork);

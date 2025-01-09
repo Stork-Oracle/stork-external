@@ -59,23 +59,25 @@ module stork::stork {
 
     /// Updates a single temporal numeric value using EVM signature for verification
     public entry fun update_single_temporal_numeric_value_evm(
-        // The signer of the transaction to pay the fee
+        // signer of the transaction to pay the fee
         signer: &signer,
-        // The asset id
+        // asset id
         asset_id: vector<u8>,
-        // The temporal numeric value
+        // temporal numeric value timestamp ns
         temporal_numeric_value_timestamp_ns: u64,
-        // The temporal numeric value
-        temporal_numeric_value_quantized_value: u128,
-        // The publisher's merkle root
+        // temporal numeric value magnitude
+        temporal_numeric_value_magnitude: u128,
+        // temporal numeric value negative
+        temporal_numeric_value_negative: bool,
+        // publisher's merkle root
         publisher_merkle_root: vector<u8>,
-        // The value compute algorithm hash
+        // value compute algorithm hash
         value_compute_alg_hash: vector<u8>,
-        // The signature r
+        // signature r
         r: vector<u8>,
-        // The signature s
+        // signature s
         s: vector<u8>,
-        // The signature v
+        // signature v
         v: u8,
     ) {
         let evm_pubkey = state::get_stork_evm_public_key();
@@ -92,7 +94,7 @@ module stork::stork {
                 &evm_pubkey,
                 asset_id,
                 temporal_numeric_value_timestamp_ns,
-                i128::from_u128(temporal_numeric_value_quantized_value),
+                i128::new(temporal_numeric_value_magnitude, temporal_numeric_value_negative),
                 publisher_merkle_root,
                 value_compute_alg_hash,
                 r,
@@ -104,7 +106,7 @@ module stork::stork {
 
         transfer_fee(signer, fee);
 
-        let temporal_numeric_value = temporal_numeric_value::new(temporal_numeric_value_timestamp_ns, i128::from_u128(temporal_numeric_value_quantized_value));
+        let temporal_numeric_value = temporal_numeric_value::new(temporal_numeric_value_timestamp_ns, i128::new(temporal_numeric_value_magnitude, temporal_numeric_value_negative));
         temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(encoded_asset_id, temporal_numeric_value);
     }
 
@@ -112,28 +114,30 @@ module stork::stork {
     /// For each update, the position in the vectors corresponds to the position in the updates vector
     /// i.e ids[0] corresponds to timestamps_ns[0], quantized_values[0], etc.
     public entry fun update_multiple_temporal_numeric_values_evm(
-        // The signer of the transaction to pay the fee
+        // signer of the transaction to pay the fee
         signer: &signer,
-        // The asset ids
+        // asset ids
         ids: vector<vector<u8>>,
-        // The timestamps in nanoseconds
-        timestamps_ns: vector<u64>,
-        // The quantized values
-        quantized_values: vector<u128>,
-        // The publisher's merkle roots
+        // temporal numeric value timestamp ns
+        temporal_numeric_value_timestamp_ns: vector<u64>,
+        // temporal numeric value magnitude
+        temporal_numeric_value_magnitude: vector<u128>,
+        // temporal numeric value negative
+        temporal_numeric_value_negative: vector<bool>,
+        // publisher's merkle roots
         publisher_merkle_roots: vector<vector<u8>>,
-        // The value compute algorithm hashes
+        // value compute algorithm hashes
         value_compute_alg_hashes: vector<vector<u8>>,
-        // The signatures r
+        // signatures r
         rs: vector<vector<u8>>,
-        // The signatures s
+        // signatures s
         ss: vector<vector<u8>>,
-        // The signatures v
+        // signatures v
         vs: vector<u8>,
     ) {
         let evm_pubkey = state::get_stork_evm_public_key();
         let fee = state::get_single_update_fee_in_octas();
-        let updates = temporal_numeric_value_evm_update::from_vectors(ids, timestamps_ns, quantized_values, publisher_merkle_roots, value_compute_alg_hashes, rs, ss, vs);
+        let updates = temporal_numeric_value_evm_update::from_vectors(ids, temporal_numeric_value_timestamp_ns, temporal_numeric_value_magnitude, temporal_numeric_value_negative, publisher_merkle_roots, value_compute_alg_hashes, rs, ss, vs);
 
         let num_updates = 0;
         while (updates.length() > 0) {
@@ -269,7 +273,8 @@ module stork::stork {
         
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let timestamp = 1722632569208762117;
-        let value = 62507457175499998000000;
+        let magnitude = 62507457175499998000000;
+        let negative = false;
         let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
         let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
         let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
@@ -280,7 +285,8 @@ module stork::stork {
             &user_signer,
             asset_id,
             timestamp,
-            value,
+            magnitude,
+            negative,
             merkle_root,
             alg_hash,
             r,
@@ -303,8 +309,11 @@ module stork::stork {
         let timestamps = vector::singleton(1722632569208762117u64);
         vector::push_back(&mut timestamps, 1722632569208762117u64);
         
-        let values = vector::singleton(62507457175499998000000u128);
-        vector::push_back(&mut values, 62507457175499998000000u128);
+        let magnitudes = vector::singleton(62507457175499998000000u128);
+        vector::push_back(&mut magnitudes, 62507457175499998000000u128);
+        
+        let negatives = vector::singleton(false);
+        vector::push_back(&mut negatives, false);
         
         let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
         let merkle_roots = vector::singleton(merkle_root);
@@ -329,7 +338,8 @@ module stork::stork {
             &user_signer,
             ids,
             timestamps,
-            values,
+            magnitudes,
+            negatives,
             merkle_roots,
             alg_hashes,
             rs,
@@ -373,7 +383,8 @@ module stork::stork {
         
         let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
         let timestamp = 1722632569208762117;
-        let value = 62507457175499998000000;
+        let magnitude = 62507457175499998000000;
+        let negative = false;
         let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
         let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
         let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
@@ -384,7 +395,8 @@ module stork::stork {
             &user_signer,
             asset_id,
             timestamp,
-            value,
+            magnitude,
+            negative,
             merkle_root,
             alg_hash,
             r,
@@ -395,9 +407,7 @@ module stork::stork {
         let encoded_asset_id = encoded_asset_id::from_bytes(asset_id);
 
         assert!(is_recent(encoded_asset_id, timestamp + 1), 0);
-        
         assert!(!is_recent(encoded_asset_id, timestamp), 1);
-        
         assert!(!is_recent(encoded_asset_id, timestamp - 1), 2);
     }
 }
