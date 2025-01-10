@@ -185,8 +185,13 @@ jobs:
       - name: Download and install Sui binaries
         run: |
           # Download latest Sui release for Linux
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/MystenLabs/sui/releases/latest | grep "tag_name" | cut -d '"' -f 4)
-          curl -L "https://github.com/MystenLabs/sui/releases/latest/download/sui-ubuntu-latest.tgz" -o sui.tgz
+          wget https://sui-releases.s3-accelerate.amazonaws.com/releases/sui-ubuntu-latest.tgz -O sui.tgz
+          
+          # Verify download was successful
+          if [ ! -f sui.tgz ] || [ ! -s sui.tgz ]; then
+            echo "Failed to download Sui binaries"
+            exit 1
+          fi
           
           # Extract to a directory
           mkdir -p $HOME/.sui/bin
