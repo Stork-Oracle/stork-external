@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "id": "WETHUSDT",
+      "dataSource": "UNISWAP_V2",
+      "config": {
+        "updateFrequency": "5s",
+        "contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
+        "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
+        "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
+        "baseTokenIndex": 0,
+        "baseTokenDecimals": 18,
+        "quoteTokenIndex": 1,
+        "quoteTokenDecimals": 6
+      }
+    },
+    {
+      "id": "PEPEWETH",
+      "dataSource": "UNISWAP_V2",
+      "config": {
+        "updateFrequency": "5s",
+        "contractAddress": "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f",
+        "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
+        "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
+        "baseTokenIndex": 0,
+        "baseTokenDecimals": 18,
+        "quoteTokenIndex": 1,
+        "quoteTokenDecimals": 18
+      }
+    },
+    {
+      "id": "MY_RANDOM_VALUE",
+      "dataSource": "RANDOM_NUMBER",
+      "config": {
+        "updateFrequency": "1s",
+        "minValue": 2500,
+        "maxValue": 3000
+      }
+    }
+  ]
+}
