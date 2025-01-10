@@ -10,7 +10,6 @@ stork = "0xe518e1832988d107b56c992f8209c2ad403a113a8a618b0ef88ae43579418d59"
 
 [dev-addresses]
 example = "0x101"
-stork = "0x111"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-framework.git"
