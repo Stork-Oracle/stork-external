@@ -18,7 +18,7 @@ module stork::state_account_store {
 
     /// Runs on publish, sets up the state account store
     fun init_module(package: &signer){
-        let (state_account_signer, state_account_signer_cap) = account::create_resource_account(package, STATE_ACCOUNT_SEED);
+        let (_, state_account_signer_cap) = account::create_resource_account(package, STATE_ACCOUNT_SEED);
         let state_account_store = new(state_account_signer_cap);
         move_to(
             package,

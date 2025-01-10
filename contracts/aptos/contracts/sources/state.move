@@ -13,8 +13,6 @@ module stork::state {
 
     /// State object for the Stork contract
     struct StorkState has key {
-        // address of the Stork contract
-        stork_address: address,
         // Stork's EVM public key
         stork_evm_public_key: EvmPubKey,
         // fee for a single update
@@ -32,7 +30,6 @@ module stork::state {
         owner: address,
     ): StorkState {
         StorkState {
-            stork_address: @stork,
             stork_evm_public_key,
             single_update_fee_in_octas,
             owner,
@@ -60,12 +57,6 @@ module stork::state {
     /// Returns the fee for a single update
     public fun get_single_update_fee_in_octas(): u64 acquires StorkState {
         borrow_global<StorkState>(state_account_store::get_state_account_address()).single_update_fee_in_octas
-    }
-
-    #[view]
-    /// Returns the address of the Stork contract
-    public fun get_stork_address(): address acquires StorkState {
-        borrow_global<StorkState>(state_account_store::get_state_account_address()).stork_address
     }
 
     #[view]
@@ -143,7 +134,6 @@ module stork::state {
         
         assert!(state_exists(), 0);
         assert!(get_single_update_fee_in_octas() == 1, 1);
-        assert!(get_stork_address() == @stork, 2);
         assert!(get_stork_evm_public_key() == evm_pubkey::create_zeroed_evm_pubkey(), 3);
         assert!(get_owner() == DEPLOYER, 5);
     }
