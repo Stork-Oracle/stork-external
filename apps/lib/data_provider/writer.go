@@ -64,14 +64,16 @@ func (w *WebsocketWriter) runWriteLoop(updateCh chan DataSourceUpdateMap) error 
 		if err != nil {
 			w.logger.Error().Msgf("Error marshalling update %v: %v", valueUpdateWebsocketMessage, err)
 		}
+
+		w.logger.Debug().Msgf("Update: %s", string(wsMessageBytes))
+
 		if conn != nil {
-			err := conn.WriteJSON(valueUpdateWebsocketMessage)
+			err := conn.WriteMessage(websocket.TextMessage, wsMessageBytes)
 			if err != nil {
 				return fmt.Errorf("error writing to websocket at %s: %v", w.wsUrl, err)
 			}
 		}
 
-		w.logger.Debug().Msgf("Update: %s", string(wsMessageBytes))
 	}
 
 	return nil
