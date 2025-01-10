@@ -9,20 +9,20 @@ import (
 
 const RandomDataSourceId = "RANDOM_NUMBER"
 
-type randomConfig struct {
+type randomPullerConfig struct {
 	UpdateFrequency string  `json:"updateFrequency"`
 	MinValue        float64 `json:"minValue"`
 	MaxValue        float64 `json:"maxValue"`
 }
 
-type randomConnector struct {
+type randomPuller struct {
 	valueId         ValueId
-	config          randomConfig
+	config          randomPullerConfig
 	updateFrequency time.Duration
 }
 
-func newRandomConnector(sourceConfig DataProviderSourceConfig) *randomConnector {
-	var randomConfig randomConfig
+func newRandomConnector(sourceConfig DataProviderSourceConfig) *randomPuller {
+	var randomConfig randomPullerConfig
 	mapstructure.Decode(sourceConfig.Config, &randomConfig)
 
 	updateFrequency, err := time.ParseDuration(randomConfig.UpdateFrequency)
@@ -30,33 +30,32 @@ func newRandomConnector(sourceConfig DataProviderSourceConfig) *randomConnector 
 		panic("unable to parse update frequency: " + randomConfig.UpdateFrequency)
 	}
 
-	return &randomConnector{
+	return &randomPuller{
 		valueId:         sourceConfig.Id,
 		config:          randomConfig,
 		updateFrequency: updateFrequency,
 	}
 }
 
-func (r *randomConnector) GetUpdate() (DataSourceUpdateMap, error) {
+func (r *randomPuller) GetUpdate() (DataSourceUpdateMap, error) {
 	randValue := r.config.MinValue + rand.Float64()*(r.config.MaxValue-r.config.MinValue)
 
 	updateMap := DataSourceUpdateMap{
 		r.valueId: DataSourceValueUpdate{
-			ValueId:      r.valueId,
-			DataSourceId: r.GetDataSourceId(),
-			Timestamp:    time.Now(),
-			Value:        randValue,
+			ValueId:   r.valueId,
+			Timestamp: time.Now(),
+			Value:     randValue,
 		},
 	}
 
 	return updateMap, nil
 }
 
-func (r *randomConnector) GetUpdateFrequency() time.Duration {
+func (r *randomPuller) GetUpdateFrequency() time.Duration {
 	return r.updateFrequency
 }
 
-func (r *randomConnector) GetDataSourceId() DataSourceId {
+func (r *randomPuller) GetDataSourceId() DataSourceId {
 	return RandomDataSourceId
 }
 

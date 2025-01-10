@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -23,6 +25,15 @@ var resourcesFS embed.FS
 // Define the DataSourceId which will be referenced in the config file and the data_source_registry
 const UniswapV2DataSourceId = "UNISWAP_V2"
 
+const (
+	maxQueryAttempts = 3
+	baseRetryDelay   = 500 * time.Millisecond
+)
+
+const uniswapV2AbiFileName = "uniswap_v2.json"
+
+const getUniswapV2ContractFunction = "getReserves"
+
 // Define the structure of the config needed to pull the appropriate data
 type uniswapDataSourceConfig struct {
 	UpdateFrequency      string `json:"updateFrequency"`
@@ -35,52 +46,54 @@ type uniswapDataSourceConfig struct {
 	QuoteTokenDecimals   int8   `json:"quoteTokenDecimals,omitempty"`
 }
 
-const (
-	maxQueryAttempts = 3
-	baseRetryDelay   = 500 * time.Millisecond
-)
-
-const uniswapV2AbiFileName = "uniswap_v2.json"
-
-const getUniswapV2ContractFunction = "getReserves"
-
 type uniswapV2Connector struct {
-	logger          zerolog.Logger
+	valueId         data_provider.ValueId
 	uniswapConfig   uniswapDataSourceConfig
+	logger          zerolog.Logger
 	apiKey          string
 	updateFrequency time.Duration
-	valueId         ValueId
 	contract        *bind.BoundContract
 }
 
-func newUniswapV2AlchemyConnector(sourceConfig DataProviderSourceConfig) *uniswapV2Connector {
-	var uniswapConfig uniswapDataSourceConfig
-	mapstructure.Decode(sourceConfig.Config, &uniswapConfig)
+func init() {
+	sources.RegisterDataPuller(UniswapV2DataSourceId, func(sourceConfig data_provider.DataProviderSourceConfig) sources.DataPuller {
+		var uniswapConfig uniswapDataSourceConfig
+		mapstructure.Decode(sourceConfig.Config, &uniswapConfig)
 
-	updateFrequency, err := time.ParseDuration(uniswapConfig.UpdateFrequency)
-	if err != nil {
-		panic("unable to parse update frequency: " + uniswapConfig.UpdateFrequency)
-	}
-
-	apiKey := ""
-	if len(uniswapConfig.ProviderApiKeyEnvVar) > 0 {
-		var exists bool
-		apiKey, exists = os.LookupEnv(uniswapConfig.ProviderApiKeyEnvVar)
-		if !exists {
-			panic("env var with name " + uniswapConfig.ProviderApiKeyEnvVar + " is not set")
+		updateFrequency, err := time.ParseDuration(uniswapConfig.UpdateFrequency)
+		if err != nil {
+			panic("unable to parse update frequency: " + uniswapConfig.UpdateFrequency)
 		}
-	}
 
-	return &uniswapV2Connector{
-		logger:          DataSourceLogger(UniswapV2DataSourceId),
-		uniswapConfig:   uniswapConfig,
-		valueId:         sourceConfig.Id,
-		apiKey:          apiKey,
-		updateFrequency: updateFrequency,
-	}
+		apiKey := ""
+		if len(uniswapConfig.ProviderApiKeyEnvVar) > 0 {
+			var exists bool
+			apiKey, exists = os.LookupEnv(uniswapConfig.ProviderApiKeyEnvVar)
+			if !exists {
+				panic("env var with name " + uniswapConfig.ProviderApiKeyEnvVar + " is not set")
+			}
+		}
+
+		return &uniswapV2Connector{
+			logger:          data_provider.DataSourceLogger(UniswapV2DataSourceId),
+			uniswapConfig:   uniswapConfig,
+			valueId:         sourceConfig.Id,
+			apiKey:          apiKey,
+			updateFrequency: updateFrequency,
+		}
+	})
 }
 
-func (c *uniswapV2Connector) GetUpdate() (DataSourceUpdateMap, error) {
+func (c *uniswapV2Connector) GetDataSourceId() sources.DataSourceId {
+	return UniswapV2DataSourceId
+}
+
+func (c *uniswapV2Connector) RunContinuousPull(updatesCh chan data_provider.DataSourceUpdateMap) {
+	scheduler := sources.NewScheduler(c.updateFrequency, c.getUpdate)
+	scheduler.Run(updatesCh)
+}
+
+func (c *uniswapV2Connector) getUpdate() (data_provider.DataSourceUpdateMap, error) {
 	if c.contract == nil {
 		err := c.updateBoundContract()
 		if err != nil {
@@ -92,14 +105,13 @@ func (c *uniswapV2Connector) GetUpdate() (DataSourceUpdateMap, error) {
 		return nil, fmt.Errorf("failed to get price: %v", err)
 	}
 
-	updates := make(DataSourceUpdateMap)
+	updates := make(data_provider.DataSourceUpdateMap)
 
 	updateTime := time.Now().UTC().UnixMilli()
-	updates[c.valueId] = DataSourceValueUpdate{
-		Timestamp:    time.UnixMilli(updateTime),
-		ValueId:      c.valueId,
-		Value:        updateValue,
-		DataSourceId: c.GetDataSourceId(),
+	updates[c.valueId] = data_provider.DataSourceValueUpdate{
+		Timestamp: time.UnixMilli(updateTime),
+		ValueId:   c.valueId,
+		Value:     updateValue,
 	}
 
 	return updates, nil
@@ -185,19 +197,4 @@ func (c *uniswapV2Connector) calculatePrice(result []interface{}) (float64, erro
 	price = price * math.Pow(10, exponent)
 
 	return price, nil
-}
-
-func (c *uniswapV2Connector) GetDataSourceId() DataSourceId {
-	return UniswapV2DataSourceId
-}
-
-func getUniswapV2DataSources(sourceConfigs []DataProviderSourceConfig) []dataSource {
-	dataSources := make([]dataSource, 0)
-	for _, sourceConfig := range sourceConfigs {
-		connector := newUniswapV2AlchemyConnector(sourceConfig)
-		dataSource := newScheduledDataSource(connector)
-		dataSources = append(dataSources, dataSource)
-	}
-
-	return dataSources
 }

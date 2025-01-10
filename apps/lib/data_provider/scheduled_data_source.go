@@ -21,7 +21,7 @@ type scheduledDataSource struct {
 func newScheduledDataSource(connector scheduledDataSourceConnector) *scheduledDataSource {
 	return &scheduledDataSource{
 		connector: connector,
-		logger:    dataSourceLogger(connector.GetDataSourceId()),
+		logger:    DataSourceLogger(connector.GetDataSourceId()),
 	}
 }
 

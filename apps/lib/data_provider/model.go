@@ -19,10 +19,9 @@ type (
 	}
 
 	DataSourceValueUpdate struct {
-		ValueId      ValueId
-		DataSourceId DataSourceId
-		Timestamp    time.Time
-		Value        float64
+		ValueId   ValueId
+		Timestamp time.Time
+		Value     float64
 	}
 
 	DataSourceUpdateMap map[ValueId]DataSourceValueUpdate
