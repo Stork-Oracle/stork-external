@@ -2,7 +2,7 @@ module stork::state {
     // === Imports ===  
     
     use stork::evm_pubkey::{Self, EvmPubKey};
-    use stork::state_object_store;
+    use stork::state_account_store;
     use aptos_std::signer;
 
     // === Errors ===
@@ -47,38 +47,38 @@ module stork::state {
     #[view]
     /// Returns the owner of the Stork contract
     public fun get_owner(): address acquires StorkState {
-        borrow_global<StorkState>(state_object_store::get_state_object_address()).owner
+        borrow_global<StorkState>(state_account_store::get_state_account_address()).owner
     }
 
     #[view]
     /// Returns the Stork's EVM public key
     public fun get_stork_evm_public_key(): EvmPubKey acquires StorkState {
-        borrow_global<StorkState>(state_object_store::get_state_object_address()).stork_evm_public_key
+        borrow_global<StorkState>(state_account_store::get_state_account_address()).stork_evm_public_key
     }
 
     #[view]
     /// Returns the fee for a single update
     public fun get_single_update_fee_in_octas(): u64 acquires StorkState {
-        borrow_global<StorkState>(state_object_store::get_state_object_address()).single_update_fee_in_octas
+        borrow_global<StorkState>(state_account_store::get_state_account_address()).single_update_fee_in_octas
     }
 
     #[view]
     /// Returns the address of the Stork contract
     public fun get_stork_address(): address acquires StorkState {
-        borrow_global<StorkState>(state_object_store::get_state_object_address()).stork_address
+        borrow_global<StorkState>(state_account_store::get_state_account_address()).stork_address
     }
 
     #[view]
     /// Returns true if the state exists
     public fun state_exists(): bool {
-        exists<StorkState>(state_object_store::get_state_object_address())
+        exists<StorkState>(state_account_store::get_state_account_address())
     }
 
     /// === Admin Functions ===
 
     /// Sets the owner of the Stork contract
     public entry fun set_owner(owner: &signer, new_owner: address) acquires StorkState {
-        let state = borrow_global_mut<StorkState>(state_object_store::get_state_object_address());
+        let state = borrow_global_mut<StorkState>(state_account_store::get_state_account_address());
         assert!(
             signer::address_of(owner) == state.owner,
             E_NOT_OWNER
@@ -88,7 +88,7 @@ module stork::state {
 
     /// Sets the fee for a single update
     public entry fun set_single_update_fee_in_octas(owner: &signer, new_fee_in_octas: u64) acquires StorkState {
-        let state = borrow_global_mut<StorkState>(state_object_store::get_state_object_address());
+        let state = borrow_global_mut<StorkState>(state_account_store::get_state_account_address());
         assert!(
             signer::address_of(owner) == state.owner,
             E_NOT_OWNER
@@ -97,7 +97,7 @@ module stork::state {
     }
 
     public entry fun set_stork_evm_public_key(owner: &signer, new_stork_evm_public_key: vector<u8>) acquires StorkState {
-        let state = borrow_global_mut<StorkState>(state_object_store::get_state_object_address());
+        let state = borrow_global_mut<StorkState>(state_account_store::get_state_account_address());
         assert!(
             signer::address_of(owner) == state.owner,
             E_NOT_OWNER
@@ -124,14 +124,14 @@ module stork::state {
     #[test_only]
     fun setup_test(): signer {
         let stork_signer = create_account_for_test(STORK);
-        state_object_store::init_module_for_test(&stork_signer);
+        state_account_store::init_module_for_test(&stork_signer);
         let deployer_signer = create_account_for_test(DEPLOYER);
         let pubkey = evm_pubkey::create_zeroed_evm_pubkey();
         let fee = 1;
-        let stork_state_object_signer = state_object_store::get_state_object_signer();
+        let stork_state_account_signer = state_account_store::get_state_account_signer();
 
         let state = new(pubkey, fee, DEPLOYER);
-        state.move_state(&stork_state_object_signer);
+        state.move_state(&stork_state_account_signer);
         deployer_signer
     }
 

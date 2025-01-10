@@ -16,7 +16,7 @@ module stork::event {
         stork_evm_public_key: EvmPubKey,
         single_update_fee: u64,
         owner: address,
-        state_object_address: address,
+        state_account_address: address,
     }
 
     #[event]
@@ -31,9 +31,9 @@ module stork::event {
         stork_evm_public_key: EvmPubKey,
         single_update_fee: u64,
         owner: address,
-        state_object_address: address,
+        state_account_address: address,
     ) {
-        event::emit(StorkInitializationEvent { stork_address, stork_evm_public_key, single_update_fee, owner, state_object_address });
+        event::emit(StorkInitializationEvent { stork_address, stork_evm_public_key, single_update_fee, owner, state_account_address });
     }
 
     package fun emit_temporal_numeric_value_update_event(

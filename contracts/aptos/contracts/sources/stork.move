@@ -11,7 +11,7 @@ module stork::stork {
     use stork::evm_pubkey;
     use stork::verify;
     use stork::i128;
-    use stork::state_object_store;
+    use stork::state_account_store;
     use aptos_std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin;
@@ -34,24 +34,26 @@ module stork::stork {
             !state::state_exists(),
             E_ALREADY_INITIALIZED
         );
-        
-        let state_object_signer = state_object_store::get_state_object_signer();
 
+
+        let state_account_signer = state_account_store::get_state_account_signer();
+        coin::register<AptosCoin>(&state_account_signer);
+        
         // Stork State resource
         let evm_pubkey = evm_pubkey::from_bytes(stork_evm_public_key);
         let state = state::new(evm_pubkey, single_update_fee, signer::address_of(owner));        
-        state.move_state(&state_object_signer);
+        state.move_state(&state_account_signer);
 
         // TNV feed table resource
         let feed_registry = temporal_numeric_value_feed_registry::new();
-        feed_registry.move_tnv_feed_registry(&state_object_signer);
+        feed_registry.move_tnv_feed_registry(&state_account_signer);
 
         emit_stork_initialization_event(
             @stork,
             evm_pubkey,
             single_update_fee,
             signer::address_of(owner),
-            signer::address_of(&state_object_signer),
+            signer::address_of(&state_account_signer),
         );
     }
 
@@ -188,7 +190,7 @@ module stork::stork {
         fee: u64,
     ) {
         let coin = coin::withdraw<AptosCoin>(signer, fee);
-        coin::deposit<AptosCoin>(@stork, coin);
+        coin::deposit<AptosCoin>(state_account_store::get_state_account_address(), coin);
     }
 
     fun is_recent(
@@ -227,11 +229,10 @@ module stork::stork {
     #[test_only]
     fun setup_test(): (signer, signer) {
         let stork_signer = create_account_for_test(STORK);
-        state_object_store::init_module_for_test(&stork_signer);
+        state_account_store::init_module_for_test(&stork_signer);
         let deployer_signer = create_account_for_test(DEPLOYER);
         let pubkey = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
         let fee = 1;
-        init_stork(&deployer_signer, evm_pubkey::get_bytes(&pubkey), fee);
 
         let user_signer = create_account_for_test(USER);
         // coin stores
@@ -247,7 +248,7 @@ module stork::stork {
         // clean up capabilities
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
-
+        init_stork(&deployer_signer, evm_pubkey::get_bytes(&pubkey), fee);
         (deployer_signer, user_signer)
     }
     
@@ -358,12 +359,12 @@ module stork::stork {
         let fee = state::get_single_update_fee_in_octas();
 
         let initial_user_balance = coin::balance<AptosCoin>(USER);
-        let initial_state_object_balance = coin::balance<AptosCoin>(state_object_store::get_state_object_address());
+        let initial_state_account_balance = coin::balance<AptosCoin>(state_account_store::get_state_account_address());
 
         transfer_fee(&user_signer, fee);
 
         assert!(coin::balance<AptosCoin>(USER) == initial_user_balance - fee, 0);
-        assert!(coin::balance<AptosCoin>(@stork) == initial_state_object_balance + fee, 1);
+        assert!(coin::balance<AptosCoin>(state_account_store::get_state_account_address()) == initial_state_account_balance + fee, 1);
     }
 
     #[test]
