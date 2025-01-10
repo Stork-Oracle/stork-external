@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strings"
 	"sync"
 	"time"
 
@@ -475,9 +474,4 @@ func (sci *SolanaContractInteracter) quantizedPriceToInt128(quantizedPrice Quant
 	}
 
 	return quantizedPrice128
-}
-
-func hexStringToByteArray(hexString string) ([]byte, error) {
-	hexString = strings.TrimPrefix(hexString, "0x")
-	return hex.DecodeString(hexString)
 }

@@ -18,12 +18,13 @@ const awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
 const versionFile = "version.txt"
 
 type PublisherMetadata struct {
-	PublisherKey          signer.PublisherKey  `json:"publisher_key"`
-	SignatureType         signer.SignatureType `json:"signature_type"`
-	PublisherAgentVersion string               `json:"publisher_agent_version"`
-	Architecture          string               `json:"architecture"`
-	PublicIp              string               `json:"public_ip"`
-	AwsMetadata           AwsMetadata          `json:"aws_metadata"`
+	PublisherKey          signer.PublisherKey       `json:"publisher_key"`
+	SignatureType         signer.SignatureType      `json:"signature_type"`
+	PublisherAgentVersion string                    `json:"publisher_agent_version"`
+	Architecture          string                    `json:"architecture"`
+	PublicIp              string                    `json:"public_ip"`
+	AwsMetadata           AwsMetadata               `json:"aws_metadata"`
+	Config                StorkPublisherAgentConfig `json:"config"`
 }
 
 type AwsMetadata struct {
@@ -39,6 +40,7 @@ type PublisherMetadataReporter struct {
 	publisherMetadataBaseUrl string
 	storkAuthSigner          signer.StorkAuthSigner
 	logger                   zerolog.Logger
+	config                   StorkPublisherAgentConfig
 }
 
 func NewPublisherMetadataReporter(
@@ -48,6 +50,7 @@ func NewPublisherMetadataReporter(
 	publisherMetadataBaseUrl string,
 	storkAuthSigner signer.StorkAuthSigner,
 	logger zerolog.Logger,
+	config StorkPublisherAgentConfig,
 ) *PublisherMetadataReporter {
 	return &PublisherMetadataReporter{
 		publicKey:                publicKey,
@@ -56,6 +59,7 @@ func NewPublisherMetadataReporter(
 		publisherMetadataBaseUrl: publisherMetadataBaseUrl,
 		storkAuthSigner:          storkAuthSigner,
 		logger:                   logger,
+		config:                   config,
 	}
 }
 
@@ -104,6 +108,7 @@ func (p *PublisherMetadataReporter) getMetadata() PublisherMetadata {
 		Architecture:          architecture,
 		PublicIp:              publicIp,
 		AwsMetadata:           awsMetadata,
+		Config:                p.config,
 	}
 }
 

@@ -96,16 +96,16 @@ func readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgentConfig, error) {
+func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgentConfig, *StorkPublisherAgentSecrets, error) {
 	configFileData, err := readFile(configFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		return nil, nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
 	var configFile Config
 	err = json.Unmarshal(configFileData, &configFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config file: %w", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal config file: %w", err)
 	}
 
 	var keys Keys
@@ -115,7 +115,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	if keysFileReadErr == nil {
 		err = json.Unmarshal(keysFileData, &keys)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
+			return nil, nil, fmt.Errorf("failed to unmarshal keys file: %w", err)
 		}
 	}
 
@@ -124,32 +124,32 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 
 	// validate config and keys file
 	if configFile.SignatureTypes == nil || len(configFile.SignatureTypes) == 0 {
-		return nil, fmt.Errorf("must specify at least one signatureType")
+		return nil, nil, fmt.Errorf("must specify at least one signatureType")
 	}
 
 	for _, signatureType := range configFile.SignatureTypes {
 		switch signatureType {
 		case EvmSignatureType:
 			if !Hex32Regex.MatchString(string(keys.EvmPrivateKey)) {
-				return nil, errors.New("must pass a valid EVM private key")
+				return nil, nil, errors.New("must pass a valid EVM private key")
 			}
 			if !Hex32Regex.MatchString(string(keys.EvmPublicKey)) {
-				return nil, errors.New("must pass a valid EVM public key")
+				return nil, nil, errors.New("must pass a valid EVM public key")
 			}
 		case StarkSignatureType:
 			if !Hex32Regex.MatchString(string(keys.StarkPrivateKey)) {
-				return nil, errors.New("must pass a valid Stark private key")
+				return nil, nil, errors.New("must pass a valid Stark private key")
 			}
 			if !Hex32Regex.MatchString(string(keys.StarkPublicKey)) {
-				return nil, errors.New("must pass a valid Stark public key")
+				return nil, nil, errors.New("must pass a valid Stark public key")
 			}
 		default:
-			return nil, fmt.Errorf("invalid signature type: %s", signatureType)
+			return nil, nil, fmt.Errorf("invalid signature type: %s", signatureType)
 		}
 	}
 
 	if len(keys.OracleId) != 5 {
-		return nil, errors.New("oracle id length must be 5")
+		return nil, nil, errors.New("oracle id length must be 5")
 	}
 
 	clockPeriodStr := configFile.ClockPeriod
@@ -158,7 +158,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	clockUpdatePeriod, err := time.ParseDuration(clockPeriodStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid clock update period: %s", clockPeriodStr)
+		return nil, nil, fmt.Errorf("invalid clock update period: %s", clockPeriodStr)
 	}
 
 	deltaCheckPeriodStr := configFile.DeltaCheckPeriod
@@ -167,10 +167,10 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	deltaUpdatePeriod, err := time.ParseDuration(deltaCheckPeriodStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid delta update period: %s", deltaCheckPeriodStr)
+		return nil, nil, fmt.Errorf("invalid delta update period: %s", deltaCheckPeriodStr)
 	}
 	if deltaUpdatePeriod.Nanoseconds() == 0 {
-		return nil, errors.New("delta update period must be positive")
+		return nil, nil, errors.New("delta update period must be positive")
 	}
 
 	storkRegistryRefreshIntervalStr := configFile.StorkRegistryRefreshInterval
@@ -179,10 +179,10 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	storkRegistryRefreshDuration, err := time.ParseDuration(storkRegistryRefreshIntervalStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid stork registry refresh duration: %s", storkRegistryRefreshIntervalStr)
+		return nil, nil, fmt.Errorf("invalid stork registry refresh duration: %s", storkRegistryRefreshIntervalStr)
 	}
 	if storkRegistryRefreshDuration.Nanoseconds() == 0 {
-		return nil, errors.New("stork registry refresh duration must be positive")
+		return nil, nil, errors.New("stork registry refresh duration must be positive")
 	}
 
 	brokerReconnectDelayStr := configFile.BrokerReconnectDelay
@@ -191,10 +191,10 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	brokerReconnectDelayDuration, err := time.ParseDuration(brokerReconnectDelayStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid broker reconnect duration: %s", brokerReconnectDelayStr)
+		return nil, nil, fmt.Errorf("invalid broker reconnect duration: %s", brokerReconnectDelayStr)
 	}
 	if brokerReconnectDelayDuration.Nanoseconds() == 0 {
-		return nil, errors.New("broker reconnect duration must be positive")
+		return nil, nil, errors.New("broker reconnect duration must be positive")
 	}
 
 	publisherMetadataUpdateIntervalStr := configFile.PublisherMetadataRefreshInterval
@@ -203,7 +203,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	publisherMetadataUpdateDuration, err := time.ParseDuration(publisherMetadataUpdateIntervalStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid publisher metadata update duration: %s", publisherMetadataUpdateIntervalStr)
+		return nil, nil, fmt.Errorf("invalid publisher metadata update duration: %s", publisherMetadataUpdateIntervalStr)
 	}
 
 	changeThresholdPercent := configFile.ChangeThresholdPercent
@@ -211,15 +211,15 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		changeThresholdPercent = DefaultChangeThresholdPercent
 	}
 	if changeThresholdPercent <= 0 {
-		return nil, errors.New("change threshold percent must be positive")
+		return nil, nil, errors.New("change threshold percent must be positive")
 	}
 
 	if configFile.IncomingWsPort > 65535 {
-		return nil, errors.New("incoming ws port must be between 0 and 65535")
+		return nil, nil, errors.New("incoming ws port must be between 0 and 65535")
 	}
 
 	if configFile.IncomingWsPort == 0 && len(configFile.PullBasedWsUrl) == 0 {
-		return nil, errors.New("must specify an incoming ws url to pull from or a port to expose for our incoming ws")
+		return nil, nil, errors.New("must specify an incoming ws url to pull from or a port to expose for our incoming ws")
 	}
 
 	pullBasedReconnectDelayStr := configFile.PullBasedWsReconnectDelay
@@ -228,7 +228,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	pullBasedReconnectDuration, err := time.ParseDuration(pullBasedReconnectDelayStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid pull-based websocket reconnect period: %s", pullBasedReconnectDelayStr)
+		return nil, nil, fmt.Errorf("invalid pull-based websocket reconnect period: %s", pullBasedReconnectDelayStr)
 	}
 
 	pullBasedWsReadTimeoutStr := configFile.PullBasedWsReadTimeout
@@ -237,7 +237,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	pullBasedWsReadTimeout, err := time.ParseDuration(pullBasedWsReadTimeoutStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid pull-based websocket read timeout: %s", pullBasedWsReadTimeoutStr)
+		return nil, nil, fmt.Errorf("invalid pull-based websocket read timeout: %s", pullBasedWsReadTimeoutStr)
 	}
 
 	storkRegistryBaseUrl := configFile.StorkRegistryBaseUrl
@@ -252,9 +252,7 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
-		keys.EvmPrivateKey,
 		keys.EvmPublicKey,
-		keys.StarkPrivateKey,
 		keys.StarkPublicKey,
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
@@ -266,7 +264,6 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		publisherMetadataBaseUrl,
 		publisherMetadataUpdateDuration,
 		configFile.PullBasedWsUrl,
-		keys.PullBasedAuth,
 		configFile.PullBasedWsSubscriptionRequest,
 		pullBasedReconnectDuration,
 		pullBasedWsReadTimeout,
@@ -274,14 +271,36 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		configFile.IncomingWsPort,
 	)
 
-	return config, nil
+	secrets := NewStorkPublisherAgentSecrets(
+		keys.EvmPrivateKey,
+		keys.StarkPrivateKey,
+		keys.PullBasedAuth,
+	)
+
+	return config, secrets, nil
+}
+
+type StorkPublisherAgentSecrets struct {
+	EvmPrivateKey   signer.EvmPrivateKey
+	StarkPrivateKey signer.StarkPrivateKey
+	PullBasedAuth   AuthToken
+}
+
+func NewStorkPublisherAgentSecrets(
+	evmPrivateKey signer.EvmPrivateKey,
+	starkPrivateKey signer.StarkPrivateKey,
+	pullBasedAuth AuthToken,
+) *StorkPublisherAgentSecrets {
+	return &StorkPublisherAgentSecrets{
+		EvmPrivateKey:   evmPrivateKey,
+		StarkPrivateKey: starkPrivateKey,
+		PullBasedAuth:   pullBasedAuth,
+	}
 }
 
 type StorkPublisherAgentConfig struct {
 	SignatureTypes                  []signer.SignatureType
-	EvmPrivateKey                   signer.EvmPrivateKey
 	EvmPublicKey                    signer.EvmPublisherKey
-	StarkPrivateKey                 signer.StarkPrivateKey
 	StarkPublicKey                  signer.StarkPublisherKey
 	ClockPeriod                     time.Duration
 	DeltaCheckPeriod                time.Duration
@@ -293,7 +312,6 @@ type StorkPublisherAgentConfig struct {
 	PublisherMetadataBaseUrl        string
 	PublisherMetadataUpdateInterval time.Duration
 	PullBasedWsUrl                  string
-	PullBasedAuth                   AuthToken
 	PullBasedWsSubscriptionRequest  string
 	PullBasedWsReconnectDelay       time.Duration
 	PullBasedWsReadTimeout          time.Duration
@@ -303,9 +321,7 @@ type StorkPublisherAgentConfig struct {
 
 func NewStorkPublisherAgentConfig(
 	signatureTypes []signer.SignatureType,
-	evmPrivateKey signer.EvmPrivateKey,
 	evmPublisherKey signer.EvmPublisherKey,
-	starkPrivateKey signer.StarkPrivateKey,
 	starkPublisherKey signer.StarkPublisherKey,
 	clockPeriod time.Duration,
 	deltaPeriod time.Duration,
@@ -317,7 +333,6 @@ func NewStorkPublisherAgentConfig(
 	publisherMetadataBaseUrl string,
 	publisherMetadataUpdateInterval time.Duration,
 	pullBasedWsUrl string,
-	pullBasedAuth AuthToken,
 	pullBasedWsSubscriptionRequest string,
 	pullBasedWsReconnectDelay time.Duration,
 	pullBasedWsReadTimeout time.Duration,
@@ -326,9 +341,7 @@ func NewStorkPublisherAgentConfig(
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
 		SignatureTypes:                  signatureTypes,
-		EvmPrivateKey:                   evmPrivateKey,
 		EvmPublicKey:                    evmPublisherKey,
-		StarkPrivateKey:                 starkPrivateKey,
 		StarkPublicKey:                  starkPublisherKey,
 		ClockPeriod:                     clockPeriod,
 		DeltaCheckPeriod:                deltaPeriod,
@@ -340,7 +353,6 @@ func NewStorkPublisherAgentConfig(
 		PublisherMetadataBaseUrl:        publisherMetadataBaseUrl,
 		PublisherMetadataUpdateInterval: publisherMetadataUpdateInterval,
 		PullBasedWsUrl:                  pullBasedWsUrl,
-		PullBasedAuth:                   pullBasedAuth,
 		PullBasedWsSubscriptionRequest:  pullBasedWsSubscriptionRequest,
 		PullBasedWsReconnectDelay:       pullBasedWsReconnectDelay,
 		PullBasedWsReadTimeout:          pullBasedWsReadTimeout,
