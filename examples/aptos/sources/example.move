@@ -4,7 +4,7 @@ module example::example {
     use aptos_framework::event;
 
     #[event]
-    public struct ExampleStorkPriceEvent has copy, drop, store {
+    struct ExampleStorkPriceEvent has copy, drop, store {
         timestamp: u64,
         magnitude: u128,
         negative: bool,
