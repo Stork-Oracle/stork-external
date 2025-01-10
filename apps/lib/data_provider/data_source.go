@@ -7,7 +7,7 @@ type dataSource interface {
 }
 
 func buildDataSources(config DataProviderConfig) []dataSource {
-	// group by data source to support batched feeds
+	// group by data source id to support batched feeds
 	sourceConfigsByDataSource := make(map[DataSourceId][]DataProviderSourceConfig)
 	for _, sourceConfig := range config.Sources {
 		dataSourceId := sourceConfig.DataSourceId
@@ -18,7 +18,7 @@ func buildDataSources(config DataProviderConfig) []dataSource {
 
 	}
 
-	// initialize pullers for each data source
+	// initialize data sources
 	allDataSources := make([]dataSource, 0)
 	for dataSourceId, sourceConfigs := range sourceConfigsByDataSource {
 		dataSourceBuilder := GetDataSourceBuilder(dataSourceId)
