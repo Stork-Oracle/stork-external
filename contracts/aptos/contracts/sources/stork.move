@@ -6,7 +6,6 @@ module stork::stork {
     use stork::event::{emit_stork_initialization_event};
     use stork::encoded_asset_id::{Self, EncodedAssetId};
     use stork::temporal_numeric_value_feed_registry;
-    use stork::temporal_numeric_value_evm_update;
     use stork::temporal_numeric_value::{Self, TemporalNumericValue};
     use stork::evm_pubkey;
     use stork::verify;
@@ -20,6 +19,8 @@ module stork::stork {
 
     const E_ALREADY_INITIALIZED: u64 = 0;
     const E_INVALID_SIGNATURE: u64 = 1;
+    const E_INVALID_LENGTHS: u64 = 2;
+    const E_NO_UPDATES: u64 = 3;
 
     // === Functions ===
 
@@ -38,7 +39,7 @@ module stork::stork {
 
         let state_account_signer = state_account_store::get_state_account_signer();
         coin::register<AptosCoin>(&state_account_signer);
-        
+
         // Stork State resource
         let evm_pubkey = evm_pubkey::from_bytes(stork_evm_public_key);
         let state = state::new(evm_pubkey, single_update_fee, signer::address_of(owner));        
@@ -139,13 +140,33 @@ module stork::stork {
     ) {
         let evm_pubkey = state::get_stork_evm_public_key();
         let fee = state::get_single_update_fee_in_octas();
-        let updates = temporal_numeric_value_evm_update::from_vectors(ids, temporal_numeric_value_timestamp_ns, temporal_numeric_value_magnitude, temporal_numeric_value_negative, publisher_merkle_roots, value_compute_alg_hashes, rs, ss, vs);
+
+        assert!(ids.length() > 0, E_NO_UPDATES);
+        assert!(temporal_numeric_value_timestamp_ns.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(temporal_numeric_value_magnitude.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(temporal_numeric_value_negative.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(publisher_merkle_roots.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(value_compute_alg_hashes.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(rs.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(ss.length() == ids.length(), E_INVALID_LENGTHS);
+        assert!(vs.length() == ids.length(), E_INVALID_LENGTHS);
+
 
         let num_updates = 0;
-        while (updates.length() > 0) {
-            let update = updates.pop_back();
+        while (ids.length() > 0) {
+            let id = ids.pop_back();
+            let encoded_asset_id = encoded_asset_id::from_bytes(id);
+            let timestamp_ns = temporal_numeric_value_timestamp_ns.pop_back();
+            let magnitude = temporal_numeric_value_magnitude.pop_back();
+            let negative = temporal_numeric_value_negative.pop_back();
+            let publisher_merkle_root = publisher_merkle_roots.pop_back();
+            let value_compute_alg_hash = value_compute_alg_hashes.pop_back();
+            let r = rs.pop_back();
+            let s = ss.pop_back();
+            let v = vs.pop_back();
+
             // recency
-            if (!is_recent(update.get_id(), update.get_temporal_numeric_value().get_timestamp_ns())) {
+            if (!is_recent(encoded_asset_id, timestamp_ns)) {
                 continue;
             };
 
@@ -153,21 +174,21 @@ module stork::stork {
             assert!(
                 verify::verify_evm_signature(
                     &evm_pubkey,
-                    update.get_id().get_bytes(),
-                    update.get_temporal_numeric_value().get_timestamp_ns(),
-                    update.get_temporal_numeric_value().get_quantized_value(),
-                    update.get_publisher_merkle_root(),
-                    update.get_value_compute_alg_hash(),
-                    update.get_r(),
-                    update.get_s(),
-                    update.get_v(),
+                    id,
+                    timestamp_ns,
+                    i128::new(magnitude, negative),
+                    publisher_merkle_root,
+                    value_compute_alg_hash,
+                    r,
+                    s,
+                    v,
                 ),
                 E_INVALID_SIGNATURE
             );
 
             num_updates = num_updates + 1;
 
-            temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(update.get_id(), update.get_temporal_numeric_value());
+            temporal_numeric_value_feed_registry::update_latest_temporal_numeric_value(encoded_asset_id, temporal_numeric_value::new(timestamp_ns, i128::new(magnitude, negative)));
         };
 
         transfer_fee(signer, fee * num_updates);

@@ -3,7 +3,7 @@ module stork::state_account_store {
     // === Imports ===
 
     use aptos_framework::account::{Self, SignerCapability};
-    use aptos_std::signer;
+    
     // === Constants ===
 
     const STATE_ACCOUNT_SEED: vector<u8> = b"state-account";
@@ -45,6 +45,11 @@ module stork::state_account_store {
         account::create_signer_with_capability(&state_account_store.state_account_signer_cap)
     }
 
+    // === Test Imports ===
+
+    #[test_only]
+    use aptos_std::signer;
+    
     // === Tests Constants ===
 
     const STORK: address = @stork;
