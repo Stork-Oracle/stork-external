@@ -432,4 +432,166 @@ module stork::stork {
         assert!(!is_recent(encoded_asset_id, timestamp), 1);
         assert!(!is_recent(encoded_asset_id, timestamp - 1), 2);
     }
+
+    #[test]
+    #[expected_failure(abort_code = E_INVALID_SIGNATURE)]
+    fun test_update_single_temporal_numeric_value_evm_invalid_signature() {
+        let (_, user_signer) = setup_test();
+        
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let timestamp = 1722632569208762117;
+        // Changed magnitude to trigger invalid signature
+        let magnitude = 62507457175499998000001;
+        let negative = false;
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        update_single_temporal_numeric_value_evm(
+            &user_signer,
+            asset_id,
+            timestamp,
+            magnitude,
+            negative,
+            merkle_root,
+            alg_hash,
+            r,
+            s,
+            v
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_INVALID_SIGNATURE)]
+    fun test_update_multiple_temporal_numeric_values_evm_invalid_signature() {
+        let (_, user_signer) = setup_test();
+        
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let ids = vector::singleton(asset_id);
+        vector::push_back(&mut ids, asset_id);
+        
+        let timestamps = vector::singleton(1722632569208762118u64);
+        vector::push_back(&mut timestamps, 1722632569208762117u64);
+        
+        // Changed one magnitude to trigger invalid signature
+        let magnitudes = vector::singleton(62507457175499998000001u128);
+        vector::push_back(&mut magnitudes, 62507457175499998000000u128);
+        
+        let negatives = vector::singleton(false);
+        vector::push_back(&mut negatives, false);
+        
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let merkle_roots = vector::singleton(merkle_root);
+        vector::push_back(&mut merkle_roots, merkle_root);
+        
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let alg_hashes = vector::singleton(alg_hash);
+        vector::push_back(&mut alg_hashes, alg_hash);
+        
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let rs = vector::singleton(r);
+        vector::push_back(&mut rs, r);
+        
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let ss = vector::singleton(s);
+        vector::push_back(&mut ss, s);
+        
+        let vs = vector::singleton(28u8);
+        vector::push_back(&mut vs, 28u8);
+
+        update_multiple_temporal_numeric_values_evm(
+            &user_signer,
+            ids,
+            timestamps,
+            magnitudes,
+            negatives,
+            merkle_roots,
+            alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_NO_UPDATES)]
+    fun test_update_multiple_temporal_numeric_values_evm_no_updates() {
+        let (_, user_signer) = setup_test();
+        
+        let ids = vector::empty<vector<u8>>();
+        let timestamps = vector::empty<u64>();
+        let magnitudes = vector::empty<u128>();
+        let negatives = vector::empty<bool>();
+        let merkle_roots = vector::empty<vector<u8>>();
+        let alg_hashes = vector::empty<vector<u8>>();
+        let rs = vector::empty<vector<u8>>();
+        let ss = vector::empty<vector<u8>>();
+        let vs = vector::empty<u8>();
+
+        update_multiple_temporal_numeric_values_evm(
+            &user_signer,
+            ids,
+            timestamps,
+            magnitudes,
+            negatives,
+            merkle_roots,
+            alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = E_INVALID_LENGTHS)]
+    fun test_update_multiple_temporal_numeric_values_evm_invalid_lengths() {
+        let (_, user_signer) = setup_test();
+        
+        let asset_id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let ids = vector::singleton(asset_id);
+        vector::push_back(&mut ids, asset_id);
+        
+        // Only add one timestamp while ids has two elements
+        let timestamps = vector::singleton(1722632569208762117u64);
+        
+        let magnitudes = vector::singleton(62507457175499998000000u128);
+        vector::push_back(&mut magnitudes, 62507457175499998000000u128);
+        
+        let negatives = vector::singleton(false);
+        vector::push_back(&mut negatives, false);
+        
+        let merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        let merkle_roots = vector::singleton(merkle_root);
+        vector::push_back(&mut merkle_roots, merkle_root);
+        
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let alg_hashes = vector::singleton(alg_hash);
+        vector::push_back(&mut alg_hashes, alg_hash);
+        
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let rs = vector::singleton(r);
+        vector::push_back(&mut rs, r);
+        
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let ss = vector::singleton(s);
+        vector::push_back(&mut ss, s);
+        
+        let vs = vector::singleton(28u8);
+        vector::push_back(&mut vs, 28u8);
+
+        update_multiple_temporal_numeric_values_evm(
+            &user_signer,
+            ids,
+            timestamps,
+            magnitudes,
+            negatives,
+            merkle_roots,
+            alg_hashes,
+            rs,
+            ss,
+            vs
+        );
+    }
 }
