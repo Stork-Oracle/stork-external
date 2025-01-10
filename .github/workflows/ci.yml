@@ -182,18 +182,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-sui-
 
-      - name: Cache Sui CLI
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/sui
-          key: ${{ runner.os }}-sui-cli
-
-      - name: Install Sui
+      - name: Download and install Sui binaries
         run: |
-          if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git sui --features tracing
-          fi
+          # Download latest Sui release for Linux
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/MystenLabs/sui/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          curl -L "https://github.com/MystenLabs/sui/releases/latest/download/sui-ubuntu-latest.tgz" -o sui.tgz
+          
+          # Extract to a directory
+          mkdir -p $HOME/.sui/bin
+          tar -xzf sui.tgz -C $HOME/.sui/bin
+          
+          # Add to PATH
+          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+          
+          # Verify installation
           sui --version
 
       - name: Run Sui tests
