@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RandomConfig",
+  "type": "object",
+  "properties": {
+    "updateFrequency": {
+      "type": "string",
+      "description": "Frequency at which updates should occur.",
+      "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+    },
+    "minValue": {
+      "type": "number",
+      "description": "The minimum possible generated value."
+    },
+    "maxValue": {
+      "type": "number",
+      "description": "The maximum possible generated value."
+    }
+  },
+  "required": ["updateFrequency", "minValue", "maxValue"],
+  "additionalProperties": false
+}

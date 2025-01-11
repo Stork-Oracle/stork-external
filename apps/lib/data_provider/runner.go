@@ -1,25 +1,29 @@
 package data_provider
 
+import (
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
+)
+
 type DataProviderRunner struct {
-	config      DataProviderConfig
-	dataSources []dataSource
-	writer      WebsocketWriter
-	updatesCh   chan DataSourceUpdateMap
+	config    types.DataProviderConfig
+	writer    WebsocketWriter
+	updatesCh chan types.DataSourceUpdateMap
 }
 
-func NewDataProviderRunner(dataProviderConfig DataProviderConfig, wsUrl string) *DataProviderRunner {
+func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, wsUrl string) *DataProviderRunner {
 	writer := NewWebsocketWriter(wsUrl)
 	return &DataProviderRunner{
 		config:    dataProviderConfig,
-		updatesCh: make(chan DataSourceUpdateMap, 4096),
+		updatesCh: make(chan types.DataSourceUpdateMap, 4096),
 		writer:    *writer,
 	}
 }
 
 func (r *DataProviderRunner) Run() {
-	r.dataSources = buildDataSources(r.config)
-	for _, dataSource := range r.dataSources {
-		go dataSource.Run(r.updatesCh)
+	dataSources := sources.BuildDataSources(r.config.Sources)
+	for _, dataSource := range dataSources {
+		go dataSource.RunDataSource(r.updatesCh)
 	}
 
 	r.writer.Run(r.updatesCh)

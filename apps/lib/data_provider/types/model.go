@@ -1,12 +1,18 @@
-package data_provider
+package types
 
 import (
 	"time"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 type (
 	DataSourceId string
 	ValueId      string
+
+	DataProviderConfig struct {
+		Sources []DataProviderSourceConfig `json:"sources,omitempty"`
+	}
 
 	DataProviderSourceConfig struct {
 		Id           ValueId      `json:"id"`
@@ -14,8 +20,13 @@ type (
 		Config       any          `json:"config"`
 	}
 
-	DataProviderConfig struct {
-		Sources []DataProviderSourceConfig `json:"sources,omitempty"`
+	DataSource interface {
+		RunDataSource(updatesCh chan DataSourceUpdateMap)
+	}
+
+	DataSourceFactory interface {
+		Build(config DataProviderSourceConfig) DataSource
+		GetSchema() (*gojsonschema.Schema, error)
 	}
 
 	DataSourceValueUpdate struct {

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "updateFrequency": {
+      "type": "string",
+      "description": "Frequency of updates."
+    },
+    "httpProviderUrl": {
+      "type": "string",
+      "description": "HTTP provider URL."
+    },
+    "providerApiKeyEnvVar": {
+      "type": "string",
+      "description": "Environment variable name for the provider API key."
+    },
+    "contractAddress": {
+      "type": "string",
+      "description": "Contract address."
+    },
+    "baseTokenIndex": {
+      "type": "integer",
+      "format": "int8",
+      "description": "Index of the base token."
+    },
+    "quoteTokenIndex": {
+      "type": "integer",
+      "format": "int8",
+      "description": "Index of the quote token."
+    },
+    "baseTokenDecimals": {
+      "type": "integer",
+      "format": "int8",
+      "description": "Decimals for the base token."
+    },
+    "quoteTokenDecimals": {
+      "type": "integer",
+      "format": "int8",
+      "description": "Decimals for the quote token."
+    }
+  },
+  "required": [
+    "updateFrequency",
+    "httpProviderUrl",
+    "contractAddress",
+    "baseTokenIndex",
+    "quoteTokenIndex"
+  ],
+  "additionalProperties": false
+}

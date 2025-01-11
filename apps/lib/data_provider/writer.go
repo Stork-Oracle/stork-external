@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
@@ -12,7 +14,7 @@ import (
 const reconnectDuration = 5 * time.Second
 
 type WebsocketWriter struct {
-	updateCh chan DataSourceUpdateMap
+	updateCh chan types.DataSourceUpdateMap
 	wsUrl    string
 	logger   zerolog.Logger
 }
@@ -20,11 +22,11 @@ type WebsocketWriter struct {
 func NewWebsocketWriter(wsUrl string) *WebsocketWriter {
 	return &WebsocketWriter{
 		wsUrl:  wsUrl,
-		logger: writerLogger(),
+		logger: utils.WriterLogger(),
 	}
 }
 
-func (w *WebsocketWriter) Run(updateCh chan DataSourceUpdateMap) {
+func (w *WebsocketWriter) Run(updateCh chan types.DataSourceUpdateMap) {
 	// always try to reconnect when we get disconnected
 	for {
 		err := w.runWriteLoop(updateCh)
@@ -35,7 +37,7 @@ func (w *WebsocketWriter) Run(updateCh chan DataSourceUpdateMap) {
 	}
 }
 
-func (w *WebsocketWriter) runWriteLoop(updateCh chan DataSourceUpdateMap) error {
+func (w *WebsocketWriter) runWriteLoop(updateCh chan types.DataSourceUpdateMap) error {
 	var conn *websocket.Conn
 	var err error
 	if len(w.wsUrl) > 0 {
@@ -46,9 +48,9 @@ func (w *WebsocketWriter) runWriteLoop(updateCh chan DataSourceUpdateMap) error 
 	}
 
 	for updateMap := range updateCh {
-		valueUpdates := make([]ValueUpdate, 0)
+		valueUpdates := make([]types.ValueUpdate, 0)
 		for _, update := range updateMap {
-			valueUpdate := ValueUpdate{
+			valueUpdate := types.ValueUpdate{
 				PublishTimestamp: update.Timestamp.UnixNano(),
 				ValueId:          update.ValueId,
 				Value:            fmt.Sprintf(`%.18f`, update.Value),
@@ -56,7 +58,7 @@ func (w *WebsocketWriter) runWriteLoop(updateCh chan DataSourceUpdateMap) error 
 			valueUpdates = append(valueUpdates, valueUpdate)
 		}
 
-		valueUpdateWebsocketMessage := ValueUpdateWebsocketMessage{
+		valueUpdateWebsocketMessage := types.ValueUpdateWebsocketMessage{
 			Type: "prices",
 			Data: valueUpdates,
 		}

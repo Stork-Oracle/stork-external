@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 	configFilePath, _ := cmd.Flags().GetString(ConfigFilePathFlag)
 	wsUrl, _ := cmd.Flags().GetString(WebsocketUrl)
 
-	mainLogger := mainLogger()
+	mainLogger := utils.MainLogger()
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
