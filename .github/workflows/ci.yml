@@ -44,10 +44,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Debug Go environment
+        run: |
+          go version
+          go env
+          echo "Contents of go.mod:"
+          cat go.mod
+          echo "Contents of go.sum:"
+          cat go.sum
+
+      - name: Clear and setup Go modules
+        run: |
+          go clean -modcache
+          go mod download -x  # -x flag for verbose output
+          go mod verify
+          
       - name: Run tests
-        run: make test
+        run: |
+          GOFLAGS="-v" make test  # Add verbose flag
         env:
           TARGETPLATFORM: linux/amd64
+          GOPROXY: "https://proxy.golang.org,direct"
+          GO111MODULE: "on"
 
   test-evm:
     runs-on: ubuntu-latest
