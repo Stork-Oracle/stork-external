@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/NethermindEth/juno v0.11.7
+	github.com/aptos-labs/aptos-go-sdk v1.4.1
 	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/gnark-crypto v0.13.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -26,7 +27,6 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
-	github.com/aptos-labs/aptos-go-sdk v1.4.1 // indirect
 	github.com/bits-and-blooms/bitset v1.14.2 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
