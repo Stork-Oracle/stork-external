@@ -200,3 +200,42 @@ jobs:
         run: |
           sui move test
         working-directory: ./contracts/sui/contracts
+    
+  test-aptos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: '**/requirements.txt'
+          
+      - name: Install pip dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install packaging
+          
+      - name: Cache Aptos CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.aptos
+            ~/.local/bin/aptos
+          key: ${{ runner.os }}-aptos-cli
+          
+      - name: Install Aptos CLI
+        run: |
+          if ! command -v aptos &> /dev/null; then
+            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+          fi
+          aptos --version
+
+      - name: Run Aptos tests
+        run: |
+          aptos move test --move-2 --dev
+        working-directory: ./contracts/aptos/contracts
