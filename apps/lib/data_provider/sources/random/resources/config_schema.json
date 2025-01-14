@@ -5,7 +5,7 @@
     "updateFrequency": {
       "type": "string",
       "description": "Frequency at which updates should occur.",
-      "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+      "pattern": "^[0-9]+(ns|us|µs|ms|m|h)$"
     },
     "minValue": {
       "type": "number",
