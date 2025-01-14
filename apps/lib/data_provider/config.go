@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/config"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/configs"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 )
 
@@ -14,5 +14,5 @@ func LoadConfig(configPath string) (*types.DataProviderConfig, error) {
 		return nil, fmt.Errorf("failed to read config file: %v", err)
 	}
 
-	return config.LoadConfigFromBytes(configBytes)
+	return configs.LoadConfigFromBytes(configBytes)
 }

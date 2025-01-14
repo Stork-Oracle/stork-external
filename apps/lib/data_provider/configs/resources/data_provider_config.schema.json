@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DataProviderConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this source"
+          },
+          "dataSource": {
+            "type": "string",
+            "description": "The DataSourceId for the data source",
+            "enum": [
+              "random",
+              "uniswap_v2"
+            ]
+          },
+          "config": {
+            "description": "An arbitrary configuration object for the configured dataSource",
+            "type": "object",
+            "oneOf": [
+              {
+                "if": {
+                  "properties": {
+                    "dataSource": {
+                      "const": "random"
+                    }
+                  }
+                },
+                "then": {
+                  "$ref": "/resources/source_config_schemas/random"
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "dataSource": {
+                      "const": "uniswap_v2"
+                    }
+                  }
+                },
+                "then": {
+                  "$ref": "/resources/source_config_schemas/uniswap_v2"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "dataSource",
+          "config"
+        ]
+      },
+      "description": "A list of source configurations",
+      "minItems": 1
+    }
+  },
+  "required": [
+    "sources"
+  ],
+  "additionalProperties": false
+}
