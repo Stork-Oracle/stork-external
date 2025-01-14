@@ -24,36 +24,15 @@ def generate_go_file(directories):
 
 def generate_config_schema(directories):
     source_config_schemas = []
-    data_source_ids = []
-
-    conditional_source_config_schema_template_str = """
-    {
-        "if": {
-          "properties": {
-            "dataSource": { "const": "$dataSource" }
-          }
-        },
-        "then": {
-            "$$ref": "/resources/source_config_schemas/$dataSource"
-        }
-    }
-    """
-    source_config_template = Template(conditional_source_config_schema_template_str)
 
     for directory in directories:
-        conditional_config_schema = source_config_template.substitute({
-            "dataSource": directory,
-        })
-        source_config_schemas.append(conditional_config_schema)
-        data_source_ids.append(directory)
+        source_config_schema = '{"$ref": "/resources/source_config_schemas/' + directory + '"}'
+        source_config_schemas.append(source_config_schema)
 
     source_config_schema_str = ",".join(source_config_schemas)
 
-    data_source_ids_str = ",".join([f'"{x}"' for x in data_source_ids])
-
     template_data = {
         "source_config_schemas": source_config_schema_str,
-        "data_source_ids": data_source_ids_str
     }
 
     with open(CONFIG_SCHEMA_TEMPLATE_FILE, 'r') as template_file:

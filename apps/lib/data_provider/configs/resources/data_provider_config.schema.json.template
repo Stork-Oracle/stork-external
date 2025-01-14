@@ -6,7 +6,7 @@
     "sources": {
       "type": "array",
       "description": "A list of source configurations",
-      "minItems": 1
+      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {
@@ -14,22 +14,15 @@
             "type": "string",
             "description": "A unique identifier for this source"
           },
-          "dataSource": {
-            "type": "string",
-            "description": "The DataSourceId for the data source",
-            "enum": [
-                $data_source_ids
-            ]
-          },
           "config": {
-            "description": "An arbitrary configuration object for the configured dataSource",
+            "description": "An arbitrary configuration object for a data source",
             "type": "object",
             "oneOf": [
                 $source_config_schemas
             ]
           }
         },
-        "required": ["id", "dataSource", "config"]
+        "required": ["id", "config"]
       }
     }
   },

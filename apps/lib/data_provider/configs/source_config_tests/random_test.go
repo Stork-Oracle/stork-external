@@ -6,38 +6,44 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/configs"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources/random"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidRandomConfig(t *testing.T) {
-	configStr := `
-		{
-		  "sources": [
-			{
-			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "random",
-			  "config": {
-				"updateFrequency": "1s",
-				"minValue": 2500,
-				"maxValue": 3000
-			  }
-			}
-		  ]
-		}`
 
-	config, err := configs.LoadConfigFromBytes([]byte(configStr))
+	validRandomConfig := `
+	{
+	  "sources": [
+		{
+		  "id": "MY_RANDOM_VALUE",
+		  "config": {
+			"dataSource": "random",
+			"updateFrequency": "1s",
+			"minValue": 2500,
+			"maxValue": 3000
+		  }
+		}
+	  ]
+	}
+`
+	config, err := configs.LoadConfigFromBytes([]byte(validRandomConfig))
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(config.Sources))
 
 	sourceConfig := config.Sources[0]
 	assert.Equal(t, types.ValueId("MY_RANDOM_VALUE"), sourceConfig.Id)
-	assert.Equal(t, types.DataSourceId("random"), sourceConfig.DataSourceId)
 
-	uniswapConfig, err := random.GetSourceSpecificConfig(sourceConfig)
+	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	assert.NoError(t, err)
+	assert.Equal(t, random.RandomDataSourceId, dataSourceId)
+
+	randomConfig, err := random.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "1s", uniswapConfig.UpdateFrequency)
-	assert.Equal(t, 2500.0, uniswapConfig.MinValue)
-	assert.Equal(t, 3000.0, uniswapConfig.MaxValue)
+	assert.Equal(t, types.DataSourceId("random"), randomConfig.DataSource)
+	assert.Equal(t, "1s", randomConfig.UpdateFrequency)
+	assert.Equal(t, 2500.0, randomConfig.MinValue)
+	assert.Equal(t, 3000.0, randomConfig.MaxValue)
 }

@@ -13,8 +13,8 @@ func TestValidConfig(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "WETHUSDT",
-			  "dataSource": "uniswap_v2",
 			  "config": {
+			  	"dataSource": "uniswap_v2",
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -27,8 +27,8 @@ func TestValidConfig(t *testing.T) {
 			},
 			{
 			  "id": "PEPEWETH",
-			  "dataSource": "uniswap_v2",
 			  "config": {
+			  	"dataSource": "uniswap_v2",
 				"updateFrequency": "5s",
 				"contractAddress": "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -41,8 +41,8 @@ func TestValidConfig(t *testing.T) {
 			},
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "random",
 			  "config": {
+			  	"dataSource": "random",
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -58,17 +58,14 @@ func TestValidConfig(t *testing.T) {
 
 	config1 := schema.Sources[0]
 	assert.Equal(t, types.ValueId("WETHUSDT"), config1.Id)
-	assert.Equal(t, types.DataSourceId("uniswap_v2"), config1.DataSourceId)
 	assert.NotNil(t, config1.Config)
 
 	config2 := schema.Sources[1]
 	assert.Equal(t, types.ValueId("PEPEWETH"), config2.Id)
-	assert.Equal(t, types.DataSourceId("uniswap_v2"), config2.DataSourceId)
 	assert.NotNil(t, config2.Config)
 
 	config3 := schema.Sources[2]
 	assert.Equal(t, types.ValueId("MY_RANDOM_VALUE"), config3.Id)
-	assert.Equal(t, types.DataSourceId("random"), config3.DataSourceId)
 	assert.NotNil(t, config3.Config)
 }
 
@@ -80,8 +77,8 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "random",
 			  "config": {
+			  	"dataSource": "random",
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -110,8 +107,8 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": 17,
-			  "dataSource": "random",
 			  "config": {
+			  	"dataSource": "random",
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -133,8 +130,8 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "random",
 			  "config": {
+			    "dataSource": "random",
 				"updateFrequency": "five_minutes",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -151,8 +148,8 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "random",
 			  "config": {
+			  	"dataSource": "random",
 				"updateFrequency": "5s",
 				"minValue": 2500,
 				"maxValue": 3000,
@@ -170,8 +167,8 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "fake_data_source",
 			  "config": {
+			  	"dataSource": "fake_data_source",
 				"updateFrequency": "5s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -180,5 +177,5 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  ]
 		}`
 	_, err = LoadConfigFromBytes([]byte(configStr))
-	assert.ErrorContains(t, err, "sources.0.dataSource must be one of the following")
+	assert.ErrorContains(t, err, "sources.0.config.dataSource does not match")
 }

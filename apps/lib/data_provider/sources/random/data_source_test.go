@@ -14,9 +14,9 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	valueId := types.ValueId("TEST_RANDOM")
 
 	config := types.DataProviderSourceConfig{
-		Id:           valueId,
-		DataSourceId: RandomDataSourceId,
+		Id: valueId,
 		Config: RandomConfig{
+			DataSource:      RandomDataSourceId,
 			UpdateFrequency: "50ms",
 			MinValue:        minValue,
 			MaxValue:        maxValue,
@@ -60,9 +60,9 @@ func TestRandomDataSource_RunDataSource(t *testing.T) {
 	valueId := types.ValueId("TEST_RANDOM")
 
 	config := types.DataProviderSourceConfig{
-		Id:           valueId,
-		DataSourceId: RandomDataSourceId,
+		Id: valueId,
 		Config: RandomConfig{
+			DataSource:      RandomDataSourceId,
 			UpdateFrequency: "50ms",
 			MinValue:        minValue,
 			MaxValue:        maxValue,

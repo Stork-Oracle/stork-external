@@ -2,6 +2,10 @@
   "$id": "/resources/source_config_schemas/uniswap_v2",
   "type": "object",
   "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "uniswap_v2"
+    },
     "updateFrequency": {
       "type": "string",
       "description": "Frequency of updates.",

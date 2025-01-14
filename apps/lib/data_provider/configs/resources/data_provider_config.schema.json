@@ -5,6 +5,8 @@
   "properties": {
     "sources": {
       "type": "array",
+      "description": "A list of source configurations",
+      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {
@@ -12,53 +14,24 @@
             "type": "string",
             "description": "A unique identifier for this source"
           },
-          "dataSource": {
-            "type": "string",
-            "description": "The DataSourceId for the data source",
-            "enum": [
-              "random",
-              "uniswap_v2"
-            ]
-          },
           "config": {
-            "description": "An arbitrary configuration object for the configured dataSource",
+            "description": "An arbitrary configuration object for a data source",
             "type": "object",
             "oneOf": [
               {
-                "if": {
-                  "properties": {
-                    "dataSource": {
-                      "const": "random"
-                    }
-                  }
-                },
-                "then": {
-                  "$ref": "/resources/source_config_schemas/random"
-                }
+                "$ref": "/resources/source_config_schemas/random"
               },
               {
-                "if": {
-                  "properties": {
-                    "dataSource": {
-                      "const": "uniswap_v2"
-                    }
-                  }
-                },
-                "then": {
-                  "$ref": "/resources/source_config_schemas/uniswap_v2"
-                }
+                "$ref": "/resources/source_config_schemas/uniswap_v2"
               }
             ]
           }
         },
         "required": [
           "id",
-          "dataSource",
           "config"
         ]
-      },
-      "description": "A list of source configurations",
-      "minItems": 1
+      }
     }
   },
   "required": [

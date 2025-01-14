@@ -13,9 +13,8 @@ type (
 	}
 
 	DataProviderSourceConfig struct {
-		Id           ValueId      `json:"id"`
-		DataSourceId DataSourceId `json:"dataSource"`
-		Config       any          `json:"config"`
+		Id     ValueId `json:"id"`
+		Config any     `json:"config"`
 	}
 
 	DataSource interface {
