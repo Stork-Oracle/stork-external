@@ -2,8 +2,6 @@ package types
 
 import (
 	"time"
-
-	"github.com/xeipuuv/gojsonschema"
 )
 
 type (
@@ -26,7 +24,6 @@ type (
 
 	DataSourceFactory interface {
 		Build(config DataProviderSourceConfig) DataSource
-		GetSchema() (*gojsonschema.Schema, error)
 	}
 
 	DataSourceValueUpdate struct {

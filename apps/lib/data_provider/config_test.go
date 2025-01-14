@@ -3,6 +3,7 @@ package data_provider
 import (
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +13,7 @@ func TestValidConfig(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "WETHUSDT",
-			  "dataSource": "UNISWAP_V2",
+			  "dataSource": "uniswap_v2",
 			  "config": {
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
@@ -26,7 +27,7 @@ func TestValidConfig(t *testing.T) {
 			},
 			{
 			  "id": "PEPEWETH",
-			  "dataSource": "UNISWAP_V2",
+			  "dataSource": "uniswap_v2",
 			  "config": {
 				"updateFrequency": "5s",
 				"contractAddress": "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f",
@@ -40,7 +41,7 @@ func TestValidConfig(t *testing.T) {
 			},
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "RANDOM_NUMBER",
+			  "dataSource": "random",
 			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
@@ -50,7 +51,9 @@ func TestValidConfig(t *testing.T) {
 		  ]
 		}`
 
-	err := validateConfig([]byte(configStr))
+	schema, err := utils.LoadSchema(resourcesFS)
+	assert.NoError(t, err)
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.NoError(t, err)
 }
 
@@ -62,7 +65,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "RANDOM_NUMBER",
+			  "dataSource": "random",
 			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
@@ -71,19 +74,21 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			}
 		  ]
 		}`
-	err := validateConfig([]byte(configStr))
+	schema, err := utils.LoadSchema(resourcesFS)
+	assert.NoError(t, err)
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "Additional property extraField is not allowed")
 
 	// missing field
 	configStr = `{}`
-	err = validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "sources is required")
 
 	// empty source list
 	configStr = `{
 		"sources": []
 	}`
-	err = validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "sources: Array must have at least 1 items")
 
 	// incorrect type
@@ -92,7 +97,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": 17,
-			  "dataSource": "RANDOM_NUMBER",
+			  "dataSource": "random",
 			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
@@ -101,23 +106,21 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			}
 		  ]
 		}`
-	err = validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "Expected: string, given: integer")
 
 	// invalid json
 	configStr = `abcde`
-	err = validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "failed to parse config JSON")
-}
 
-func TestInvalidSourceConfigs(t *testing.T) {
 	// invalid value
-	configStr := `
+	configStr = `
 		{
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "RANDOM_NUMBER",
+			  "dataSource": "random",
 			  "config": {
 				"updateFrequency": "five_minutes",
 				"minValue": 2500,
@@ -126,7 +129,7 @@ func TestInvalidSourceConfigs(t *testing.T) {
 			}
 		  ]
 		}`
-	err := validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "updateFrequency: Does not match pattern")
 
 	// unexpected field
@@ -135,7 +138,7 @@ func TestInvalidSourceConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "RANDOM_NUMBER",
+			  "dataSource": "random",
 			  "config": {
 				"updateFrequency": "5s",
 				"minValue": 2500,
@@ -145,26 +148,8 @@ func TestInvalidSourceConfigs(t *testing.T) {
 			}
 		  ]
 		}`
-	err = validateConfig([]byte(configStr))
+	err = utils.ValidateConfig([]byte(configStr), schema)
 	assert.ErrorContains(t, err, "Additional property extraSourceConfigField is not allowed")
-
-	// mismatched data source
-	configStr = `
-		{
-		  "sources": [
-			{
-			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "UNISWAP_V2",
-			  "config": {
-				"updateFrequency": "5s",
-				"minValue": 2500,
-				"maxValue": 3000
-			  }
-			}
-		  ]
-		}`
-	err = validateConfig([]byte(configStr))
-	assert.ErrorContains(t, err, "httpProviderUrl is required")
 
 	// invalid data source
 	configStr = `
@@ -172,7 +157,7 @@ func TestInvalidSourceConfigs(t *testing.T) {
 		  "sources": [
 			{
 			  "id": "MY_RANDOM_VALUE",
-			  "dataSource": "FAKE_DATA_SOURCE",
+			  "dataSource": "fake_data_source",
 			  "config": {
 				"updateFrequency": "5s",
 				"minValue": 2500,
@@ -181,6 +166,6 @@ func TestInvalidSourceConfigs(t *testing.T) {
 			}
 		  ]
 		}`
-	err = validateConfig([]byte(configStr))
-	assert.ErrorContains(t, err, "no factory registered for: FAKE_DATA_SOURCE")
+	err = utils.ValidateConfig([]byte(configStr), schema)
+	assert.ErrorContains(t, err, "sources.0.dataSource must be one of the following")
 }

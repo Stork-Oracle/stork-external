@@ -3,6 +3,7 @@ package data_provider
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
@@ -12,6 +13,17 @@ import (
 )
 
 const reconnectDuration = 5 * time.Second
+
+type Writer interface {
+	Run(updateCh chan types.DataSourceUpdateMap)
+}
+
+func GetWriter(outputAddress string) (Writer, error) {
+	if strings.HasPrefix("ws://", outputAddress) || len(outputAddress) == 0 {
+		return NewWebsocketWriter(outputAddress), nil
+	}
+	return nil, fmt.Errorf("invalid output address: %s", outputAddress)
+}
 
 type WebsocketWriter struct {
 	updateCh chan types.DataSourceUpdateMap

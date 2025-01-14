@@ -7,16 +7,19 @@ import (
 
 type DataProviderRunner struct {
 	config    types.DataProviderConfig
-	writer    WebsocketWriter
+	writer    Writer
 	updatesCh chan types.DataSourceUpdateMap
 }
 
-func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, wsUrl string) *DataProviderRunner {
-	writer := NewWebsocketWriter(wsUrl)
+func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAddress string) *DataProviderRunner {
+	writer, err := GetWriter(outputAddress)
+	if err != nil {
+		panic("unable to get data writer: " + err.Error())
+	}
 	return &DataProviderRunner{
 		config:    dataProviderConfig,
 		updatesCh: make(chan types.DataSourceUpdateMap, 4096),
-		writer:    *writer,
+		writer:    writer,
 	}
 }
 

@@ -30,11 +30,10 @@ services:
         "start",
         "-c",
         "/etc/data_provider_config.json",
-        "-w",
-        "ws://publisher-agent:5216/publish"
+        "--verbose"
       ]
     volumes:
-      - "./path-to-data-provider-config.json:/etc/data_provider_config.json"
+      - "./sample.data-provider.config.json:/etc/data_provider_config.json"
 
   evm-pusher:
     build:

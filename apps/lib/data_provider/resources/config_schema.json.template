@@ -1,0 +1,38 @@
+{
+  "$$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DataProviderConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this source"
+          },
+          "dataSource": {
+            "type": "string",
+            "description": "The DataSourceId for the data source",
+            "enum": [
+                $data_source_ids
+            ]
+          },
+          "config": {
+            "description": "An arbitrary configuration object for the configured dataSource",
+            "type": "object",
+            "oneOf": [
+                $source_config_schemas
+            ]
+          }
+        },
+        "required": ["id", "dataSource", "config"]
+      },
+      "description": "A list of source configurations",
+      "minItems": 1
+    }
+  },
+  "required": ["sources"],
+  "additionalProperties": false
+}

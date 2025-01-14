@@ -18,18 +18,18 @@ var DataProviderCmd = &cobra.Command{
 
 // required
 const ConfigFilePathFlag = "config-file-path"
-const WebsocketUrl = "ws-url"
+const OutputAddressFlag = "output-address"
 
 func init() {
 	DataProviderCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
-	DataProviderCmd.Flags().StringP(WebsocketUrl, "w", "", "the websocket url to write updates to")
+	DataProviderCmd.Flags().StringP(OutputAddressFlag, "o", "", "a string representing an output address (e.g. ws://localhost:5216/)")
 
 	DataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
 }
 
 func runDataProvider(cmd *cobra.Command, args []string) error {
 	configFilePath, _ := cmd.Flags().GetString(ConfigFilePathFlag)
-	wsUrl, _ := cmd.Flags().GetString(WebsocketUrl)
+	outputAddress, _ := cmd.Flags().GetString(OutputAddressFlag)
 
 	mainLogger := utils.MainLogger()
 
@@ -44,7 +44,7 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error loading config: %v", err)
 	}
 
-	runner := NewDataProviderRunner(*config, wsUrl)
+	runner := NewDataProviderRunner(*config, outputAddress)
 	runner.Run()
 
 	return nil
