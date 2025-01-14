@@ -1,17 +1,13 @@
 package uniswap_v2
 
 import (
-	"embed"
-
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
+	"github.com/mitchellh/mapstructure"
 )
 
 var UniswapV2DataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
-
-//go:embed resources
-var resourcesFS embed.FS
 
 type uniswapV2DataSourceFactory struct{}
 
@@ -21,6 +17,12 @@ func (f *uniswapV2DataSourceFactory) Build(sourceConfig types.DataProviderSource
 
 func init() {
 	sources.RegisterDataSourceFactory(UniswapV2DataSourceId, &uniswapV2DataSourceFactory{})
+}
+
+func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (UniswapV2Config, error) {
+	var config UniswapV2Config
+	err := mapstructure.Decode(sourceConfig.Config, &config)
+	return config, err
 }
 
 var _ types.DataSource = (*uniswapV2DataSource)(nil)

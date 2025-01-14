@@ -1,6 +1,6 @@
 package uniswap_v2
 
-type uniswapV2Config struct {
+type UniswapV2Config struct {
 	UpdateFrequency      string `json:"updateFrequency"`
 	HttpProviderUrl      string `json:"httpProviderUrl"`
 	ProviderApiKeyEnvVar string `json:"providerApiKeyEnvVar"`

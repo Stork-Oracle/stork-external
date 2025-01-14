@@ -39,7 +39,7 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 
 	mainLogger.Info().Msg("Starting data provider")
 
-	config, err := loadConfig(configFilePath)
+	config, err := LoadConfig(configFilePath)
 	if err != nil {
 		return fmt.Errorf("error loading config: %v", err)
 	}

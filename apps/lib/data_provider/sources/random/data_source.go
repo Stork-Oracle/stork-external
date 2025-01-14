@@ -7,20 +7,18 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
-	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog"
 )
 
 type randomDataSource struct {
 	valueId         types.ValueId
-	config          randomConfig
+	config          RandomConfig
 	updateFrequency time.Duration
 	logger          zerolog.Logger
 }
 
 func newRandomDataSource(sourceConfig types.DataProviderSourceConfig) *randomDataSource {
-	var randomConfig randomConfig
-	err := mapstructure.Decode(sourceConfig.Config, &randomConfig)
+	randomConfig, err := GetSourceSpecificConfig(sourceConfig)
 	if err != nil {
 		panic("unable to decode random config: " + err.Error())
 	}

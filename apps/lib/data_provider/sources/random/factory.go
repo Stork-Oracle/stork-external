@@ -1,17 +1,13 @@
 package random
 
 import (
-	"embed"
-
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
+	"github.com/mitchellh/mapstructure"
 )
 
 var RandomDataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
-
-//go:embed resources
-var resourcesFS embed.FS
 
 type randomDataSourceFactory struct{}
 
@@ -21,6 +17,12 @@ func (f *randomDataSourceFactory) Build(sourceConfig types.DataProviderSourceCon
 
 func init() {
 	sources.RegisterDataSourceFactory(RandomDataSourceId, &randomDataSourceFactory{})
+}
+
+func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (RandomConfig, error) {
+	var config RandomConfig
+	err := mapstructure.Decode(sourceConfig.Config, &config)
+	return config, err
 }
 
 var _ types.DataSource = (*randomDataSource)(nil)

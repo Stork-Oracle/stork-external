@@ -1,6 +1,7 @@
 package uniswap_v2
 
 import (
+	"embed"
 	"fmt"
 	"math"
 	"math/big"
@@ -11,16 +12,18 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog"
 )
 
-const uniswapV2AbiFileName = "uniswap_v2.json"
+const uniswapV2AbiFileName = "random.json"
 const getUniswapV2ContractFunction = "getReserves"
+
+//go:embed resources
+var resourcesFS embed.FS
 
 type uniswapV2DataSource struct {
 	logger          zerolog.Logger
-	uniswapConfig   uniswapV2Config
+	uniswapConfig   UniswapV2Config
 	apiKey          string
 	updateFrequency time.Duration
 	valueId         types.ValueId
@@ -28,8 +31,10 @@ type uniswapV2DataSource struct {
 }
 
 func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswapV2DataSource {
-	var uniswapConfig uniswapV2Config
-	mapstructure.Decode(sourceConfig.Config, &uniswapConfig)
+	uniswapConfig, err := GetSourceSpecificConfig(sourceConfig)
+	if err != nil {
+		panic("unable to decode uniswap config: " + err.Error())
+	}
 
 	updateFrequency, err := time.ParseDuration(uniswapConfig.UpdateFrequency)
 	if err != nil {
