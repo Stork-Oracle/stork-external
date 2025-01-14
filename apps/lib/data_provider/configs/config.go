@@ -24,12 +24,12 @@ func LoadConfigFromBytes(configBytes []byte) (*types.DataProviderConfig, error) 
 
 	err = validateConfig(configBytes, schema)
 	if err != nil {
-		return nil, fmt.Errorf("configs file is invalid: %v", err)
+		return nil, fmt.Errorf("config file is invalid: %v", err)
 	}
 
 	var config types.DataProviderConfig
 	if err := json.Unmarshal(configBytes, &config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal configs file: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal config file: %v", err)
 	}
 	return &config, nil
 }
@@ -74,16 +74,16 @@ func loadSchema(resourcesFS embed.FS) (*gojsonschema.Schema, error) {
 func validateConfig(configBytes []byte, schema *gojsonschema.Schema) error {
 	var dataProviderConfig map[string]interface{}
 	if err := json.Unmarshal(configBytes, &dataProviderConfig); err != nil {
-		return fmt.Errorf("failed to parse configs JSON: %v", err)
+		return fmt.Errorf("failed to parse config JSON: %v", err)
 	}
 
 	configLoader := gojsonschema.NewGoLoader(dataProviderConfig)
 	result, err := schema.Validate(configLoader)
 	if err != nil {
-		return fmt.Errorf("error validating configs: %v", err)
+		return fmt.Errorf("error validating config: %v", err)
 	}
 	if !result.Valid() {
-		return fmt.Errorf("configs is invalid: %v", result.Errors())
+		return fmt.Errorf("config is invalid: %v", result.Errors())
 	}
 
 	return nil

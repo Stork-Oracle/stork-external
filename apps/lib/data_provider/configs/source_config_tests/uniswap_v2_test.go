@@ -16,7 +16,7 @@ func TestValidUniswapV2Config(t *testing.T) {
 			{
 			  "id": "WETHUSDT",
 			  "dataSource": "uniswap_v2",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",

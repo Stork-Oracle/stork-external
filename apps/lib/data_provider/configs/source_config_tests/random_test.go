@@ -16,7 +16,7 @@ func TestValidRandomConfig(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000

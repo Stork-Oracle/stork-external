@@ -14,7 +14,7 @@ func TestValidConfig(t *testing.T) {
 			{
 			  "id": "WETHUSDT",
 			  "dataSource": "uniswap_v2",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -28,7 +28,7 @@ func TestValidConfig(t *testing.T) {
 			{
 			  "id": "PEPEWETH",
 			  "dataSource": "uniswap_v2",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "5s",
 				"contractAddress": "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -42,7 +42,7 @@ func TestValidConfig(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -81,7 +81,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -111,7 +111,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			{
 			  "id": 17,
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "1s",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -125,7 +125,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 	// invalid json
 	configStr = `abcde`
 	_, err = LoadConfigFromBytes([]byte(configStr))
-	assert.ErrorContains(t, err, "failed to parse configs JSON")
+	assert.ErrorContains(t, err, "failed to parse config JSON")
 
 	// invalid value
 	configStr = `
@@ -134,7 +134,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "five_minutes",
 				"minValue": 2500,
 				"maxValue": 3000
@@ -152,7 +152,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "random",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "5s",
 				"minValue": 2500,
 				"maxValue": 3000,
@@ -171,7 +171,7 @@ func TestInvalidTopLevelConfigs(t *testing.T) {
 			{
 			  "id": "MY_RANDOM_VALUE",
 			  "dataSource": "fake_data_source",
-			  "configs": {
+			  "config": {
 				"updateFrequency": "5s",
 				"minValue": 2500,
 				"maxValue": 3000
