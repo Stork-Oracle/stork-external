@@ -23,8 +23,6 @@ services:
       dockerfile: Dockerfile
       args:
         SERVICE: "data_provider"
-    environment:
-      ALCHEMY_API_KEY: YOUR_ALCHEMY_API_KEY
     command:
       [
         "start",
