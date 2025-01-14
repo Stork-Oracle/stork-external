@@ -4,6 +4,7 @@ This is a very simple Aptos project to show how you would use the Stork Aptos pr
 ## Deploy locally
 1. Deploy a local version of the [Stork contract](../../contracts/aptos) 
 2. Initialize the contract and write some data to it for your desired asset id using the cli in [admin.ts](../../contracts/aptos/cli/admin.ts)
+3. Set the stork address in the example [Move.toml](./Move.toml)
 3. Compile and deploy this example contract.
 ```bash
 aptos move deploy-object --address-name example --profile <profile_name> --move-2

@@ -5,8 +5,9 @@ authors = []
 
 [addresses]
 example = "_"
-# TODO: Update this to the official address after the contract is deployed
-stork = "0xe518e1832988d107b56c992f8209c2ad403a113a8a618b0ef88ae43579418d59"
+# TODO: Update this to the deployed address after the contract is deployed
+# Official addresses can be found at https://docs.stork.network/resources/contract-addresses/aptos
+stork = "0x68ba7261bf09152006999d7f53432ed540e238d8f1050e1fe739738309f58217"
 
 [dev-addresses]
 example = "0x101"
