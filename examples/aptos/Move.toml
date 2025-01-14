@@ -1,0 +1,24 @@
+[package]
+name = "example"
+version = "1.0.0"
+authors = []
+
+[addresses]
+example = "_"
+# TODO: Update this to the official address after the contract is deployed
+stork = "0xe518e1832988d107b56c992f8209c2ad403a113a8a618b0ef88ae43579418d59"
+
+[dev-addresses]
+example = "0x101"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dependencies.stork]
+git = "https://github.com/stork-oracle/stork-external.git"
+rev = "henry/sto-617-aptos-contract-implementation"
+subdir = "contracts/aptos/contracts"
+
+[dev-dependencies]
