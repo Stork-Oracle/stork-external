@@ -49,6 +49,29 @@ jobs:
         env:
           TARGETPLATFORM: linux/amd64
 
+  data-provider-codegen-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Run code generation script
+        run: |
+          python ./apps/scripts/update_shared_data_provider_code.py
+
+      - name: Check for changes
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "Generated code is out of sync. Please run the script and commit the changes."
+            exit 1
+          fi
+
   test-evm:
     runs-on: ubuntu-latest
 
