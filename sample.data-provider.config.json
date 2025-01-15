@@ -1,11 +1,20 @@
 {
   "sources": [
     {
-      "id": "MY_RANDOM_VALUE",
+      "id": "BTCUSD",
       "config": {
         "dataSource": "random",
         "updateFrequency": "1s",
-        "minValue": 2500,
+        "minValue": 50000,
+        "maxValue": 100000
+      }
+    },
+    {
+      "id": "ETHUSD",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "10s",
+        "minValue": 2000,
         "maxValue": 3000
       }
     }

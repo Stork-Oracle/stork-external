@@ -24,7 +24,10 @@ func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAd
 }
 
 func (r *DataProviderRunner) Run() {
-	dataSources := sources.BuildDataSources(r.config.Sources)
+	dataSources, err := sources.BuildDataSources(r.config.Sources)
+	if err != nil {
+		panic("unable to build data sources: " + err.Error())
+	}
 	for _, dataSource := range dataSources {
 		go dataSource.RunDataSource(r.updatesCh)
 	}

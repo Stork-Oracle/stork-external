@@ -11,10 +11,19 @@ var dataSourceFactories = map[types.DataSourceId]types.DataSourceFactory{}
 
 // Register a new factory for a specific DataSource type.
 func RegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types.DataSourceFactory) {
+	err := tryRegisterDataSourceFactory(dataSourceId, factory)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// exposed for testing
+func tryRegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types.DataSourceFactory) error {
 	if _, exists := dataSourceFactories[dataSourceId]; exists {
-		panic(fmt.Sprintf("DataSourceFactory already registered for: %s", dataSourceId))
+		return fmt.Errorf("DataSourceFactory already registered for: %s", dataSourceId)
 	}
 	dataSourceFactories[dataSourceId] = factory
+	return nil
 }
 
 // Get a factory by dataSourceId.
@@ -26,19 +35,27 @@ func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFact
 	return factory, nil
 }
 
-func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) []types.DataSource {
+func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, error) {
 	dataSources := make([]types.DataSource, 0)
+	valueIds := make(map[types.ValueId]interface{})
 	for _, source := range sourceConfigs {
+		_, exists := valueIds[source.Id]
+		if exists {
+			return nil, fmt.Errorf("duplicate value id in config: %s", source.Id)
+		}
+		valueIds[source.Id] = nil
+
 		dataSourceId, err := utils.GetDataSourceId(source.Config)
 		if err != nil {
-			panic("unable to get data source id from source config " + string(source.Id) + ": " + err.Error())
+			return nil, fmt.Errorf("unable to get data source id from source config %s: %v", source.Id, err)
 		}
 		factory, err := GetDataSourceFactory(dataSourceId)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("unable to get data source factory for data source id %s: %v", dataSourceId, err)
 		}
 		dataSource := factory.Build(source)
 		dataSources = append(dataSources, dataSource)
+
 	}
-	return dataSources
+	return dataSources, nil
 }

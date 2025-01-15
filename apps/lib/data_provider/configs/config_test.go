@@ -69,7 +69,7 @@ func TestValidConfig(t *testing.T) {
 	assert.NotNil(t, config3.Config)
 }
 
-func TestInvalidTopLevelConfigs(t *testing.T) {
+func TestInvalidConfigs(t *testing.T) {
 	// unexpected field
 	configStr := `
 		{

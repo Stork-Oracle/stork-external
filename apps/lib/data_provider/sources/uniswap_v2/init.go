@@ -19,10 +19,11 @@ func init() {
 	sources.RegisterDataSourceFactory(UniswapV2DataSourceId, &uniswapV2DataSourceFactory{})
 }
 
+var _ types.DataSource = (*uniswapV2DataSource)(nil)
+var _ types.DataSourceFactory = (*uniswapV2DataSourceFactory)(nil)
+
 func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (UniswapV2Config, error) {
 	var config UniswapV2Config
 	err := mapstructure.Decode(sourceConfig.Config, &config)
 	return config, err
 }
-
-var _ types.DataSource = (*uniswapV2DataSource)(nil)

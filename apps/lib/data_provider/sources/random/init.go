@@ -19,10 +19,12 @@ func init() {
 	sources.RegisterDataSourceFactory(RandomDataSourceId, &randomDataSourceFactory{})
 }
 
+// assert we're satisfying our interfaces
+var _ types.DataSource = (*randomDataSource)(nil)
+var _ types.DataSourceFactory = (*randomDataSourceFactory)(nil)
+
 func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (RandomConfig, error) {
 	var config RandomConfig
 	err := mapstructure.Decode(sourceConfig.Config, &config)
 	return config, err
 }
-
-var _ types.DataSource = (*randomDataSource)(nil)
