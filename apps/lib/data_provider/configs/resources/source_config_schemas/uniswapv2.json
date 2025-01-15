@@ -1,10 +1,10 @@
 {
-  "$id": "/resources/source_config_schemas/uniswap_v2",
+  "$id": "/resources/source_config_schemas/uniswapv2",
   "type": "object",
   "properties": {
     "dataSource": {
       "type": "string",
-      "const": "uniswap_v2"
+      "const": "uniswapv2"
     },
     "updateFrequency": {
       "type": "string",

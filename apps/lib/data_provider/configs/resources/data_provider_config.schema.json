@@ -22,7 +22,7 @@
                 "$ref": "/resources/source_config_schemas/random"
               },
               {
-                "$ref": "/resources/source_config_schemas/uniswap_v2"
+                "$ref": "/resources/source_config_schemas/uniswapv2"
               }
             ]
           }

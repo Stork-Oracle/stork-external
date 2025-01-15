@@ -1,4 +1,4 @@
-package uniswap_v2
+package uniswapv2
 
 import (
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/configs"
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources/uniswap_v2"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources/uniswapv2"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +17,7 @@ func TestValidUniswapV2Config(t *testing.T) {
 			{
 			  "id": "WETHUSDT",
 			  "config": {
-			  	"dataSource": "uniswap_v2",
+			  	"dataSource": "uniswapv2",
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -41,12 +41,12 @@ func TestValidUniswapV2Config(t *testing.T) {
 
 	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, uniswap_v2.UniswapV2DataSourceId, dataSourceId)
+	assert.Equal(t, uniswapv2.UniswapV2DataSourceId, dataSourceId)
 
-	uniswapConfig, err := uniswap_v2.GetSourceSpecificConfig(sourceConfig)
+	uniswapConfig, err := uniswapv2.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
 
-	assert.Equal(t, types.DataSourceId("uniswap_v2"), uniswapConfig.DataSource)
+	assert.Equal(t, types.DataSourceId("uniswapv2"), uniswapConfig.DataSource)
 	assert.Equal(t, "5s", uniswapConfig.UpdateFrequency)
 	assert.Equal(t, "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852", uniswapConfig.ContractAddress)
 	assert.Equal(t, "https://eth-mainnet.g.alchemy.com/v2/", uniswapConfig.HttpProviderUrl)

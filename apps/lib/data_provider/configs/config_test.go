@@ -14,7 +14,7 @@ func TestValidConfig(t *testing.T) {
 			{
 			  "id": "WETHUSDT",
 			  "config": {
-			  	"dataSource": "uniswap_v2",
+			  	"dataSource": "uniswapv2",
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
@@ -28,7 +28,7 @@ func TestValidConfig(t *testing.T) {
 			{
 			  "id": "PEPEWETH",
 			  "config": {
-			  	"dataSource": "uniswap_v2",
+			  	"dataSource": "uniswapv2",
 				"updateFrequency": "5s",
 				"contractAddress": "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f",
 				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",

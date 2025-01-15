@@ -1,4 +1,4 @@
-package uniswap_v2
+package uniswapv2
 
 import (
 	"embed"
