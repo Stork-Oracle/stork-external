@@ -6,8 +6,7 @@
       "type": "string",
       "const": "skeleton"
     }
-   // TODO: add all other possible fields from your config object
   },
-  "required": ["dataSource"], // TODO: add all other required fields here
+  "required": ["dataSource"],
   "additionalProperties": false
 }

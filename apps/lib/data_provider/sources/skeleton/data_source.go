@@ -5,6 +5,7 @@ import (
 )
 
 type skeletonDataSource struct {
+	SkeletonConfig SkeletonConfig
 	// TODO: set any necessary parameters
 }
 
@@ -15,10 +16,12 @@ func newSkeletonDataSource(sourceConfig types.DataProviderSourceConfig) *skeleto
 	}
 
 	// TODO: add any necessary initialization code
-	panic("implement me")
+	return &skeletonDataSource{
+		SkeletonConfig: skeletonConfig,
+	}
 }
 
 func (r skeletonDataSource) RunDataSource(updatesCh chan types.DataSourceUpdateMap) {
-	// TODO: Write all logic to fetch datapoints and add to updatesCh
+	// TODO: Write all logic to fetch data points and report them to updatesCh
 	panic("implement me")
 }

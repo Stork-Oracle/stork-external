@@ -27,7 +27,8 @@ func TestValidSkeletonConfig(t *testing.T) {
 
 	sourceSpecificConfig, err := skeleton.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
+	assert.NotNil(t, sourceSpecificConfig)
 
 	// TODO: write some asserts to check that the fields on sourceSpecificConfig have the values you'd expect
-	panic("implement me")
+	t.Fatalf("implement me")
 }
