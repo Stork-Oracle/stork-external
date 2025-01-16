@@ -12,7 +12,17 @@ import (
 func TestValidSkeletonConfig(t *testing.T) {
 
 	// TODO: set this to a valid config string using a feed from your new source
-	validConfig := `{}`
+	validConfig := `
+	{
+	  "sources": [
+		{
+		  "id": "MY_VALUE",
+		  "config": {
+			"dataSource": "skeleton"
+		  }
+		}
+	  ]
+	}`
 
 	config, err := configs.LoadConfigFromBytes([]byte(validConfig))
 	assert.NoError(t, err)
