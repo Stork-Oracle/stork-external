@@ -1,0 +1,13 @@
+{
+  "$id": "/resources/source_config_schemas/skeleton",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "skeleton"
+    }
+   // TODO: add all other possible fields from your config object
+  },
+  "required": ["dataSourceId"], // TODO: add all other required fields here
+  "additionalProperties": false
+}
