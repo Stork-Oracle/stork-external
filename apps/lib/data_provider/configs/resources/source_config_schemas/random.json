@@ -20,6 +20,6 @@
       "description": "The maximum possible generated value."
     }
   },
-  "required": ["updateFrequency", "minValue", "maxValue"],
+  "required": ["dataSource", "updateFrequency", "minValue", "maxValue"],
   "additionalProperties": false
 }

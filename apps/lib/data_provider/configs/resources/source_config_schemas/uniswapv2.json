@@ -23,7 +23,6 @@
       "type": "string",
       "description": "Contract address.",
       "pattern": "^0x[0-9a-fA-F]+$"
-
     },
     "baseTokenIndex": {
       "type": "integer",
@@ -47,6 +46,7 @@
     }
   },
   "required": [
+    "dataSource",
     "updateFrequency",
     "httpProviderUrl",
     "contractAddress",
