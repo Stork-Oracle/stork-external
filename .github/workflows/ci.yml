@@ -45,7 +45,20 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Run tests
-        run: make test
+        run: |
+          # First attempt
+          if ! make test; then
+            # Check if the error matches the pattern indicating a cache issue
+            if [[ $? -eq 2 ]] && [[ $(cat /tmp/test_output 2>&1) =~ "unknown revision" ]]; then
+              echo "Tests failed with cache-related error. Cleaning Go cache and retrying..."
+              go clean -cache -modcache
+              # Second attempt after cleaning cache
+              make test
+            else
+              # If it failed for a different reason, exit with the original error
+              exit 1
+            fi
+          fi
         env:
           TARGETPLATFORM: linux/amd64
 
