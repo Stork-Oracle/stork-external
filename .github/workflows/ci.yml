@@ -24,6 +24,7 @@ jobs:
           go-version: '1.22'
 
       - name: Cache Go modules
+        id: go-cache
         uses: actions/cache@v3
         with:
           path: |
@@ -35,8 +36,10 @@ jobs:
 
       - name: Clean Go module cache if needed
         run: |
-          if [ ! -f "go.sum" ] || ! go mod verify &>/dev/null; then
+          if ! go mod download 2>/dev/null; then
+            echo "Module download failed, cleaning cache..."
             go clean -modcache
+            go mod download
           fi
 
       - name: Cache Rust dependencies
