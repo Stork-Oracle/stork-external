@@ -31,7 +31,13 @@ jobs:
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            ${{ runner.os }}-go-
+
+      - name: Clean Go module cache if needed
+        run: |
+          if [ ! -f "go.sum" ] || ! go mod verify &>/dev/null; then
+            go clean -modcache
+          fi
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
