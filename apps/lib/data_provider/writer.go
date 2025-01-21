@@ -19,7 +19,7 @@ type Writer interface {
 }
 
 func GetWriter(outputAddress string) (Writer, error) {
-	if strings.HasPrefix("ws://", outputAddress) || len(outputAddress) == 0 {
+	if strings.HasPrefix(outputAddress, "ws://") || len(outputAddress) == 0 {
 		return NewWebsocketWriter(outputAddress), nil
 	}
 	return nil, fmt.Errorf("invalid output address: %s", outputAddress)
