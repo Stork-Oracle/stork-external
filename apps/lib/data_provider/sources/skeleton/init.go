@@ -20,11 +20,14 @@ func init() {
 }
 
 // assert we're satisfying our interfaces
-var _ types.DataSource = (*skeletonDataSource)(nil)
-var _ types.DataSourceFactory = (*skeletonDataSourceFactory)(nil)
+var (
+	_ types.DataSource        = (*skeletonDataSource)(nil)
+	_ types.DataSourceFactory = (*skeletonDataSourceFactory)(nil)
+)
 
 func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (SkeletonConfig, error) {
 	var config SkeletonConfig
 	err := mapstructure.Decode(sourceConfig.Config, &config)
+
 	return config, err
 }
