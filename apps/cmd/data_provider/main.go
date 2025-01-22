@@ -34,6 +34,8 @@ func main() {
 
 			// set global log level
 			zerolog.SetGlobalLevel(logLevel)
+
+			data_provider.RunStartupAnimation()
 		},
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
@@ -41,7 +43,6 @@ func main() {
 	rootCmd.AddCommand(data_provider.StartDataProviderCmd)
 	rootCmd.AddCommand(data_provider.GenerateDataProviderCmd)
 	rootCmd.AddCommand(data_provider.UpdateSharedCodeCmd)
-	rootCmd.AddCommand(data_provider.RunStartupAnimationCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

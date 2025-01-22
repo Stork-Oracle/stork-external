@@ -16,12 +16,6 @@ const (
 	startupAnimationPath = "apps/lib/data_provider/configs/resources/frames"
 )
 
-var RunStartupAnimationCmd = &cobra.Command{
-	Use:   "woosh",
-	Short: "Run the startup animation",
-	RunE:  runStartupAnimation,
-}
-
 var GenerateDataProviderCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate skeleton code for a new data source integration",
@@ -92,7 +86,7 @@ func runUpdateSharedCode(cmd *cobra.Command, args []string) error {
 	return updateSharedCode(basePath)
 }
 
-func runStartupAnimation(cmd *cobra.Command, args []string) error {
+func RunStartupAnimation() error {
 	basePath, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
