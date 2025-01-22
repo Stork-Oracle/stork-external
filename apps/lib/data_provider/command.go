@@ -12,7 +12,7 @@ import (
 
 var GenerateDataProviderCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generate the necessary data provider source files",
+	Short: "Generate skeleton code for a new data source integration",
 	RunE:  generateDataProvider,
 }
 
@@ -37,7 +37,7 @@ func init() {
 	StartDataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
 
 	GenerateDataProviderCmd.Flags().StringP(
-		DataProviderNameFlag, "n", "", "the name of your data provider in PascalCase",
+		DataProviderNameFlag, "n", "", "the name of your data provider in PascalCase (e.g. MyProvider)",
 	)
 	GenerateDataProviderCmd.MarkFlagRequired(DataProviderNameFlag)
 }
