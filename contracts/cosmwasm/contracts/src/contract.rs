@@ -1,6 +1,9 @@
 use crate::{
     error::StorkError,
-    responses::{GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse, GetTemporalNumericValueResponse},
+    responses::{
+        GetOwnerResponse, GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse,
+        GetTemporalNumericValueResponse,
+    },
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::{verify_stork_evm_signature, EvmPubkey},
 };
@@ -84,7 +87,7 @@ where
                 &stork_evm_public_key,
                 update.id,
                 update.temporal_numeric_value.timestamp_ns,
-                update.temporal_numeric_value.quantized_value,
+                update.temporal_numeric_value.quantized_value.i128(),
                 update.publisher_merkle_root,
                 update.value_compute_alg_hash,
                 update.r,
@@ -122,28 +125,39 @@ where
         ctx: QueryCtx<Q>,
         id: EncodedAssetId,
     ) -> Result<GetTemporalNumericValueResponse, StorkError> {
-        let temporal_numeric_value = self.temporal_numeric_value_feed_registry
+        let temporal_numeric_value = self
+            .temporal_numeric_value_feed_registry
             .may_load(ctx.deps.storage, id)?
             .ok_or(StorkError::FeedNotFound)?;
-        Ok(GetTemporalNumericValueResponse { temporal_numeric_value })
+        Ok(GetTemporalNumericValueResponse {
+            temporal_numeric_value,
+        })
     }
 
     #[sv::msg(query)]
-    fn get_single_update_fee(&self, ctx: QueryCtx<Q>) -> Result<GetSingleUpdateFeeResponse, StorkError> {
+    fn get_single_update_fee(
+        &self,
+        ctx: QueryCtx<Q>,
+    ) -> Result<GetSingleUpdateFeeResponse, StorkError> {
         let fee = self.single_update_fee.load(ctx.deps.storage)?;
         Ok(GetSingleUpdateFeeResponse { fee })
     }
 
     #[sv::msg(query)]
-    fn get_stork_evm_public_key(&self, ctx: QueryCtx<Q>) -> Result<GetStorkEvmPublicKeyResponse, StorkError> {
+    fn get_stork_evm_public_key(
+        &self,
+        ctx: QueryCtx<Q>,
+    ) -> Result<GetStorkEvmPublicKeyResponse, StorkError> {
         let stork_evm_public_key = self.stork_evm_public_key.load(ctx.deps.storage)?;
-        Ok(GetStorkEvmPublicKeyResponse { stork_evm_public_key })
+        Ok(GetStorkEvmPublicKeyResponse {
+            stork_evm_public_key,
+        })
     }
 
     #[sv::msg(query)]
-    fn get_owner(&self, ctx: QueryCtx<Q>) -> Result<Addr, StorkError> {
+    fn get_owner(&self, ctx: QueryCtx<Q>) -> Result<GetOwnerResponse, StorkError> {
         let owner = self.owner.load(ctx.deps.storage)?;
-        Ok(owner)
+        Ok(GetOwnerResponse { owner })
     }
 
     // Admin functions
