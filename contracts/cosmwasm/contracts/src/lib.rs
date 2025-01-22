@@ -5,3 +5,4 @@ mod multitest;
 pub mod responses;
 pub mod temporal_numeric_value;
 pub mod verify;
+pub mod events;

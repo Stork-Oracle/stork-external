@@ -6,6 +6,7 @@ use crate::{
     },
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::{verify_stork_evm_signature, EvmPubkey},
+    events::{new_stork_init_event, new_temporal_numeric_value_update_event},
 };
 use cw_storage_plus::{Item, Map};
 #[cfg(not(feature = "library"))]
@@ -14,7 +15,7 @@ use sylvia::{
     contract,
     ctx::{ExecCtx, InstantiateCtx, MigrateCtx, QueryCtx},
     cw_schema::cw_serde,
-    cw_std::{coin, has_coins, Addr, Coin, Response, StdResult},
+    cw_std::{coin, has_coins, Addr, Coin, Event, Response, StdResult},
     types::{CustomMsg, CustomQuery},
 };
 
@@ -57,7 +58,11 @@ where
         self.single_update_fee
             .save(ctx.deps.storage, &single_update_fee)?;
         self.owner.save(ctx.deps.storage, &ctx.info.sender)?;
-        Ok(Response::new())
+        Ok(Response::new().add_event(new_stork_init_event(
+            stork_evm_public_key,
+            single_update_fee,
+            ctx.info.sender,
+        )))
     }
 
     #[sv::msg(exec)]
@@ -70,6 +75,7 @@ where
         let stork_evm_public_key = self.stork_evm_public_key.load(ctx.deps.storage)?;
         let mut num_updates: u128 = 0;
         let api = ctx.deps.api;
+        let mut events: Vec<Event> = Vec::new();
         for update in update_data {
             // recency
             if let Some(feed) = self
@@ -102,6 +108,10 @@ where
                         &update.temporal_numeric_value,
                     )?;
                     num_updates += 1;
+                    events.push(new_temporal_numeric_value_update_event(
+                        update.id,
+                        update.temporal_numeric_value,
+                    ));
                 }
                 _ => {
                     return Err(StorkError::InvalidSignature);
@@ -116,7 +126,7 @@ where
         if !has_coins(funds.as_ref(), &total_fee) {
             return Err(StorkError::InsufficientFunds);
         }
-        Ok(Response::new())
+        Ok(Response::new().add_events(events))
     }
 
     #[sv::msg(query)]
