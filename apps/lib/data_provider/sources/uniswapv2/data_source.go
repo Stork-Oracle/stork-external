@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"os"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
@@ -15,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const uniswapV2AbiFileName = "random.json"
+const uniswapV2AbiFileName = "uniswap_v2.json"
 const getUniswapV2ContractFunction = "getReserves"
 
 //go:embed resources
@@ -41,19 +40,9 @@ func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswa
 		panic("unable to parse update frequency: " + uniswapConfig.UpdateFrequency)
 	}
 
-	apiKey := ""
-	if len(uniswapConfig.ProviderApiKeyEnvVar) > 0 {
-		var exists bool
-		apiKey, exists = os.LookupEnv(uniswapConfig.ProviderApiKeyEnvVar)
-		if !exists {
-			panic("env var with name " + uniswapConfig.ProviderApiKeyEnvVar + " is not set")
-		}
-	}
-
 	return &uniswapV2DataSource{
 		uniswapConfig:   uniswapConfig,
 		valueId:         sourceConfig.Id,
-		apiKey:          apiKey,
 		updateFrequency: updateFrequency,
 		logger:          utils.DataSourceLogger(UniswapV2DataSourceId),
 	}
@@ -99,7 +88,6 @@ func (c *uniswapV2DataSource) initializeBoundContract() error {
 		c.uniswapConfig.ContractAddress,
 		uniswapV2AbiFileName,
 		c.uniswapConfig.HttpProviderUrl,
-		c.apiKey,
 		resourcesFS,
 	)
 	if err != nil {

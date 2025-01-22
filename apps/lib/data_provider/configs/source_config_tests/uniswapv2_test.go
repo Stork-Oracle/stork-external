@@ -20,11 +20,10 @@ func TestValidUniswapV2Config(t *testing.T) {
 			  	"dataSource": "uniswapv2",
 				"updateFrequency": "5s",
 				"contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
-				"httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
-				"providerApiKeyEnvVar": "ALCHEMY_API_KEY",
-				"baseTokenIndex": 1,
+				"httpProviderUrl": "https://ethereum-rpc.publicnode.com",
+				"baseTokenIndex": 0,
 				"baseTokenDecimals": 18,
-				"quoteTokenIndex": 2,
+				"quoteTokenIndex": 1,
 				"quoteTokenDecimals": 6
 			  }
 			}
@@ -49,10 +48,9 @@ func TestValidUniswapV2Config(t *testing.T) {
 	assert.Equal(t, types.DataSourceId("uniswapv2"), uniswapConfig.DataSource)
 	assert.Equal(t, "5s", uniswapConfig.UpdateFrequency)
 	assert.Equal(t, "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852", uniswapConfig.ContractAddress)
-	assert.Equal(t, "https://eth-mainnet.g.alchemy.com/v2/", uniswapConfig.HttpProviderUrl)
-	assert.Equal(t, "ALCHEMY_API_KEY", uniswapConfig.ProviderApiKeyEnvVar)
-	assert.Equal(t, int8(1), uniswapConfig.BaseTokenIndex)
+	assert.Equal(t, "https://ethereum-rpc.publicnode.com", uniswapConfig.HttpProviderUrl)
+	assert.Equal(t, int8(0), uniswapConfig.BaseTokenIndex)
 	assert.Equal(t, int8(18), uniswapConfig.BaseTokenDecimals)
-	assert.Equal(t, int8(2), uniswapConfig.QuoteTokenIndex)
+	assert.Equal(t, int8(1), uniswapConfig.QuoteTokenIndex)
 	assert.Equal(t, int8(6), uniswapConfig.QuoteTokenDecimals)
 }
