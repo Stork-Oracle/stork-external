@@ -1,16 +1,19 @@
 use crate::{
     error::StorkError,
+    responses::{GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse, GetTemporalNumericValueResponse},
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::{verify_stork_evm_signature, EvmPubkey},
 };
 use cw_storage_plus::{Item, Map};
-use sylvia::contract;
-use sylvia::ctx::{ExecCtx, InstantiateCtx, MigrateCtx, QueryCtx};
-use sylvia::cw_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use sylvia::cw_std::Empty;
-use sylvia::cw_std::{coin, has_coins, storage_keys, Addr, Coin, Response, StdResult, Uint128};
-use sylvia::types::{CustomMsg, CustomQuery};
+use sylvia::{
+    contract,
+    ctx::{ExecCtx, InstantiateCtx, MigrateCtx, QueryCtx},
+    cw_schema::cw_serde,
+    cw_std::{coin, has_coins, Addr, Coin, Response, StdResult},
+    types::{CustomMsg, CustomQuery},
+};
 
 pub struct StorkContract<E, Q> {
     pub stork_evm_public_key: Item<EvmPubkey>,
@@ -118,31 +121,29 @@ where
         &self,
         ctx: QueryCtx<Q>,
         id: EncodedAssetId,
-    ) -> Result<TemporalNumericValue, StorkError> {
-        self.temporal_numeric_value_feed_registry
+    ) -> Result<GetTemporalNumericValueResponse, StorkError> {
+        let temporal_numeric_value = self.temporal_numeric_value_feed_registry
             .may_load(ctx.deps.storage, id)?
-            .ok_or(StorkError::FeedNotFound)
+            .ok_or(StorkError::FeedNotFound)?;
+        Ok(GetTemporalNumericValueResponse { temporal_numeric_value })
     }
 
     #[sv::msg(query)]
-    fn get_single_update_fee(&self, ctx: QueryCtx<Q>) -> Result<Coin, StorkError> {
-        self.single_update_fee
-            .load(ctx.deps.storage)
-            .map_err(|_| StorkError::FeedNotFound)
+    fn get_single_update_fee(&self, ctx: QueryCtx<Q>) -> Result<GetSingleUpdateFeeResponse, StorkError> {
+        let fee = self.single_update_fee.load(ctx.deps.storage)?;
+        Ok(GetSingleUpdateFeeResponse { fee })
     }
 
     #[sv::msg(query)]
-    fn get_stork_evm_public_key(&self, ctx: QueryCtx<Q>) -> Result<EvmPubkey, StorkError> {
-        self.stork_evm_public_key
-            .load(ctx.deps.storage)
-            .map_err(|_| StorkError::FeedNotFound)
+    fn get_stork_evm_public_key(&self, ctx: QueryCtx<Q>) -> Result<GetStorkEvmPublicKeyResponse, StorkError> {
+        let stork_evm_public_key = self.stork_evm_public_key.load(ctx.deps.storage)?;
+        Ok(GetStorkEvmPublicKeyResponse { stork_evm_public_key })
     }
 
     #[sv::msg(query)]
     fn get_owner(&self, ctx: QueryCtx<Q>) -> Result<Addr, StorkError> {
-        self.owner
-            .load(ctx.deps.storage)
-            .map_err(|_| StorkError::FeedNotFound)
+        let owner = self.owner.load(ctx.deps.storage)?;
+        Ok(owner)
     }
 
     // Admin functions
@@ -182,7 +183,7 @@ where
     }
 
     #[sv::msg(migrate)]
-    fn migrate(&self, ctx: MigrateCtx<Q>) -> Result<Response<E>, StorkError> {
+    fn migrate(&self, _ctx: MigrateCtx<Q>) -> Result<Response<E>, StorkError> {
         Ok(Response::new())
     }
 }
