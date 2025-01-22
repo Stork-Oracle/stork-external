@@ -40,6 +40,8 @@ func main() {
 
 	rootCmd.AddCommand(data_provider.StartDataProviderCmd)
 	rootCmd.AddCommand(data_provider.GenerateDataProviderCmd)
+	rootCmd.AddCommand(data_provider.UpdateSharedCodeCmd)
+	rootCmd.AddCommand(data_provider.RunStartupAnimationCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

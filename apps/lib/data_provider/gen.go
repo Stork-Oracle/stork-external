@@ -27,10 +27,10 @@ const (
 )
 
 type templateStrings struct {
-	PascalStr           string
-	LowerStr            string
-	CamelStr            string
-	PackageNames        []string
+	PascalStr    string
+	LowerStr     string
+	CamelStr     string
+	PackageNames []string
 }
 
 type templateFile struct {

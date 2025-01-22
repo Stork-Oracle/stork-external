@@ -56,19 +56,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          python-version: 3.10.16
+          go-version: '1.22'
 
-      - name: Run code generation script
+      - name: Run update command
         run: |
-          python ./apps/scripts/update_shared_data_provider_code.py
+          go run ./apps/cmd/data-provider update
 
       - name: Check for changes
         run: |
           if [[ $(git status --porcelain) ]]; then
-            echo "Generated code is out of sync. Please run the script and commit the changes."
+            echo "Generated code is out of sync. Please run 'go run ./apps/cmd/data-provider update' and commit the changes."
             exit 1
           fi
 
