@@ -38,7 +38,8 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(data_provider.DataProviderCmd)
+	rootCmd.AddCommand(data_provider.StartDataProviderCmd)
+	rootCmd.AddCommand(data_provider.GenerateDataProviderCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
