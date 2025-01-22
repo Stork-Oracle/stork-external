@@ -1,66 +1,126 @@
-// The following directive is necessary to make the package coherent:
-//go:build ignore
-// +build ignore
-
-// This program generates (TODO fill in here). It can be invoked by running go generate
-
-package main
+package data_provider
 
 import (
-	"bufio"
 	"fmt"
 	"html/template"
-	"log"
 	"os"
+	"os/exec"
 	"regexp"
+	"slices"
 	"strings"
+	"time"
+
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	// Get the current working directory to debug paths
+const (
+	dirMode = 0o777
+)
+
+func generateDataProvider(cmd *cobra.Command, args []string) error {
+	dataProviderName, _ := cmd.Flags().GetString(DataProviderNameFlag)
+
+	mainLogger := utils.MainLogger()
+
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	zerolog.DurationFieldUnit = time.Nanosecond
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
 	basePath, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
-		return
+		return fmt.Errorf("failed to get working directory: %w", err)
 	}
-	pascalName := getDataProviderName()
-	generateAll(pascalName, basePath)
+
+	if err := validateDataProviderName(dataProviderName, basePath); err != nil {
+		return fmt.Errorf("failed to validate data provider name: %w", err)
+	}
+
+	mainLogger.Info().Msg("Generating data provider")
+
+	if err := generateAll(dataProviderName, basePath); err != nil {
+		return fmt.Errorf("failed to generate files: %w", err)
+	}
+
+	if err := runUpdateSharedCodeScript(basePath); err != nil {
+		return fmt.Errorf("failed to run Python script: %w", err)
+	}
+
+	return nil
 }
 
-func getDataProviderName() string {
-	for {
-		fmt.Print("Please enter the name of your data provider in PascalCase: ")
-		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		input = input[:len(input)-1]
-
-		if validatePascalCase(input) {
-			return input
-		}
-
-		fmt.Println("Invalid, name not in PascalCase. Please try again.")
+func validateDataProviderName(dataProviderName string, basePath string) error {
+	if !validatePascalCase(dataProviderName) {
+		return fmt.Errorf("data provider name must be in PascalCase. Please try again.")
 	}
-}
 
-func generateAll(pascalName string, basePath string) {
-	sourceDirPath := basePath + "/apps/lib/data_provider/sources/" + pascalToLower(pascalName)
-	err := os.Mkdir(sourceDirPath, 0777) // what permissions should we have?
+	dataSourcesDir := basePath + "/apps/lib/data_provider/sources"
+	dirEntries, err := os.ReadDir(dataSourcesDir)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to read data sources directory: %w", err)
 	}
 
-	generateConfigFile(sourceDirPath, pascalName)
-	generateDataSourceFile(sourceDirPath, pascalName)
-	generateDataSourceTestFile(sourceDirPath, pascalName)
-	generateInitFile(sourceDirPath, pascalName)
+	existingDataNames := []string{}
+	for _, dirEntry := range dirEntries {
+		if dirEntry.IsDir() {
+			existingDataNames = append(existingDataNames, dirEntry.Name())
+		}
+	}
+
+	if slices.Contains(existingDataNames, pascalToLower(dataProviderName)) {
+		return fmt.Errorf("data provider name already taken. Please try again.")
+	}
+
+	return nil
+}
+
+func generateAll(pascalName string, basePath string) error {
+	sourceDirPath := basePath + "/apps/lib/data_provider/sources/" + pascalToLower(pascalName)
+	if err := os.Mkdir(sourceDirPath, dirMode); err != nil {
+		return fmt.Errorf("failed to create source directory: %w", err)
+	}
+
+	if err := generateConfigFile(sourceDirPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate config file: %w", err)
+	}
+
+	if err := generateDataSourceFile(sourceDirPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate data source file: %w", err)
+	}
+
+	if err := generateDataSourceTestFile(sourceDirPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate data source test file: %w", err)
+	}
+
+	if err := generateInitFile(sourceDirPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate init file: %w", err)
+	}
 
 	configSchemaPath := basePath + "/apps/lib/data_provider/configs/resources/source_config_schemas"
-	generateSourceConfigSchema(configSchemaPath, pascalName)
+	if err := generateSourceConfigSchema(configSchemaPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate source config schema: %w", err)
+	}
 
 	configTestPath := basePath + "/apps/lib/data_provider/configs/source_config_tests"
-	generateSourceConfigTest(configTestPath, pascalName)
+	if err := generateSourceConfigTest(configTestPath, pascalName); err != nil {
+		return fmt.Errorf("failed to generate source config test: %w", err)
+	}
+
+	return nil
 }
 
-func generateConfigFile(sourceDirPath string, pascalName string) {
+func runUpdateSharedCodeScript(basePath string) error {
+	scriptPath := basePath + "/apps/scripts/update_shared_data_provider_code.py"
+	cmd := exec.Command("python3", scriptPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
+func generateConfigFile(sourceDirPath string, pascalName string) error {
 	configContent := `// Code generated by go generate.
 
 package {{ .LowerStr }}
@@ -73,10 +133,10 @@ type {{ .PascalStr }}Config struct {
 }
 
 `
-	generateFile(sourceDirPath + "/config.go", configContent, pascalName)
+	return generateFile(sourceDirPath+"/config.go", configContent, pascalName)
 }
 
-func generateDataSourceFile(sourceDirPath string, pascalName string) {
+func generateDataSourceFile(sourceDirPath string, pascalName string) error {
 	dataSourceContent := `// Code generated by go generate.
 
 package {{ .LowerStr }}
@@ -108,10 +168,10 @@ func (r {{ .CamelStr }}DataSource) RunDataSource(updatesCh chan types.DataSource
 }
 
 `
-	generateFile(sourceDirPath + "/data_source.go", dataSourceContent, pascalName)	
+	return generateFile(sourceDirPath+"/data_source.go", dataSourceContent, pascalName)
 }
 
-func generateDataSourceTestFile(sourceDirPath string, pascalName string) {
+func generateDataSourceTestFile(sourceDirPath string, pascalName string) error {
 	dataSourceTestContent := `// Code generated by go generate.
 
 package {{ .LowerStr }}
@@ -126,10 +186,10 @@ func Test{{ .PascalStr }}DataSource(t *testing.T) {
 }
 	
 `
-	generateFile(sourceDirPath + "/data_source_test.go", dataSourceTestContent, pascalName)	
+	return generateFile(sourceDirPath+"/data_source_test.go", dataSourceTestContent, pascalName)
 }
 
-func generateInitFile(sourceDirPath string, pascalName string) {
+func generateInitFile(sourceDirPath string, pascalName string) error {
 	initContent := `// Code generated by go generate.
 
 package {{ .LowerStr }}
@@ -167,10 +227,10 @@ func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) ({{ .P
 }
 
 `
-	generateFile(sourceDirPath + "/init.go", initContent, pascalName)
+	return generateFile(sourceDirPath+"/init.go", initContent, pascalName)
 }
 
-func generateSourceConfigSchema(configSchemaPath string, pascalName string) {
+func generateSourceConfigSchema(configSchemaPath string, pascalName string) error {
 	configSchemaContent := `{
   "$id": "/resources/source_config_schemas/{{ .LowerStr }}",
   "type": "object",
@@ -183,10 +243,12 @@ func generateSourceConfigSchema(configSchemaPath string, pascalName string) {
   "required": ["dataSource"],
   "additionalProperties": false
 }`
-	generateFile(fmt.Sprintf("%s/%s.json", configSchemaPath, pascalToLower(pascalName)), configSchemaContent, pascalName)
+	return generateFile(
+		fmt.Sprintf("%s/%s.json", configSchemaPath, pascalToLower(pascalName)), configSchemaContent, pascalName,
+	)
 }
 
-func generateSourceConfigTest(configTestPath string, pascalName string) {
+func generateSourceConfigTest(configTestPath string, pascalName string) error {
 	configTestContent := `// Code generated by go generate.
 package config
 
@@ -232,37 +294,42 @@ func TestValid{{ .PascalStr }}Config(t *testing.T) {
 	// TODO: write some asserts to check that the fields on sourceSpecificConfig have the values you'd expect
 	t.Fatalf("implement me")
 }`
-	generateFile(fmt.Sprintf("%s/%s_test.go", configTestPath, pascalToSnake(pascalName)), configTestContent, pascalName)
-
+	return generateFile(
+		fmt.Sprintf("%s/%s_test.go", configTestPath, pascalToLower(pascalName)), configTestContent, pascalName,
+	)
 }
 
-func generateFile(filePath string, fileContent string, pascalName string) {
-	template := template.Must(template.New("").Parse(fileContent))
+func generateFile(filePath string, fileContent string, pascalName string) error {
+	tmpl, err := template.New("").Parse(fileContent)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
 
 	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to create file: %w", err)
 	}
 
-	err = template.Execute(file, struct {
+	inputData := struct {
 		PascalStr string
 		LowerStr  string
 		CamelStr  string
-		SnakeStr  string
 	}{
 		PascalStr: pascalName,
 		LowerStr:  pascalToLower(pascalName),
 		CamelStr:  pascalToCamel(pascalName),
-		SnakeStr:  pascalToSnake(pascalName),
-	})
-	if err != nil {
-		log.Fatal(err)
 	}
+
+	if err := tmpl.Execute(file, inputData); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return nil
 }
 
 func validatePascalCase(name string) bool {
-	pascalCasePattern := regexp.MustCompile(`^[A-Z][A-Za-z]*$`)
+	pascalCasePattern := regexp.MustCompile(`^[A-Z][A-Za-z0-9]*$`)
 	if !pascalCasePattern.MatchString(name) {
 		return false
 	}
@@ -276,11 +343,4 @@ func pascalToLower(pascalName string) string {
 
 func pascalToCamel(pascalName string) string {
 	return strings.ToLower(pascalName[:1]) + pascalName[1:]
-}
-
-func pascalToSnake(pascalName string) string {
-	re := regexp.MustCompile("([a-z0-9])([A-Z])")
-	snake := re.ReplaceAllString(pascalName, "${1}_${2}")
-
-	return strings.ToLower(snake)
 }
