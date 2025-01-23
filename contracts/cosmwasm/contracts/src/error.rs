@@ -5,8 +5,8 @@ use thiserror::Error;
 pub enum StorkError {
     #[error("{0}")]
     Std(#[from] StdError),
-    #[error("Invalid signature")]
-    InvalidSignature,
+    #[error("Invalid signature: {0}")]
+    InvalidSignature(String),
     #[error("Insufficient funds")]
     InsufficientFunds,
     #[error("Feed not found")]

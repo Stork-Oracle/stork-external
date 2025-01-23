@@ -113,8 +113,11 @@ where
                         update.temporal_numeric_value,
                     ));
                 }
-                _ => {
-                    return Err(StorkError::InvalidSignature);
+                Err(e) => {
+                    return Err(StorkError::InvalidSignature(e.to_string()));
+                }
+                Ok(false) => {
+                    return Err(StorkError::InvalidSignature("Invalid signature".to_string()));
                 }
             }
         }

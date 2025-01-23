@@ -151,6 +151,55 @@ fn update_temporal_numeric_value_helper(
 }
 
 #[test]
+fn test_update_temporal_numeric_value_custom() {
+    let mut app = App::default();
+    let contract = instantiate(&mut app);
+    let id = hex_to_bytes("7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de")[..32]
+        .try_into()
+        .unwrap();
+    let recv_time: u64 = 1737669840842233600;
+    let quantized_value: i128 = 103246772269950000000000;
+    let publisher_merkle_root =
+        hex_to_bytes("e6711563fd1f29aaea81a9a78495dd40d16b58d154a29560f3cf64f688eba557")[..32]
+            .try_into()
+            .unwrap();
+    let value_compute_alg_hash =
+        hex_to_bytes("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba")[..32]
+            .try_into()
+            .unwrap();
+    let r = hex_to_bytes("d2fa833e7701959b11bf10bdd36189085e70187c8aba84b95c561164fc8ec41a")[..32]
+        .try_into()
+        .unwrap();
+    let s = hex_to_bytes("045cb9898d6c8ec4db1e7c908fa6f3861dcc26aedfef3b1d51e322b96d72999f")[..32]
+        .try_into()
+        .unwrap();
+    let v = 27;
+
+    let temporal_numeric_value = TemporalNumericValue {
+        timestamp_ns: recv_time,
+        quantized_value: quantized_value.into(),
+    };
+
+    let update_data = UpdateData {
+        id,
+        temporal_numeric_value,
+        publisher_merkle_root,
+        value_compute_alg_hash,
+        r,
+        s,
+        v,
+    };
+
+    let update_data_vec = vec![update_data.clone()];
+    if let Err(e) = contract
+        .update_temporal_numeric_values_evm(update_data_vec)
+        .with_funds(&[Coin::new(SINGLE_UPDATE_FEE, "stork")])
+        .call(&USER.into_addr())
+    {
+        panic!("{}", e);
+    }
+}
+#[test]
 fn test_update_temporal_numeric_value_and_get_value() {
     let mut app = App::default();
     let mut contract = instantiate(&mut app);

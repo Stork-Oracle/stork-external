@@ -44,6 +44,8 @@ fn verify_ecdsa_signature(
     };
 
     let eth_pubkey = get_eth_pubkey(&recovered_pubkey);
+    println!("eth_pubkey: {:?}", eth_pubkey);
+    println!("pubkey: {:?}", pubkey);
     Ok(eth_pubkey == *pubkey)
 }
 
