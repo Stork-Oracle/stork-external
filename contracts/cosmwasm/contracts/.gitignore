@@ -1,3 +1,4 @@
 /target
 /schema
+/artifacts
 Cargo.lock
