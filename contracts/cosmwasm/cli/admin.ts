@@ -25,7 +25,6 @@ async function getSender() {
     }
     const wallet = await DirectSecp256k1HdWallet.fromMnemonic(MNEMONIC, options);
     const [firstAccount] = await wallet.getAccounts();
-    console.log(firstAccount.address);
     return firstAccount.address;
 }
 
@@ -59,7 +58,7 @@ cliProgram
     .version("0.1.0");
 
 cliProgram
-    .command("get-state-info")
+    .command("get-info")
     .description("Get all Stork contract information")
     .action(async () => {
         if (!STORK_CONTRACT_ADDRESS) {
@@ -171,11 +170,7 @@ cliProgram
         const signingClient = await getSigningClient();
 
         // Convert EVM public key from hex to byte array
-        const evmKeyBytes = DEFAULT_EVM_PUBLIC_KEY.startsWith('0x') 
-            ? DEFAULT_EVM_PUBLIC_KEY.slice(2) 
-            : DEFAULT_EVM_PUBLIC_KEY;
-        const evmKeyArray = Buffer.from(evmKeyBytes, 'hex').toJSON().data;
-        
+        const evmKeyArray = hexStringToByteArray(DEFAULT_EVM_PUBLIC_KEY);
         if (evmKeyArray.length !== 20) {
             throw new Error("EVM public key must be 20 bytes");
         }
@@ -191,7 +186,6 @@ cliProgram
         const options = {
             admin: await getSender(),
         }
-        console.log("here");
         const result = await signingClient.instantiate(
             await getSender(),
             parseInt(codeId),
@@ -236,7 +230,6 @@ cliProgram
                 /(?<!["\d])\b\d{16,}\b(?!["])/g,
                 (match) => `"${match}"`
             );
-            
             const responseData = JSON.parse(safeJsonText);
             const updateData: UpdateData[] = [];
 
@@ -245,15 +238,36 @@ cliProgram
                     timestamp_ns: parseInt(data.stork_signed_price.timestamped_signature.timestamp),
                     quantized_value: data.stork_signed_price.price.toString()
                 };
+                console.log(parseInt(data.stork_signed_price.timestamped_signature.timestamp));
+                console.log(data.stork_signed_price.price.toString());
+                console.log(data.stork_signed_price.encoded_asset_id);
+                console.log(data.stork_signed_price.publisher_merkle_root);
+                console.log(data.stork_signed_price.calculation_alg.checksum);
+                console.log(data.stork_signed_price.timestamped_signature.signature.r);
+                console.log(data.stork_signed_price.timestamped_signature.signature.s);
+                console.log(data.stork_signed_price.timestamped_signature.signature.v);
 
+                const id = hexStringToByteArray(data.stork_signed_price.encoded_asset_id).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
+                const publisher_merkle_root = hexStringToByteArray(data.stork_signed_price.publisher_merkle_root).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
+                const value_compute_alg_hash = hexStringToByteArray(data.stork_signed_price.calculation_alg.checksum).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
+                const r = hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.r).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
+                const s = hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.s).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
+                const v = hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.v).slice(0, 1)[0];
+
+                console.log(id);
+                console.log(publisher_merkle_root);
+                console.log(value_compute_alg_hash);
+                console.log(r);
+                console.log(s);
+                console.log(v);
                 updateData.push({
-                    id: Buffer.from(data.stork_signed_price.encoded_asset_id.slice(2), 'hex').toJSON().data as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number],
+                    id,
                     temporal_numeric_value: temporalNumericValue,
-                    publisher_merkle_root: Buffer.from(data.stork_signed_price.publisher_merkle_root.slice(2), 'hex').toJSON().data as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number],
-                    value_compute_alg_hash: Buffer.from(data.stork_signed_price.calculation_alg.checksum.slice(2), 'hex').toJSON().data as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number],
-                    r: Buffer.from(data.stork_signed_price.timestamped_signature.signature.r.slice(2), 'hex').toJSON().data as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number],
-                    s: Buffer.from(data.stork_signed_price.timestamped_signature.signature.s.slice(2), 'hex').toJSON().data as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number],
-                    v: data.stork_signed_price.timestamped_signature.signature.v
+                    publisher_merkle_root,
+                    value_compute_alg_hash,
+                    r,
+                    s,
+                    v
                 });
             });
 
@@ -272,5 +286,12 @@ cliProgram
             process.exit(1);
         }
     });
+
+    function hexStringToByteArray(hexString: string) {
+        if (hexString.startsWith("0x")) {
+          hexString = hexString.slice(2);
+        }
+        return Array.from(Buffer.from(hexString, "hex"));
+    }
 
 cliProgram.parse();
