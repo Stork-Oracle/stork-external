@@ -71,6 +71,10 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error loading config: %v", err)
 	}
 
+	if err := RunAnimation(); err != nil {
+		mainLogger.Debug().Err(err).Msg("failed to run animation")
+	}
+
 	runner := NewDataProviderRunner(*config, outputAddress)
 	runner.Run()
 
@@ -83,10 +87,12 @@ func runUpdateSharedCode(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
 
+	RunAnimation()
+
 	return updateSharedCode(basePath)
 }
 
-func RunStartupAnimation() error {
+func RunAnimation() error {
 	basePath, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)

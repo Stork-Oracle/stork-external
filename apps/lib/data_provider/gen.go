@@ -58,6 +58,10 @@ func generateDataProvider(cmd *cobra.Command, args []string) error {
 
 	mainLogger.Info().Msg("Generating data provider")
 
+	if err := RunAnimation(); err != nil {
+		mainLogger.Debug().Err(err).Msg("failed to run animation")
+	}
+
 	if err := generateSkeleton(dataProviderName, basePath); err != nil {
 		return fmt.Errorf("failed to generate files: %w", err)
 	}

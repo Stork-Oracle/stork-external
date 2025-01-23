@@ -61,14 +61,16 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Install CLI
+        run: make install-data-provider-cli
+  
       - name: Run update command
-        run: |
-          go run ./apps/cmd/data-provider update
+        run: stork-data-provider update
 
       - name: Check for changes
         run: |
           if [[ $(git status --porcelain) ]]; then
-            echo "Generated code is out of sync. Please run 'go run ./apps/cmd/data-provider update' and commit the changes."
+            echo "Generated code is out of sync. Please run 'stork-data-provider update' and commit the changes."
             exit 1
           fi
 

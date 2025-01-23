@@ -34,8 +34,6 @@ func main() {
 
 			// set global log level
 			zerolog.SetGlobalLevel(logLevel)
-
-			data_provider.RunStartupAnimation()
 		},
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
