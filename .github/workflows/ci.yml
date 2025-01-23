@@ -61,8 +61,10 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install CLI
-        run: make install-data-provider-cli
+      - name: Install CLI directly
+        run: |
+          pwd
+          go build -o $(go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
   
       - name: Run update command
         run: stork-data-provider update
