@@ -41,6 +41,21 @@ docker run --rm -v "$(pwd)":/code \
   cosmwasm/optimizer:0.16.0
 ```
 
+#### Generate JSON Schema
+
+```bash
+cargo run schema
+```
+
+#### Generate Typescript Types
+
+This step is only necessary if you update or add entrypoints in the contract and need to update the CLI tool.
+
+```bash
+npm install @cosmwasm/ts-codegen
+npx @cosmwasm/ts-codegen generate --plugin client --schema ./schema --out ../cli/client/ --name Stork --no-bundle
+```
+
 ### Note
 
 Though this contract is built with Sylvia, it is compatible with any cosmwasm contract.
