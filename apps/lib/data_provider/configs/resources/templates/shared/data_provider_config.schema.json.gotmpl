@@ -21,7 +21,7 @@
             "oneOf": [
               {{- range $i, $ref := .PackageNames }}
                 {{- if $i }},{{ end }}
-                {"$ref": "/resources/source_config_schemas/{{ $ref }}"}
+                { "$ref": "/resources/source_config_schemas/{{ $ref }}" }
               {{- end }}
             ]
           }

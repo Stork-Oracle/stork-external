@@ -63,7 +63,6 @@ jobs:
 
       - name: Install CLI directly
         run: |
-          pwd
           go build -o $(go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
   
       - name: Run update command
@@ -71,8 +70,10 @@ jobs:
 
       - name: Check for changes
         run: |
+          echo "Checking for changes in generated code..."
           if [[ $(git status --porcelain) ]]; then
             echo "Generated code is out of sync. Please run 'stork-data-provider update' and commit the changes."
+            git diff
             exit 1
           fi
 
