@@ -92,7 +92,7 @@ where
                 api,
                 &stork_evm_public_key,
                 update.id,
-                update.temporal_numeric_value.timestamp_ns,
+                update.temporal_numeric_value.timestamp_ns.u64(),
                 update.temporal_numeric_value.quantized_value.i128(),
                 update.publisher_merkle_root,
                 update.value_compute_alg_hash,
