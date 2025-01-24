@@ -19,6 +19,7 @@ help:
 .PHONY: install-data-provider-cli
 install-data-provider-cli:
 	@echo "Installing stork-data-provider..."
+	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider"
 	@go build -o $(shell go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
 	@echo "Successfully installed stork-data-provider. Run 'stork-data-provider help' to get started."
 

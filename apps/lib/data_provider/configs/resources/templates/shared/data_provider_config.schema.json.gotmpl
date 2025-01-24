@@ -19,17 +19,22 @@
             "description": "An arbitrary configuration object for a data source",
             "type": "object",
             "oneOf": [
-              {{- range $i, $ref := .PackageNames }}
+              {{- range $i, $sourceType := .PackageNames }}
                 {{- if $i }},{{ end }}
-                { "$ref": "/resources/source_config_schemas/{{ $ref }}" }
+                { "$ref": "/resources/source_config_schemas/{{ $sourceType }}" }
               {{- end }}
             ]
           }
         },
-        "required": ["id", "config"]
+        "required": [
+          "id", 
+          "config"
+        ]
       }
     }
   },
-  "required": ["sources"],
+  "required": [
+    "sources"
+  ],
   "additionalProperties": false
 }

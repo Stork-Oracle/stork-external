@@ -17,13 +17,10 @@ import (
 )
 
 const (
-	dirMode                  = 0o777
-	templatesDir             = "apps/lib/data_provider/configs/resources/templates"
-	sourceDir                = "apps/lib/data_provider/sources"
-	pathPrefix               = "// @path: "
-	importSourcesFile        = "apps/lib/data_provider/configs/import_sources.go"
-	configSchemaFile         = "apps/lib/data_provider/configs/resources/data_provider_config.schema.json"
-	configSchemaTemplateFile = "apps/lib/data_provider/configs/resources/data_provider_config.schema.json.template"
+	dirMode      = 0o777
+	templatesDir = "apps/lib/data_provider/configs/resources/templates"
+	sourceDir    = "apps/lib/data_provider/sources"
+	pathPrefix   = "// @path: "
 )
 
 type templateStrings struct {
@@ -62,7 +59,7 @@ func generateDataProvider(cmd *cobra.Command, args []string) error {
 		mainLogger.Debug().Err(err).Msg("failed to run animation")
 	}
 
-	if err := generateSkeleton(dataProviderName, basePath); err != nil {
+	if err := generateSourceCode(dataProviderName, basePath); err != nil {
 		return fmt.Errorf("failed to generate files: %w", err)
 	}
 
@@ -85,14 +82,14 @@ func validateDataProviderName(dataProviderName string, basePath string) error {
 	return nil
 }
 
-func generateSkeleton(pascalName string, basePath string) error {
+func generateSourceCode(pascalName string, basePath string) error {
 	stringData := templateStrings{
 		PascalStr: pascalName,
 		LowerStr:  pascalToLower(pascalName),
 		CamelStr:  pascalToCamel(pascalName),
 	}
 
-	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "skeleton"), stringData)
+	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "source"), stringData)
 	if err != nil {
 		return fmt.Errorf("failed to process templates: %w", err)
 	}
@@ -269,5 +266,19 @@ func pascalToLower(pascalName string) string {
 }
 
 func pascalToCamel(pascalName string) string {
-	return strings.ToLower(pascalName[:1]) + pascalName[1:]
+	// Find end of first word by first lowercase or last uppercase in sequence of uppercase
+	var endOfFirstWord int
+	for i := 1; i < len(pascalName); i++ {
+		if pascalName[i] >= 'a' && pascalName[i] <= 'z' {
+			if i == 1 {
+				endOfFirstWord = i
+			} else {
+				endOfFirstWord = i - 1
+			}
+
+			break
+		}
+	}
+
+	return strings.ToLower(pascalName[:endOfFirstWord]) + pascalName[endOfFirstWord:]
 }

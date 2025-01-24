@@ -18,7 +18,7 @@ const (
 
 var GenerateDataProviderCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generate skeleton code for a new data source integration",
+	Short: "Generate source code for a new data source integration",
 	RunE:  generateDataProvider,
 }
 

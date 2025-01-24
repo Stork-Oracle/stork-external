@@ -23,10 +23,15 @@
             ]
           }
         },
-        "required": ["id", "config"]
+        "required": [
+          "id", 
+          "config"
+        ]
       }
     }
   },
-  "required": ["sources"],
+  "required": [
+    "sources"
+  ],
   "additionalProperties": false
 }
