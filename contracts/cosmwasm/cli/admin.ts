@@ -214,7 +214,7 @@ cliProgram
         }
 
         console.log(`Writing to feeds: ${asset_pairs}`);
-        
+
         try {
             const response = await fetch(
                 `${endpoint}/v1/prices/latest?assets=${asset_pairs}`,
@@ -224,7 +224,6 @@ cliProgram
                     },
                 }
             );
-            
             const rawJson = await response.text();
             const safeJsonText = rawJson.replace(
                 /(?<!["\d])\b\d{16,}\b(?!["])/g,
@@ -235,17 +234,9 @@ cliProgram
 
             Object.values(responseData.data).forEach((data: any) => {
                 const temporalNumericValue: TemporalNumericValue = {
-                    timestamp_ns: parseInt(data.stork_signed_price.timestamped_signature.timestamp),
+                    timestamp_ns: data.stork_signed_price.timestamped_signature.timestamp.toString(),
                     quantized_value: data.stork_signed_price.price.toString()
                 };
-                console.log(parseInt(data.stork_signed_price.timestamped_signature.timestamp));
-                console.log(data.stork_signed_price.price.toString());
-                console.log(data.stork_signed_price.encoded_asset_id);
-                console.log(data.stork_signed_price.publisher_merkle_root);
-                console.log(data.stork_signed_price.calculation_alg.checksum);
-                console.log(data.stork_signed_price.timestamped_signature.signature.r);
-                console.log(data.stork_signed_price.timestamped_signature.signature.s);
-                console.log(data.stork_signed_price.timestamped_signature.signature.v);
 
                 const id = hexStringToByteArray(data.stork_signed_price.encoded_asset_id).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
                 const publisher_merkle_root = hexStringToByteArray(data.stork_signed_price.publisher_merkle_root).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
@@ -254,12 +245,7 @@ cliProgram
                 const s = hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.s).slice(0, 32) as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
                 const v = hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.v).slice(0, 1)[0];
 
-                console.log(id);
-                console.log(publisher_merkle_root);
-                console.log(value_compute_alg_hash);
-                console.log(r);
-                console.log(s);
-                console.log(v);
+                
                 updateData.push({
                     id,
                     temporal_numeric_value: temporalNumericValue,
@@ -274,7 +260,11 @@ cliProgram
             const signingClient = await getSigningClient();
             const storkClient = new StorkClient(signingClient, await getSender(), STORK_CONTRACT_ADDRESS);
 
-            const result = await storkClient.updateTemporalNumericValuesEvm({ updateData });
+            const singleUpdateFeeResponse = await storkClient.getSingleUpdateFee();
+            const amount = BigInt(singleUpdateFeeResponse.fee.amount) * BigInt(updateData.length);
+            const denom = singleUpdateFeeResponse.fee.denom;
+            const funds: Coin[] = [{ amount: amount.toString(), denom }];
+            const result = await storkClient.updateTemporalNumericValuesEvm({ updateData }, 'auto', "", funds);
             console.log("Values updated:", result.transactionHash);
 
             if (options.report) {

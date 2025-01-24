@@ -32,6 +32,7 @@ export type ExecMsg = {
   };
 };
 export type Int128 = string;
+export type Uint64 = string;
 export type Addr = string;
 export interface UpdateData {
   id: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
@@ -44,7 +45,7 @@ export interface UpdateData {
 }
 export interface TemporalNumericValue {
   quantized_value: Int128;
-  timestamp_ns: number;
+  timestamp_ns: Uint64;
 }
 export type QueryMsg = QueryMsg1;
 export type QueryMsg1 = {
