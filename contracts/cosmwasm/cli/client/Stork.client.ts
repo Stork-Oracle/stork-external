@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { StdFee } from "@cosmjs/amino";
-import { Uint128, InstantiateMsg, Coin, ExecuteMsg, ExecMsg, Int128, Addr, UpdateData, TemporalNumericValue, QueryMsg, QueryMsg1, GetTemporalNumericValueResponse, GetOwnerResponse, GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse } from "./Stork.types";
+import { Uint128, InstantiateMsg, Coin, ExecuteMsg, ExecMsg, Int128, Uint64, Addr, UpdateData, TemporalNumericValue, QueryMsg, QueryMsg1, GetTemporalNumericValueResponse, GetOwnerResponse, GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse } from "./Stork.types";
 export interface StorkReadOnlyInterface {
   contractAddress: string;
   getLatestCanonicalTemporalNumericValueUnchecked: ({
