@@ -3,17 +3,12 @@ package data_provider
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
-)
-
-const (
-	startupAnimationPath = "apps/lib/data_provider/configs/resources/frames"
 )
 
 var GenerateDataProviderCmd = &cobra.Command{
@@ -71,10 +66,6 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error loading config: %v", err)
 	}
 
-	if err := RunAnimation(); err != nil {
-		mainLogger.Debug().Err(err).Msg("failed to run animation")
-	}
-
 	runner := NewDataProviderRunner(*config, outputAddress)
 	runner.Run()
 
@@ -87,37 +78,5 @@ func runUpdateSharedCode(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
 
-	RunAnimation()
-
 	return updateSharedCode(basePath)
-}
-
-func RunAnimation() error {
-	basePath, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	frames, err := os.ReadDir(filepath.Join(basePath, startupAnimationPath))
-	if err != nil {
-		return fmt.Errorf("failed to read frames: %w", err)
-	}
-
-	for _, frame := range frames {
-		frameContent, err := os.ReadFile(filepath.Join(basePath, startupAnimationPath, frame.Name()))
-		if err != nil {
-			return fmt.Errorf("failed to read frame %s: %w", frame.Name(), err)
-		}
-
-		// Clear the screen
-		fmt.Print("\033[H\033[2J")
-
-		// Print the frame
-		fmt.Println(string(frameContent))
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	fmt.Print("\033[H\033[2J")
-
-	return nil
 }
