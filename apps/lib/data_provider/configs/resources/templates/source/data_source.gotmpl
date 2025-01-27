@@ -8,7 +8,7 @@ import (
 )
 
 type {{ .CamelStr }}DataSource struct {
-	{{ .PascalStr }}Config {{ .PascalStr }}Config
+	{{ .CamelStr }}Config {{ .PascalStr }}Config
 	// TODO: set any necessary parameters
 }
 
@@ -20,7 +20,7 @@ func new{{ .PascalStr }}DataSource(sourceConfig types.DataProviderSourceConfig) 
 
 	// TODO: add any necessary initialization code
 	return &{{ .CamelStr }}DataSource{
-		{{ .PascalStr }}Config: {{ .CamelStr }}Config,
+		{{ .CamelStr }}Config: {{ .CamelStr }}Config,
 	}
 }
 
