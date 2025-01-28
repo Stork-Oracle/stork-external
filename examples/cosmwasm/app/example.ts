@@ -106,9 +106,11 @@ cliProgram.command("read-price")
         feedId: Array.from(feedId)
     });
 
-    const event = response.events.find(e => e.type === "stork_price_used");
+    const event = response.events.find(e => e.type === "wasm-stork_price_used");
     const price = event?.attributes.find(a => a.key === "value");
 
-    console.log("Price:", price);
+    console.log("Price:", price?.value);
 
 });
+
+cliProgram.parse();
