@@ -306,6 +306,22 @@ const config: HardhatUserConfig = {
       url: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
       accounts: [PRIVATE_KEY],
       chainId: 7001
+    },
+    zkSyncSepolia: {
+      url: "https://sepolia.era.zksync.dev",
+      ethNetwork: "sepolia",
+      accounts: [PRIVATE_KEY],
+      chainId: 300,
+      verifyURL: "https://sepolia.explorer.zksync.io/contract_verification",
+      zksync: true,
+    },
+    zkSyncMainnet: {
+      url: "https://mainnet.era.zksync.io",
+      ethNetwork: "mainnet",
+      accounts: [PRIVATE_KEY],
+      chainId: 324,
+      verifyURL: "https://explorer.zksync.io/contract_verification",
+      zksync: true,
     }
   },
   etherscan: {
