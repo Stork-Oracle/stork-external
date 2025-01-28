@@ -2,6 +2,8 @@
 
 This directory contains the Stork compatable contract in the form of a [Sylvia](https://github.com/CosmWasm/sylvia) project, as well as a CLI tool used to manage the Stork Cosmwasm compatible contract.
 
+This contract can be used as an SDK with the `library` feature, and is available on [crates.io](https://crates.io/crates/stork-cw).
+
 ### Getting started
 
 As there is no core cosmwasm chain, but rather a multitude of chains built on top of cosmwasm, the specifics of development will vary depending on the chain.
