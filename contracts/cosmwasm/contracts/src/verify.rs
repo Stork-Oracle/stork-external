@@ -1,8 +1,11 @@
+//! Provides the [`verify_stork_evm_signature`] function implementing the signature verification logic for verifying updates.
 use sylvia::cw_std::{Api, StdResult};
 use tiny_keccak::{Hasher, Keccak};
 
+/// The type for EVM public keys. This is an alias for a 20 byte array.
 pub type EvmPubkey = [u8; 20];
 
+/// Verifies the EVM signature for a Stork update from the provided update parameters.
 pub fn verify_stork_evm_signature(
     api: &dyn Api,
     stork_evm_public_key: &EvmPubkey,
