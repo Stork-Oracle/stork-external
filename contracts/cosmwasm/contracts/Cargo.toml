@@ -1,5 +1,5 @@
 [package]
-name = "stork"
+name = "stork-cw"
 version = "0.1.0"
 edition = "2021"
 
