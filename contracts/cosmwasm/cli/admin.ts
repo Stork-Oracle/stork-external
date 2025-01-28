@@ -1,11 +1,11 @@
 import { Command } from "commander";
-import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { StorkClient } from "./client/Stork.client";
 import { Coin, UpdateData, TemporalNumericValue, InstantiateMsg } from "./client/Stork.types";
 import { Decimal } from "@cosmjs/math";
 
-const DEFAULT_RPC_URL = process.env.RPC_URL || "http://localhost:26657";
+const DEFAULT_RPC_URL = process.env.RPC_URL;
 const STORK_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const MNEMONIC = process.env.MNEMONIC;
 
@@ -20,6 +20,9 @@ async function getSender() {
     if (!MNEMONIC) {
         throw new Error("MNEMONIC environment variable is not set");
     }
+    if (!PREFIX) {
+        throw new Error("CHAIN_PREFIX environment variable is not set");
+    }
     const options = {
         prefix: PREFIX
     }
@@ -33,10 +36,16 @@ async function getSigningClient(): Promise<SigningCosmWasmClient> {
         throw new Error("MNEMONIC environment variable is not set");
     }
     if (!DEFAULT_DENOM) {
-        throw new Error("DEFAULT_DENOM environment variable is not set");
+        throw new Error("NATIVE_DENOM environment variable is not set");
     }
     if (!DEFAULT_GAS_PRICE) {
-        throw new Error("DEFAULT_GAS_PRICE environment variable is not set");
+        throw new Error("GAS_PRICE environment variable is not set");
+    }
+    if (!DEFAULT_RPC_URL) {
+        throw new Error("RPC_URL environment variable is not set");
+    }
+    if (!PREFIX) {
+        throw new Error("CHAIN_PREFIX environment variable is not set");
     }
     const wallet_options = {
         prefix: PREFIX
