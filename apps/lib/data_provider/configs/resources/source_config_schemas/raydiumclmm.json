@@ -1,0 +1,35 @@
+{
+  "$id": "/resources/source_config_schemas/raydiumclmm",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "raydiumclmm"
+    },
+    "updateFrequency": {
+      "type": "string",
+      "description": "Frequency of updates.",
+      "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+    },
+    "httpProviderUrl": {
+      "type": "string",
+      "description": "HTTP provider URL."
+    },
+    "providerApiKeyEnvVar": {
+      "type": "string",
+      "description": "Environment variable name for the provider API key."
+    },
+    "contractAddress": {
+      "type": "string",
+      "description": "Contract address.",
+      "pattern": "^[0-9a-zA-Z]+$"
+    }
+  },
+  "required": [
+    "dataSource",
+    "updateFrequency",
+    "httpProviderUrl",
+    "contractAddress"
+  ],
+  "additionalProperties": false
+} 

@@ -1,0 +1,24 @@
+{
+  "sources": [
+    {
+      "id": "SOL_USDC",
+      "config": {
+        "dataSource": "raydiumclmm",
+        "updateFrequency": "5s",
+        "httpProviderUrl": "https://rpc.helius.xyz/?api-key=",
+        "providerApiKeyEnvVar": "HELIUS_API_KEY",
+        "contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj"
+      }
+    },
+    {
+      "id": "JUP_SOL",
+      "config": {
+        "dataSource": "raydiumclmm",
+        "updateFrequency": "5s",
+        "httpProviderUrl": "https://rpc.helius.xyz/?api-key=",
+        "providerApiKeyEnvVar": "HELIUS_API_KEY",
+        "contractAddress": "EZVkeboWeXygtq8LMyENHyXdF5wpYrtExRNH9UwB1qYw"
+      }
+    }
+  ]
+}
