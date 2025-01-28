@@ -1,4 +1,4 @@
-use stork::contract::sv::{ContractExecMsg, ContractQueryMsg, InstantiateMsg};
+use stork_cw::contract::sv::{ContractExecMsg, ContractQueryMsg, InstantiateMsg};
 use sylvia::cw_schema::write_api;
 use sylvia::cw_std::Empty;
 
