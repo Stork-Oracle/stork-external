@@ -6,20 +6,23 @@ import (
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/configs"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources/raydiumclmm"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidRaydiumCLMMConfig(t *testing.T) {
-
-	// TODO: set this to a valid config string using a feed from your new source
 	validConfig := `
 	{
 	  "sources": [
 		{
-		  "id": "MY_VALUE",
+		  "id": "SOL_USDC",
 		  "config": {
-			"dataSource": "raydiumclmm"
+			"dataSource": "raydiumclmm",
+			"updateFrequency": "5s",
+			"httpProviderUrl": "https://rpc.helius.xyz/?api-key=",
+			"contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",
+			"providerApiKeyEnvVar": "HELIUS_API_KEY"
 		  }
 		}
 	  ]
@@ -31,6 +34,7 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 	assert.Equal(t, 1, len(config.Sources))
 
 	sourceConfig := config.Sources[0]
+	assert.Equal(t, types.ValueId("SOL_USDC"), sourceConfig.Id)
 
 	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
 	assert.NoError(t, err)
@@ -40,6 +44,9 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sourceSpecificConfig)
 
-	// TODO: write some asserts to check that the fields on sourceSpecificConfig have the values you'd expect
-	t.Fatalf("implement me")
+	assert.Equal(t, types.DataSourceId("raydiumclmm"), sourceSpecificConfig.DataSource)
+	assert.Equal(t, "5s", sourceSpecificConfig.UpdateFrequency)
+	assert.Equal(t, "https://rpc.helius.xyz/?api-key=", sourceSpecificConfig.HttpProviderUrl)
+	assert.Equal(t, "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj", sourceSpecificConfig.ContractAddress)
+	assert.Equal(t, "HELIUS_API_KEY", sourceSpecificConfig.ProviderApiKeyEnvVar)
 }

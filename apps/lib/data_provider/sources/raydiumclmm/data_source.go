@@ -27,11 +27,6 @@ type raydiumCLMMDataSource struct {
 	rpcClient         *rpc.Client
 }
 
-// type uint128 struct {
-// 	Lo uint64
-// 	Hi uint64
-// }
-
 // https://github.com/raydium-io/raydium-sdk/blob/master/src/clmm/layout.ts#L34 RewardInfo
 // Represents the reward information for a pool.
 type RewardInfo struct {
@@ -170,7 +165,6 @@ func (r raydiumCLMMDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 
 // https://github.com/raydium-io/raydium-sdk/blob/master/src/clmm/utils/math.ts#L86 sqrtPriceX64ToPrice
 // Converts sqrtPriceX64 representation to float64 price.
-// TODO: underflows when MintDecimalsB is larger than MintDecimalsA
 func calculatePrice(poolState PoolState) float64 {
 	// Convert uint128 to float64
 	hi := float64(poolState.SqrtPriceX64.Hi) * math.Pow(2, 64)

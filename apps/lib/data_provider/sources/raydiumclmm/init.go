@@ -21,7 +21,6 @@ func init() {
 	sources.RegisterDataSourceFactory(RaydiumCLMMDataSourceId, &raydiumCLMMDataSourceFactory{})
 }
 
-// assert we're satisfying our interfaces
 var (
 	_ types.DataSource        = (*raydiumCLMMDataSource)(nil)
 	_ types.DataSourceFactory = (*raydiumCLMMDataSourceFactory)(nil)
