@@ -45,8 +45,13 @@ docker run --rm -v "$(pwd)":/code \
   cosmwasm/optimizer:0.16.0
 ```
 
+#### Deploy
 
+This will vary chain to chain, but typically looks something like this Osmosis Testnet example:
 
+```bash
+osmosisd tx wasm store artifacts/stork.wasm --from wallet --chain-id=osmo-test-5 --gas-prices=0.1uosmo --gas=auto --gas-adjustment 1.3 -y --output json -b sync 
+```
 #### Generate JSON Schema
 
 ```bash
