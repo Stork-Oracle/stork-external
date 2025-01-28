@@ -13,6 +13,9 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.33.0",
+    "@cosmjs/math": "^0.33.0",
+    "@cosmjs/proto-signing": "^0.33.0",
     "commander": "^13.1.0"
   }
 }
