@@ -1160,9 +1160,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stork-cw"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3ef37b2350910f5e254ee55ef5f8eb2067bf45fa190c1c827da8e96eeaf5c1e"
+checksum = "101a400c4254f08d6dbeb04db3aae678bb94d49ea5c6aec6923d69fa45235e14"
 dependencies = [
  "cw-storage-plus",
  "sylvia",
