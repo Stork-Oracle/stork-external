@@ -1,3 +1,5 @@
+//! This contains the main logic for the contract, including the implementation of the entry points.
+//! The relevant definitions, such as message structs and enums, are present in the `sv` module.
 use crate::{
     error::StorkError,
     responses::{
@@ -19,6 +21,8 @@ use sylvia::{
     types::{CustomMsg, CustomQuery},
 };
 
+/// The main struct for the Stork Cosmwasm Contract.
+/// This struct contains the state of the contract, including the EVM public key, the single update fee, the owner, and the temporal numeric value feed registry.
 pub struct StorkContract<E, Q> {
     pub stork_evm_public_key: Item<EvmPubkey>,
     pub single_update_fee: Item<Coin>,
@@ -173,7 +177,6 @@ where
         Ok(GetOwnerResponse { owner })
     }
 
-    // Admin functions
     #[sv::msg(exec)]
     fn set_single_update_fee(&self, ctx: ExecCtx<Q>, fee: Coin) -> Result<Response<E>, StorkError> {
         let owner = self.owner.load(ctx.deps.storage)?;
@@ -215,6 +218,8 @@ where
     }
 }
 
+/// The data structure for an update to a Stork feed.
+/// This is used in the `UpdateTemporalNumericValuesEvm` `ExecMsg`` variant
 #[cw_serde(crate = "sylvia")]
 pub struct UpdateData {
     pub id: EncodedAssetId,

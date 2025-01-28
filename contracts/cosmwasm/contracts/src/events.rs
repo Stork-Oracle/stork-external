@@ -1,9 +1,12 @@
+//! Event creation functions for the Stork Cosmwasm Contract. The event names are typically automatically prefixed with `wasm-` by the comsos runtime.
 use crate::{
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::EvmPubkey,
 };
 use sylvia::{cw_std::Coin, cw_std::Addr, cw_std::Event};
 
+/// Creates an event for the Stork contract initialization with the name `stork_init`.
+/// This event contains important information about the state of the Stork contract.
 pub(crate) fn new_stork_init_event(
     stork_evm_public_key: EvmPubkey,
     single_update_fee: Coin,
@@ -16,6 +19,8 @@ pub(crate) fn new_stork_init_event(
         .add_attribute("owner", owner)
 }
 
+/// Creates an event for the Stork contract initialization with the name `temporal_numeric_value_update`.
+/// This event is emitted whenever a new price update is successfully submitted to the Stork contract.
 pub(crate) fn new_temporal_numeric_value_update_event(
     id: EncodedAssetId,
     value: TemporalNumericValue,
