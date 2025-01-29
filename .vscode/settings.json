@@ -4,5 +4,6 @@
         "./contracts/solana/programs/stork/Cargo.toml",
         "./contracts/solana/programs/example/Cargo.toml",
         "./sdks/solana/stork-sdk/Cargo.toml"
-    ]
+    ],
+    "files.insertFinalNewline": true
 }
