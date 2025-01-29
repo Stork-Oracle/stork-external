@@ -4,7 +4,8 @@ use stork_solana_sdk::{
     temporal_numeric_value::TemporalNumericValueFeed,
 };
 
-declare_id!("FGpoDwQC8gYadJAsB9vrsgPN38qkqDgSk3qQcaRiyPra");
+// Change this to the program ID you're using
+declare_id!("GzkgPe7VSGeqC6QsUMJjL9FWSqfyqbqcJxe5FW2Xjm61");
 
 #[program]
 pub mod example {

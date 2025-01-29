@@ -56,12 +56,13 @@ cliProgram
     const { program } = initializeCliProgram();
     try {
       const feedIdBytes = hexStringToByteArray(feedId);
-      await program.methods
+      const response = await program.methods
         .readPrice(feedIdBytes)
         .accounts({})
         .rpc();
       
       console.log("Price read successfully from feed:", feedId);
+      console.log("TX:", response);
     } catch (error) {
       console.error("Error reading price:", error);
       if (error instanceof anchor.web3.SendTransactionError) {
