@@ -1,4 +1,4 @@
-//! Responses for the Stork Cosmwasm Contract.
+//! Responses for the Stork CosmWasm Contract.
 //! These are the responses returned from queries to the Stork contract.
 use crate::temporal_numeric_value::TemporalNumericValue;
 use crate::verify::EvmPubkey;

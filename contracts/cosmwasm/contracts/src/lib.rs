@@ -6,7 +6,7 @@ A top level overview can be found in [the libraries entry in crates.io](https://
 
 # Pull Model
 
-The Stork Cosmwasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/docs/chain_pusher.md) in order to do this.
+The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/docs/chain_pusher.md) in order to do this.
 
 # Stork Feeds
 
