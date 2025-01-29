@@ -1,5 +1,5 @@
 [package]
-name = "stork-sdk"
+name = "stork-solana-sdk"
 version = "0.0.5"
 edition = "2021"
 description = "A Solana SDK for Stork Protocol"
@@ -9,7 +9,7 @@ repository = "https://github.com/Stork-Oracle/stork-external"
 
 [lib]
 crate-type = ["lib"]
-name = "stork_sdk"
+name = "stork_solana_sdk"
 
 [dependencies]
 anchor-lang = "0.30.1"

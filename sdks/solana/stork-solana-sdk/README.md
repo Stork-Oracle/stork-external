@@ -2,7 +2,7 @@
 
 This is a Rust SDK to build Solana programs that consume Stork price feeds. This crate is maintained by [Stork Labs](https://stork.network).
 
-It is available on [crates.io](https://crates.io/crates/stork-sdk).
+It is available on [crates.io](https://crates.io/crates/stork-solana-sdk).
 
 ## Pull Model
 
@@ -40,7 +40,7 @@ pub struct ReadPrice<'info> {
     #[account(
         seeds = [STORK_FEED_SEED.as_ref(), feed_id.as_ref()],
         bump,
-        seeds::program = stork_sdk::ID
+        seeds::program = stork_solana_sdk::ID
     )]
     pub feed: Account<'info, TemporalNumericValueFeed>,
 }
