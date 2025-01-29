@@ -4,13 +4,13 @@ use anchor_lang::solana_program::system_instruction;
 mod verify;
 use verify::{verify_stork_evm_signature, EvmPubkey};
 
-use stork_sdk::{
+use stork_solana_sdk::{
     pda::{STORK_CONFIG_SEED, STORK_FEED_SEED, STORK_TREASURY_SEED},
     temporal_numeric_value::{TemporalNumericValue, TemporalNumericValueFeed},
 };
 
 // This needs to match the ID in the stork-sdk crate
-declare_id!(stork_sdk::PROGRAM_ID);
+declare_id!(stork_solana_sdk::PROGRAM_ID);
 
 #[program]
 pub mod stork {
