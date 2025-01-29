@@ -65,7 +65,6 @@ This step is only necessary if you update or add entrypoints in the contract and
 ```bash
 npm install @cosmwasm/ts-codegen
 npx @cosmwasm/ts-codegen generate --plugin client --schema ./schema --out ../cli/client/ --name Stork --no-bundle
-npx @cosmwasm/ts-codegen generate --plugin client --schema ./schema --out ../cli/client/ --name Stork --no-bundle
 ```
 
 ### Note
