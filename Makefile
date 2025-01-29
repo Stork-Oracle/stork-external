@@ -29,3 +29,8 @@ uninstall-data-provider-cli:
 	@echo "Uninstalling stork-data-provider..."
 	@rm -f $(shell go env GOPATH)/bin/stork-data-provider $(shell go env GOPATH)/bin/data_provider
 	@echo "Successfully uninstalled stork-data-provider"
+
+## Rebuild and reinstall the stork-data-provider binary
+.PHONY: rebuild-data-provider-cli
+rebuild-data-provider-cli: uninstall-data-provider-cli install-data-provider-cli
+	@echo "Successfully rebuilt stork-data-provider"

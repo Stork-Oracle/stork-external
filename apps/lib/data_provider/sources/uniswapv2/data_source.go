@@ -15,8 +15,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const uniswapV2AbiFileName = "random.json"
-const getUniswapV2ContractFunction = "getReserves"
+const (
+	uniswapV2AbiFileName         = "uniswap_v2.json"
+	getUniswapV2ContractFunction = "getReserves"
+)
 
 //go:embed resources
 var resourcesFS embed.FS
@@ -106,6 +108,7 @@ func (c *uniswapV2DataSource) initializeBoundContract() error {
 		return fmt.Errorf("failed to initialize contract: %v", err)
 	}
 	c.contract = contract
+
 	return nil
 }
 
@@ -131,7 +134,13 @@ func (c *uniswapV2DataSource) getPrice() (float64, error) {
 }
 
 // helper function to convert the result object to a useful price
-func calculatePrice(result []interface{}, baseTokenIndex int8, quoteTokenIndex int8, baseTokenDecimals int8, quoteTokenDecimals int8) (float64, error) {
+func calculatePrice(
+	result []interface{},
+	baseTokenIndex int8,
+	quoteTokenIndex int8,
+	baseTokenDecimals int8,
+	quoteTokenDecimals int8,
+) (float64, error) {
 	reserveBase, ok := result[baseTokenIndex].(*big.Int)
 	if !ok {
 		return -1, fmt.Errorf("failed to convert reserveBase size to big int: %v", ok)
