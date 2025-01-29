@@ -2,11 +2,11 @@
 
 This directory contains an [Anchor](https://www.anchor-lang.com/) project used to manage and deploy the Stork Solana compatible contract.
 
-This contract is used to write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-sdk](../../sdks/solana/stork-sdk).
+This contract is used to write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-solana-sdk](../../sdks/solana/stork-solana-sdk).
 
 ### TemporalNumericValueFeed Accounts
 
-On Solana, Stork price feeds exist as on-chain accounts. These accounts are instances of the [`TemporalNumericValueFeed` account](../../sdks/solana/stork-sdk/src/temporal_numeric_value.rs), and are created and owned by the Stork Oracle contract. These account have an ID which associates them with a specific asset, and a `latest_value` field which stores the latest price update. The ID of a TemporalNumericValueFeed account is determined by taking the keccak256 hash of the asset ID.
+On Solana, Stork price feeds exist as on-chain accounts. These accounts are instances of the [`TemporalNumericValueFeed` account](../../sdks/solana/stork-solana-sdk/src/temporal_numeric_value.rs), and are created and owned by the Stork Oracle contract. These account have an ID which associates them with a specific asset, and a `latest_value` field which stores the latest price update. The ID of a TemporalNumericValueFeed account is determined by taking the keccak256 hash of the asset ID.
 
 #### Writing to a TemporalNumericValueFeed Account
 

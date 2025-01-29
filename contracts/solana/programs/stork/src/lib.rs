@@ -9,7 +9,7 @@ use stork_solana_sdk::{
     temporal_numeric_value::{TemporalNumericValue, TemporalNumericValueFeed},
 };
 
-// This needs to match the ID in the stork-sdk crate
+// This needs to match the ID in the stork-solana-sdk crate
 declare_id!(stork_solana_sdk::PROGRAM_ID);
 
 #[program]
