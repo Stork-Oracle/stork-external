@@ -8,11 +8,10 @@ import (
 )
 
 var GenerateDataProviderCmd = &cobra.Command{
-	Use:   "data-provider [name]",
+	Use:   "source [name]",
 	Short: "Generate a new data provider",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		name := args[0]
 		return generateDataProvider(cmd, args)
 	},
 }
