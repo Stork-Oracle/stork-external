@@ -36,7 +36,7 @@ type templateFile struct {
 }
 
 func generateDataProvider(cmd *cobra.Command, args []string) error {
-	dataProviderName, _ := cmd.Flags().GetString(DataProviderNameFlag)
+	dataProviderName := args[0]
 
 	mainLogger := utils.MainLogger()
 

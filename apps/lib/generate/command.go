@@ -22,11 +22,6 @@ var UpdateSharedCodeCmd = &cobra.Command{
 	RunE:  runUpdateSharedCode,
 }
 
-// required
-const (
-	DataProviderNameFlag = "data-provider-name"
-)
-
 func runUpdateSharedCode(cmd *cobra.Command, args []string) error {
 	basePath, err := os.Getwd()
 	if err != nil {
