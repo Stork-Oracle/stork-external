@@ -15,33 +15,50 @@ help:
 		printf "  %-30s %s\n", $$1, helpMessage; \
 	}' $(MAKEFILE_LIST)
 
+## Install the stork-generate binary
+.PHONY: install-stork-source-generator
+install-stork-source-generator:
+	@echo "Installing stork-source-generator..."
+	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-source-generator ./apps/cmd/generate"
+	@go build -o $(shell go env GOPATH)/bin/stork-source-generator ./apps/cmd/generate
+	@go run ./apps/cmd/animate/main.go
+	@echo "Successfully installed stork-source-generator. Run 'stork-source-generator help' to get started."
+
+## Uninstall the stork-source-generator binary
+.PHONY: uninstall-stork-source-generator
+uninstall-stork-source-generator:
+	@echo "Uninstalling stork-source-generator..."
+	@echo "Running: rm -f $(shell go env GOPATH)/bin/stork-source-generator"
+	@rm -f $(shell go env GOPATH)/bin/stork-source-generator
+	@echo "Successfully uninstalled stork-source-generator"
+
 ## Install the stork-data-provider binary
-.PHONY: install-data-provider-cli
-install-data-provider-cli:
-	@echo "Installing stork-data-provider..."
-	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider"
-	@go build -o $(shell go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
-	@echo "Successfully installed stork-data-provider. Run 'stork-data-provider help' to get started."
+.PHONY: install-stork-source-runner
+install-stork-source-runner:
+	@echo "Installing stork-source-runner..."
+	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-source-runner ./apps/cmd/data_provider"
+	@go build -o $(shell go env GOPATH)/bin/stork-source-runner ./apps/cmd/data_provider
+	@echo "Successfully installed stork-source-runner. Run 'stork-source-runner help' to get started."
 
 ## Uninstall the stork-data-provider binary
-.PHONY: uninstall-data-provider-cli
-uninstall-data-provider-cli:
-	@echo "Uninstalling stork-data-provider..."
-	@rm -f $(shell go env GOPATH)/bin/stork-data-provider $(shell go env GOPATH)/bin/data_provider
-	@echo "Successfully uninstalled stork-data-provider"
+.PHONY: uninstall-stork-source-runner
+uninstall-stork-source-runner:
+	@echo "Uninstalling stork-source-runner..."
+	@rm -f $(shell go env GOPATH)/bin/stork-source-runner
+	@echo "Successfully uninstalled stork-source-runner"
 
 ## Rebuild and reinstall the stork-data-provider binary
-.PHONY: rebuild-data-provider-cli
-rebuild-data-provider-cli: uninstall-data-provider-cli install-data-provider-cli
-	@echo "Successfully rebuilt stork-data-provider"
+.PHONY: rebuild-stork-source-runner
+rebuild-stork-source-runner: uninstall-stork-source-runner install-stork-source-runner
+	@echo "Successfully rebuilt stork-source-runner"
 
 ## Start the data provider (rebuilds first)
-.PHONY: start-data-provider
-start-data-provider: rebuild-data-provider-cli
+.PHONY: start-stork-source-runner
+start-stork-source-runner: rebuild-stork-source-runner
 	@if [ -z "$(ARGS)" ]; then \
 		echo "Error: Missing required arguments"; \
-		echo "Usage: make start-data-provider ARGS=\"-c <config-file-path> -o <output-address>\""; \
+		echo "Usage: make start-stork-source-runner ARGS=\"-c <config-file-path> -o <output-address>\""; \
 		exit 1; \
 	fi
 	@echo "Starting data provider with arguments: $(ARGS)"
-	@stork-data-provider start $(ARGS)
+	@stork-source-runner start $(ARGS)
