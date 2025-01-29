@@ -1,4 +1,4 @@
-//! Event creation functions for the Stork Cosmwasm Contract. The event names are typically automatically prefixed with `wasm-` by the comsos runtime.
+//! Event creation functions for the Stork CosmWasm Contract. The event names are typically automatically prefixed with `wasm-` by the comsos runtime.
 use crate::{
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::EvmPubkey,

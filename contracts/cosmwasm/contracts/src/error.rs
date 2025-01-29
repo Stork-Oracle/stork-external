@@ -1,4 +1,4 @@
-//! Errors for the Stork Cosmwasm Contract.
+//! Errors for the Stork CosmWasm Contract.
 use sylvia::cw_std::StdError;
 use thiserror::Error;
 

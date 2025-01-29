@@ -21,7 +21,7 @@ use sylvia::{
     types::{CustomMsg, CustomQuery},
 };
 
-/// The main struct for the Stork Cosmwasm Contract.
+/// The main struct for the Stork CosmWasm Contract.
 /// This struct contains the state of the contract, including the EVM public key, the single update fee, the owner, and the temporal numeric value feed registry.
 pub struct StorkContract<E, Q> {
     pub stork_evm_public_key: Item<EvmPubkey>,
