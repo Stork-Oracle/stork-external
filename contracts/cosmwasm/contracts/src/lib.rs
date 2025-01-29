@@ -24,9 +24,9 @@ to name a few. These live in the `stork-cw::contract::sv` module.
 
 pub mod contract;
 pub mod error;
+pub mod events;
 #[cfg(test)]
 mod multitest;
 pub mod responses;
 pub mod temporal_numeric_value;
 pub mod verify;
-pub mod events;

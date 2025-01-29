@@ -3,7 +3,7 @@ use crate::{
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::EvmPubkey,
 };
-use sylvia::{cw_std::Coin, cw_std::Addr, cw_std::Event};
+use sylvia::{cw_std::Addr, cw_std::Coin, cw_std::Event};
 
 /// Creates an event for the Stork contract initialization with the name `stork_init`.
 /// This event contains important information about the state of the Stork contract.
@@ -13,7 +13,10 @@ pub(crate) fn new_stork_init_event(
     owner: Addr,
 ) -> Event {
     Event::new("stork_init")
-        .add_attribute("stork_evm_public_key", byte_array_to_hex_string(&stork_evm_public_key))
+        .add_attribute(
+            "stork_evm_public_key",
+            byte_array_to_hex_string(&stork_evm_public_key),
+        )
         .add_attribute("single_update_fee", single_update_fee.amount)
         .add_attribute("single_update_fee_denom", single_update_fee.denom)
         .add_attribute("owner", owner)

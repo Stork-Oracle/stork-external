@@ -43,11 +43,19 @@ fn instantiate<'a>(
             .unwrap();
         router
             .bank
-            .init_balance(storage, &USER.into_addr(), vec![Coin::new(100u128, "stork")])
+            .init_balance(
+                storage,
+                &USER.into_addr(),
+                vec![Coin::new(100u128, "stork")],
+            )
             .unwrap();
         router
             .bank
-            .init_balance(storage, &UNDERFUNDED_USER.into_addr(), vec![Coin::new(1u128, "stork")])
+            .init_balance(
+                storage,
+                &UNDERFUNDED_USER.into_addr(),
+                vec![Coin::new(1u128, "stork")],
+            )
             .unwrap();
     });
 
@@ -203,10 +211,7 @@ fn test_set_owner() {
 fn test_set_owner_not_authorized() {
     let mut app = App::default();
     let contract = instantiate(&mut app);
-    if let Err(e) = contract
-        .set_owner(USER.into_addr())
-        .call(&USER.into_addr())
-    {
+    if let Err(e) = contract.set_owner(USER.into_addr()).call(&USER.into_addr()) {
         panic!("{}", e);
     }
 }
