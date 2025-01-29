@@ -63,16 +63,16 @@ jobs:
 
       - name: Install CLI directly
         run: |
-          go build -o $(go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
+          go build -o $(go env GOPATH)/bin/stork-source-generator ./apps/cmd/generate
   
       - name: Run update command
-        run: stork-data-provider update
+        run: stork-source-generator update
 
       - name: Check for changes
         run: |
           echo "Checking for changes in generated code..."
           if [[ $(git status --porcelain) ]]; then
-            echo "Generated code is out of sync. Please run 'stork-data-provider update' and commit the changes."
+            echo "Generated code is out of sync. Please run 'stork-source-generator update' and commit the changes."
             git diff
             exit 1
           fi

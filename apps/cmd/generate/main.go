@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider"
+	"github.com/Stork-Oracle/stork-external/apps/lib/generate"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
@@ -15,8 +15,8 @@ var verbose bool
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "stork-data-provider",
-		Short: "Stork CLI tool for fetching prices from data sources",
+		Use:   "stork-generate",
+		Short: "Stork CLI tool for generating code",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
@@ -38,7 +38,8 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(data_provider.StartDataProviderCmd)
+	rootCmd.AddCommand(generate.GenerateDataProviderCmd)
+	rootCmd.AddCommand(generate.UpdateSharedCodeCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

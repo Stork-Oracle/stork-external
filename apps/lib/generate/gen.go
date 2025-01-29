@@ -1,4 +1,4 @@
-package data_provider
+package generate
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ type templateFile struct {
 }
 
 func generateDataProvider(cmd *cobra.Command, args []string) error {
-	dataProviderName, _ := cmd.Flags().GetString(DataProviderNameFlag)
+	dataProviderName := args[0]
 
 	mainLogger := utils.MainLogger()
 
@@ -280,55 +280,55 @@ func pascalToCamel(pascalName string) string {
 	return strings.ToLower(pascalName[:endOfFirstWord]) + pascalName[endOfFirstWord:]
 }
 
-func removeDataProvider(cmd *cobra.Command, args []string) error {
-	dataProviderName, _ := cmd.Flags().GetString(DataProviderNameFlag)
+// func removeDataProvider(cmd *cobra.Command, args []string) error {
+// 	dataProviderName, _ := cmd.Flags().GetString(DataProviderNameFlag)
 
-	mainLogger := utils.MainLogger()
+// 	mainLogger := utils.MainLogger()
 
-	zerolog.TimeFieldFormat = time.RFC3339Nano
-	zerolog.DurationFieldUnit = time.Nanosecond
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+// 	zerolog.TimeFieldFormat = time.RFC3339Nano
+// 	zerolog.DurationFieldUnit = time.Nanosecond
+// 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	basePath, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
+// 	basePath, err := os.Getwd()
+// 	if err != nil {
+// 		return fmt.Errorf("failed to get working directory: %w", err)
+// 	}
 
-	mainLogger.Info().Msg("Removing data provider")
+// 	mainLogger.Info().Msg("Removing data provider")
 
-	if err := deleteSourceCode(dataProviderName, basePath, mainLogger); err != nil {
-		return fmt.Errorf("failed to delete source code: %w", err)
-	}
+// 	if err := deleteSourceCode(dataProviderName, basePath, mainLogger); err != nil {
+// 		return fmt.Errorf("failed to delete source code: %w", err)
+// 	}
 
-	if err := updateSharedCode(basePath); err != nil {
-		return fmt.Errorf("failed to run Python script: %w", err)
-	}
+// 	if err := updateSharedCode(basePath); err != nil {
+// 		return fmt.Errorf("failed to run Python script: %w", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func deleteSourceCode(pascalName string, basePath string, mainLogger zerolog.Logger) error {
-	stringData := templateStrings{
-		PascalStr: pascalName,
-		LowerStr:  pascalToLower(pascalName),
-		CamelStr:  pascalToCamel(pascalName),
-	}
+// func deleteSourceCode(pascalName string, basePath string, mainLogger zerolog.Logger) error {
+// 	stringData := templateStrings{
+// 		PascalStr: pascalName,
+// 		LowerStr:  pascalToLower(pascalName),
+// 		CamelStr:  pascalToCamel(pascalName),
+// 	}
 
-	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "source"), stringData)
-	if err != nil {
-		return fmt.Errorf("failed to process templates: %w", err)
-	}
+// 	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "source"), stringData)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to process templates: %w", err)
+// 	}
 
-	if err := os.RemoveAll(filepath.Join(basePath, sourceDir, stringData.LowerStr)); err != nil {
-		return fmt.Errorf("failed to delete source directory: %w", err)
-	}
+// 	if err := os.RemoveAll(filepath.Join(basePath, sourceDir, stringData.LowerStr)); err != nil {
+// 		return fmt.Errorf("failed to delete source directory: %w", err)
+// 	}
 
-	for _, template := range templates {
-		if err := os.RemoveAll(template.destPath); err != nil {
-			return fmt.Errorf("failed to delete file %s: %w", template.destPath, err)
-		}
-		mainLogger.Info().Msgf("Deleted file %s", template.destPath)
-	}
+// 	for _, template := range templates {
+// 		if err := os.RemoveAll(template.destPath); err != nil {
+// 			return fmt.Errorf("failed to delete file %s: %w", template.destPath, err)
+// 		}
+// 		mainLogger.Info().Msgf("Deleted file %s", template.destPath)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
