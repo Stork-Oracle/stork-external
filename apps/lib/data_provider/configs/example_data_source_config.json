@@ -8,9 +8,9 @@
         "contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
         "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
         "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
-        "baseTokenIndex": 1,
+        "baseTokenIndex": 0,
         "baseTokenDecimals": 18,
-        "quoteTokenIndex": 2,
+        "quoteTokenIndex": 1,
         "quoteTokenDecimals": 6
       }
     },

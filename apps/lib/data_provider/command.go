@@ -17,6 +17,12 @@ var GenerateDataProviderCmd = &cobra.Command{
 	RunE:  generateDataProvider,
 }
 
+var RemoveDataProviderCmd = &cobra.Command{
+	Use:   "remove",
+	Short: "Remove code related toa data source integration",
+	RunE:  removeDataProvider,
+}
+
 var UpdateSharedCodeCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update the shared code for the data provider sources",
@@ -47,6 +53,11 @@ func init() {
 		DataProviderNameFlag, "n", "", "the name of your data provider in PascalCase (e.g. MyProvider)",
 	)
 	GenerateDataProviderCmd.MarkFlagRequired(DataProviderNameFlag)
+
+	RemoveDataProviderCmd.Flags().StringP(
+		DataProviderNameFlag, "n", "", "the name of your data provider in PascalCase (e.g. MyProvider)",
+	)
+	RemoveDataProviderCmd.MarkFlagRequired(DataProviderNameFlag)
 }
 
 func runDataProvider(cmd *cobra.Command, args []string) error {
