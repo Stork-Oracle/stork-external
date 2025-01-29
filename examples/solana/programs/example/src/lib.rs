@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use stork_sdk::{
+use stork_solana_sdk::{
     pda::STORK_FEED_SEED,
     temporal_numeric_value::TemporalNumericValueFeed,
 };
@@ -40,7 +40,7 @@ pub struct ReadPrice<'info> {
     #[account(
         seeds = [STORK_FEED_SEED.as_ref(), feed_id.as_ref()],
         bump,
-        seeds::program = stork_sdk::ID
+        seeds::program = stork_solana_sdk::ID
     )]
     pub feed: Account<'info, TemporalNumericValueFeed>,
 }

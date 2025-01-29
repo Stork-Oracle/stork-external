@@ -3,7 +3,7 @@
     "rust-analyzer.linkedProjects": [
         "./contracts/solana/programs/stork/Cargo.toml",
         "./examples/solana/programs/example/Cargo.toml",
-        "./sdks/solana/stork-sdk/Cargo.toml"
+        "./sdks/solana/stork-solana-sdk/Cargo.toml"
     ],
     "files.insertFinalNewline": true
 }
