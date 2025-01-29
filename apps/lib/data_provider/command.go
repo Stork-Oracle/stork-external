@@ -2,6 +2,7 @@ package data_provider
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
@@ -10,21 +11,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var DataProviderCmd = &cobra.Command{
+var GenerateDataProviderCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Generate source code for a new data source integration",
+	RunE:  generateDataProvider,
+}
+
+var UpdateSharedCodeCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update the shared code for the data provider sources",
+	RunE:  runUpdateSharedCode,
+}
+
+var StartDataProviderCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a process to fetch prices from data sources",
 	RunE:  runDataProvider,
 }
 
 // required
-const ConfigFilePathFlag = "config-file-path"
-const OutputAddressFlag = "output-address"
+const (
+	ConfigFilePathFlag   = "config-file-path"
+	OutputAddressFlag    = "output-address"
+	DataProviderNameFlag = "data-provider-name"
+)
 
 func init() {
-	DataProviderCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
-	DataProviderCmd.Flags().StringP(OutputAddressFlag, "o", "", "a string representing an output address (e.g. ws://localhost:5216/)")
+	StartDataProviderCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
+	StartDataProviderCmd.Flags().StringP(
+		OutputAddressFlag, "o", "", "a string representing an output address (e.g. ws://localhost:5216/)",
+	)
+	StartDataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
 
-	DataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
+	GenerateDataProviderCmd.Flags().StringP(
+		DataProviderNameFlag, "n", "", "the name of your data provider in PascalCase (e.g. MyProvider)",
+	)
+	GenerateDataProviderCmd.MarkFlagRequired(DataProviderNameFlag)
 }
 
 func runDataProvider(cmd *cobra.Command, args []string) error {
@@ -48,4 +70,13 @@ func runDataProvider(cmd *cobra.Command, args []string) error {
 	runner.Run()
 
 	return nil
+}
+
+func runUpdateSharedCode(cmd *cobra.Command, args []string) error {
+	basePath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	return updateSharedCode(basePath)
 }

@@ -5,6 +5,12 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 )
 
+// This is the main orchestrator of the data provider package.
+// It builds the data sources defined in the config and runs them in separate goroutines.
+// Each data source is responsible for fetching data from its source and reporting it to the updates channel.
+// The writer then writes this data to the output address.
+// If no output address is provided, the messages are logged to the console but not sent anywhere.
+
 type DataProviderRunner struct {
 	config    types.DataProviderConfig
 	writer    Writer

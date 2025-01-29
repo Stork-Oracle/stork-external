@@ -56,19 +56,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          python-version: 3.10.16
+          go-version: '1.22'
 
-      - name: Run code generation script
+      - name: Install CLI directly
         run: |
-          python ./apps/scripts/update_shared_data_provider_code.py
+          go build -o $(go env GOPATH)/bin/stork-data-provider ./apps/cmd/data_provider
+  
+      - name: Run update command
+        run: stork-data-provider update
 
       - name: Check for changes
         run: |
+          echo "Checking for changes in generated code..."
           if [[ $(git status --porcelain) ]]; then
-            echo "Generated code is out of sync. Please run the script and commit the changes."
+            echo "Generated code is out of sync. Please run 'stork-data-provider update' and commit the changes."
+            git diff
             exit 1
           fi
 
