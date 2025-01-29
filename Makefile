@@ -15,7 +15,7 @@ help:
 		printf "  %-30s %s\n", $$1, helpMessage; \
 	}' $(MAKEFILE_LIST)
 
-## Install the stork-generate binary
+## Install the stork-source-generate binary
 .PHONY: install-stork-source-generator
 install-stork-source-generator:
 	@echo "Installing stork-source-generator..."
@@ -32,7 +32,7 @@ uninstall-stork-source-generator:
 	@rm -f $(shell go env GOPATH)/bin/stork-source-generator
 	@echo "Successfully uninstalled stork-source-generator"
 
-## Install the stork-data-provider binary
+## Install the stork-source-runner binary
 .PHONY: install-stork-source-runner
 install-stork-source-runner:
 	@echo "Installing stork-source-runner..."
@@ -40,19 +40,19 @@ install-stork-source-runner:
 	@go build -o $(shell go env GOPATH)/bin/stork-source-runner ./apps/cmd/data_provider
 	@echo "Successfully installed stork-source-runner. Run 'stork-source-runner help' to get started."
 
-## Uninstall the stork-data-provider binary
+## Uninstall the stork-source-runner binary
 .PHONY: uninstall-stork-source-runner
 uninstall-stork-source-runner:
 	@echo "Uninstalling stork-source-runner..."
 	@rm -f $(shell go env GOPATH)/bin/stork-source-runner
 	@echo "Successfully uninstalled stork-source-runner"
 
-## Rebuild and reinstall the stork-data-provider binary
+## Rebuild and reinstall the stork-source-runner binary
 .PHONY: rebuild-stork-source-runner
 rebuild-stork-source-runner: uninstall-stork-source-runner install-stork-source-runner
 	@echo "Successfully rebuilt stork-source-runner"
 
-## Start the data provider (rebuilds first)
+## Start the source runner (rebuilds first)
 .PHONY: start-stork-source-runner
 start-stork-source-runner: rebuild-stork-source-runner
 	@if [ -z "$(ARGS)" ]; then \
@@ -60,5 +60,5 @@ start-stork-source-runner: rebuild-stork-source-runner
 		echo "Usage: make start-stork-source-runner ARGS=\"-c <config-file-path> -o <output-address>\""; \
 		exit 1; \
 	fi
-	@echo "Starting data provider with arguments: $(ARGS)"
+	@echo "Starting source runner with arguments: $(ARGS)"
 	@stork-source-runner start $(ARGS)
