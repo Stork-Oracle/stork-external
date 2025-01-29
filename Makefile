@@ -34,3 +34,14 @@ uninstall-data-provider-cli:
 .PHONY: rebuild-data-provider-cli
 rebuild-data-provider-cli: uninstall-data-provider-cli install-data-provider-cli
 	@echo "Successfully rebuilt stork-data-provider"
+
+## Start the data provider (rebuilds first)
+.PHONY: start-data-provider
+start-data-provider: rebuild-data-provider-cli
+	@if [ -z "$(ARGS)" ]; then \
+		echo "Error: Missing required arguments"; \
+		echo "Usage: make start-data-provider ARGS=\"-c <config-file-path> -o <output-address>\""; \
+		exit 1; \
+	fi
+	@echo "Starting data provider with arguments: $(ARGS)"
+	@stork-data-provider start $(ARGS)
