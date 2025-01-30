@@ -6,7 +6,6 @@ type UniswapV2Config struct {
 	DataSource           types.DataSourceId `json:"dataSource"`
 	UpdateFrequency      string             `json:"updateFrequency"`
 	HttpProviderUrl      string             `json:"httpProviderUrl"`
-	ProviderApiKeyEnvVar string             `json:"providerApiKeyEnvVar"`
 	ContractAddress      string             `json:"contractAddress"`
 	BaseTokenIndex       int8               `json:"baseTokenIndex"`
 	QuoteTokenIndex      int8               `json:"quoteTokenIndex"`

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
@@ -21,7 +20,6 @@ import (
 type raydiumCLMMDataSource struct {
 	raydiumCLMMConfig RaydiumCLMMConfig
 	valueId           types.ValueId
-	apiKey            string
 	updateFrequency   time.Duration
 	logger            zerolog.Logger
 	rpcClient         *rpc.Client
@@ -96,21 +94,11 @@ func newRaydiumCLMMDataSource(sourceConfig types.DataProviderSourceConfig) *rayd
 		panic("unable to parse update frequency: " + raydiumCLMMConfig.UpdateFrequency)
 	}
 
-	apiKey := ""
-	if len(raydiumCLMMConfig.ProviderApiKeyEnvVar) > 0 {
-		var exists bool
-		apiKey, exists = os.LookupEnv(raydiumCLMMConfig.ProviderApiKeyEnvVar)
-		if !exists {
-			panic("env var with name " + raydiumCLMMConfig.ProviderApiKeyEnvVar + " is not set")
-		}
-	}
-
-	rpcClient := rpc.New(raydiumCLMMConfig.HttpProviderUrl + apiKey)
+	rpcClient := rpc.New(raydiumCLMMConfig.HttpProviderUrl)
 
 	return &raydiumCLMMDataSource{
 		raydiumCLMMConfig: raydiumCLMMConfig,
 		valueId:           sourceConfig.Id,
-		apiKey:            apiKey,
 		updateFrequency:   updateFrequency,
 		logger:            utils.DataSourceLogger(RaydiumCLMMDataSourceId),
 		rpcClient:         rpcClient,

@@ -20,9 +20,8 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 		  "config": {
 			"dataSource": "raydiumclmm",
 			"updateFrequency": "5s",
-			"httpProviderUrl": "https://rpc.helius.xyz/?api-key=",
-			"contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",
-			"providerApiKeyEnvVar": "HELIUS_API_KEY"
+			"httpProviderUrl": "https://eclipse.helius-rpc.com/",
+			"contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj"
 		  }
 		}
 	  ]
@@ -46,7 +45,6 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 
 	assert.Equal(t, types.DataSourceId("raydiumclmm"), sourceSpecificConfig.DataSource)
 	assert.Equal(t, "5s", sourceSpecificConfig.UpdateFrequency)
-	assert.Equal(t, "https://rpc.helius.xyz/?api-key=", sourceSpecificConfig.HttpProviderUrl)
+	assert.Equal(t, "https://eclipse.helius-rpc.com/", sourceSpecificConfig.HttpProviderUrl)
 	assert.Equal(t, "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj", sourceSpecificConfig.ContractAddress)
-	assert.Equal(t, "HELIUS_API_KEY", sourceSpecificConfig.ProviderApiKeyEnvVar)
 }

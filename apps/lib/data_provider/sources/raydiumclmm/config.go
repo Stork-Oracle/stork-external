@@ -8,6 +8,5 @@ type RaydiumCLMMConfig struct {
 	DataSource           types.DataSourceId `json:"dataSource"`
 	UpdateFrequency      string             `json:"updateFrequency"`
 	HttpProviderUrl      string             `json:"httpProviderUrl"`
-	ProviderApiKeyEnvVar string             `json:"providerApiKeyEnvVar"`
 	ContractAddress      string             `json:"contractAddress"`
 }

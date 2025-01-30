@@ -6,11 +6,10 @@
         "dataSource": "uniswapv2",
         "updateFrequency": "5s",
         "contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
-        "httpProviderUrl": "https://eth-mainnet.g.alchemy.com/v2/",
-        "providerApiKeyEnvVar": "ALCHEMY_API_KEY",
-        "baseTokenIndex": 1,
+        "httpProviderUrl": "https://ethereum-rpc.publicnode.com",
+        "baseTokenIndex": 0,
         "baseTokenDecimals": 18,
-        "quoteTokenIndex": 2,
+        "quoteTokenIndex": 1,
         "quoteTokenDecimals": 6
       }
     },
@@ -19,8 +18,7 @@
       "config": {
         "dataSource": "raydiumclmm",
         "updateFrequency": "5s",
-        "httpProviderUrl": "https://rpc.helius.xyz/?api-key=",
-        "providerApiKeyEnvVar": "HELIUS_API_KEY",
+        "httpProviderUrl": "https://solana-rpc.publicnode.com",
         "contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj"
       }
     },
