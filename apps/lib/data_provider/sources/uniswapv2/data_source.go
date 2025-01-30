@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"os"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
@@ -26,7 +25,6 @@ var resourcesFS embed.FS
 type uniswapV2DataSource struct {
 	logger          zerolog.Logger
 	uniswapConfig   UniswapV2Config
-	apiKey          string
 	updateFrequency time.Duration
 	valueId         types.ValueId
 	contract        *bind.BoundContract
@@ -43,19 +41,9 @@ func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswa
 		panic("unable to parse update frequency: " + uniswapConfig.UpdateFrequency)
 	}
 
-	apiKey := ""
-	if len(uniswapConfig.ProviderApiKeyEnvVar) > 0 {
-		var exists bool
-		apiKey, exists = os.LookupEnv(uniswapConfig.ProviderApiKeyEnvVar)
-		if !exists {
-			panic("env var with name " + uniswapConfig.ProviderApiKeyEnvVar + " is not set")
-		}
-	}
-
 	return &uniswapV2DataSource{
 		uniswapConfig:   uniswapConfig,
 		valueId:         sourceConfig.Id,
-		apiKey:          apiKey,
 		updateFrequency: updateFrequency,
 		logger:          utils.DataSourceLogger(UniswapV2DataSourceId),
 	}
@@ -101,7 +89,6 @@ func (c *uniswapV2DataSource) initializeBoundContract() error {
 		c.uniswapConfig.ContractAddress,
 		uniswapV2AbiFileName,
 		c.uniswapConfig.HttpProviderUrl,
-		c.apiKey,
 		resourcesFS,
 	)
 	if err != nil {

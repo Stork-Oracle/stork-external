@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GenerateDataProviderCmd = &cobra.Command{
-	Use:   "source [name]",
+var GenerateCmd = &cobra.Command{
+	Use:   "generate [name]",
 	Short: "Generate a new data provider",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -16,9 +16,18 @@ var GenerateDataProviderCmd = &cobra.Command{
 	},
 }
 
+var RemoveCmd = &cobra.Command{
+	Use:   "remove [name]",
+	Short: "Remove code related toa data source integration",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return removeDataProvider(cmd, args)
+	},
+}
+
 var UpdateSharedCodeCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update the shared code for the data provider sources",
+	Short: "Update the shared code for all data provider sources",
 	RunE:  runUpdateSharedCode,
 }
 

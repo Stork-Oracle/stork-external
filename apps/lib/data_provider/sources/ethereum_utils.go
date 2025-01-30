@@ -23,7 +23,6 @@ func GetEthereumContract(
 	contractAddress string,
 	abiFileName string,
 	httpProviderUrl string,
-	apiKey string,
 	resourcesFs embed.FS,
 ) (*bind.BoundContract, error) {
 	address := common.HexToAddress(contractAddress)
@@ -37,7 +36,7 @@ func GetEthereumContract(
 		return nil, fmt.Errorf("failed to parse ABI file %s: %v", abiFileName, err)
 	}
 
-	httpClient, err := ethclient.Dial(httpProviderUrl + apiKey)
+	httpClient, err := ethclient.Dial(httpProviderUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to the http client: %v", err)
 	}

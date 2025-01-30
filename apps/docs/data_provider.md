@@ -5,8 +5,8 @@ The Stork Data Provider is a framework to pull arbitrary numeric data across man
 If you want to report data from a data source which does not already have an [integration](../lib/data_provider/sources), you can add your own.
 
 To add a new source:
-1. Run `make install-data-provider-cli` to install the `stork-data-provider` CLI tool.
-1. Run `stork-data-provider generate -n <pascal-case-name>` to add your new data provider.
+1. Run `make install-stork-generate` to install the `stork-generate` CLI tool.
+1. Run `stork-generate generate <pascal-case-name>` to add your new data provider.
    1. Adds a [package](../lib/data_provider/sources/random) in the [sources directory](../lib/data_provider/sources) with your data source's name
    1. Adds a [data_source.go](../lib/data_provider/sources/random/data_source.go) and implements a DataSource object conforming to the [DataSource interface](../lib/data_provider/types/model.go). This object will contain most of your source-specific logic, but it can leverage tools like the [scheduler](../lib/data_provider/sources/scheduler.go) or [ethereum_utils](../lib/data_provider/sources/ethereum_utils.go) as needed.
    1. Adds a [data_source_test.go](../lib/data_provider/sources/random/data_source_test.go) to unit test your data source.
