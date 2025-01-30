@@ -1537,7 +1537,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stork-sdk"
+name = "stork-solana-sdk"
 version = "0.0.5"
 dependencies = [
  "anchor-lang",

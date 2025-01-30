@@ -3,7 +3,7 @@
 
 This is a Rust SDK to build Solana programs that consume Stork price feeds. This crate is maintained by [Stork Labs](https://stork.network).
 
-A top level overview, as well as a small code sample, can be found in [the libraries entry in crates.io](https://crates.io/crates/stork-sdk).
+A top level overview, as well as a small code sample, can be found in [the libraries entry in crates.io](https://crates.io/crates/stork-solana-sdk).
 
 # Pull Model
 
