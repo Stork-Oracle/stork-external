@@ -18,7 +18,7 @@ var GenerateCmd = &cobra.Command{
 
 var RemoveCmd = &cobra.Command{
 	Use:   "remove [name]",
-	Short: "Remove code related toa data source integration",
+	Short: "Remove code related to a data source integration",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return removeDataProvider(cmd, args)
