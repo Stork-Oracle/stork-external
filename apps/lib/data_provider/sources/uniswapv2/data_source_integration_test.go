@@ -4,6 +4,7 @@
 package uniswapv2
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -27,7 +28,9 @@ func TestUniswapDataSource_RunDataSource(t *testing.T) {
 	}
 	dataSource := newUniswapV2DataSource(config)
 	updateCh := make(chan types.DataSourceUpdateMap)
-	go dataSource.RunDataSource(updateCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go dataSource.RunDataSource(ctx, updateCh)
 
 	// print a few messages, fail if none come through within the timeout period
 	numMessages := 10

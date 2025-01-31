@@ -105,14 +105,14 @@ func newRaydiumCLMMDataSource(sourceConfig types.DataProviderSourceConfig) *rayd
 	}
 }
 
-func (r raydiumCLMMDataSource) RunDataSource(updatesCh chan types.DataSourceUpdateMap) {
+func (r raydiumCLMMDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
 	updater := func() (types.DataSourceUpdateMap, error) { return r.getUpdate() }
 	scheduler := sources.NewScheduler(
 		r.updateFrequency,
 		updater,
 		sources.GetErrorLogHandler(r.logger, zerolog.WarnLevel),
 	)
-	scheduler.RunScheduler(updatesCh)
+	scheduler.RunScheduler(ctx, updatesCh)
 }
 
 func (r raydiumCLMMDataSource) getUpdate() (types.DataSourceUpdateMap, error) {

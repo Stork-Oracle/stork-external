@@ -1,6 +1,7 @@
 package uniswapv2
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"math"
@@ -49,14 +50,14 @@ func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswa
 	}
 }
 
-func (c *uniswapV2DataSource) RunDataSource(updatesCh chan types.DataSourceUpdateMap) {
+func (c *uniswapV2DataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
 	updater := func() (types.DataSourceUpdateMap, error) { return c.getUpdate() }
 	scheduler := sources.NewScheduler(
 		c.updateFrequency,
 		updater,
 		sources.GetErrorLogHandler(c.logger, zerolog.WarnLevel),
 	)
-	scheduler.RunScheduler(updatesCh)
+	scheduler.RunScheduler(ctx, updatesCh)
 }
 
 func (c *uniswapV2DataSource) getUpdate() (types.DataSourceUpdateMap, error) {

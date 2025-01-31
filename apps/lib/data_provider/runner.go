@@ -1,6 +1,8 @@
 package data_provider
 
 import (
+	"context"
+
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 )
@@ -34,8 +36,12 @@ func (r *DataProviderRunner) Run() {
 	if err != nil {
 		panic("unable to build data sources: " + err.Error())
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for _, dataSource := range dataSources {
-		go dataSource.RunDataSource(r.updatesCh)
+		go dataSource.RunDataSource(ctx, r.updatesCh)
 	}
 
 	r.writer.Run(r.updatesCh)

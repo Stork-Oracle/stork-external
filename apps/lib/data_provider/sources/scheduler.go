@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"context"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
@@ -25,10 +26,18 @@ func NewScheduler(
 	}
 }
 
-func (s *Scheduler) RunScheduler(updatesCh chan types.DataSourceUpdateMap) {
+func (s *Scheduler) RunScheduler(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
 	s.emitUpdate(updatesCh)
-	for range time.NewTicker(s.updateFrequency).C {
-		s.emitUpdate(updatesCh)
+	ticker := time.NewTicker(s.updateFrequency)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			s.emitUpdate(updatesCh)
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 
