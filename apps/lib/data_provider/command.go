@@ -10,21 +10,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var DataProviderCmd = &cobra.Command{
+var StartDataProviderCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a process to fetch prices from data sources",
 	RunE:  runDataProvider,
 }
 
 // required
-const ConfigFilePathFlag = "config-file-path"
-const OutputAddressFlag = "output-address"
+const (
+	ConfigFilePathFlag   = "config-file-path"
+	OutputAddressFlag    = "output-address"
+	DataProviderNameFlag = "data-provider-name"
+)
 
 func init() {
-	DataProviderCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
-	DataProviderCmd.Flags().StringP(OutputAddressFlag, "o", "", "a string representing an output address (e.g. ws://localhost:5216/)")
-
-	DataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
+	StartDataProviderCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
+	StartDataProviderCmd.Flags().StringP(
+		OutputAddressFlag, "o", "", "a string representing an output address (e.g. ws://localhost:5216/)",
+	)
+	StartDataProviderCmd.MarkFlagRequired(ConfigFilePathFlag)
 }
 
 func runDataProvider(cmd *cobra.Command, args []string) error {
