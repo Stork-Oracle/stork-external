@@ -47,6 +47,34 @@ jobs:
         env:
           TARGETPLATFORM: linux/amd64
 
+  data-provider-codegen-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Install CLI directly
+        run: |
+          go build -o $(go env GOPATH)/bin/stork-generate ./apps/cmd/generate
+  
+      - name: Run update command
+        run: stork-generate update
+
+      - name: Check for changes
+        run: |
+          echo "Checking for changes in generated code..."
+          if [[ $(git status --porcelain) ]]; then
+            echo "Generated code is out of sync. Please run 'stork-generate update' and commit the changes."
+            git diff
+            exit 1
+          fi
+
   test-evm:
     runs-on: ubuntu-latest
 
