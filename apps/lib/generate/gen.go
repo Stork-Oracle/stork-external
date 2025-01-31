@@ -2,12 +2,12 @@ package generate
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
