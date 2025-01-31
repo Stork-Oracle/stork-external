@@ -23,7 +23,7 @@ func TestValidUniswapV2Config(t *testing.T) {
 				"httpProviderUrl": "https://ethereum-rpc.publicnode.com",
 				"baseTokenIndex": 1,
 				"baseTokenDecimals": 18,
-				"quoteTokenIndex": 2,
+				"quoteTokenIndex": 1,
 				"quoteTokenDecimals": 6
 			  }
 			}
@@ -51,6 +51,6 @@ func TestValidUniswapV2Config(t *testing.T) {
 	assert.Equal(t, "https://ethereum-rpc.publicnode.com", uniswapConfig.HttpProviderUrl)
 	assert.Equal(t, int8(1), uniswapConfig.BaseTokenIndex)
 	assert.Equal(t, int8(18), uniswapConfig.BaseTokenDecimals)
-	assert.Equal(t, int8(2), uniswapConfig.QuoteTokenIndex)
+	assert.Equal(t, int8(1), uniswapConfig.QuoteTokenIndex)
 	assert.Equal(t, int8(6), uniswapConfig.QuoteTokenDecimals)
 }

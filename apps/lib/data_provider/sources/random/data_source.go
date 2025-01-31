@@ -1,6 +1,7 @@
 package random
 
 import (
+	"context"
 	"math/rand"
 	"time"
 
@@ -36,14 +37,14 @@ func newRandomDataSource(sourceConfig types.DataProviderSourceConfig) *randomDat
 	}
 }
 
-func (r randomDataSource) RunDataSource(updatesCh chan types.DataSourceUpdateMap) {
+func (r randomDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
 	updater := func() (types.DataSourceUpdateMap, error) { return r.getUpdate() }
 	scheduler := sources.NewScheduler(
 		r.updateFrequency,
 		updater,
 		sources.GetErrorLogHandler(r.logger, zerolog.WarnLevel),
 	)
-	scheduler.RunScheduler(updatesCh)
+	scheduler.RunScheduler(ctx, updatesCh)
 }
 
 func (r randomDataSource) getUpdate() (types.DataSourceUpdateMap, error) {

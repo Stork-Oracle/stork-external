@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type (
 	}
 
 	DataSource interface {
-		RunDataSource(updatesCh chan DataSourceUpdateMap)
+		RunDataSource(ctx context.Context, updatesCh chan DataSourceUpdateMap)
 	}
 
 	DataSourceFactory interface {
