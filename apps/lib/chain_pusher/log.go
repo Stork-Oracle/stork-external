@@ -47,3 +47,13 @@ func SuiPusherLogger(
 		Str("contractAddress", contractAddress).
 		Logger()
 }
+
+func CosmwasmPusherLogger(
+	chainGrpcUrl string,
+	contractAddress string,
+) zerolog.Logger {
+	return AppLogger("cosmwasm").With().
+		Str("chainGrpcUrl", chainGrpcUrl).
+		Str("contractAddress", contractAddress).
+		Logger()
+}
