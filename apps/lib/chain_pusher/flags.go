@@ -17,6 +17,13 @@ const LimitPerSecondFlag = "limit-per-second"
 const BurstLimitFlag = "burst-limit"
 const BatchSizeFlag = "batch-size"
 
+// Cosmwasm flags
+const GasPriceFlag = "gas-price"
+const GasAdjustmentFlag = "gas-adjustment"
+const DenomFlag = "denom"
+const ChainIDFlag = "chain-id"
+const ChainPrefixFlag = "chain-prefix"
+
 // Descriptions for the flags
 const StorkWebsocketEndpointDesc = "Stork WebSocket endpoint"
 const StorkAuthCredentialsDesc = "Stork auth credentials - base64(username:password)"
@@ -33,3 +40,10 @@ const PollingFrequencyDesc = "Asset Polling frequency (seconds)"
 const LimitPerSecondDesc = "JSON RPC call limit per second"
 const BurstLimitDesc = "JSON RPC call Burst limit"
 const BatchSizeDesc = "Batch size between 1 and 4"
+
+// Cosmwasm descriptions
+const GasPriceDesc = "Gas price"
+const GasAdjustmentDesc = "Gas adjustment"
+const DenomDesc = "Denom"
+const ChainIDDesc = "Chain ID"
+const ChainPrefixDesc = "Chain prefix"

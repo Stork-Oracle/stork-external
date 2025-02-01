@@ -19,7 +19,7 @@ type CosmwasmContractInteracter struct {
 	pollingFrequencySec int
 }
 
-func NewCosmwasmContractInteracter(chainGrpcUrl, contractAddress, mnemonicFile string, batchingWindow, pollingFrequency int, logger zerolog.Logger) (*CosmwasmContractInteracter, error) {
+func NewCosmwasmContractInteracter(chainGrpcUrl, contractAddress, mnemonicFile string, batchingWindow, pollingFrequency int, logger zerolog.Logger, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*CosmwasmContractInteracter, error) {
 	logger = logger.With().Str("component", "cosmwasm-contract-interacter").Logger()
 
 	mnemonic, err := os.ReadFile(mnemonicFile)
@@ -27,7 +27,8 @@ func NewCosmwasmContractInteracter(chainGrpcUrl, contractAddress, mnemonicFile s
 		return nil, err
 	}
 	mnemonicString := strings.TrimSpace(string(mnemonic))
-	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString)
+	logger.Info().Msg("Creating cosmwasm contract interacter")
+	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		return nil, err
 	}

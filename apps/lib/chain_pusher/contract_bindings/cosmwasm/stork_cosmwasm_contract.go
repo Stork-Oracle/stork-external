@@ -1,26 +1,25 @@
 package contract_bindings_cosmwasm
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
-	"os"
+	"strings"
 
 	cosmossdk_io_math "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	sdkclienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/go-bip39"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -141,18 +140,39 @@ type StorkContract struct {
 	GasAdjustment   float64
 	Denom           string
 	ChainID         string
+	ChainPrefix     string
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string) (*StorkContract, error) {
-	grpcConn, err := grpc.NewClient(rpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*StorkContract, error) {
+	config := sdktypes.GetConfig()
+	config.SetBech32PrefixForAccount(chainPrefix, "cosmos")
+	config.Seal()
+	cleanUrl := rpcUrl
+	if strings.HasPrefix(cleanUrl, "https://") {
+		cleanUrl = cleanUrl[len("https://"):]
+	} else if strings.HasPrefix(cleanUrl, "http://") {
+		cleanUrl = cleanUrl[len("http://"):]
+	}
+
+	// Add the default gRPC port if not specified
+	if !strings.Contains(cleanUrl, ":") {
+		cleanUrl = cleanUrl + ":9090"
+	}
+
+	grpcConn, err := grpc.Dial(
+		cleanUrl,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
 	if err != nil {
 		return nil, err
 	}
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	hdPath := hd.NewFundraiserParams(0, sdktypes.CoinType, 0).String()
+	derivedPrivKey, err := hd.Secp256k1.Derive()(mnemonic, "", hdPath)
 	if err != nil {
 		return nil, err
 	}
-	privKey := secp256k1.PrivKey{Key: seed[:32]}
+	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
 
 	storkContract := &StorkContract{Client: grpcConn, ContractAddress: contractAddress, Key: privKey}
 	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
@@ -160,6 +180,11 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string) (*
 		return nil, err
 	}
 	storkContract.SingleUpdateFee = singleUpdateFee.Fee
+	storkContract.GasPrice = gasPrice
+	storkContract.GasAdjustment = gasAdjustment
+	storkContract.Denom = denom
+	storkContract.ChainID = chainID
+	storkContract.ChainPrefix = chainPrefix
 	return storkContract, nil
 }
 
@@ -179,6 +204,9 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 
 func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	authtypes.RegisterInterfaces(interfaceRegistry)
+	cryptocodec.RegisterInterfaces(interfaceRegistry)
+	wasmtypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
@@ -190,70 +218,61 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	clientCtx := sdkclient.Context{
-		FromAddress: sdktypes.AccAddress(s.Key.PubKey().Address()),
-		ChainID:     s.ChainID,
-		GRPCClient:  s.Client,
-		TxConfig:    txConfig,
+		FromAddress:       sdktypes.AccAddress(s.Key.PubKey().Address()),
+		ChainID:           s.ChainID,
+		GRPCClient:        s.Client,
+		TxConfig:          txConfig,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		NodeURI:           s.Client.Target(),
+		InterfaceRegistry: interfaceRegistry,
+		BroadcastMode:     "sync",
+		Offline:           false,
 	}
+
+	gasPrice := fmt.Sprintf("%.3f%s", s.GasPrice, s.Denom)
 
 	factory := sdkclienttx.Factory{}.
 		WithChainID(s.ChainID).
-		WithGasPrices(fmt.Sprintf("%.3f%s", s.GasPrice, s.Denom)).
+		WithGasPrices(gasPrice).
 		WithGasAdjustment(s.GasAdjustment).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// err := sdkclienttx.GenerateOrBroadcastTxWithFactory(clientCtx, factory, msg)
-	// if err != nil {
-	// 	return err
-	// }
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
+		WithTxConfig(clientCtx.TxConfig).
+		WithAccountRetriever(clientCtx.AccountRetriever)
 
 	txf, err := factory.Prepare(clientCtx)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to prepare transaction: %w", err)
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
 		_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to calculate gas: %w", err)
 		}
 		txf = txf.WithGas(adjusted)
 	}
 
 	tx, err := txf.BuildUnsignedTx(msg)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
 	encoder := txConfig.TxJSONEncoder()
 	if encoder == nil {
-		return "", errors.New("failed to encode transaction: tx json encoder is nil")
+		return "", fmt.Errorf("failed to encode transaction: tx json encoder is nil")
 	}
 
 	txBytes, err := encoder(tx.GetTx())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to encode transaction: %w", err)
 	}
 
-	if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
-		return "", err
-	}
-
-	buf := bufio.NewReader(os.Stdin)
-	ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-	if err != nil {
-		return "", err
-	}
-	if !ok {
-		return "", errors.New("transaction canceled")
-	}
-
-	// broadcast to a CometBFT node
+	// broadcast to a CometBFT?
 	res, err := clientCtx.BroadcastTx(txBytes)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
-
+	// txClient := tx.NewServiceClient(s.Client)
 	if res.Code != 0 {
 		return "", fmt.Errorf("transaction failed with code %d", res.Code)
 	}
