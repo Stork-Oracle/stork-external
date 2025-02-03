@@ -95,6 +95,10 @@ type GetTemporalNumericValueResponse struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
 }
 
+type QueryAccountInfoRequest struct {
+	Address string `json:"address"`
+}
+
 // The data structure for an update to a Stork feed. This is used in the `UpdateTemporalNumericValuesEvm` `ExecMsg" variant
 type UpdateData struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
@@ -246,10 +250,9 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	clientCtx := sdkclient.Context{
-		FromAddress: sdktypes.AccAddress(s.Key.PubKey().Address()),
-		ChainID:     s.ChainID,
-		FromName:    keyName,
-		// NodeURI:           s.Client.Remote(),
+		FromAddress:       sdktypes.AccAddress(s.Key.PubKey().Address()),
+		ChainID:           s.ChainID,
+		FromName:          keyName,
 		Client:            s.Client,
 		TxConfig:          txConfig,
 		AccountRetriever:  authtypes.AccountRetriever{},
@@ -261,37 +264,44 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 
 	gasPrice := fmt.Sprintf("%.3f%s", s.GasPrice, s.Denom)
 
-	// Query account info using RPC
-	// result, err := s.Client.ABCIQuery(
-	// 	context.Background(),
-	// 	"/cosmos.auth.v1beta1.Query/Account",
-	// 	[]byte(fmt.Sprintf(`{"address":"%s"}`, senderBech32)),
-	// )
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to query account: %w", err)
-	// }
+	accMsg := &authtypes.QueryAccountRequest{
+		Address: sdktypes.AccAddress(s.Key.PubKey().Address()).String(),
+	}
+	rawAccMsg, err := marshaler.Marshal(accMsg)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal account message: %w", err)
+	}
 
-	// if result.Response.Value == nil {
-	// 	return "", fmt.Errorf("no account data returned for address %s", senderBech32)
-	// }
+	result, err := s.Client.ABCIQuery(
+		context.Background(),
+		"/cosmos.auth.v1beta1.Query/Account",
+		rawAccMsg,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to query account: %w", err)
+	}
 
-	// var resp authtypes.QueryAccountResponse
-	// if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
-	// 	return "", fmt.Errorf("failed to unmarshal account: %w", err)
-	// }
+	if result.Response.Value == nil {
+		return "", fmt.Errorf("no account data returned for address %s", senderBech32)
+	}
 
-	// if resp.Account == nil {
-	// 	return "", fmt.Errorf("no account found for address %s", senderBech32)
-	// }
+	var resp authtypes.QueryAccountResponse
+	if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+		return "", fmt.Errorf("failed to unmarshal account: %w", err)
+	}
 
-	// var acc sdktypes.AccountI
-	// if err := interfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
-	// 	return "", fmt.Errorf("failed to unpack account: %w", err)
-	// }
+	if resp.Account == nil {
+		return "", fmt.Errorf("no account found for address %s", senderBech32)
+	}
 
-	// if acc == nil {
-	// 	return "", fmt.Errorf("failed to decode account for address %s", senderBech32)
-	// }
+	var acc sdktypes.AccountI
+	if err := interfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
+		return "", fmt.Errorf("failed to unpack account: %w", err)
+	}
+
+	if acc == nil {
+		return "", fmt.Errorf("failed to decode account for address %s", senderBech32)
+	}
 
 	// Use the account number and sequence
 	txf := sdkclienttx.Factory{}.
@@ -301,9 +311,11 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
 		WithTxConfig(clientCtx.TxConfig).
 		WithAccountRetriever(clientCtx.AccountRetriever).
-		WithKeybase(clientCtx.Keyring)
-		// WithAccountNumber(acc.GetAccountNumber()).
-		// WithSequence(acc.GetSequence())
+		WithKeybase(kr).
+		WithAccountNumber(acc.GetAccountNumber()).
+		WithSequence(acc.GetSequence()).
+		WithSimulateAndExecute(true).
+		WithFromName(keyName)
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
 		_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
@@ -311,21 +323,16 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 			return "", fmt.Errorf("failed to calculate gas: %w", err)
 		}
 		txf = txf.WithGas(adjusted)
+	} else {
+		fmt.Println("SimulateAndExecute is false")
 	}
 
-	txBuilder := txConfig.NewTxBuilder()
-	txBuilder.SetMsgs(msg)
-	txBuilder.SetFeeAmount(sdktypes.NewCoins(sdktypes.NewCoin(s.Denom, cosmossdk_io_math.NewInt(int64(txf.Gas())))))
-	txBuilder.SetGasLimit(1000000)
-	txBuilder.SetMemo("")
-	txBuilder.SetTimeoutHeight(0)
+	tx, err := txf.BuildUnsignedTx(msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
+	}
 
-	// tx, err := txf.BuildUnsignedTx(msg)
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
-	// }
-
-	if err = sdkclienttx.Sign(clientCtx.CmdContext, txf, clientCtx.FromName, txBuilder, true); err != nil {
+	if err = sdkclienttx.Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
@@ -334,28 +341,21 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		return "", fmt.Errorf("failed to encode transaction: tx json encoder is nil")
 	}
 
-	txBytes, err := encoder(txBuilder.GetTx())
+	txBytes, err := encoder(tx.GetTx())
 	if err != nil {
 		return "", fmt.Errorf("failed to encode transaction: %w", err)
 	}
 
 	// broadcast to a CometBFT?
-	// res, err := clientCtx.BroadcastTx(txBytes)
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to broadcast transaction: %w", err)
-	// }
-	// // txClient := tx.NewServiceClient(s.Client)
-	// if res.Code != 0 {
-	// 	return "", fmt.Errorf("transaction failed %s", res)
-	// }
-
-	res, err := s.Client.BroadcastTxSync(context.Background(), txBytes)
+	res, err := clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
-	return "", fmt.Errorf("res: %v", res)
+	if res.Code != 0 {
+		return "", fmt.Errorf("transaction failed %s", res)
+	}
 
-	return hex.EncodeToString(res.Hash), nil
+	return res.TxHash, nil
 }
 
 func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error) {
@@ -393,6 +393,7 @@ func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(id [32]i
 }
 
 func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
+	fmt.Println("updateData: ", updateData[0].TemporalNumericValue.TimestampNs)
 	rawExecData, err := json.Marshal(map[string]any{"update_temporal_numeric_values_evm": &ExecMsg_UpdateTemporalNumericValuesEvm{UpdateData: updateData}})
 	if err != nil {
 		return "", err

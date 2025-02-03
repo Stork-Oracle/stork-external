@@ -100,7 +100,7 @@ func (sci *CosmwasmContractInteracter) aggregatedSignedPriceToUpdateData(price A
 	if err != nil {
 		return contract.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
-	timestampNs := uint64(signedPrice.TimestampedSignature.Timestamp)
+	timestampNs := strconv.FormatUint(uint64(signedPrice.TimestampedSignature.Timestamp), 10)
 	quantizedValue := string(signedPrice.QuantizedPrice)
 	temporalNumericValue := contract.TemporalNumericValue{
 		QuantizedValue: contract.Int128(quantizedValue),
