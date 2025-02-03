@@ -36,12 +36,12 @@ func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAd
 }
 
 func (r *DataProviderRunner) Run() {
-	dataSources, err := sources.BuildDataSources(r.config.Sources)
+	dataSources, valueIds, err := sources.BuildDataSources(r.config.Sources)
 	if err != nil {
 		panic("unable to build data sources: " + err.Error())
 	}
 
-	transformations, err := transformations.BuildTransformations(r.config.Transformations)
+	transformations, err := transformations.BuildTransformations(r.config.Transformations, valueIds)
 	if err != nil {
 		panic("unable to build transformations: " + err.Error())
 	}

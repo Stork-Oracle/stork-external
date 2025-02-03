@@ -3,6 +3,7 @@ package transformations
 import (
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -310,7 +311,7 @@ func (o *OrderedTransformation) String() string {
 	return fmt.Sprintf("%s: %s", o.Id, o.Transformation.String())
 }
 
-func BuildTransformations(transformations []types.DataProviderTransformationConfig) ([]*OrderedTransformation, error) {
+func BuildTransformations(transformations []types.DataProviderTransformationConfig, sourceIds []types.ValueId) ([]OrderedTransformation, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> price id
@@ -341,7 +342,17 @@ func BuildTransformations(transformations []types.DataProviderTransformationConf
 		for _, dep := range deps {
 			if strings.HasPrefix(dep, "t.") {
 				dep = dep[2:]
+				if _, ok := transformationIdToNode[types.ValueId(dep)]; !ok {
+					return nil, fmt.Errorf("no such transformation: %s", dep)
+				}
 				g.SetEdge(g.NewEdge(transformationIdToNode[types.ValueId(dep)], transformationIdToNode[transformation.Id]))
+			} else if strings.HasPrefix(dep, "s.") {
+				dep = dep[2:]
+				if !slices.Contains(sourceIds, types.ValueId(dep)) {
+					return nil, fmt.Errorf("no such source: %s", dep)
+				}
+			} else {
+				return nil, fmt.Errorf("unknown dependency: %s", dep)
 			}
 		}
 	}
@@ -351,9 +362,9 @@ func BuildTransformations(transformations []types.DataProviderTransformationConf
 		return nil, fmt.Errorf("could not linearize price id graph - there may be circular dependencies: %v", err)
 	}
 
-	transformationsInOrder := make([]*OrderedTransformation, len(nodes))
+	transformationsInOrder := make([]OrderedTransformation, len(nodes))
 	for i, node := range nodes {
-		transformationsInOrder[i] = &OrderedTransformation{
+		transformationsInOrder[i] = OrderedTransformation{
 			Id:             nodeToTransformationId[node],
 			Transformation: parsedTransformations[nodeToTransformationId[node]],
 		}
