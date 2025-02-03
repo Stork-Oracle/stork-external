@@ -6,19 +6,11 @@ This contract can be used as an SDK with the `library` feature, and is available
 
 ### Getting started
 
-<<<<<<< HEAD
-As there is no core cosmwasm chain, but rather a multitude of chains built on top of cosmwasm, the specifics of development will vary depending on the chain.
-
-For specific chain development, please refer to the chain's documentation.
-
-For general purpose development and testing, we recommend using the Osmosis testnet, though the contract is compatible with any cosmwasm chain.
-=======
 As there is no core CosmWasm chain, but rather a multitude of chains built on top of CosmWasm, the specifics of development will vary depending on the chain.
 
 For specific chain development, please refer to the chain's documentation.
 
 For general purpose development and testing, we recommend using the Osmosis testnet, though the contract is compatible with any CosmWasm chain.
->>>>>>> cosmwasm-integration
 
 ### Development
 
