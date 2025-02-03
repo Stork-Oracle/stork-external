@@ -113,8 +113,38 @@ go run ./cmd/chain_pusher/main.go sui \
 
 ### Sui Development Setup
 At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
-## Deployment
 
+## CosmWasm Chain Setup
+
+### Wallet Setup
+Create a `.key` file containing only your private key mnemonic.
+
+### Running the CosmWasm Pusher
+For full explanation of the flags, run:
+```bash
+go run . cosmwasm --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/chain_pusher/main.go cosmwasm \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -r <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -k <mnemonic-file> \
+    -g <gas-price> \
+    -j <gas-adjustment> \
+    -d <denom> \
+    -i <chain-id> \
+    -p <chain-prefix>
+```
+
+### CosmWasm Development Setup
+At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/cosmwasm/stork_cosmwasm_contract.go).
+
+## Deployment
 ### Running on EC2
 The pusher runs on a per chain basis. This example assumes that the log driver is AWS Cloudwatch.
 
