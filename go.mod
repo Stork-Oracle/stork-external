@@ -5,10 +5,13 @@ go 1.23.1
 toolchain go1.23.5
 
 require (
+	cosmossdk.io/math v1.5.0
 	github.com/CosmWasm/wasmd v0.54.0
 	github.com/NethermindEth/juno v0.11.7
+	github.com/cometbft/cometbft v0.38.15
 	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/gnark-crypto v0.13.0
+	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/fardream/go-bcs v0.7.0
@@ -22,7 +25,6 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/time v0.5.0
-	google.golang.org/grpc v1.70.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -33,7 +35,6 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
-	cosmossdk.io/math v1.5.0 // indirect
 	cosmossdk.io/store v1.1.1 // indirect
 	cosmossdk.io/x/tx v0.13.7 // indirect
 	cosmossdk.io/x/upgrade v0.1.4 // indirect
@@ -66,14 +67,12 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.15 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk v0.50.11 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
@@ -209,6 +208,7 @@ require (
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250127172529-29210b9bc287 // indirect
+	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
