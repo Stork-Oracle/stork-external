@@ -201,6 +201,9 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if result.Response.Code != 0 {
+		return nil, fmt.Errorf("query failed with code %d", result.Response.Code)
+	}
 
 	// Parse the response
 	var resp wasmtypes.QuerySmartContractStateResponse
@@ -317,15 +320,11 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		WithSimulateAndExecute(true).
 		WithFromName(keyName)
 
-	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
-		if err != nil {
-			return "", fmt.Errorf("failed to calculate gas: %w", err)
-		}
-		txf = txf.WithGas(adjusted)
-	} else {
-		fmt.Println("SimulateAndExecute is false")
+	_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to calculate gas: %w", err)
 	}
+	txf = txf.WithGas(adjusted)
 
 	tx, err := txf.BuildUnsignedTx(msg)
 	if err != nil {
@@ -387,13 +386,12 @@ func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(id [32]i
 	var response GetTemporalNumericValueResponse
 	err = json.Unmarshal(rawResponseData, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 	return &response, nil
 }
 
 func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
-	fmt.Println("updateData: ", updateData[0].TemporalNumericValue.TimestampNs)
 	rawExecData, err := json.Marshal(map[string]any{"update_temporal_numeric_values_evm": &ExecMsg_UpdateTemporalNumericValuesEvm{UpdateData: updateData}})
 	if err != nil {
 		return "", err

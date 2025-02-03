@@ -27,7 +27,6 @@ func NewCosmwasmContractInteracter(chainGrpcUrl, contractAddress, mnemonicFile s
 		return nil, err
 	}
 	mnemonicString := strings.TrimSpace(string(mnemonic))
-	logger.Info().Msg("Creating cosmwasm contract interacter")
 	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		return nil, err
@@ -46,15 +45,13 @@ func (sci *CosmwasmContractInteracter) ListenContractEvents(ch chan map[Internal
 func (sci *CosmwasmContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
-		//convert [32]byte to [32]int
-		// Convert [32]byte to [32]int using copy and type conversion
 		var encodeAssetIdInt [32]int
 		for i, b := range encodedAssetId {
 			encodeAssetIdInt[i] = int(b)
 		}
 		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIdInt)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		quantizedValueBigInt := new(big.Int)
 		quantizedValueBigInt, ok := quantizedValueBigInt.SetString(string(response.TemporalNumericValue.QuantizedValue), 10)
@@ -70,6 +67,7 @@ func (sci *CosmwasmContractInteracter) PullValues(encodedAssetIds []InternalEnco
 			QuantizedValue: quantizedValueBigInt,
 		}
 	}
+	sci.logger.Debug().Msgf("Pulled %d values from contract", len(polledVals))
 	return polledVals, nil
 }
 
