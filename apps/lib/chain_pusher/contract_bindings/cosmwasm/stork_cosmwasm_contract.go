@@ -33,16 +33,9 @@ type Uint64 string
 
 type Int128 string
 
-// type Coin struct {
-// 	Amount Uint128 `json:"amount"`
-// 	Denom  string  `json:"denom"`
-// }
-
 type QueryMsg struct {
 	GetLatestCanonicalTemporalNumericValueUnchecked *QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked `json:"get_latest_canonical_temporal_numeric_value_unchecked,omitempty"`
 	GetSingleUpdateFee                              *QueryMsg_GetSingleUpdateFee                              `json:"get_single_update_fee,omitempty"`
-	GetStorkEvmPublicKey                            *QueryMsg_GetStorkEvmPublicKey                            `json:"get_stork_evm_public_key,omitempty"`
-	GetOwner                                        *QueryMsg_GetOwner                                        `json:"get_owner,omitempty"`
 }
 
 type Coin struct {
@@ -64,16 +57,6 @@ type GetSingleUpdateFeeResponse struct {
 	Fee Coin `json:"fee"`
 }
 
-// Response for the `get_stork_evm_public_key` query containing the EVM public key set in the Stork contract. This is typically the Stork Aggregator's public key
-type GetStorkEvmPublicKeyResponse struct {
-	StorkEvmPublicKey [20]int `json:"stork_evm_public_key"`
-}
-
-// Response for the `get_owner` query containing the address owner of the Stork contract.
-type GetOwnerResponse struct {
-	Owner Addr `json:"owner"`
-}
-
 // A struct representing a timestamped value.
 type TemporalNumericValue struct {
 	// The quantized value.
@@ -84,9 +67,6 @@ type TemporalNumericValue struct {
 
 type ExecMsg struct {
 	UpdateTemporalNumericValuesEvm *ExecMsg_UpdateTemporalNumericValuesEvm `json:"update_temporal_numeric_values_evm,omitempty"`
-	SetSingleUpdateFee             *ExecMsg_SetSingleUpdateFee             `json:"set_single_update_fee,omitempty"`
-	SetStorkEvmPublicKey           *ExecMsg_SetStorkEvmPublicKey           `json:"set_stork_evm_public_key,omitempty"`
-	SetOwner                       *ExecMsg_SetOwner                       `json:"set_owner,omitempty"`
 }
 
 // Response for the `get_temporal_numeric_value` query containing the [`TemporalNumericValue`](./temporal_numeric_value.rs) for a given asset id.
@@ -115,24 +95,8 @@ type QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked struct {
 
 type QueryMsg_GetSingleUpdateFee struct{}
 
-type QueryMsg_GetStorkEvmPublicKey struct{}
-
-type QueryMsg_GetOwner struct{}
-
 type ExecMsg_UpdateTemporalNumericValuesEvm struct {
 	UpdateData []UpdateData `json:"update_data"`
-}
-
-type ExecMsg_SetSingleUpdateFee struct {
-	Fee Coin `json:"fee"`
-}
-
-type ExecMsg_SetStorkEvmPublicKey struct {
-	StorkEvmPublicKey [20]int `json:"stork_evm_public_key"`
-}
-
-type ExecMsg_SetOwner struct {
-	Owner Addr `json:"owner"`
 }
 
 type StorkContract struct {
