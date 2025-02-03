@@ -146,6 +146,9 @@ type StorkContract struct {
 	Denom           string
 	ChainID         string
 	ChainPrefix     string
+	clientCtx       sdkclient.Context
+	txf             sdkclienttx.Factory
+	marshaler       codec.Codec
 }
 
 func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*StorkContract, error) {
@@ -175,6 +178,57 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 	storkContract.Denom = denom
 	storkContract.ChainID = chainID
 	storkContract.ChainPrefix = chainPrefix
+
+	// set up execution context and factory
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	sdktypes.RegisterInterfaces(interfaceRegistry)
+	authtypes.RegisterInterfaces(interfaceRegistry)
+	cryptocodec.RegisterInterfaces(interfaceRegistry)
+	wasmtypes.RegisterInterfaces(interfaceRegistry)
+
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	storkContract.marshaler = marshaler
+	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+
+	senderAddr := sdktypes.AccAddress(storkContract.Key.PubKey().Address())
+
+	kr := keyring.NewInMemory(marshaler)
+	keyName := storkContract.Key.PubKey().Address().String()
+	err = kr.ImportPrivKeyHex(
+		keyName,
+		hex.EncodeToString(storkContract.Key.Key),
+		"secp256k1",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to import key: %w", err)
+	}
+
+	storkContract.clientCtx = sdkclient.Context{
+		FromAddress:       senderAddr,
+		ChainID:           storkContract.ChainID,
+		FromName:          keyName,
+		Client:            storkContract.Client,
+		TxConfig:          txConfig,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		InterfaceRegistry: interfaceRegistry,
+		BroadcastMode:     "sync",
+		Offline:           false,
+		Keyring:           kr,
+	}
+
+	gasPriceStr := fmt.Sprintf("%.3f%s", storkContract.GasPrice, storkContract.Denom)
+
+	storkContract.txf = sdkclienttx.Factory{}.
+		WithChainID(storkContract.ChainID).
+		WithGasPrices(gasPriceStr).
+		WithGasAdjustment(storkContract.GasAdjustment).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
+		WithTxConfig(storkContract.clientCtx.TxConfig).
+		WithAccountRetriever(storkContract.clientCtx.AccountRetriever).
+		WithKeybase(kr).
+		WithFromName(keyName).
+		WithSimulateAndExecute(true)
+
 	return storkContract, nil
 }
 
@@ -215,20 +269,9 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 }
 
 func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-
-	// Register base interfaces
-	sdktypes.RegisterInterfaces(interfaceRegistry)
-	authtypes.RegisterInterfaces(interfaceRegistry)
-	cryptocodec.RegisterInterfaces(interfaceRegistry)
-	wasmtypes.RegisterInterfaces(interfaceRegistry)
-
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
 	// Convert the address to bech32 with the correct prefix
-	senderAddr := sdktypes.AccAddress(s.Key.PubKey().Address())
-	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, senderAddr)
+	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
 	}
@@ -240,37 +283,10 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		Funds:    funds,
 	}
 
-	kr := keyring.NewInMemory(marshaler)
-
-	keyName := s.Key.PubKey().Address().String()
-	err = kr.ImportPrivKeyHex(
-		keyName,
-		hex.EncodeToString(s.Key.Key),
-		"secp256k1",
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to import key: %w", err)
-	}
-
-	clientCtx := sdkclient.Context{
-		FromAddress:       sdktypes.AccAddress(s.Key.PubKey().Address()),
-		ChainID:           s.ChainID,
-		FromName:          keyName,
-		Client:            s.Client,
-		TxConfig:          txConfig,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		InterfaceRegistry: interfaceRegistry,
-		BroadcastMode:     "sync",
-		Offline:           false,
-		Keyring:           kr,
-	}
-
-	gasPrice := fmt.Sprintf("%.3f%s", s.GasPrice, s.Denom)
-
 	accMsg := &authtypes.QueryAccountRequest{
 		Address: sdktypes.AccAddress(s.Key.PubKey().Address()).String(),
 	}
-	rawAccMsg, err := marshaler.Marshal(accMsg)
+	rawAccMsg, err := s.marshaler.Marshal(accMsg)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal account message: %w", err)
 	}
@@ -289,7 +305,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	var resp authtypes.QueryAccountResponse
-	if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+	if err := s.marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
 		return "", fmt.Errorf("failed to unmarshal account: %w", err)
 	}
 
@@ -298,7 +314,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	var acc sdktypes.AccountI
-	if err := interfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
+	if err := s.clientCtx.InterfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
 		return "", fmt.Errorf("failed to unpack account: %w", err)
 	}
 
@@ -307,20 +323,11 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	// Use the account number and sequence
-	txf := sdkclienttx.Factory{}.
-		WithChainID(s.ChainID).
-		WithGasPrices(gasPrice).
-		WithGasAdjustment(s.GasAdjustment).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
-		WithTxConfig(clientCtx.TxConfig).
-		WithAccountRetriever(clientCtx.AccountRetriever).
-		WithKeybase(kr).
+	txf := s.txf.
 		WithAccountNumber(acc.GetAccountNumber()).
-		WithSequence(acc.GetSequence()).
-		WithSimulateAndExecute(true).
-		WithFromName(keyName)
+		WithSequence(acc.GetSequence())
 
-	_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
+	_, adjusted, err := sdkclienttx.CalculateGas(s.clientCtx, txf, msg)
 	if err != nil {
 		return "", fmt.Errorf("failed to calculate gas: %w", err)
 	}
@@ -331,11 +338,11 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
-	if err = sdkclienttx.Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
+	if err = sdkclienttx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true); err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	encoder := clientCtx.TxConfig.TxEncoder()
+	encoder := s.clientCtx.TxConfig.TxEncoder()
 	if encoder == nil {
 		return "", fmt.Errorf("failed to encode transaction: tx json encoder is nil")
 	}
@@ -346,7 +353,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	// broadcast to a CometBFT?
-	res, err := clientCtx.BroadcastTx(txBytes)
+	res, err := s.clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
