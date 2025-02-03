@@ -2,8 +2,10 @@ package data_provider
 
 import (
 	"context"
+	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/transformations"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 )
 
@@ -17,6 +19,7 @@ type DataProviderRunner struct {
 	config    types.DataProviderConfig
 	writer    Writer
 	updatesCh chan types.DataSourceUpdateMap
+	outputCh  chan types.DataSourceUpdateMap
 }
 
 func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAddress string) *DataProviderRunner {
@@ -27,6 +30,7 @@ func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAd
 	return &DataProviderRunner{
 		config:    dataProviderConfig,
 		updatesCh: make(chan types.DataSourceUpdateMap, 4096),
+		outputCh:  make(chan types.DataSourceUpdateMap, 4096),
 		writer:    writer,
 	}
 }
@@ -37,6 +41,11 @@ func (r *DataProviderRunner) Run() {
 		panic("unable to build data sources: " + err.Error())
 	}
 
+	transformations, err := transformations.BuildTransformations(r.config.Transformations)
+	if err != nil {
+		panic("unable to build transformations: " + err.Error())
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -44,5 +53,39 @@ func (r *DataProviderRunner) Run() {
 		go dataSource.RunDataSource(ctx, r.updatesCh)
 	}
 
-	r.writer.Run(r.updatesCh)
+	currentVals := make(map[string]types.DataSourceValueUpdate, len(dataSources)+len(transformations))
+	resolveVarsTicker := time.NewTicker(1 * time.Millisecond)
+
+	go func() {
+		for {
+			select {
+			case update := <-r.updatesCh:
+				r.outputCh <- update
+				for valueId, update := range update {
+					currentVals["s."+string(valueId)] = update
+				}
+			case <-resolveVarsTicker.C:
+				updateMap := make(types.DataSourceUpdateMap, len(currentVals))
+				for _, transformation := range transformations {
+					computed := types.DataSourceValueUpdate{
+						ValueId:      transformation.Id,
+						DataSourceId: types.DataSourceId(transformation.Id),
+						Timestamp:    time.Now(),
+						Value:        transformation.Transformation.Eval(currentVals),
+					}
+
+					// Only add to updateMap if value has changed
+					if existing, ok := currentVals["t."+string(transformation.Id)]; !ok || existing.Value != computed.Value {
+						updateMap[transformation.Id] = computed
+					}
+					currentVals["t."+string(transformation.Id)] = computed
+				}
+				if len(updateMap) > 0 {
+					r.outputCh <- updateMap
+				}
+			}
+		}
+	}()
+
+	r.writer.Run(r.outputCh)
 }

@@ -10,12 +10,18 @@ type (
 	ValueId      string
 
 	DataProviderConfig struct {
-		Sources []DataProviderSourceConfig `json:"sources,omitempty"`
+		Sources         []DataProviderSourceConfig         `json:"sources,omitempty"`
+		Transformations []DataProviderTransformationConfig `json:"transformations,omitempty"`
 	}
 
 	DataProviderSourceConfig struct {
 		Id     ValueId `json:"id"`
 		Config any     `json:"config"`
+	}
+
+	DataProviderTransformationConfig struct {
+		Id      ValueId `json:"id"`
+		Formula string  `json:"formula"`
 	}
 
 	DataSource interface {
