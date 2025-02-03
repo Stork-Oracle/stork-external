@@ -1,6 +1,9 @@
 //! Provides the [`TemporalNumericValue`] struct.
 
-use sylvia::{cw_schema::cw_serde, cw_std::{Int128, Uint64}};
+use sylvia::{
+    cw_schema::cw_serde,
+    cw_std::{Int128, Uint64},
+};
 
 /// The type for encoded asset ids. This is an alias for a 32 byte array.
 pub type EncodedAssetId = [u8; 32];

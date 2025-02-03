@@ -2,13 +2,13 @@
 //! The relevant definitions, such as message structs and enums, are present in the `sv` module.
 use crate::{
     error::StorkError,
+    events::{new_stork_init_event, new_temporal_numeric_value_update_event},
     responses::{
         GetOwnerResponse, GetSingleUpdateFeeResponse, GetStorkEvmPublicKeyResponse,
         GetTemporalNumericValueResponse,
     },
     temporal_numeric_value::{EncodedAssetId, TemporalNumericValue},
     verify::{verify_stork_evm_signature, EvmPubkey},
-    events::{new_stork_init_event, new_temporal_numeric_value_update_event},
 };
 use cw_storage_plus::{Item, Map};
 #[cfg(not(feature = "library"))]
@@ -121,7 +121,9 @@ where
                     return Err(StorkError::InvalidSignature(e.to_string()));
                 }
                 Ok(false) => {
-                    return Err(StorkError::InvalidSignature("Invalid signature".to_string()));
+                    return Err(StorkError::InvalidSignature(
+                        "Invalid signature".to_string(),
+                    ));
                 }
             }
         }
