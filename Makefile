@@ -21,7 +21,7 @@ install-stork-generate:
 	@echo "Installing stork-generate..."
 	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-generate ./apps/cmd/generate"
 	@go build -o $(shell go env GOPATH)/bin/stork-generate ./apps/cmd/generate
-	@go run ./apps/cmd/animate/main.go
+	@./apps/scripts/animate.sh
 	@echo "Successfully installed stork-generate. Run 'stork-generate help' to get started."
 
 ## Uninstall the stork-generate binary
