@@ -54,43 +54,45 @@ func (r *DataProviderRunner) Run() {
 		go dataSource.RunDataSource(ctx, r.updatesCh)
 	}
 
+	go r.processUpdates(dataSources, transformations)
+
+	r.writer.Run(r.outputCh)
+}
+
+func (r *DataProviderRunner) processUpdates(dataSources []types.DataSource, transformations []transformations.OrderedTransformation) {
 	currentVals := make(map[string]types.DataSourceValueUpdate, len(dataSources)+len(transformations))
 	resolveVarsTicker := time.NewTicker(100 * time.Nanosecond)
 
-	go func() {
-		for {
-			select {
-			case update := <-r.updatesCh:
-				r.outputCh <- update
-				for valueId, update := range update {
-					currentVals["s."+string(valueId)] = update
+	for {
+		select {
+		case update := <-r.updatesCh:
+			r.outputCh <- update
+			for valueId, update := range update {
+				currentVals["s."+string(valueId)] = update
+			}
+		case <-resolveVarsTicker.C:
+			updateMap := make(types.DataSourceUpdateMap, len(currentVals))
+			for _, transformation := range transformations {
+				computed := types.DataSourceValueUpdate{
+					ValueId:      transformation.Id,
+					DataSourceId: types.DataSourceId(transformation.Id),
+					Timestamp:    time.Now(),
+					Value:        transformation.Transformation.Eval(currentVals),
 				}
-			case <-resolveVarsTicker.C:
-				updateMap := make(types.DataSourceUpdateMap, len(currentVals))
-				for _, transformation := range transformations {
-					computed := types.DataSourceValueUpdate{
-						ValueId:      transformation.Id,
-						DataSourceId: types.DataSourceId(transformation.Id),
-						Timestamp:    time.Now(),
-						Value:        transformation.Transformation.Eval(currentVals),
-					}
 
-					if math.IsNaN(computed.Value) {
-						continue
-					}
+				if math.IsNaN(computed.Value) {
+					continue
+				}
 
-					// Only add to updateMap if value has changed
-					if existing, ok := currentVals["t."+string(transformation.Id)]; !ok || existing.Value != computed.Value {
-						updateMap[transformation.Id] = computed
-					}
-					currentVals["t."+string(transformation.Id)] = computed
+				// Only add to updateMap if value has changed
+				if existing, ok := currentVals["t."+string(transformation.Id)]; !ok || existing.Value != computed.Value {
+					updateMap[transformation.Id] = computed
 				}
-				if len(updateMap) > 0 {
-					r.outputCh <- updateMap
-				}
+				currentVals["t."+string(transformation.Id)] = computed
+			}
+			if len(updateMap) > 0 {
+				r.outputCh <- updateMap
 			}
 		}
-	}()
-
-	r.writer.Run(r.outputCh)
+	}
 }
