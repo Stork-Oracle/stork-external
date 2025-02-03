@@ -2,26 +2,27 @@ package contract_bindings_cosmwasm
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"strings"
 
 	cosmossdk_io_math "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	http "github.com/cometbft/cometbft/rpc/client/http"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	sdkclienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	keyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	grpc "google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Types
@@ -132,7 +133,7 @@ type ExecMsg_SetOwner struct {
 }
 
 type StorkContract struct {
-	Client          *grpc.ClientConn
+	Client          rpcclient.Client
 	ContractAddress string
 	Key             secp256k1.PrivKey
 	SingleUpdateFee Coin
@@ -145,25 +146,10 @@ type StorkContract struct {
 
 func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*StorkContract, error) {
 	config := sdktypes.GetConfig()
-	config.SetBech32PrefixForAccount(chainPrefix, "cosmos")
+	config.SetBech32PrefixForAccount(chainPrefix, chainPrefix+"pub")
 	config.Seal()
-	cleanUrl := rpcUrl
-	if strings.HasPrefix(cleanUrl, "https://") {
-		cleanUrl = cleanUrl[len("https://"):]
-	} else if strings.HasPrefix(cleanUrl, "http://") {
-		cleanUrl = cleanUrl[len("http://"):]
-	}
 
-	// Add the default gRPC port if not specified
-	if !strings.Contains(cleanUrl, ":") {
-		cleanUrl = cleanUrl + ":9090"
-	}
-
-	grpcConn, err := grpc.Dial(
-		cleanUrl,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
-	)
+	rpcClient, err := http.New(rpcUrl, "/websocket")
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +160,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 	}
 	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
 
-	storkContract := &StorkContract{Client: grpcConn, ContractAddress: contractAddress, Key: privKey}
+	storkContract := &StorkContract{Client: rpcClient, ContractAddress: contractAddress, Key: privKey}
 	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
 	if err != nil {
 		return nil, err
@@ -189,60 +175,135 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 }
 
 func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
-	queryClient := wasmtypes.NewQueryClient(s.Client)
-	in := &wasmtypes.QuerySmartContractStateRequest{
+	query := &wasmtypes.QuerySmartContractStateRequest{
 		Address:   s.ContractAddress,
 		QueryData: rawQueryData,
 	}
-	out, err := queryClient.SmartContractState(context.Background(), in)
+
+	// Create the protobuf-encoded query
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+
+	bz, err := marshaler.Marshal(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query: %w", err)
+	}
+
+	result, err := s.Client.ABCIQuery(
+		context.Background(),
+		"/cosmwasm.wasm.v1.Query/SmartContractState",
+		bz,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return out.Data, nil
+	// Parse the response
+	var resp wasmtypes.QuerySmartContractStateResponse
+	if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return resp.Data, nil
 }
 
 func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+
+	// Register base interfaces
+	sdktypes.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
 	cryptocodec.RegisterInterfaces(interfaceRegistry)
 	wasmtypes.RegisterInterfaces(interfaceRegistry)
+
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
+	// Convert the address to bech32 with the correct prefix
+	senderAddr := sdktypes.AccAddress(s.Key.PubKey().Address())
+	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, senderAddr)
+	if err != nil {
+		return "", fmt.Errorf("failed to bech32ify address: %w", err)
+	}
+
 	msg := &wasmtypes.MsgExecuteContract{
-		Sender:   s.Key.PubKey().Address().String(),
+		Sender:   senderBech32,
 		Contract: s.ContractAddress,
 		Msg:      rawExecData,
 		Funds:    funds,
 	}
 
+	kr := keyring.NewInMemory(marshaler)
+
+	keyName := s.Key.PubKey().Address().String()
+	err = kr.ImportPrivKeyHex(
+		keyName,
+		hex.EncodeToString(s.Key.Key),
+		"secp256k1",
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to import key: %w", err)
+	}
+
 	clientCtx := sdkclient.Context{
-		FromAddress:       sdktypes.AccAddress(s.Key.PubKey().Address()),
-		ChainID:           s.ChainID,
-		GRPCClient:        s.Client,
+		FromAddress: sdktypes.AccAddress(s.Key.PubKey().Address()),
+		ChainID:     s.ChainID,
+		FromName:    keyName,
+		// NodeURI:           s.Client.Remote(),
+		Client:            s.Client,
 		TxConfig:          txConfig,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		NodeURI:           s.Client.Target(),
 		InterfaceRegistry: interfaceRegistry,
 		BroadcastMode:     "sync",
 		Offline:           false,
+		Keyring:           kr,
 	}
 
 	gasPrice := fmt.Sprintf("%.3f%s", s.GasPrice, s.Denom)
 
-	factory := sdkclienttx.Factory{}.
+	// Query account info using RPC
+	// result, err := s.Client.ABCIQuery(
+	// 	context.Background(),
+	// 	"/cosmos.auth.v1beta1.Query/Account",
+	// 	[]byte(fmt.Sprintf(`{"address":"%s"}`, senderBech32)),
+	// )
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to query account: %w", err)
+	// }
+
+	// if result.Response.Value == nil {
+	// 	return "", fmt.Errorf("no account data returned for address %s", senderBech32)
+	// }
+
+	// var resp authtypes.QueryAccountResponse
+	// if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+	// 	return "", fmt.Errorf("failed to unmarshal account: %w", err)
+	// }
+
+	// if resp.Account == nil {
+	// 	return "", fmt.Errorf("no account found for address %s", senderBech32)
+	// }
+
+	// var acc sdktypes.AccountI
+	// if err := interfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
+	// 	return "", fmt.Errorf("failed to unpack account: %w", err)
+	// }
+
+	// if acc == nil {
+	// 	return "", fmt.Errorf("failed to decode account for address %s", senderBech32)
+	// }
+
+	// Use the account number and sequence
+	txf := sdkclienttx.Factory{}.
 		WithChainID(s.ChainID).
 		WithGasPrices(gasPrice).
 		WithGasAdjustment(s.GasAdjustment).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
 		WithTxConfig(clientCtx.TxConfig).
-		WithAccountRetriever(clientCtx.AccountRetriever)
-
-	txf, err := factory.Prepare(clientCtx)
-	if err != nil {
-		return "", fmt.Errorf("failed to prepare transaction: %w", err)
-	}
+		WithAccountRetriever(clientCtx.AccountRetriever).
+		WithKeybase(clientCtx.Keyring)
+		// WithAccountNumber(acc.GetAccountNumber()).
+		// WithSequence(acc.GetSequence())
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
 		_, adjusted, err := sdkclienttx.CalculateGas(clientCtx, txf, msg)
@@ -252,32 +313,49 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		txf = txf.WithGas(adjusted)
 	}
 
-	tx, err := txf.BuildUnsignedTx(msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
+	txBuilder := txConfig.NewTxBuilder()
+	txBuilder.SetMsgs(msg)
+	txBuilder.SetFeeAmount(sdktypes.NewCoins(sdktypes.NewCoin(s.Denom, cosmossdk_io_math.NewInt(int64(txf.Gas())))))
+	txBuilder.SetGasLimit(1000000)
+	txBuilder.SetMemo("")
+	txBuilder.SetTimeoutHeight(0)
+
+	// tx, err := txf.BuildUnsignedTx(msg)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
+	// }
+
+	if err = sdkclienttx.Sign(clientCtx.CmdContext, txf, clientCtx.FromName, txBuilder, true); err != nil {
+		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	encoder := txConfig.TxJSONEncoder()
+	encoder := clientCtx.TxConfig.TxEncoder()
 	if encoder == nil {
 		return "", fmt.Errorf("failed to encode transaction: tx json encoder is nil")
 	}
 
-	txBytes, err := encoder(tx.GetTx())
+	txBytes, err := encoder(txBuilder.GetTx())
 	if err != nil {
 		return "", fmt.Errorf("failed to encode transaction: %w", err)
 	}
 
 	// broadcast to a CometBFT?
-	res, err := clientCtx.BroadcastTx(txBytes)
+	// res, err := clientCtx.BroadcastTx(txBytes)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to broadcast transaction: %w", err)
+	// }
+	// // txClient := tx.NewServiceClient(s.Client)
+	// if res.Code != 0 {
+	// 	return "", fmt.Errorf("transaction failed %s", res)
+	// }
+
+	res, err := s.Client.BroadcastTxSync(context.Background(), txBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
-	// txClient := tx.NewServiceClient(s.Client)
-	if res.Code != 0 {
-		return "", fmt.Errorf("transaction failed with code %d", res.Code)
-	}
+	return "", fmt.Errorf("res: %v", res)
 
-	return res.TxHash, nil
+	return hex.EncodeToString(res.Hash), nil
 }
 
 func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error) {
