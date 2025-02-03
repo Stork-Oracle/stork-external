@@ -12,6 +12,7 @@ import './tasks/interact';
 import './tasks/print-abi';
 import './tasks/deploy-zk';
 import './tasks/upgrade-zk';
+import './tasks/get-impl';
 
 import { vars } from "hardhat/config";
 
@@ -286,6 +287,11 @@ const config: HardhatUserConfig = {
       chainId: 841,
       hardfork: 'berlin',
     },
+    unichainSepolia: {
+      url: "https://rough-misty-frog.unichain-sepolia.quiknode.pro/ddb18152added7093553cbefdb422162f325ac7a",
+      accounts: [PRIVATE_KEY],
+      chainId: 1301,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -341,6 +347,7 @@ const config: HardhatUserConfig = {
       storyOdysseyTestnet: 'fake',
       tacTurin: 'fake',
       taraxaMainnet: 'fake',
+      unichainSepolia: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake'
@@ -608,6 +615,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://tara.to/api",
           browserURL: "https://tara.to"
+        }
+      },
+      {
+        network: "unichainSepolia",
+        chainId: 1301,
+        urls: {
+          apiURL: "https://api-sepolia.uniscan.xyz/api",
+          browserURL: "https://sepolia.uniscan.xyz/"
         }
       },
       {
