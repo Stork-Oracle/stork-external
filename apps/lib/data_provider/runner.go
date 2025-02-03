@@ -2,6 +2,7 @@ package data_provider
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
@@ -54,7 +55,7 @@ func (r *DataProviderRunner) Run() {
 	}
 
 	currentVals := make(map[string]types.DataSourceValueUpdate, len(dataSources)+len(transformations))
-	resolveVarsTicker := time.NewTicker(1 * time.Millisecond)
+	resolveVarsTicker := time.NewTicker(100 * time.Nanosecond)
 
 	go func() {
 		for {
@@ -72,6 +73,10 @@ func (r *DataProviderRunner) Run() {
 						DataSourceId: types.DataSourceId(transformation.Id),
 						Timestamp:    time.Now(),
 						Value:        transformation.Transformation.Eval(currentVals),
+					}
+
+					if math.IsNaN(computed.Value) {
+						continue
 					}
 
 					// Only add to updateMap if value has changed

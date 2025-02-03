@@ -170,7 +170,7 @@ func (v *Value) Eval(ctx map[string]types.DataSourceValueUpdate) float64 {
 	case v.Variable != nil:
 		value, ok := ctx[string(*v.Variable)]
 		if !ok {
-			panic("no such variable " + *v.Variable)
+			return math.NaN()
 		}
 		return value.Value
 	case v.Function != nil:
