@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const startupAnimationPath = "apps/lib/data_provider/configs/resources/frames"
+const startupAnimationPath = "apps/lib/generate/frames"
 
 func main() {
 	runAnimation()
