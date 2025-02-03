@@ -9,10 +9,9 @@ import (
 
 	cosmossdk_io_math "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	http "github.com/cometbft/cometbft/rpc/client/http"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	sdkclienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	sdkclient_tx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -137,17 +136,11 @@ type ExecMsg_SetOwner struct {
 }
 
 type StorkContract struct {
-	Client          rpcclient.Client
 	ContractAddress string
-	Key             secp256k1.PrivKey
-	SingleUpdateFee Coin
-	GasPrice        float64
-	GasAdjustment   float64
-	Denom           string
-	ChainID         string
 	ChainPrefix     string
+	singleUpdateFee Coin
 	clientCtx       sdkclient.Context
-	txf             sdkclienttx.Factory
+	txf             sdkclient_tx.Factory
 	marshaler       codec.Codec
 }
 
@@ -167,17 +160,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 	}
 	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
 
-	storkContract := &StorkContract{Client: rpcClient, ContractAddress: contractAddress, Key: privKey}
-	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
-	if err != nil {
-		return nil, err
-	}
-	storkContract.SingleUpdateFee = singleUpdateFee.Fee
-	storkContract.GasPrice = gasPrice
-	storkContract.GasAdjustment = gasAdjustment
-	storkContract.Denom = denom
-	storkContract.ChainID = chainID
-	storkContract.ChainPrefix = chainPrefix
+	storkContract := &StorkContract{ContractAddress: contractAddress, ChainPrefix: chainPrefix}
 
 	// set up execution context and factory
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -190,13 +173,13 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 	storkContract.marshaler = marshaler
 	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
-	senderAddr := sdktypes.AccAddress(storkContract.Key.PubKey().Address())
+	senderAddr := sdktypes.AccAddress(privKey.PubKey().Address())
 
 	kr := keyring.NewInMemory(marshaler)
-	keyName := storkContract.Key.PubKey().Address().String()
+	keyName := privKey.PubKey().Address().String()
 	err = kr.ImportPrivKeyHex(
 		keyName,
-		hex.EncodeToString(storkContract.Key.Key),
+		hex.EncodeToString(privKey.Key),
 		"secp256k1",
 	)
 	if err != nil {
@@ -205,9 +188,9 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 
 	storkContract.clientCtx = sdkclient.Context{
 		FromAddress:       senderAddr,
-		ChainID:           storkContract.ChainID,
+		ChainID:           chainID,
 		FromName:          keyName,
-		Client:            storkContract.Client,
+		Client:            rpcClient,
 		TxConfig:          txConfig,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		InterfaceRegistry: interfaceRegistry,
@@ -216,18 +199,24 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 		Keyring:           kr,
 	}
 
-	gasPriceStr := fmt.Sprintf("%.3f%s", storkContract.GasPrice, storkContract.Denom)
+	gasPriceStr := fmt.Sprintf("%.3f%s", gasPrice, denom)
 
-	storkContract.txf = sdkclienttx.Factory{}.
-		WithChainID(storkContract.ChainID).
+	storkContract.txf = sdkclient_tx.Factory{}.
+		WithChainID(chainID).
 		WithGasPrices(gasPriceStr).
-		WithGasAdjustment(storkContract.GasAdjustment).
+		WithGasAdjustment(gasAdjustment).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
 		WithTxConfig(storkContract.clientCtx.TxConfig).
 		WithAccountRetriever(storkContract.clientCtx.AccountRetriever).
 		WithKeybase(kr).
 		WithFromName(keyName).
 		WithSimulateAndExecute(true)
+
+	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
+	if err != nil {
+		return nil, err
+	}
+	storkContract.singleUpdateFee = singleUpdateFee.Fee
 
 	return storkContract, nil
 }
@@ -238,7 +227,6 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 		QueryData: rawQueryData,
 	}
 
-	// Create the protobuf-encoded query
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
@@ -247,7 +235,7 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to marshal query: %w", err)
 	}
 
-	result, err := s.Client.ABCIQuery(
+	result, err := s.clientCtx.Client.ABCIQuery(
 		context.Background(),
 		"/cosmwasm.wasm.v1.Query/SmartContractState",
 		bz,
@@ -259,7 +247,6 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 		return nil, fmt.Errorf("query failed with code %d", result.Response.Code)
 	}
 
-	// Parse the response
 	var resp wasmtypes.QuerySmartContractStateResponse
 	if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -270,7 +257,6 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 
 func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
 
-	// Convert the address to bech32 with the correct prefix
 	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
@@ -284,14 +270,14 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	accMsg := &authtypes.QueryAccountRequest{
-		Address: sdktypes.AccAddress(s.Key.PubKey().Address()).String(),
+		Address: s.clientCtx.FromAddress.String(),
 	}
 	rawAccMsg, err := s.marshaler.Marshal(accMsg)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal account message: %w", err)
 	}
 
-	result, err := s.Client.ABCIQuery(
+	result, err := s.clientCtx.Client.ABCIQuery(
 		context.Background(),
 		"/cosmos.auth.v1beta1.Query/Account",
 		rawAccMsg,
@@ -322,12 +308,11 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		return "", fmt.Errorf("failed to decode account for address %s", senderBech32)
 	}
 
-	// Use the account number and sequence
 	txf := s.txf.
 		WithAccountNumber(acc.GetAccountNumber()).
 		WithSequence(acc.GetSequence())
 
-	_, adjusted, err := sdkclienttx.CalculateGas(s.clientCtx, txf, msg)
+	_, adjusted, err := sdkclient_tx.CalculateGas(s.clientCtx, txf, msg)
 	if err != nil {
 		return "", fmt.Errorf("failed to calculate gas: %w", err)
 	}
@@ -338,7 +323,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
-	if err = sdkclienttx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true); err != nil {
+	if err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true); err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
@@ -403,7 +388,7 @@ func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) 
 	if err != nil {
 		return "", err
 	}
-	fee := s.SingleUpdateFee.toCosmosCoin()
+	fee := s.singleUpdateFee.toCosmosCoin()
 	fee.Amount = fee.Amount.MulRaw(int64(len(updateData)))
 	txHash, err := s.executeContract(rawExecData, []sdktypes.Coin{fee})
 	if err != nil {
