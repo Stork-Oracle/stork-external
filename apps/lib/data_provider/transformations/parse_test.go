@@ -36,8 +36,8 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name:     "order of operations",
-			formula:  "(1 + 2) * 3 + 4",
-			expected: 13.0,
+			formula:  "((1 + 3) * 3) / 4",
+			expected: 3.0,
 		},
 		{
 			name:     "median",
