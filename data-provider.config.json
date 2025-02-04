@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "id": "USDTUSD",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "1s",
+        "minValue": 1,
+        "maxValue": 1.001
+      }
+    },
+    {
+      "id": "BTCUSDT_BINANCE",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "1s",
+        "minValue": 99000,
+        "maxValue": 100000
+      }
+    },
+    {
+      "id": "BTCUSDT_BYBIT",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "1s",
+        "minValue": 99000,
+        "maxValue": 100000
+      }
+    }
+  ],
+  "transformations": [
+    {
+      "id": "BTCUSD_BINANCE",
+      "formula": "s.BTCUSDT_BINANCE * s.USDTUSD"
+    },
+    {
+      "id": "BTCUSD_BYBIT",
+      "formula": "s.BTCUSDT_BYBIT * s.USDTUSD"
+    },
+    {
+      "id": "BTCUSD",
+      "formula": "median(t.BTCUSD_BINANCE, t.BTCUSD_BYBIT)"
+    }
+  ]
+}
