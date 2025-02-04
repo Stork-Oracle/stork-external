@@ -13,6 +13,8 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
+// heavily borrowed from https://github.com/alecthomas/participle/blob/master/_examples/expr/main.go
+
 type evaluable interface {
 	Eval(ctx map[string]types.DataSourceValueUpdate) float64
 	getDependencies() []string
