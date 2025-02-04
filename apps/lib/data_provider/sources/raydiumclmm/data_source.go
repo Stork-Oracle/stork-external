@@ -21,8 +21,8 @@ type raydiumCLMMDataSource struct {
 	raydiumCLMMConfig RaydiumCLMMConfig
 	valueId           types.ValueId
 	updateFrequency   time.Duration
-	logger            zerolog.Logger
 	rpcClient         *rpc.Client
+	logger            zerolog.Logger
 }
 
 // https://github.com/raydium-io/raydium-sdk/blob/master/src/clmm/layout.ts#L34 RewardInfo
@@ -100,8 +100,8 @@ func newRaydiumCLMMDataSource(sourceConfig types.DataProviderSourceConfig) *rayd
 		raydiumCLMMConfig: raydiumCLMMConfig,
 		valueId:           sourceConfig.Id,
 		updateFrequency:   updateFrequency,
-		logger:            utils.DataSourceLogger(RaydiumCLMMDataSourceId),
 		rpcClient:         rpcClient,
+		logger:            utils.DataSourceLogger(RaydiumCLMMDataSourceId),
 	}
 }
 
