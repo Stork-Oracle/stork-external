@@ -195,23 +195,4 @@ func TestBuildTransformations(t *testing.T) {
 			}
 		})
 	}
-	// 	transformations, err := BuildTransformations([]types.DataProviderTransformationConfig{
-	// 	{
-	// 		Id:      "vtest1",
-	// 		Formula: "s.test1 + 2",
-	// 	},
-	// 	{
-	// 		Id:      "vtest2",
-	// 		Formula: "s.test2 + 2",
-	// 	},
-	// 	{
-	// 		Id:      "vtest3",
-	// 		Formula: "median(t.vtest1, t.vtest2)",
-	// 	},
-	// }, map[types.ValueId]interface{}{
-	// 	"test1": nil,
-	// 	"test2": nil,
-	// })
-	// require.NoError(t, err)
-	// require.Equal(t, 3, len(transformations))
 }
