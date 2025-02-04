@@ -2,8 +2,6 @@ package data_provider
 
 import (
 	"context"
-	"math"
-	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/transformations"
@@ -42,7 +40,7 @@ func (r *DataProviderRunner) Run() {
 		panic("unable to build data sources: " + err.Error())
 	}
 
-	transformations, err := transformations.BuildTransformations(r.config.Transformations, valueIds)
+	transformationGraph, err := transformations.BuildTransformationGraph(r.config.Transformations, valueIds)
 	if err != nil {
 		panic("unable to build transformations: " + err.Error())
 	}
@@ -54,45 +52,17 @@ func (r *DataProviderRunner) Run() {
 		go dataSource.RunDataSource(ctx, r.updatesCh)
 	}
 
-	go r.processUpdates(dataSources, transformations)
+	go r.processUpdates(transformationGraph)
 
 	r.writer.Run(r.outputCh)
 }
 
-func (r *DataProviderRunner) processUpdates(dataSources []types.DataSource, transformations []transformations.OrderedTransformation) {
-	currentVals := make(map[string]types.DataSourceValueUpdate, len(dataSources)+len(transformations))
-	resolveVarsTicker := time.NewTicker(100 * time.Nanosecond)
-
+func (r *DataProviderRunner) processUpdates(transformationGraph *transformations.TransformationGraph) {
 	for {
 		select {
-		case update := <-r.updatesCh:
-			r.outputCh <- update
-			for valueId, update := range update {
-				currentVals["s."+string(valueId)] = update
-			}
-		case <-resolveVarsTicker.C:
-			updateMap := make(types.DataSourceUpdateMap, len(currentVals))
-			for _, transformation := range transformations {
-				computed := types.DataSourceValueUpdate{
-					ValueId:      transformation.Id,
-					DataSourceId: types.DataSourceId(transformation.Id),
-					Timestamp:    time.Now(),
-					Value:        transformation.Transformation.Eval(currentVals),
-				}
-				currentVals["t."+string(transformation.Id)] = computed
-
-				if math.IsNaN(computed.Value) {
-					continue
-				}
-
-				// Only add to updateMap if value has changed
-				if existing, ok := currentVals["t."+string(transformation.Id)]; !ok || existing.Value != computed.Value {
-					updateMap[transformation.Id] = computed
-				}
-			}
-			if len(updateMap) > 0 {
-				r.outputCh <- updateMap
-			}
+		case sourceUpdates := <-r.updatesCh:
+			processedUpdates := transformationGraph.ProcessSourceUpdates(sourceUpdates)
+			r.outputCh <- processedUpdates
 		}
 	}
 }
