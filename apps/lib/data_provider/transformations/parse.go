@@ -304,15 +304,6 @@ func parse(formula string) (*Expression, error) {
 	return parser.ParseString("", formula)
 }
 
-//type OrderedTransformation struct {
-//	Id             types.ValueId
-//	Transformation *Expression
-//}
-//
-//func (o *OrderedTransformation) String() string {
-//	return fmt.Sprintf("%s: %s", o.Id, o.Transformation.String())
-//}
-
 const TransformationDataSourceId = types.DataSourceId("transformation")
 
 type TransformationGraph struct {
