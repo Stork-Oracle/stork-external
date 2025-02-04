@@ -10,7 +10,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
@@ -18,7 +17,7 @@ import (
 
 const (
 	dirMode      = 0o777
-	templatesDir = "apps/lib/data_provider/configs/resources/templates"
+	templatesDir = "apps/lib/generate/resources/templates"
 	sourceDir    = "apps/lib/data_provider/sources"
 	pathPrefix   = "// @path: "
 )
@@ -38,7 +37,7 @@ type templateFile struct {
 func generateDataProvider(cmd *cobra.Command, args []string) error {
 	dataProviderName := args[0]
 
-	mainLogger := utils.MainLogger()
+	mainLogger := MainLogger()
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
@@ -283,7 +282,7 @@ func pascalToCamel(pascalName string) string {
 func removeDataProvider(cmd *cobra.Command, args []string) error {
 	dataProviderName := args[0]
 
-	mainLogger := utils.MainLogger()
+	mainLogger := MainLogger()
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
