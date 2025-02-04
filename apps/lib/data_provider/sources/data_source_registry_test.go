@@ -25,7 +25,7 @@ func TestDuplicateValueId(t *testing.T) {
 	fakeDataSourceId := "fake_data_source_2"
 
 	RegisterDataSourceFactory(types.DataSourceId(fakeDataSourceId), &fakeDataSourceFactory{})
-	_, err := BuildDataSources([]types.DataProviderSourceConfig{
+	_, _, err := BuildDataSources([]types.DataProviderSourceConfig{
 		{
 			Id: "fake1",
 			Config: map[string]interface{}{
