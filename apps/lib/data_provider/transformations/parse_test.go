@@ -129,12 +129,7 @@ func TestBuildTransformations(t *testing.T) {
 		name            string
 		transformations []types.DataProviderTransformationConfig
 		knownSources    map[types.ValueId]interface{}
-		formula         string
-		expectedSize    int
-		expectedIndices []struct {
-			Index int
-			Id    types.ValueId
-		}
+		expectedOrder   []types.ValueId
 	}{
 		{
 			name: "simple addition",
@@ -147,13 +142,7 @@ func TestBuildTransformations(t *testing.T) {
 			knownSources: map[types.ValueId]interface{}{
 				"test1": nil,
 			},
-			expectedSize: 1,
-			expectedIndices: []struct {
-				Index int
-				Id    types.ValueId
-			}{
-				{Index: 0, Id: "vtest1"},
-			},
+			expectedOrder: []types.ValueId{"vtest1"},
 		},
 		{
 			name: "multiple transformations",
@@ -163,25 +152,14 @@ func TestBuildTransformations(t *testing.T) {
 					Formula: "s.test1 + 2",
 				},
 				{
-					Id:      "vtest2",
-					Formula: "s.test2 + 2",
-				},
-				{
 					Id:      "vtest3",
-					Formula: "median(t.vtest1, t.vtest2)",
+					Formula: "median(t.vtest1, 5)",
 				},
 			},
 			knownSources: map[types.ValueId]interface{}{
 				"test1": nil,
-				"test2": nil,
 			},
-			expectedSize: 3,
-			expectedIndices: []struct {
-				Index int
-				Id    types.ValueId
-			}{
-				{Index: 2, Id: "vtest3"},
-			},
+			expectedOrder: []types.ValueId{"vtest1", "vtest3"},
 		},
 	}
 
@@ -189,9 +167,9 @@ func TestBuildTransformations(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			transformations, err := BuildTransformations(test.transformations, test.knownSources)
 			require.NoError(t, err)
-			require.Equal(t, test.expectedSize, len(transformations))
-			for _, expected := range test.expectedIndices {
-				require.Equal(t, expected.Id, transformations[expected.Index].Id)
+			require.Equal(t, len(test.expectedOrder), len(transformations))
+			for i, expected := range test.expectedOrder {
+				require.Equal(t, expected, transformations[i].Id)
 			}
 		})
 	}
