@@ -3,7 +3,6 @@ package transformations
 import (
 	"fmt"
 	"math"
-	"slices"
 	"sort"
 	"strings"
 
@@ -311,7 +310,7 @@ func (o *OrderedTransformation) String() string {
 	return fmt.Sprintf("%s: %s", o.Id, o.Transformation.String())
 }
 
-func BuildTransformations(transformations []types.DataProviderTransformationConfig, sourceIds []types.ValueId) ([]OrderedTransformation, error) {
+func BuildTransformations(transformations []types.DataProviderTransformationConfig, sourceIds map[types.ValueId]interface{}) ([]OrderedTransformation, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> price id
@@ -348,7 +347,7 @@ func BuildTransformations(transformations []types.DataProviderTransformationConf
 				g.SetEdge(g.NewEdge(transformationIdToNode[types.ValueId(dep)], transformationIdToNode[transformation.Id]))
 			} else if strings.HasPrefix(dep, "s.") {
 				dep = dep[2:]
-				if !slices.Contains(sourceIds, types.ValueId(dep)) {
+				if _, ok := sourceIds[types.ValueId(dep)]; !ok {
 					return nil, fmt.Errorf("no such source: %s", dep)
 				}
 			} else {
