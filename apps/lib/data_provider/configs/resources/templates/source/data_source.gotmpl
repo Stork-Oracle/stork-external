@@ -7,10 +7,14 @@ package {{ .LowerStr }}
 import (
 	"context"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
+	"github.com/rs/zerolog"
 )
 
 type {{ .CamelStr }}DataSource struct {
 	{{ .CamelStr }}Config {{ .PascalStr }}Config
+	valueId 	types.ValueId
+	logger 		zerolog.Logger
 	// TODO: set any necessary parameters
 }
 
@@ -23,6 +27,8 @@ func new{{ .PascalStr }}DataSource(sourceConfig types.DataProviderSourceConfig) 
 	// TODO: add any necessary initialization code
 	return &{{ .CamelStr }}DataSource{
 		{{ .CamelStr }}Config: {{ .CamelStr }}Config,
+		valueId: 	sourceConfig.Id,
+		logger: 	utils.DataSourceLogger({{ .PascalStr }}DataSourceId),
 	}
 }
 

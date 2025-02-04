@@ -24,11 +24,11 @@ const (
 var resourcesFS embed.FS
 
 type uniswapV2DataSource struct {
-	logger          zerolog.Logger
 	uniswapConfig   UniswapV2Config
-	updateFrequency time.Duration
 	valueId         types.ValueId
+	updateFrequency time.Duration
 	contract        *bind.BoundContract
+	logger          zerolog.Logger
 }
 
 func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswapV2DataSource {
