@@ -30,12 +30,13 @@ contract StorkChainlinkAdapter {
         return stork.getTemporalNumericValueUnsafeV1(priceId).quantizedValue;
     }
 
+    // in nanoseconds
     function latestTimestamp() public view returns (uint256) {
         return stork.getTemporalNumericValueUnsafeV1(priceId).timestampNs;
     }
 
     function latestRound() public view returns (uint256) {
-        // use timestamp as the round id
+        // use timestamp in nanoseconds as the round id
         return latestTimestamp();
     }
 
@@ -43,6 +44,7 @@ contract StorkChainlinkAdapter {
         return latestAnswer();
     }
 
+    // in nanoseconds
     function getTimestamp(uint256) external view returns (uint256) {
         return latestTimestamp();
     }
@@ -50,6 +52,7 @@ contract StorkChainlinkAdapter {
     /*
     * @notice This is exactly the same as `latestRoundData`, just including for parity with Chainlink
     * Stork doesn't store roundId on chain so there's no way to access old data by round id
+    * Note that timestamps are in nanoseconds
     */
     function getRoundData(
         uint80 _roundId
@@ -74,6 +77,7 @@ contract StorkChainlinkAdapter {
         );
     }
 
+    // timestamps are in nanoseconds
     function latestRoundData()
     external
     view
