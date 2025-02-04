@@ -79,6 +79,7 @@ func (r *DataProviderRunner) processUpdates(dataSources []types.DataSource, tran
 					Timestamp:    time.Now(),
 					Value:        transformation.Transformation.Eval(currentVals),
 				}
+				currentVals["t."+string(transformation.Id)] = computed
 
 				if math.IsNaN(computed.Value) {
 					continue
@@ -88,7 +89,6 @@ func (r *DataProviderRunner) processUpdates(dataSources []types.DataSource, tran
 				if existing, ok := currentVals["t."+string(transformation.Id)]; !ok || existing.Value != computed.Value {
 					updateMap[transformation.Id] = computed
 				}
-				currentVals["t."+string(transformation.Id)] = computed
 			}
 			if len(updateMap) > 0 {
 				r.outputCh <- updateMap
