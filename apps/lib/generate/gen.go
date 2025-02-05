@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,15 +11,17 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
 )
 
+//go:embed resources
+var resourcesFS embed.FS
+
 const (
 	dirMode      = 0o777
-	templatesDir = "apps/lib/data_provider/configs/resources/templates"
+	templatesDir = "resources/templates"
 	sourceDir    = "apps/lib/data_provider/sources"
 	pathPrefix   = "// @path: "
 )
@@ -38,7 +41,7 @@ type templateFile struct {
 func generateDataProvider(cmd *cobra.Command, args []string) error {
 	dataProviderName := args[0]
 
-	mainLogger := utils.MainLogger()
+	mainLogger := MainLogger()
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
@@ -85,7 +88,7 @@ func generateSourceCode(pascalName string, basePath string, mainLogger zerolog.L
 		CamelStr:  pascalToCamel(pascalName),
 	}
 
-	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "source"), stringData)
+	templates, err := processTemplateFiles(basePath, templatesDir+"/source", stringData)
 	if err != nil {
 		return fmt.Errorf("failed to process templates: %w", err)
 	}
@@ -114,7 +117,7 @@ func updateSharedCode(basePath string) error {
 		PackageNames: packageNames,
 	}
 
-	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "shared"), stringData)
+	templates, err := processTemplateFiles(basePath, templatesDir+"/shared", stringData)
 	if err != nil {
 		return fmt.Errorf("failed to process templates: %w", err)
 	}
@@ -129,7 +132,7 @@ func updateSharedCode(basePath string) error {
 }
 
 func processTemplateFiles(basePath string, templateDir string, stringData templateStrings) ([]templateFile, error) {
-	dirEntries, err := os.ReadDir(filepath.Join(basePath, templateDir))
+	dirEntries, err := resourcesFS.ReadDir(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read templates directory: %w", err)
 	}
@@ -142,7 +145,7 @@ func processTemplateFiles(basePath string, templateDir string, stringData templa
 		}
 
 		// Entry is a template file, load into templateFile struct
-		template, err := loadTemplate(basePath, filepath.Join(basePath, templateDir, entry.Name()), stringData)
+		template, err := loadTemplate(basePath, templateDir+"/"+entry.Name(), stringData)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load template %s: %w", entry.Name(), err)
 		}
@@ -173,7 +176,7 @@ func generateFileFromContent(filePath string, content string, stringData templat
 }
 
 func loadTemplate(basePath string, templatePath string, stringData templateStrings) (templateFile, error) {
-	contentBytes, err := os.ReadFile(templatePath)
+	contentBytes, err := resourcesFS.ReadFile(templatePath)
 	if err != nil {
 		return templateFile{}, fmt.Errorf("failed to read template %s: %w", templatePath, err)
 	}
@@ -238,7 +241,7 @@ func validatePascalCase(name string) bool {
 }
 
 func validateUniqueDataSourceName(dataProviderName string, basePath string) error {
-	dataSourcesDir := basePath + "/apps/lib/data_provider/sources"
+	dataSourcesDir := basePath + "/" + sourceDir
 	dirEntries, err := os.ReadDir(dataSourcesDir)
 	if err != nil {
 		return fmt.Errorf("failed to read data sources directory: %w", err)
@@ -283,7 +286,7 @@ func pascalToCamel(pascalName string) string {
 func removeDataProvider(cmd *cobra.Command, args []string) error {
 	dataProviderName := args[0]
 
-	mainLogger := utils.MainLogger()
+	mainLogger := MainLogger()
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	zerolog.DurationFieldUnit = time.Nanosecond
@@ -314,7 +317,7 @@ func deleteSourceCode(pascalName string, basePath string, mainLogger zerolog.Log
 		CamelStr:  pascalToCamel(pascalName),
 	}
 
-	templates, err := processTemplateFiles(basePath, filepath.Join(templatesDir, "source"), stringData)
+	templates, err := processTemplateFiles(basePath, templatesDir+"/source", stringData)
 	if err != nil {
 		return fmt.Errorf("failed to process templates: %w", err)
 	}
