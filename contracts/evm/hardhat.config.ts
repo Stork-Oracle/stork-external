@@ -63,6 +63,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    berachainMainnet: {
+      url: "https://rpc.berachain.com/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80094,
+    },
     bevmTestnet: {
       url: "https://testnet.bevm.io/rpc",
       accounts: [PRIVATE_KEY],
