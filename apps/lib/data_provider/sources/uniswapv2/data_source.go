@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	uniswapV2AbiFileName         = "uniswap_v2.json"
+	uniswapV2AbiFileName         = "resources/abis/uniswap_v2.json"
 	getUniswapV2ContractFunction = "getReserves"
 )
 
