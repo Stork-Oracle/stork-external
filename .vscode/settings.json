@@ -5,5 +5,7 @@
         "./examples/solana/programs/example/Cargo.toml",
         "./sdks/solana/stork-solana-sdk/Cargo.toml"
     ],
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+
+    "go.testFlags": ["-v", "-count=1", "-tags=integration"]
 }
