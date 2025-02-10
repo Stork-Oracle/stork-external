@@ -7,5 +7,10 @@
     ],
     "files.insertFinalNewline": true,
 
+    "gopls": {
+        "build.buildFlags": [
+            "-tags=integration"
+        ]
+    },
     "go.testFlags": ["-v", "-count=1", "-tags=integration"]
 }
