@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	boringVaultEvmAbiFileName         = "boring_vault.json"
+	boringVaultEvmAbiFileName         = "resources/abis/boring_vault.json"
 	getBoringVaultEvmContractFunction = "getRate"
 	getDecimalsContractFunction       = "decimals"
 )

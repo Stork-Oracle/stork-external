@@ -21,7 +21,7 @@ func TestBoringVaultEvmDataSource_RunDataSource(t *testing.T) {
 		Config: BoringVaultEvmConfig{
 			DataSource:      BoringVaultEvmDataSourceId,
 			UpdateFrequency: "1s",
-			HttpProviderUrl: "https://phoenix-rpc.plumenetwork.xyz/REPLACE_WITH_API_KEY",
+			HttpProviderUrl: "https://rpc.plumenetwork.xyz",
 			ContractAddress: "0xbB2fAA1e1D6183EE3c4177476ce0d70CBd55A388",
 		},
 	}
