@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DataProviderConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "description": "A list of source configurations",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this source"
+          },
+          "config": {
+            "description": "An arbitrary configuration object for a data source",
+            "type": "object",
+            "oneOf": [
+                { "$ref": "/resources/source_config_schemas/boringvaultevm" },
+                { "$ref": "/resources/source_config_schemas/random" },
+                { "$ref": "/resources/source_config_schemas/raydiumclmm" },
+                { "$ref": "/resources/source_config_schemas/uniswapv2" }
+            ]
+          }
+        },
+        "required": [
+          "id", 
+          "config"
+        ]
+      }
+    }
+  },
+  "required": [
+    "sources"
+  ],
+  "additionalProperties": false
+}

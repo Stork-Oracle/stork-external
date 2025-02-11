@@ -63,6 +63,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    berachainMainnet: {
+      url: "https://rpc.berachain.com/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80094,
+    },
     bevmTestnet: {
       url: "https://testnet.bevm.io/rpc",
       accounts: [PRIVATE_KEY],
@@ -153,6 +158,11 @@ const config: HardhatUserConfig = {
       url: "https://testnet-rpc.merlinchain.io/",
       accounts: [PRIVATE_KEY],
       chainId: 686868
+    },
+    minionsTestnet: {
+      url: "https://rpc.minions.t.raas.gelato.cloud",
+      accounts: [PRIVATE_KEY],
+      chainId: 123420001524
     },
     mitosisPrivateTestnet: {
       url: "https://rpc.testnet.mitosis.org",
@@ -306,6 +316,22 @@ const config: HardhatUserConfig = {
       url: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
       accounts: [PRIVATE_KEY],
       chainId: 7001
+    },
+    zkSyncSepolia: {
+      url: "https://sepolia.era.zksync.dev",
+      ethNetwork: "sepolia",
+      accounts: [PRIVATE_KEY],
+      chainId: 300,
+      verifyURL: "https://sepolia.explorer.zksync.io/contract_verification",
+      zksync: true,
+    },
+    zkSyncMainnet: {
+      url: "https://mainnet.era.zksync.io",
+      ethNetwork: "mainnet",
+      accounts: [PRIVATE_KEY],
+      chainId: 324,
+      verifyURL: "https://explorer.zksync.io/contract_verification",
+      zksync: true,
     }
   },
   etherscan: {
@@ -329,6 +355,7 @@ const config: HardhatUserConfig = {
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
+      minionsTestnet: 'fake',
       mitosisTestnet: 'fake',
       mitosisPrivateTestnet: 'fake',
       molten: 'fake',
@@ -487,6 +514,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://testnet-scan.merlinchain.io/api",
           browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      },
+      {
+        network: "minionsTestnet",
+        chainId: 123420001524,
+        urls: {
+          apiURL: "https://minions.cloud.blockscout.com/api",
+          browserURL: "https://minions.cloud.blockscout.com/"
         }
       },
       {

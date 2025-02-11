@@ -1,0 +1,35 @@
+{
+  "sources": [
+    {
+      "id": "WETHUSDT",
+      "config": {
+        "dataSource": "uniswapv2",
+        "updateFrequency": "5s",
+        "contractAddress": "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
+        "httpProviderUrl": "https://ethereum-rpc.publicnode.com",
+        "baseTokenIndex": 0,
+        "baseTokenDecimals": 18,
+        "quoteTokenIndex": 1,
+        "quoteTokenDecimals": 6
+      }
+    },
+    {
+      "id": "SOL_USDC",
+      "config": {
+        "dataSource": "raydiumclmm",
+        "updateFrequency": "5s",
+        "httpProviderUrl": "https://solana-rpc.publicnode.com",
+        "contractAddress": "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj"
+      }
+    },
+    {
+      "id": "MY_RANDOM_VALUE",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "1s",
+        "minValue": 2500,
+        "maxValue": 3000
+      }
+    }
+  ]
+}

@@ -114,6 +114,28 @@ go run ./cmd/chain_pusher/main.go sui \
 ### Sui Development Setup
 At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
 
+## Aptos Chain Setup
+
+### Wallet Setup
+Create a `.key` file containing your Aptos wallet private key. This file is needed to sign transactions.
+
+### Running the Aptos Pusher
+For full explanation of the flags, run:
+```bash
+go run . aptos --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/chain_pusher/main.go aptos \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -c <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -k <key-file>
+```
+
 ## CosmWasm Chain Setup
 
 ### Wallet Setup

@@ -12,7 +12,7 @@ anchor build
 ```
 anchor deploy
 ```
-5. Read the price from the Stork feed using the cli in [example.ts](example.ts)
+5. Read the price from the Stork feed using the cli in [example.ts](app/example.ts)
 ```
 ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=~/.config/solana/id.json npx ts-node ./app/example.ts read-price <encoded_asset_id>
 ```

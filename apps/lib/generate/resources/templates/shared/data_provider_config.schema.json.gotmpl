@@ -1,0 +1,40 @@
+// @path: apps/lib/data_provider/configs/resources/data_provider_config.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DataProviderConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "description": "A list of source configurations",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this source"
+          },
+          "config": {
+            "description": "An arbitrary configuration object for a data source",
+            "type": "object",
+            "oneOf": [
+              {{- range $i, $sourceType := .PackageNames }}
+                {{- if $i }},{{ end }}
+                { "$ref": "/resources/source_config_schemas/{{ $sourceType }}" }
+              {{- end }}
+            ]
+          }
+        },
+        "required": [
+          "id", 
+          "config"
+        ]
+      }
+    }
+  },
+  "required": [
+    "sources"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "id": "BTCUSD",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "1s",
+        "minValue": 50000,
+        "maxValue": 100000
+      }
+    },
+    {
+      "id": "ETHUSD",
+      "config": {
+        "dataSource": "random",
+        "updateFrequency": "10s",
+        "minValue": 2000,
+        "maxValue": 3000
+      }
+    }
+  ]
+}

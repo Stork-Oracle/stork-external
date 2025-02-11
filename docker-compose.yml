@@ -17,6 +17,22 @@ services:
       - "./path-to-pull-config.json:/etc/pull_config.json"
       - "./path-to-keys.json:/etc/keys.json"
 
+  data-provider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: "data_provider"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/data_provider_config.json",
+        "--verbose"
+      ]
+    volumes:
+      - "./sample.data-provider.config.json:/etc/data_provider_config.json"
+
   evm-pusher:
     build:
       context: .
