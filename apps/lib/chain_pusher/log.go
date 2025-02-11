@@ -47,3 +47,13 @@ func SuiPusherLogger(
 		Str("contractAddress", contractAddress).
 		Logger()
 }
+
+func AptosPusherLogger(
+	chainRpcUrl string,
+	contractAddress string,
+) zerolog.Logger {
+	return AppLogger("aptos").With().
+		Str("chainRpcUrl", chainRpcUrl).
+		Str("contractAddress", contractAddress).
+		Logger()
+}
