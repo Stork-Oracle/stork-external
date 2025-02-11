@@ -159,6 +159,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 686868
     },
+    minionsTestnet: {
+      url: "https://rpc.minions.t.raas.gelato.cloud",
+      accounts: [PRIVATE_KEY],
+      chainId: 123420001524
+    },
     mitosisPrivateTestnet: {
       url: "https://rpc.testnet.mitosis.org",
       accounts: [PRIVATE_KEY],
@@ -350,6 +355,7 @@ const config: HardhatUserConfig = {
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
       merlinTestnet: 'fake',
+      minionsTestnet: 'fake',
       mitosisTestnet: 'fake',
       mitosisPrivateTestnet: 'fake',
       molten: 'fake',
@@ -508,6 +514,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://testnet-scan.merlinchain.io/api",
           browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      },
+      {
+        network: "minionsTestnet",
+        chainId: 123420001524,
+        urls: {
+          apiURL: "https://minions.cloud.blockscout.com/api",
+          browserURL: "https://minions.cloud.blockscout.com/"
         }
       },
       {
