@@ -42,6 +42,7 @@ func main() {
 	rootCmd.AddCommand(chain_pusher.EvmpushCmd)
 	rootCmd.AddCommand(chain_pusher.SolanapushCmd)
 	rootCmd.AddCommand(chain_pusher.SuipushCmd)
+	rootCmd.AddCommand(chain_pusher.CosmwasmPushCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
