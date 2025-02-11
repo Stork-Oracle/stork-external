@@ -1,0 +1,25 @@
+[package]
+name = "stork-cw"
+version = "0.1.1"
+edition = "2021"
+description = "A Stork Protocol contract for the CosmWasm ecosystem"
+license = "Apache-2.0"
+repository = "https://github.com/Stork-Oracle/stork-external"
+exclude = [
+    ".github/"
+    ]
+
+[features]
+library = []
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+sylvia = "1.3.0"
+cw-storage-plus = "2.0.0"
+tiny-keccak = { version = "2.0.2", features = ["keccak"] }
+thiserror = "2.0.11"
+
+[dev-dependencies]
+sylvia = { version = "1.3.0", features = ["mt"] }

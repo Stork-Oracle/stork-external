@@ -3,7 +3,11 @@
     "rust-analyzer.linkedProjects": [
         "./contracts/solana/programs/stork/Cargo.toml",
         "./examples/solana/programs/example/Cargo.toml",
-        "./sdks/solana/stork-solana-sdk/Cargo.toml"
+        "./sdks/solana/stork-solana-sdk/Cargo.toml",
+        "./sdks/solana/stork-sdk/Cargo.toml",
+        "./contracts/cosmwasm/contracts/Cargo.toml",
+        "./examples/cosmwasm/sylvia/Cargo.toml",
+        "./examples/cosmwasm/cosmwasm_core/Cargo.toml"
     ],
     "files.insertFinalNewline": true,
 
