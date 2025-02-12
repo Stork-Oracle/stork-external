@@ -167,8 +167,8 @@ go run ./cmd/chain_pusher/main.go cosmwasm \
 At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/cosmwasm/stork_cosmwasm_contract.go).
 
 ## Deployment
-### Running on EC2
-The pusher runs on a per chain basis. This example assumes that the log driver is AWS Cloudwatch.
+### Running with Docker
+The pusher runs on a per chain basis.
 
 1. Install docker
 2. Setup `.asset-config.yaml` and wallet files in user home directory, e.g. `/home/ec2-user`
