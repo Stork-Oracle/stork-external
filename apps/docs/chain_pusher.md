@@ -177,17 +177,9 @@ The pusher runs on a per chain basis. This example assumes that the log driver i
 #### EVM Chain Example (Polygon Testnet)
 ```bash
 docker run \
-    -e AWS_REGION=ap-northeast-1 \
-    --pull always \
-    --name evm-polygon-testnet \
     -v /home/ec2-user/polygon.asset-config.yaml:/etc/asset-config.yaml \
     -v /home/ec2-user/polygon-testnet.secret:/etc/private-key.secret \
     -itd --restart=on-failure \
-    --log-driver=awslogs \
-    --log-opt awslogs-group=/aws/ec2/dev-apps-evm-pusher \
-    --log-opt awslogs-stream=polygon-testnet \
-    --log-opt mode=non-blocking \
-    --log-opt max-buffer-size=4m \
     storknetwork/chain-pusher:v1.0.1 evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
