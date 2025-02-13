@@ -189,6 +189,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 41454
     },
+    monadTestnet: {
+      url: "https://testnet-rpc.monad.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 10143
+    },
     movementTestnet: {
       url: "https://mevm.devnet.imola.movementlabs.xyz/",
       accounts: [PRIVATE_KEY],
