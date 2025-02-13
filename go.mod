@@ -1,15 +1,13 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.23.1
-
-toolchain go1.23.5
+go 1.22.2
 
 require (
 	cosmossdk.io/math v1.5.0
-	github.com/CosmWasm/wasmd v0.54.0
+	github.com/CosmWasm/wasmd v0.53.2
 	github.com/NethermindEth/juno v0.11.7
 	github.com/aptos-labs/aptos-go-sdk v1.4.1
-	github.com/cometbft/cometbft v0.38.15
+	github.com/cometbft/cometbft v0.38.12
 	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/gnark-crypto v0.13.0
 	github.com/cosmos/cosmos-sdk v0.50.11
@@ -70,7 +68,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft-db v0.14.1 // indirect
+	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
