@@ -43,11 +43,17 @@ RUN apt-get update && \
         ca-certificates \
         curl \
         jq \
+        wget \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+# Install CosmWasm libraries
+RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.aarch64.so -O /usr/lib/libwasmvm.aarch64.so && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.x86_64.so -O /usr/lib/libwasmvm.x86_64.so && \
+    cp "/usr/lib/libwasmvm.$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" /usr/lib/libwasmvm.so
+
 COPY --from=builder /app/.lib/libstork.so /usr/local/lib/
-ENV LD_LIBRARY_PATH=/usr/local/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/lib
 
 # Ensure SERVICE is defined
 ARG SERVICE
