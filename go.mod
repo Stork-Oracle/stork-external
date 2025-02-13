@@ -1,8 +1,6 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.23.1
-
-toolchain go1.23.5
+go 1.23.6
 
 require (
 	cosmossdk.io/math v1.5.0
