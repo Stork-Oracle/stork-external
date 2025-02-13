@@ -154,6 +154,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 3441006,
     },
+    mantaPacificMainnet: {
+      url: "https://pacific-rpc.manta.network/http",
+      accounts: [PRIVATE_KEY],
+      chainId: 169,
+    },
     merlinTestnet: {
       url: "https://testnet-rpc.merlinchain.io/",
       accounts: [PRIVATE_KEY],
@@ -354,6 +359,7 @@ const config: HardhatUserConfig = {
       lightlinkPhoenixMainnet: 'fake',
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
+      mantaPacificMainnet: 'fake',
       merlinTestnet: 'fake',
       minionsTestnet: 'fake',
       mitosisTestnet: 'fake',
@@ -506,6 +512,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://manta-sepolia.explorer.caldera.xyz/api",
           browserURL: "https://manta-sepolia.explorer.caldera.xyz/"
+        }
+      },
+      {
+        network: "mantaPacificMainnet",
+        chainId: 169,
+        urls: {
+          apiURL: "https://pacific-explorer.manta.network/api",
+          browserURL: "https://pacific-explorer.manta.network/"
         }
       },
       {
