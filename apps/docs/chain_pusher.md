@@ -167,8 +167,8 @@ go run ./cmd/chain_pusher/main.go cosmwasm \
 At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/cosmwasm/stork_cosmwasm_contract.go).
 
 ## Deployment
-### Running on EC2
-The pusher runs on a per chain basis. This example assumes that the log driver is AWS Cloudwatch.
+### Running with Docker
+The pusher runs on a per chain basis.
 
 1. Install docker
 2. Setup `.asset-config.yaml` and wallet files in user home directory, e.g. `/home/ec2-user`
@@ -177,17 +177,9 @@ The pusher runs on a per chain basis. This example assumes that the log driver i
 #### EVM Chain Example (Polygon Testnet)
 ```bash
 docker run \
-    -e AWS_REGION=ap-northeast-1 \
-    --pull always \
-    --name evm-polygon-testnet \
     -v /home/ec2-user/polygon.asset-config.yaml:/etc/asset-config.yaml \
     -v /home/ec2-user/polygon-testnet.secret:/etc/private-key.secret \
     -itd --restart=on-failure \
-    --log-driver=awslogs \
-    --log-opt awslogs-group=/aws/ec2/dev-apps-evm-pusher \
-    --log-opt awslogs-stream=polygon-testnet \
-    --log-opt mode=non-blocking \
-    --log-opt max-buffer-size=4m \
     storknetwork/chain-pusher:v1.0.1 evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
