@@ -43,13 +43,12 @@ RUN apt-get update && \
         ca-certificates \
         curl \
         jq \
-        wget \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 # Install CosmWasm libraries
-RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.aarch64.so -O /usr/local/lib/libwasmvm.aarch64.so && \
-    wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.x86_64.so -O /usr/local/lib/libwasmvm.x86_64.so && \
+RUN curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.aarch64.so -o /usr/local/lib/libwasmvm.aarch64.so && \
+    curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.x86_64.so -o /usr/local/lib/libwasmvm.x86_64.so && \
     cp "/usr/local/lib/libwasmvm.$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" /usr/local/lib/libwasmvm.so
 
 COPY --from=builder /app/.lib/libstork.so /usr/local/lib/
