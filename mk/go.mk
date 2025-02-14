@@ -23,9 +23,20 @@ mocks: $(GOBIN)/mockery
 test: $(LIBSTORK)
 	@$(GO) test -v ./...
 
+.PHONY: install-cosmwasm-libs
+install-cosmwasm-libs:
+	@mkdir -p .lib
+	@if [ ! -f ".lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
+		echo "Installing CosmWasm libraries..."; \
+		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o .lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
+		echo "Successfully installed CosmWasm libraries to .lib/"; \
+	else \
+		echo "CosmWasm libraries already installed"; \
+	fi
+
 .PHONY: install
 ## Aggregate target to install all Go binaries
-install: $(LIBSTORK)
+install: $(LIBSTORK) install-cosmwasm-libs
 	@$(GO) install -v ./apps/cmd/...
 	@echo "All Go binaries have been installed successfully."
 
