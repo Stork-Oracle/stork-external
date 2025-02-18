@@ -22,6 +22,7 @@ jobs:
           go-version: '1.22'
 
       - name: Cache Go modules
+        id: go-cache
         uses: actions/cache@v3
         with:
           path: |
@@ -29,7 +30,16 @@ jobs:
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
+            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
             ${{ runner.os }}-go-
+
+      - name: Clean Go module cache if needed
+        run: |
+          if ! go mod download 2>/dev/null; then
+            echo "Module download failed, cleaning cache..."
+            go clean -modcache
+            go mod download
+          fi
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
@@ -194,7 +204,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Rust
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
@@ -226,3 +236,69 @@ jobs:
         run: |
           sui move test
         working-directory: ./contracts/sui/contracts
+
+  test-cosmwasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-cosmwasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cosmwasm-
+
+      - name: Run tests
+        run: |
+          cargo test
+        working-directory: ./contracts/cosmwasm/contracts
+
+  test-aptos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: '**/requirements.txt'
+          
+      - name: Install pip dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install packaging
+          
+      - name: Cache Aptos CLI
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.aptos
+            ~/.local/bin/aptos
+          key: ${{ runner.os }}-aptos-cli
+          
+      - name: Install Aptos CLI
+        run: |
+          if ! command -v aptos &> /dev/null; then
+            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+          fi
+          aptos --version
+
+      - name: Run Aptos tests
+        run: |
+          aptos move test --move-2 --dev
+        working-directory: ./contracts/aptos/contracts

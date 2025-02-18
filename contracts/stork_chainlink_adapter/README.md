@@ -1,6 +1,7 @@
 # Stork Chainlink Adapter
 This contract is a light wrapper around the [Stork EVM contract](../evm) which conforms to Chainlink's [AggregatorV3Interface](https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol).
 
+Note that all timestamps are in nanoseconds.
 
 ## Integrate with Your Solidity Contracts
 1. Install the Stork Chainlink Adapter npm package in your project

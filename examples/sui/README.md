@@ -12,7 +12,7 @@ sui move build
 ```bash
 sui client publish
 ```
-5. Read the price from the Stork feed using the cli in [example.ts](example.ts)
+5. Read the price from the Stork feed using the cli in [example.ts](./app/example.ts)
 ```bash
 EXAMPLE_PACKAGE_ADDRESS=<package_address> RPC_ALIAS=<rpc_alias> SUI_KEY_ALIAS=<key_alias> npx ts-node ./app/example.ts read-price <asset_id> <stork_contract_address>
 ```

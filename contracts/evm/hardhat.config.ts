@@ -63,6 +63,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80084,
     },
+    berachainMainnet: {
+      url: "https://rpc.berachain.com/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80094,
+    },
     bevmTestnet: {
       url: "https://testnet.bevm.io/rpc",
       accounts: [PRIVATE_KEY],
@@ -149,10 +154,20 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 3441006,
     },
+    mantaPacificMainnet: {
+      url: "https://pacific-rpc.manta.network/http",
+      accounts: [PRIVATE_KEY],
+      chainId: 169,
+    },
     merlinTestnet: {
       url: "https://testnet-rpc.merlinchain.io/",
       accounts: [PRIVATE_KEY],
       chainId: 686868
+    },
+    minionsTestnet: {
+      url: "https://rpc.minions.t.raas.gelato.cloud",
+      accounts: [PRIVATE_KEY],
+      chainId: 123420001524
     },
     mitosisPrivateTestnet: {
       url: "https://rpc.testnet.mitosis.org",
@@ -173,6 +188,11 @@ const config: HardhatUserConfig = {
       url: "https://devnet1.monad.xyz/rpc/Hr83nzcKqOU2xOPXKme4bKm3BlDdxQPH99k9NAe1",
       accounts: [PRIVATE_KEY],
       chainId: 41454
+    },
+    monadTestnet: {
+      url: "https://testnet-rpc.monad.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 10143
     },
     movementTestnet: {
       url: "https://mevm.devnet.imola.movementlabs.xyz/",
@@ -344,7 +364,9 @@ const config: HardhatUserConfig = {
       lightlinkPhoenixMainnet: 'fake',
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
+      mantaPacificMainnet: 'fake',
       merlinTestnet: 'fake',
+      minionsTestnet: 'fake',
       mitosisTestnet: 'fake',
       mitosisPrivateTestnet: 'fake',
       molten: 'fake',
@@ -498,11 +520,27 @@ const config: HardhatUserConfig = {
         }
       },
       {
+        network: "mantaPacificMainnet",
+        chainId: 169,
+        urls: {
+          apiURL: "https://pacific-explorer.manta.network/api",
+          browserURL: "https://pacific-explorer.manta.network/"
+        }
+      },
+      {
         network: "merlinTestnet",
         chainId: 686868,
         urls: {
           apiURL: "https://testnet-scan.merlinchain.io/api",
           browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      },
+      {
+        network: "minionsTestnet",
+        chainId: 123420001524,
+        urls: {
+          apiURL: "https://minions.cloud.blockscout.com/api",
+          browserURL: "https://minions.cloud.blockscout.com/"
         }
       },
       {

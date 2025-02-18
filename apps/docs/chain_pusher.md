@@ -113,10 +113,62 @@ go run ./cmd/chain_pusher/main.go sui \
 
 ### Sui Development Setup
 At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/sui/stork_sui_contract.go).
-## Deployment
 
-### Running on EC2
-The pusher runs on a per chain basis. This example assumes that the log driver is AWS Cloudwatch.
+## Aptos Chain Setup
+
+### Wallet Setup
+Create a `.key` file containing your Aptos wallet private key. This file is needed to sign transactions.
+
+### Running the Aptos Pusher
+For full explanation of the flags, run:
+```bash
+go run . aptos --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/chain_pusher/main.go aptos \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -c <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -k <key-file>
+```
+
+## CosmWasm Chain Setup
+
+### Wallet Setup
+Create a `.key` file containing only your private key mnemonic.
+
+### Running the CosmWasm Pusher
+For full explanation of the flags, run:
+```bash
+go run . cosmwasm --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/chain_pusher/main.go cosmwasm \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -r <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -k <mnemonic-file> \
+    -g <gas-price> \
+    -j <gas-adjustment> \
+    -d <denom> \
+    -i <chain-id> \
+    -p <chain-prefix>
+```
+
+### CosmWasm Development Setup
+At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](../lib/chain_pusher/contract_bindings/cosmwasm/stork_cosmwasm_contract.go).
+
+## Deployment
+### Running with Docker
+The pusher runs on a per chain basis.
 
 1. Install docker
 2. Setup `.asset-config.yaml` and wallet files in user home directory, e.g. `/home/ec2-user`
@@ -125,17 +177,9 @@ The pusher runs on a per chain basis. This example assumes that the log driver i
 #### EVM Chain Example (Polygon Testnet)
 ```bash
 docker run \
-    -e AWS_REGION=ap-northeast-1 \
-    --pull always \
-    --name evm-polygon-testnet \
     -v /home/ec2-user/polygon.asset-config.yaml:/etc/asset-config.yaml \
     -v /home/ec2-user/polygon-testnet.secret:/etc/private-key.secret \
     -itd --restart=on-failure \
-    --log-driver=awslogs \
-    --log-opt awslogs-group=/aws/ec2/dev-apps-evm-pusher \
-    --log-opt awslogs-stream=polygon-testnet \
-    --log-opt mode=non-blocking \
-    --log-opt max-buffer-size=4m \
     storknetwork/chain-pusher:v1.0.1 evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \

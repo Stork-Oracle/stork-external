@@ -12,8 +12,8 @@ import (
 )
 
 type randomDataSource struct {
+	randomConfig    RandomConfig
 	valueId         types.ValueId
-	config          RandomConfig
 	updateFrequency time.Duration
 	logger          zerolog.Logger
 }
@@ -30,8 +30,8 @@ func newRandomDataSource(sourceConfig types.DataProviderSourceConfig) *randomDat
 	}
 
 	return &randomDataSource{
+		randomConfig:    randomConfig,
 		valueId:         sourceConfig.Id,
-		config:          randomConfig,
 		updateFrequency: updateFrequency,
 		logger:          utils.DataSourceLogger(RandomDataSourceId),
 	}
@@ -48,7 +48,7 @@ func (r randomDataSource) RunDataSource(ctx context.Context, updatesCh chan type
 }
 
 func (r randomDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
-	randValue := r.config.MinValue + rand.Float64()*(r.config.MaxValue-r.config.MinValue)
+	randValue := r.randomConfig.MinValue + rand.Float64()*(r.randomConfig.MaxValue-r.randomConfig.MinValue)
 
 	updateMap := types.DataSourceUpdateMap{
 		r.valueId: types.DataSourceValueUpdate{

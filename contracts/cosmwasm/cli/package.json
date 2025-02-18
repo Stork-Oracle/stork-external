@@ -1,0 +1,22 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.33.0",
+    "@cosmjs/math": "^0.33.0",
+    "@cosmjs/proto-signing": "^0.33.0",
+    "commander": "^13.1.0"
+  }
+}

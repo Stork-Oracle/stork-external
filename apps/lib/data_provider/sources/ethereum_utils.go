@@ -21,19 +21,19 @@ const (
 
 func GetEthereumContract(
 	contractAddress string,
-	abiFileName string,
+	abiFilePath string,
 	httpProviderUrl string,
 	resourcesFs embed.FS,
 ) (*bind.BoundContract, error) {
 	address := common.HexToAddress(contractAddress)
 
-	abiJson, err := resourcesFs.ReadFile("resources/abis/" + abiFileName)
+	abiJson, err := resourcesFs.ReadFile(abiFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read ABI file %s: %v", abiFileName, err)
+		return nil, fmt.Errorf("failed to read ABI file %s: %v", abiFilePath, err)
 	}
 	abi, err := abi.JSON(strings.NewReader(string(abiJson)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse ABI file %s: %v", abiFileName, err)
+		return nil, fmt.Errorf("failed to parse ABI file %s: %v", abiFilePath, err)
 	}
 
 	httpClient, err := ethclient.Dial(httpProviderUrl)
