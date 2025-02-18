@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/transformations"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 )
 
@@ -17,6 +18,7 @@ type DataProviderRunner struct {
 	config    types.DataProviderConfig
 	writer    Writer
 	updatesCh chan types.DataSourceUpdateMap
+	outputCh  chan types.DataSourceUpdateMap
 }
 
 func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAddress string) *DataProviderRunner {
@@ -27,14 +29,20 @@ func NewDataProviderRunner(dataProviderConfig types.DataProviderConfig, outputAd
 	return &DataProviderRunner{
 		config:    dataProviderConfig,
 		updatesCh: make(chan types.DataSourceUpdateMap, 4096),
+		outputCh:  make(chan types.DataSourceUpdateMap, 4096),
 		writer:    writer,
 	}
 }
 
 func (r *DataProviderRunner) Run() {
-	dataSources, err := sources.BuildDataSources(r.config.Sources)
+	dataSources, valueIds, err := sources.BuildDataSources(r.config.Sources)
 	if err != nil {
 		panic("unable to build data sources: " + err.Error())
+	}
+
+	transformationGraph, err := transformations.BuildTransformationGraph(r.config.Transformations, valueIds)
+	if err != nil {
+		panic("unable to build transformations: " + err.Error())
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -44,5 +52,17 @@ func (r *DataProviderRunner) Run() {
 		go dataSource.RunDataSource(ctx, r.updatesCh)
 	}
 
-	r.writer.Run(r.updatesCh)
+	go r.processUpdates(transformationGraph)
+
+	r.writer.Run(r.outputCh)
+}
+
+func (r *DataProviderRunner) processUpdates(transformationGraph *transformations.TransformationGraph) {
+	for {
+		select {
+		case sourceUpdates := <-r.updatesCh:
+			processedUpdates := transformationGraph.ProcessSourceUpdates(sourceUpdates)
+			r.outputCh <- processedUpdates
+		}
+	}
 }

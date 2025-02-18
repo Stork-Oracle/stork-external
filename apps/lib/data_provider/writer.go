@@ -87,7 +87,6 @@ func (w *WebsocketWriter) runWriteLoop(updateCh chan types.DataSourceUpdateMap) 
 				return fmt.Errorf("error writing to websocket at %s: %v", w.wsUrl, err)
 			}
 		}
-
 	}
 
 	return nil

@@ -31,6 +31,21 @@
           "config"
         ]
       }
+    },
+    "transformations": {
+      "type": "array",
+      "description": "A list of transformations to apply to the data",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "formula": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "formula"
+        ]
+      }
     }
   },
   "required": [

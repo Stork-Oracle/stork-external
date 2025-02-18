@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/math v1.5.0
 	github.com/CosmWasm/wasmd v0.53.2
 	github.com/NethermindEth/juno v0.11.7
+	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/aptos-labs/aptos-go-sdk v1.4.1
 	github.com/cometbft/cometbft v0.38.12
 	github.com/coming-chat/go-sui/v2 v2.0.1
@@ -26,6 +27,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/time v0.5.0
+	gonum.org/v1/gonum v0.15.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 

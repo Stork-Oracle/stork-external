@@ -35,27 +35,27 @@ func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFact
 	return factory, nil
 }
 
-func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, error) {
+func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, map[types.ValueId]interface{}, error) {
 	dataSources := make([]types.DataSource, 0)
 	valueIds := make(map[types.ValueId]interface{})
 	for _, source := range sourceConfigs {
 		_, exists := valueIds[source.Id]
 		if exists {
-			return nil, fmt.Errorf("duplicate value id in config: %s", source.Id)
+			return nil, nil, fmt.Errorf("duplicate value id in config: %s", source.Id)
 		}
 		valueIds[source.Id] = nil
 
 		dataSourceId, err := utils.GetDataSourceId(source.Config)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get data source id from source config %s: %v", source.Id, err)
+			return nil, nil, fmt.Errorf("unable to get data source id from source config %s: %v", source.Id, err)
 		}
 		factory, err := GetDataSourceFactory(dataSourceId)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get data source factory for data source id %s: %v", dataSourceId, err)
+			return nil, nil, fmt.Errorf("unable to get data source factory for data source id %s: %v", dataSourceId, err)
 		}
 		dataSource := factory.Build(source)
 		dataSources = append(dataSources, dataSource)
 
 	}
-	return dataSources, nil
+	return dataSources, valueIds, nil
 }

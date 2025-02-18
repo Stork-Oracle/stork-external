@@ -31,5 +31,19 @@
         "maxValue": 3000
       }
     }
+  ],
+  "transformations": [
+    {
+      "id": "MY_RANDOM_VALUE_SQUARED",
+      "formula": "MY_RANDOM_VALUE * MY_RANDOM_VALUE"
+    },
+    {
+      "id": "USDC_SOL",
+      "formula": "1 / SOL_USDC"
+    },
+    {
+      "id": "SOL_WETH_MEDIAN",
+      "formula": "median(SOL_USDC, WETHUSDT)"
+    }
   ]
 }
