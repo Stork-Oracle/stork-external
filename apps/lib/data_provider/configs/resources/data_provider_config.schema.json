@@ -33,7 +33,6 @@
     "transformations": {
       "type": "array",
       "description": "A list of transformations to apply to the data",
-      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {

@@ -45,6 +45,11 @@ func TestParse(t *testing.T) {
 			expected: 2.0,
 		},
 		{
+			name:     "median with even number of values",
+			formula:  "median(1, 2, 3, 4)",
+			expected: 2.5,
+		},
+		{
 			name:     "mean",
 			formula:  "mean(1, 2, 3)",
 			expected: 2.0,
@@ -56,13 +61,29 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name:     "product",
-			formula:  "product(1, 2, 3)",
-			expected: 6.0,
+			formula:  "product(2, 3, 4)",
+			expected: 24.0,
 		},
 		{
 			name:     "nested expression",
 			formula:  "median(1, 2, 3) * mean(4, 5, 6)",
 			expected: 10.0,
+		},
+		{
+			name:    "further nested expression",
+			formula: "median(x * 2, y * 2, z * 2)",
+			variables: map[string]types.DataSourceValueUpdate{
+				"x": {
+					Value: 1,
+				},
+				"y": {
+					Value: 2,
+				},
+				"z": {
+					Value: 3,
+				},
+			},
+			expected: 4.0,
 		},
 		{
 			name:    "nested expression with variables",
