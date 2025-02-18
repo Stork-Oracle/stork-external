@@ -8,9 +8,6 @@ import (
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/alecthomas/participle/v2"
-	"gonum.org/v1/gonum/graph"
-	"gonum.org/v1/gonum/graph/simple"
-	"gonum.org/v1/gonum/graph/topo"
 )
 
 // heavily borrowed from https://github.com/alecthomas/participle/blob/master/_examples/expr/main.go
@@ -301,75 +298,4 @@ var parser = participle.MustBuild[Expression]()
 
 func parse(formula string) (*Expression, error) {
 	return parser.ParseString("", formula)
-}
-
-type OrderedTransformation struct {
-	Id             types.ValueId
-	Transformation *Expression
-}
-
-func (o *OrderedTransformation) String() string {
-	return fmt.Sprintf("%s: %s", o.Id, o.Transformation.String())
-}
-
-func BuildTransformations(transformations []types.DataProviderTransformationConfig, sourceIds map[types.ValueId]interface{}) ([]OrderedTransformation, error) {
-	g := simple.NewDirectedGraph()
-
-	// allow translating node <-> price id
-	nodeToTransformationId := make(map[graph.Node]types.ValueId)
-	transformationIdToNode := make(map[types.ValueId]graph.Node)
-
-	parsedTransformations := make(map[types.ValueId]*Expression)
-	for _, transformation := range transformations {
-		expr, err := parse(transformation.Formula)
-		if err != nil {
-			return nil, err
-		}
-		parsedTransformations[transformation.Id] = expr
-
-		node := g.NewNode()
-		g.AddNode(node)
-		nodeToTransformationId[node] = transformation.Id
-		transformationIdToNode[transformation.Id] = node
-	}
-
-	for _, transformation := range transformations {
-		expr, ok := parsedTransformations[transformation.Id]
-		if !ok {
-			return nil, fmt.Errorf("no such transformation: %s", transformation.Id)
-		}
-
-		deps := expr.getDependencies()
-		for _, dep := range deps {
-			if strings.HasPrefix(dep, "t.") {
-				dep = dep[2:]
-				if _, ok := transformationIdToNode[types.ValueId(dep)]; !ok {
-					return nil, fmt.Errorf("no such transformation: %s", dep)
-				}
-				g.SetEdge(g.NewEdge(transformationIdToNode[types.ValueId(dep)], transformationIdToNode[transformation.Id]))
-			} else if strings.HasPrefix(dep, "s.") {
-				dep = dep[2:]
-				if _, ok := sourceIds[types.ValueId(dep)]; !ok {
-					return nil, fmt.Errorf("no such source: %s", dep)
-				}
-			} else {
-				return nil, fmt.Errorf("unknown dependency: %s", dep)
-			}
-		}
-	}
-
-	nodes, err := topo.Sort(g)
-	if err != nil {
-		return nil, fmt.Errorf("could not linearize price id graph - there may be circular dependencies: %v", err)
-	}
-
-	transformationsInOrder := make([]OrderedTransformation, len(nodes))
-	for i, node := range nodes {
-		transformationsInOrder[i] = OrderedTransformation{
-			Id:             nodeToTransformationId[node],
-			Transformation: parsedTransformations[nodeToTransformationId[node]],
-		}
-	}
-
-	return transformationsInOrder, nil
 }
