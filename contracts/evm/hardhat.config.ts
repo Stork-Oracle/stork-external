@@ -57,6 +57,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 421614,
     },
+    baseMainnet: {
+      url: "https://mainnet.base.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 8453,
+    },
     // you might need to use a custom RPC URL for this chain, get one from quicknode
     berachainTestnet: {
       url: "https://bartio.rpc.berachain.com/",
