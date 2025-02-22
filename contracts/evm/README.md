@@ -57,7 +57,7 @@ npx hardhat verify --network <network> <proxy-contract-address>
 See `tasks/interact.ts` for available methods.
 
 ```
-npx hardhat --network inMemoryNode inMemoryNode
+npx hardhat --network inMemoryNode interact <method>
 ```
 
 #### Test
