@@ -243,7 +243,7 @@ func TestProcessSourceUpdates(t *testing.T) {
 	assert.Equal(t, 1.0, update.Value)
 }
 
-func BenchmarkTranformationGraph_ProcessSourceUpdates(b *testing.B) {
+func BenchmarkTransformationGraph_ProcessSourceUpdates(b *testing.B) {
 	// create two long independent dependency chains
 	transformationConfigs := []types.DataProviderTransformationConfig{
 		{
