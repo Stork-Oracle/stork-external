@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -53,5 +55,6 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to initialize Solana contract interacter")
 	}
 	solanaPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, solanaInteracter, &logger)
-	solanaPusher.Run()
+	ctx := context.Background()
+	solanaPusher.Run(ctx)
 }

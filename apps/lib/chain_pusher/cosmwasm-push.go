@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -55,5 +57,6 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	}
 
 	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteracter, &logger)
-	cosmwasmPusher.Run()
+	ctx := context.Background()
+	cosmwasmPusher.Run(ctx)
 }

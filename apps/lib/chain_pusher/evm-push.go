@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -45,5 +47,6 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	evmInteracter := NewEvmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, verifyPublishers, logger)
 
 	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteracter, &logger)
-	evmPusher.Run()
+	ctx := context.Background()
+	evmPusher.Run(ctx)
 }
