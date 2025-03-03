@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +28,6 @@ func init() {
 	SuipushCmd.MarkFlagRequired(ContractAddressFlag)
 	SuipushCmd.MarkFlagRequired(AssetConfigFileFlag)
 	SuipushCmd.MarkFlagRequired(PrivateKeyFileFlag)
-
 }
 
 func runSuiPush(cmd *cobra.Command, args []string) {
@@ -47,6 +48,6 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	}
 
 	suiPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, suiInteracter, &logger)
-	suiPusher.Run()
-
+	ctx := context.Background()
+	suiPusher.Run(ctx)
 }

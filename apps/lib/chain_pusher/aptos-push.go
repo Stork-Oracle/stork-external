@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -46,5 +48,6 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 	}
 
 	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, aptosInteracter, &logger)
-	aptosPusher.Run()
+	ctx := context.Background()
+	aptosPusher.Run(ctx)
 }

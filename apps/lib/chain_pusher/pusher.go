@@ -1,6 +1,7 @@
 package chain_pusher
 
 import (
+	"context"
 	"math/big"
 	"time"
 
@@ -35,7 +36,7 @@ func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetCo
 	}
 }
 
-func (p *Pusher) Run() {
+func (p *Pusher) Run(ctx context.Context) {
 	priceConfig, err := LoadConfig(p.assetConfigFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load price config")
@@ -80,7 +81,9 @@ func (p *Pusher) Run() {
 
 	for {
 		select {
-		// Determine updates after the batching window has passed and push them to the contract
+		case <-ctx.Done():
+			p.logger.Info().Msg("Pusher stopping due to context cancellation")
+			return
 		case <-ticker.C:
 			updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			for encodedAssetId, latestStorkPrice := range latestStorkValueMap {
@@ -164,7 +167,7 @@ func shouldUpdateAsset(latestValue InternalStorkStructsTemporalNumericValue, lat
 
 func (p *Pusher) poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
-	for _ = range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
+	for range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
 		polledVals, err := p.interacter.PullValues(encodedAssetIds)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
