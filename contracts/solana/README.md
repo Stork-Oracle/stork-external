@@ -6,7 +6,7 @@ This contract is used to write the latest values from the Stork network on-chain
 
 ### TemporalNumericValueFeed Accounts
 
-On Solana, Stork price feeds exist as on-chain accounts. These accounts are instances of the [`TemporalNumericValueFeed` account](../../sdks/solana/stork-solana-sdk/src/temporal_numeric_value.rs), and are created and owned by the Stork Oracle contract. These account have an ID which associates them with a specific asset, and a `latest_value` field which stores the latest price update. The ID of a TemporalNumericValueFeed account is determined by taking the keccak256 hash of the asset ID.
+On Solana, Stork price feeds exist as on-chain accounts. These accounts are instances of the [`TemporalNumericValueFeed` account](../../sdks/solana/stork-solana-sdk/src/temporal_numeric_value.rs), and are created and owned by the Stork Oracle contract. These accounts have an ID which associates them with a specific asset, and a `latest_value` field which stores the latest price update. The ID of a TemporalNumericValueFeed account is determined by taking the keccak256 hash of the asset ID.
 
 #### Writing to a TemporalNumericValueFeed Account
 
@@ -31,7 +31,7 @@ Treasury accounts collect small fees from users submitting new values to the sto
 
 ### StorkConfig Account
 
-The [`StorkConfig` account](./programs/stork/src/lib.rs) stores the Stork Solana public key, the Stork EVM public key, the update fee, and the owner of the Stork contract. The owner fields is used to validate the caller ofadmin instructions
+The [`StorkConfig` account](./programs/stork/src/lib.rs) stores the Stork Solana public key, the Stork EVM public key, the update fee, and the owner of the Stork contract. The owner field is used to validate the caller of admin instructions
 
 ### Program Address
 
