@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "id": "monad_block_data",
+      "config": {
+        "dataSource": "monadblockdata",
+        "rpcEndpoint": "https://rpc-testnet.monad.xyz",
+        "updateFrequency": "10s",
+        "blockTimeWindow": 20
+      }
+    }
+  ]
+} 

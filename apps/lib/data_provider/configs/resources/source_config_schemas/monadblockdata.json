@@ -1,0 +1,25 @@
+{
+  "$id": "/resources/source_config_schemas/monadblockdata",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "monadblockdata"
+    },
+    "rpcEndpoint": {
+      "type": "string",
+      "description": "Monad RPC endpoint URL"
+    },
+    "updateFrequency": {
+      "type": "string",
+      "description": "How often to fetch new block data (e.g. '10s', '1m')"
+    },
+    "blockTimeWindow": {
+      "type": "integer",
+      "description": "Number of recent blocks to analyze for block time",
+      "default": 10
+    }
+  },
+  "required": ["dataSource", "rpcEndpoint", "updateFrequency"],
+  "additionalProperties": false
+} 

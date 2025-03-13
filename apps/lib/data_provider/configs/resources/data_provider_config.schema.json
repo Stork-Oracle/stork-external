@@ -19,6 +19,8 @@
             "type": "object",
             "oneOf": [
                 { "$ref": "/resources/source_config_schemas/boringvaultevm" },
+                { "$ref": "/resources/source_config_schemas/monadblockdata" },
+                { "$ref": "/resources/source_config_schemas/monadtokenprice" },
                 { "$ref": "/resources/source_config_schemas/random" },
                 { "$ref": "/resources/source_config_schemas/raydiumclmm" },
                 { "$ref": "/resources/source_config_schemas/uniswapv2" }
