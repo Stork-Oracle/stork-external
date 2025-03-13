@@ -1,0 +1,12 @@
+{
+  "$id": "/resources/source_config_schemas/monadgasfees",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "monadgasfees"
+    }
+  },
+  "required": ["dataSource"],
+  "additionalProperties": false
+} 

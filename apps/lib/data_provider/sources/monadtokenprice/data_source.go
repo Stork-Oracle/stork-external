@@ -5,16 +5,52 @@ package monadtokenprice
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"math/big"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
 )
 
+// Uniswap V2 Router ABI for getAmountsOut function
+const routerABI = `[{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"}]`
+
+// ERC20 ABI for decimals function
+const erc20ABI = `[{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"}]`
+
 type monadTokenPriceDataSource struct {
 	monadTokenPriceConfig MonadTokenPriceConfig
-	valueId 	types.ValueId
-	logger 		zerolog.Logger
-	// TODO: set any necessary parameters
+	valueId               types.ValueId
+	logger                zerolog.Logger
+	updateFrequency       time.Duration
+	client                *http.Client
+}
+
+// JSON-RPC request structure
+type jsonRPCRequest struct {
+	JSONRPC string      `json:"jsonrpc"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params"`
+	ID      int         `json:"id"`
+}
+
+// JSON-RPC response structure
+type jsonRPCResponse struct {
+	JSONRPC string          `json:"jsonrpc"`
+	Result  json.RawMessage `json:"result"`
+	Error   *jsonRPCError   `json:"error,omitempty"`
+	ID      int             `json:"id"`
+}
+
+type jsonRPCError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 func newMonadTokenPriceDataSource(sourceConfig types.DataProviderSourceConfig) *monadTokenPriceDataSource {
@@ -23,15 +59,192 @@ func newMonadTokenPriceDataSource(sourceConfig types.DataProviderSourceConfig) *
 		panic("unable to decode config: " + err.Error())
 	}
 
-	// TODO: add any necessary initialization code
+	updateFrequency, err := time.ParseDuration(monadTokenPriceConfig.UpdateFrequency)
+	if err != nil {
+		panic("unable to parse update frequency: " + monadTokenPriceConfig.UpdateFrequency)
+	}
+
 	return &monadTokenPriceDataSource{
 		monadTokenPriceConfig: monadTokenPriceConfig,
-		valueId: 	sourceConfig.Id,
-		logger: 	utils.DataSourceLogger(MonadTokenPriceDataSourceId),
+		valueId:               sourceConfig.Id,
+		logger:                utils.DataSourceLogger(MonadTokenPriceDataSourceId),
+		updateFrequency:       updateFrequency,
+		client:                &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
-func (r monadTokenPriceDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
-	// TODO: Write all logic to fetch data points and report them to updatesCh
-	panic("implement me")
+func (m monadTokenPriceDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
+	updater := func() (types.DataSourceUpdateMap, error) { return m.getUpdate() }
+	scheduler := sources.NewScheduler(
+		m.updateFrequency,
+		updater,
+		sources.GetErrorLogHandler(m.logger, zerolog.WarnLevel),
+	)
+	scheduler.RunScheduler(ctx, updatesCh)
+}
+
+func (m monadTokenPriceDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
+	// Get token price from DEX
+	price, err := m.getTokenPrice()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token price: %w", err)
+	}
+
+	// Create update map
+	updateMap := types.DataSourceUpdateMap{
+		m.valueId: types.DataSourceValueUpdate{
+			ValueId:      m.valueId,
+			DataSourceId: MonadTokenPriceDataSourceId,
+			Timestamp:    time.Now(),
+			Value:        price,
+		},
+	}
+
+	return updateMap, nil
+}
+
+func (m monadTokenPriceDataSource) getTokenPrice() (float64, error) {
+	// Get token decimals
+	tokenDecimals, err := m.getTokenDecimals(m.monadTokenPriceConfig.TokenAddress)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get token decimals: %w", err)
+	}
+
+	// Get base token decimals
+	baseTokenDecimals, err := m.getTokenDecimals(m.monadTokenPriceConfig.BaseTokenAddress)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get base token decimals: %w", err)
+	}
+
+	// Call getAmountsOut on the router contract
+	// We use 1 token as the input amount (with proper decimals)
+	oneToken := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(tokenDecimals)), nil)
+	path := []string{m.monadTokenPriceConfig.TokenAddress, m.monadTokenPriceConfig.BaseTokenAddress}
+
+	// Encode the function call
+	data := fmt.Sprintf(
+		`{"to":"%s","data":"0xd06ca61f%064x%064x%064x%064x%064x%064x"}`,
+		m.monadTokenPriceConfig.RouterAddress,
+		big.NewInt(32),                // offset to path array
+		oneToken,                      // amountIn
+		big.NewInt(2),                 // path length
+		new(big.Int).SetBytes([]byte(m.monadTokenPriceConfig.TokenAddress)),
+		new(big.Int).SetBytes([]byte(m.monadTokenPriceConfig.BaseTokenAddress)),
+		big.NewInt(0),
+	)
+
+	// Create JSON-RPC request for eth_call
+	request := jsonRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "eth_call",
+		Params:  []interface{}{json.RawMessage(data), "latest"},
+		ID:      1,
+	}
+
+	// Send request to Monad RPC endpoint
+	response, err := m.sendJSONRPCRequest(request)
+	if err != nil {
+		return 0, err
+	}
+
+	// Parse the response
+	var result string
+	if err := json.Unmarshal(response.Result, &result); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal result: %w", err)
+	}
+
+	// Extract the output amount
+	// The result format is: 0x<offset><array length><amount1><amount2>
+	if len(result) < 194 {
+		return 0, fmt.Errorf("invalid result length: %d", len(result))
+	}
+
+	// Extract the second amount (index 1 in the amounts array)
+	amountHex := result[130:194]
+	amount := new(big.Int)
+	amount.SetString(amountHex, 16)
+
+	// Convert to float with proper decimals
+	baseTokenDecimalsBig := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(baseTokenDecimals)), nil)
+	amountFloat := new(big.Float).Quo(
+		new(big.Float).SetInt(amount),
+		new(big.Float).SetInt(baseTokenDecimalsBig),
+	)
+
+	price, _ := amountFloat.Float64()
+	return price, nil
+}
+
+func (m monadTokenPriceDataSource) getTokenDecimals(tokenAddress string) (uint8, error) {
+	// Encode the decimals() function call (0x313ce567)
+	data := fmt.Sprintf(`{"to":"%s","data":"0x313ce567"}`, tokenAddress)
+
+	// Create JSON-RPC request for eth_call
+	request := jsonRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "eth_call",
+		Params:  []interface{}{json.RawMessage(data), "latest"},
+		ID:      1,
+	}
+
+	// Send request to Monad RPC endpoint
+	response, err := m.sendJSONRPCRequest(request)
+	if err != nil {
+		return 0, err
+	}
+
+	// Parse the response
+	var result string
+	if err := json.Unmarshal(response.Result, &result); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal result: %w", err)
+	}
+
+	// Convert hex to decimal
+	decimalsHex := strings.TrimPrefix(result, "0x")
+	decimals := new(big.Int)
+	decimals.SetString(decimalsHex, 16)
+
+	return uint8(decimals.Uint64()), nil
+}
+
+func (m monadTokenPriceDataSource) sendJSONRPCRequest(request jsonRPCRequest) (*jsonRPCResponse, error) {
+	// Marshal request to JSON
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequest("POST", m.monadTokenPriceConfig.RpcEndpoint, strings.NewReader(string(requestBody)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send request
+	resp, err := m.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	// Decode response
+	var response jsonRPCResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// Check for JSON-RPC error
+	if response.Error != nil {
+		return nil, fmt.Errorf("JSON-RPC error: %d - %s", response.Error.Code, response.Error.Message)
+	}
+
+	return &response, nil
 }
