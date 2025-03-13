@@ -5,8 +5,21 @@
     "dataSource": {
       "type": "string",
       "const": "monadgasfees"
+    },
+    "rpcEndpoint": {
+      "type": "string",
+      "description": "Monad RPC endpoint URL"
+    },
+    "updateFrequency": {
+      "type": "string",
+      "description": "How often to fetch gas fee data (e.g. '10s', '1m')"
+    },
+    "blockWindow": {
+      "type": "integer",
+      "description": "Number of recent blocks to analyze for gas fees",
+      "default": 20
     }
   },
-  "required": ["dataSource"],
+  "required": ["dataSource", "rpcEndpoint", "updateFrequency"],
   "additionalProperties": false
 } 

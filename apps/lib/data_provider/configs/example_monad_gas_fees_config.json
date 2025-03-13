@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "id": "monad_gas_fees",
+      "config": {
+        "dataSource": "monadgasfees",
+        "rpcEndpoint": "https://testnet-rpc.monad.xyz",
+        "updateFrequency": "1m",
+        "blockWindow": 50
+      }
+    }
+  ]
+} 

@@ -7,12 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/big"
-	"net/http"
-	"strings"
-	"time"
-
-	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/sources"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/types"
 	"github.com/Stork-Oracle/stork-external/apps/lib/data_provider/utils"
 	"github.com/rs/zerolog"
@@ -20,42 +14,9 @@ import (
 
 type monadBlockDataDataSource struct {
 	monadBlockDataConfig MonadBlockDataConfig
-	valueId              types.ValueId
-	logger               zerolog.Logger
-	updateFrequency      time.Duration
-	client               *http.Client
-}
-
-// JSON-RPC request structure
-type jsonRPCRequest struct {
-	JSONRPC string      `json:"jsonrpc"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params"`
-	ID      int         `json:"id"`
-}
-
-// JSON-RPC response structure
-type jsonRPCResponse struct {
-	JSONRPC string          `json:"jsonrpc"`
-	Result  json.RawMessage `json:"result"`
-	Error   *jsonRPCError   `json:"error,omitempty"`
-	ID      int             `json:"id"`
-}
-
-type jsonRPCError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// Block structure for eth_getBlockByNumber response
-type Block struct {
-	Number           string   `json:"number"`
-	Timestamp        string   `json:"timestamp"`
-	Transactions     []string `json:"transactions"`
-	GasUsed          string   `json:"gasUsed"`
-	GasLimit         string   `json:"gasLimit"`
-	BaseFeePerGas    string   `json:"baseFeePerGas"`
-	TransactionCount int      `json:"transactionCount"`
+	valueId 	types.ValueId
+	logger 		zerolog.Logger
+	// TODO: set any necessary parameters
 }
 
 func newMonadBlockDataDataSource(sourceConfig types.DataProviderSourceConfig) *monadBlockDataDataSource {
@@ -64,134 +25,48 @@ func newMonadBlockDataDataSource(sourceConfig types.DataProviderSourceConfig) *m
 		panic("unable to decode config: " + err.Error())
 	}
 
-	updateFrequency, err := time.ParseDuration(monadBlockDataConfig.UpdateFrequency)
-	if err != nil {
-		panic("unable to parse update frequency: " + monadBlockDataConfig.UpdateFrequency)
-	}
-
+	// TODO: add any necessary initialization code
 	return &monadBlockDataDataSource{
 		monadBlockDataConfig: monadBlockDataConfig,
-		valueId:              sourceConfig.Id,
-		logger:               utils.DataSourceLogger(MonadBlockDataDataSourceId),
-		updateFrequency:      updateFrequency,
-		client:               &http.Client{Timeout: 10 * time.Second},
+		valueId: 	sourceConfig.Id,
+		logger: 	utils.DataSourceLogger(MonadBlockDataDataSourceId),
 	}
 }
 
-func (m monadBlockDataDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
-	updater := func() (types.DataSourceUpdateMap, error) { return m.getUpdate() }
-	scheduler := sources.NewScheduler(
-		m.updateFrequency,
-		updater,
-		sources.GetErrorLogHandler(m.logger, zerolog.WarnLevel),
-	)
-	scheduler.RunScheduler(ctx, updatesCh)
+func (r monadBlockDataDataSource) RunDataSource(ctx context.Context, updatesCh chan types.DataSourceUpdateMap) {
+	// TODO: Write all logic to fetch data points and report them to updatesCh
+	panic("implement me")
 }
 
-func (m monadBlockDataDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
-	// Get the latest block number
-	latestBlockNumber, err := m.getLatestBlockNumber()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest block number: %w", err)
-	}
-
-	// Get the latest block details
-	latestBlock, err := m.getBlockByNumber(latestBlockNumber)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest block: %w", err)
-	}
-
-	// Calculate block time by getting previous blocks
-	blockTime, err := m.calculateAverageBlockTime(latestBlockNumber)
-	if err != nil {
-		m.logger.Warn().Err(err).Msg("Failed to calculate average block time")
-		// Continue with other metrics even if block time calculation fails
-	}
-
-	// Convert block timestamp from hex to decimal
-	timestampHex := strings.TrimPrefix(latestBlock.Timestamp, "0x")
-	timestamp := new(big.Int)
-	timestamp.SetString(timestampHex, 16)
-
-	// Convert gas used from hex to decimal
-	gasUsedHex := strings.TrimPrefix(latestBlock.GasUsed, "0x")
-	gasUsed := new(big.Int)
-	gasUsed.SetString(gasUsedHex, 16)
-
-	// Convert gas limit from hex to decimal
-	gasLimitHex := strings.TrimPrefix(latestBlock.GasLimit, "0x")
-	gasLimit := new(big.Int)
-	gasLimit.SetString(gasLimitHex, 16)
-
-	// Calculate gas utilization percentage
-	gasUtilization := 0.0
-	if gasLimit.Cmp(big.NewInt(0)) > 0 {
-		gasUtilizationRatio := new(big.Float).Quo(
-			new(big.Float).SetInt(gasUsed),
-			new(big.Float).SetInt(gasLimit),
-		)
-		gasUtilizationFloat, _ := gasUtilizationRatio.Float64()
-		gasUtilization = gasUtilizationFloat * 100 // Convert to percentage
-	}
-
-	// Get transaction count
-	txCount := len(latestBlock.Transactions)
-
-	// Create update map with multiple metrics
-	updateMap := types.DataSourceUpdateMap{
-		m.valueId: types.DataSourceValueUpdate{
-			ValueId:      m.valueId,
-			DataSourceId: MonadBlockDataDataSourceId,
-			Timestamp:    time.Now(),
-			Value:        float64(txCount), // Default value is transaction count
-		},
-		types.ValueId(fmt.Sprintf("%s_block_time", m.valueId)): types.DataSourceValueUpdate{
-			ValueId:      types.ValueId(fmt.Sprintf("%s_block_time", m.valueId)),
-			DataSourceId: MonadBlockDataDataSourceId,
-			Timestamp:    time.Now(),
-			Value:        blockTime,
-		},
-		types.ValueId(fmt.Sprintf("%s_gas_utilization", m.valueId)): types.DataSourceValueUpdate{
-			ValueId:      types.ValueId(fmt.Sprintf("%s_gas_utilization", m.valueId)),
-			DataSourceId: MonadBlockDataDataSourceId,
-			Timestamp:    time.Now(),
-			Value:        gasUtilization,
-		},
-	}
-
-	return updateMap, nil
+// Block structure for eth_getBlockByNumber response
+type Block struct {
+	Number       string `json:"number"`
+	Timestamp    string `json:"timestamp"`
+	Transactions string `json:"transactions,string"` // Force string type
+	GasUsed      string `json:"gasUsed"`
+	GasLimit     string `json:"gasLimit"`
+	BaseFeePerGas string `json:"baseFeePerGas"`
 }
 
-func (m monadBlockDataDataSource) getLatestBlockNumber() (string, error) {
-	// Create JSON-RPC request for eth_blockNumber
-	request := jsonRPCRequest{
-		JSONRPC: "2.0",
-		Method:  "eth_blockNumber",
-		Params:  []interface{}{},
-		ID:      1,
-	}
-
-	// Send request to Monad RPC endpoint
-	response, err := m.sendJSONRPCRequest(request)
-	if err != nil {
-		return "", err
-	}
-
-	// Extract block number from response
-	var blockNumber string
-	if err := json.Unmarshal(response.Result, &blockNumber); err != nil {
-		return "", fmt.Errorf("failed to unmarshal block number: %w", err)
-	}
-
-	return blockNumber, nil
+// Transaction structure for eth_getBlockByNumber response
+type Transaction struct {
+	Hash             string `json:"hash"`
+	TransactionIndex string `json:"transactionIndex"`
+	From             string `json:"from"`
+	To               string `json:"to"`
+	Value            string `json:"value"`
+	Gas              string `json:"gas"`
+	GasPrice         string `json:"gasPrice"`
+	Input            string `json:"input"`
 }
 
+// getBlockByNumber retrieves a block by number from the blockchain
 func (m monadBlockDataDataSource) getBlockByNumber(blockNumber string) (*Block, error) {
-	// Create JSON-RPC request for eth_getBlockByNumber
+	// Create a custom request to get the block without transactions
 	request := jsonRPCRequest{
 		JSONRPC: "2.0",
 		Method:  "eth_getBlockByNumber",
-		Params:  []interface{}{blockNumber, true},
+		Params:  []interface{}{blockNumber, false}, // false = don't get transaction objects
 		ID:      1,
 	}
 
@@ -201,105 +76,27 @@ func (m monadBlockDataDataSource) getBlockByNumber(blockNumber string) (*Block, 
 		return nil, err
 	}
 
-	// Extract block from response
-	var block Block
-	if err := json.Unmarshal(response.Result, &block); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal block: %w", err)
+	// First convert to a map to handle the transactions field
+	var blockMap map[string]interface{}
+	if err := json.Unmarshal(response.Result, &blockMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal block to map: %w", err)
 	}
 
-	return &block, nil
-}
-
-func (m monadBlockDataDataSource) calculateAverageBlockTime(latestBlockNumber string) (float64, error) {
-	// Convert latest block number from hex to decimal
-	latestBlockHex := strings.TrimPrefix(latestBlockNumber, "0x")
-	latestBlockInt := new(big.Int)
-	latestBlockInt.SetString(latestBlockHex, 16)
-
-	// Calculate the block number from BlockTimeWindow blocks ago
-	windowSize := m.monadBlockDataConfig.BlockTimeWindow
-	if windowSize <= 0 {
-		windowSize = 10 // Default to 10 blocks if not specified
-	}
-
-	if latestBlockInt.Cmp(big.NewInt(int64(windowSize))) <= 0 {
-		return 0, fmt.Errorf("not enough blocks to calculate average block time")
-	}
-
-	oldBlockInt := new(big.Int).Sub(latestBlockInt, big.NewInt(int64(windowSize)))
-	oldBlockHex := fmt.Sprintf("0x%x", oldBlockInt)
-
-	// Get the latest block and the old block
-	latestBlock, err := m.getBlockByNumber(latestBlockNumber)
+	// Convert transactions to a string representation
+	txBytes, err := json.Marshal(blockMap["transactions"])
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("failed to marshal transactions: %w", err)
 	}
 
-	oldBlock, err := m.getBlockByNumber(oldBlockHex)
-	if err != nil {
-		return 0, err
+	// Set up the Block struct
+	block := &Block{
+		Number:        fmt.Sprintf("%v", blockMap["number"]),
+		Timestamp:     fmt.Sprintf("%v", blockMap["timestamp"]),
+		Transactions:  string(txBytes),
+		GasUsed:       fmt.Sprintf("%v", blockMap["gasUsed"]),
+		GasLimit:      fmt.Sprintf("%v", blockMap["gasLimit"]),
+		BaseFeePerGas: fmt.Sprintf("%v", blockMap["baseFeePerGas"]),
 	}
 
-	// Convert timestamps from hex to decimal
-	latestTimestampHex := strings.TrimPrefix(latestBlock.Timestamp, "0x")
-	latestTimestamp := new(big.Int)
-	latestTimestamp.SetString(latestTimestampHex, 16)
-
-	oldTimestampHex := strings.TrimPrefix(oldBlock.Timestamp, "0x")
-	oldTimestamp := new(big.Int)
-	oldTimestamp.SetString(oldTimestampHex, 16)
-
-	// Calculate time difference in seconds
-	timeDiff := new(big.Int).Sub(latestTimestamp, oldTimestamp)
-
-	// Calculate average block time
-	blockTimeBigFloat := new(big.Float).Quo(
-		new(big.Float).SetInt(timeDiff),
-		new(big.Float).SetInt64(int64(windowSize)),
-	)
-
-	blockTime, _ := blockTimeBigFloat.Float64()
-	return blockTime, nil
-}
-
-func (m monadBlockDataDataSource) sendJSONRPCRequest(request jsonRPCRequest) (*jsonRPCResponse, error) {
-	// Marshal request to JSON
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	// Create HTTP request
-	req, err := http.NewRequest("POST", m.monadBlockDataConfig.RpcEndpoint, strings.NewReader(string(requestBody)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	resp, err := m.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	// Decode response
-	var response jsonRPCResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	// Check for JSON-RPC error
-	if response.Error != nil {
-		return nil, fmt.Errorf("JSON-RPC error: %d - %s", response.Error.Code, response.Error.Message)
-	}
-
-	return &response, nil
+	return block, nil
 }

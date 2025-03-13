@@ -10,5 +10,4 @@ type MonadGasFeesConfig struct {
 	RpcEndpoint     string             `json:"rpcEndpoint"` // Monad RPC endpoint URL
 	UpdateFrequency string             `json:"updateFrequency"` // How often to fetch gas fee data
 	BlockWindow     int                `json:"blockWindow"` // Number of recent blocks to analyze for gas fees
-	// TODO: Add any additional config parameters needed to pull a particular data feed
 }
