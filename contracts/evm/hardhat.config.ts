@@ -359,7 +359,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    // enabled: true, // uncomment this for ZKSync verifications
+    // enabled: false, // uncomment this for ZKSync verifications
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
