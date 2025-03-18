@@ -21,6 +21,9 @@
     "zksync-ethers": "^6.15.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@quai/hardhat-deploy-metadata": "^1.0.8",
+    "@quai/quais-upgrades": "^3.8.14",
+    "quais": "^1.0.0-alpha.40"
   }
 }

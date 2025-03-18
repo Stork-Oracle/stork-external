@@ -3,9 +3,13 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
 require("@openzeppelin/hardhat-upgrades");
 
+import "@quai/quais-upgrades"
+import "@quai/hardhat-deploy-metadata"
+
 import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-upgradable";
 
+import './tasks/deploy-quai';
 import './tasks/deploy';
 import './tasks/upgrade';
 import './tasks/interact';
@@ -13,22 +17,35 @@ import './tasks/print-abi';
 import './tasks/deploy-zk';
 import './tasks/upgrade-zk';
 import './tasks/get-impl';
+import './tasks/get-address';
 
 import { vars } from "hardhat/config";
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
-const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
-const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
-const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
-const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
-const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
-const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
-const SCROLL_MAINNET_API_KEY = vars.get("SCROLL_MAINNET_API_KEY");
-const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
-const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
+// const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
+// const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
+// const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
+// const CORE_TESTNET_API_KEY = vars.get("CORE_TESTNET_API_KEY");
+// const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
+// const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
+// const SCROLL_MAINNET_API_KEY = vars.get("SCROLL_MAINNET_API_KEY");
+// const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
+// const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.24",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.24",
+        settings: {
+          metadata: {
+        bytecodeHash: 'ipfs',
+        useLiteralContent: true,
+          }
+        }
+      }
+    ],
+  },
   zksolc: {
     version: "latest",
     settings: {
@@ -239,11 +256,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80002,
     },
-    rootstockTestnet: {
-      url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
-      accounts: [PRIVATE_KEY],
-      chainId: 31,
-    },
+    // rootstockTestnet: {
+    //   // url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
+    //   accounts: [PRIVATE_KEY],
+    //   chainId: 31,
+    // },
     scrollMainnet: {
       url: "https://rpc.scroll.io/",
       accounts: [PRIVATE_KEY],
@@ -259,11 +276,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1946
     },
-    soneiumMainnet: {
-      url: SONEIUM_MAINNET_RPC_URL,
-      accounts: [PRIVATE_KEY],
-      chainId: 1868
-    },
+    // soneiumMainnet: {
+    //   url: SONEIUM_MAINNET_RPC_URL,
+    //   accounts: [PRIVATE_KEY],
+    //   chainId: 1868
+    // },
     sonicMainnet: {
       url: "https://rpc.soniclabs.com",
       accounts: [PRIVATE_KEY],
@@ -347,24 +364,30 @@ const config: HardhatUserConfig = {
       chainId: 324,
       verifyURL: "https://explorer.zksync.io/contract_verification",
       zksync: true,
-    }
+    },
+    quaiOrchardTestnetCyprus1: {
+      url: "https://orchard.rpc.quai.network/cyprus1",
+      accounts: [PRIVATE_KEY],
+      chainId: 15000,
+      loggingEnabled: false,
+    },
   },
   etherscan: {
     // enabled: false, // uncomment this for ZKSync verifications
     apiKey: {
-      arbitrumSepolia: ARBISCAN_API_KEY,
+      // arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
       bevmTestnet: 'fake',
       bitlayerTestnet: 'fake',
       bitlayerMainnet: 'fake',
       bobSepolia: 'fake',
       citreaTestnet: 'fake',
-      coreTestnet: CORE_TESTNET_API_KEY,
-      coreMainnet: CORE_MAINNET_API_KEY,
+      // coreTestnet: CORE_TESTNET_API_KEY,
+      // coreMainnet: CORE_MAINNET_API_KEY,
       expchainTestnet: 'fake',
       glueTestnet: 'fake',
       goatTestnet: 'fake',
-      holesky: ETHERSCAN_API_KEY,
+      // holesky: ETHERSCAN_API_KEY,
       lightlinkPegasusTestnet: 'fake',
       lightlinkPhoenixMainnet: 'fake',
       lorenzoTestnet: 'fake',
@@ -381,10 +404,10 @@ const config: HardhatUserConfig = {
       ozeanTestnet: 'fake',
       plume: 'fake',
       plumeDevnet: 'fake',
-      polygon: POLYGON_API_KEY,
-      polygonAmoy: POLYGON_API_KEY,
-      rootstockTestnet: 'fake',
-      scrollMainnet: SCROLL_MAINNET_API_KEY,
+      // polygon: POLYGON_API_KEY,
+      // polygonAmoy: POLYGON_API_KEY,
+      // rootstockTestnet: 'fake',
+      // scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
       soneiumMinato: 'fake',
       storyOdysseyTestnet: 'fake',
@@ -393,7 +416,8 @@ const config: HardhatUserConfig = {
       unichainSepolia: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
-      zetachainTestnet: 'fake'
+      zetachainTestnet: 'fake',
+      cyprus1: 'fake',
     },
     customChains: [
       {
@@ -636,14 +660,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://scrollscan.com/"
         }
       },
-      {
-        network: "soneiumMainnet",
-        chainId: 1868,
-        urls: {
-          apiURL: `${SONEIUM_MAINNET_BLOCKSCOUT_URL}/api`,
-          browserURL: SONEIUM_MAINNET_BLOCKSCOUT_URL
-        }
-      },
+      // {
+      //   network: "soneiumMainnet",
+      //   chainId: 1868,
+      //   urls: {
+      //     apiURL: `${SONEIUM_MAINNET_BLOCKSCOUT_URL}/api`,
+      //     browserURL: SONEIUM_MAINNET_BLOCKSCOUT_URL
+      //   }
+      // },
       {
         network: "soneiumMinato",
         chainId: 1946,
@@ -706,6 +730,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://zetachain-testnet.blockscout.com/api",
           browserURL: "https://zetachain-testnet.blockscout.com/"
+        }
+      },
+      {
+        network: "quaiOrchardTestnetCyprus1",
+        chainId: 15000,
+        urls: {
+          apiURL: "https://orchard.rpc.quai.network/cyprus1/api",
+          browserURL: "https://orchard.quaiscan.io"
         }
       }
     ],
