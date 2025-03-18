@@ -26,6 +26,7 @@ const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 const SCROLL_MAINNET_API_KEY = vars.get("SCROLL_MAINNET_API_KEY");
 const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
 const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
+const CRONOS_L2_API_KEY = vars.get("CRONOS_L2_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
@@ -107,6 +108,14 @@ const config: HardhatUserConfig = {
       url: "https://rpc.coredao.org/",
       accounts: [PRIVATE_KEY],
       chainId: 1116,
+    },
+    cronosZkEvmMainnet: {
+      url: "https://mainnet.zkevm.cronos.org/",
+      accounts: [PRIVATE_KEY],
+      chainId: 388,
+      zksync: true,
+      verifyURL: "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
+      ethNetwork: "mainnet",
     },
     crossFiMainnet: {
       url: "https://rpc.mainnet.ms/",
@@ -350,7 +359,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    // enabled: false, // uncomment this for ZKSync verifications
+    // enabled: true, // uncomment this for ZKSync verifications
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
       berachainTestnet: 'fake',
@@ -393,7 +402,8 @@ const config: HardhatUserConfig = {
       unichainSepolia: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
-      zetachainTestnet: 'fake'
+      zetachainTestnet: 'fake',
+      cronosZkEvmMainnet: CRONOS_L2_API_KEY,
     },
     customChains: [
       {
@@ -466,6 +476,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://openapi.coredao.org/api",
           browserURL: "https://scan.coredao.org/"
+        }
+      },
+      {
+        network: "cronosZkEvmMainnet",
+        chainId: 388,
+        urls: {
+          apiURL: "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
+          browserURL: "https://explorer.zkevm.cronos.org/"
         }
       },
       {
