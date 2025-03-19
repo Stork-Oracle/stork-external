@@ -117,6 +117,14 @@ const config: HardhatUserConfig = {
       verifyURL: "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
       ethNetwork: "mainnet",
     },
+    cronosZkEvmTestnet: {
+      url: "https://testnet.zkevm.cronos.org/",
+      accounts: [PRIVATE_KEY],
+      chainId: 240,
+      zksync: true,
+      verifyURL: "https://explorer-api.zkevm.cronos.org/testnet/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
+      ethNetwork: "mainnet",
+    },
     crossFiMainnet: {
       url: "https://rpc.mainnet.ms/",
       accounts: [PRIVATE_KEY],
@@ -404,6 +412,7 @@ const config: HardhatUserConfig = {
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake',
       cronosZkEvmMainnet: CRONOS_L2_API_KEY,
+      cronosZkEvmTestnet: CRONOS_L2_API_KEY,
     },
     customChains: [
       {
@@ -484,6 +493,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-api.zkevm.cronos.org/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
           browserURL: "https://explorer.zkevm.cronos.org/"
+        }
+      },
+      {
+        network: "cronosZkEvmTestnet",
+        chainId: 240,
+        urls: {
+          apiURL: "https://explorer-api.zkevm.cronos.org/testnet/api/v1/contract/verify/hardhat?apikey=" + CRONOS_L2_API_KEY,
+          browserURL: "https://explorer.zkevm.cronos.org/testnet"
         }
       },
       {
