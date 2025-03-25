@@ -14,7 +14,7 @@ For general purpose development and testing, we recommend using the Osmosis test
 
 ### Development
 
-ensure you have the correct target installed for the chain you are developing on. This is typycially `wasm32-unknown-unknown`. 
+ensure you have the correct target installed for the chain you are developing on. This is typically `wasm32-unknown-unknown`. 
 
 ```bash
 rustup target add wasm32-unknown-unknown
