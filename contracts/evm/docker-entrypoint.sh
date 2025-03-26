@@ -14,6 +14,7 @@ npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
 npx hardhat vars set SCROLL_MAINNET_API_KEY fake
 npx hardhat vars set SONEIUM_MAINNET_RPC_URL fake
 npx hardhat vars set SONEIUM_MAINNET_BLOCKSCOUT_URL fake
+npx hardhat vars set CRONOS_L2_API_KEY fake
 
 # Start hardhat node as a background process
 npx hardhat node &
