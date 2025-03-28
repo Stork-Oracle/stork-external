@@ -1,0 +1,33 @@
+{
+  "sources": [
+    {
+      "id": "monad_block_data",
+      "config": {
+        "dataSource": "monadblockdata",
+        "rpcEndpoint": "https://testnet-rpc.monad.xyz",
+        "updateFrequency": "10s",
+        "blockTimeWindow": 20
+      }
+    },
+    {
+      "id": "monad_token_price_weth",
+      "config": {
+        "dataSource": "monadtokenprice",
+        "rpcEndpoint": "https://testnet-rpc.monad.xyz",
+        "updateFrequency": "30s",
+        "routerAddress": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+        "tokenAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "baseTokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"
+      }
+    },
+    {
+      "id": "monad_gas_fees",
+      "config": {
+        "dataSource": "monadgasfees",
+        "rpcEndpoint": "https://testnet-rpc.monad.xyz",
+        "updateFrequency": "1m",
+        "blockWindow": 50
+      }
+    }
+  ]
+} 
