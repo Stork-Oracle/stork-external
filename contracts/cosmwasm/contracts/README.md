@@ -4,7 +4,7 @@ This is the Stork CosmWasm compatible contract. This crate is maintained by [Sto
 
 It is available on [crates.io](https://crates.io/crates/stork-cw).
 
-This crate can be used as an SDK to build contracts that interact with the Stork Contract by including it as a depency and enabling the `library` feature.
+This crate can be used as an SDK to build contracts that interact with the Stork Contract by including it as a dependency and enabling the `library` feature.
 
 ## Pull Model
 
