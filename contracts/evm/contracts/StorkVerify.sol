@@ -2,14 +2,17 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
 contract StorkVerify {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
+
     function getEthSignedMessageHash32(
         bytes32 message
     ) private pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", message)
-            );
+        return MessageHashUtils.toEthSignedMessageHash(message);
     }
 
     function getStorkMessageHashV1(
@@ -51,7 +54,8 @@ contract StorkVerify {
         bytes32 s,
         uint8 v
     ) private pure returns (address) {
-        return ecrecover(signedMessageHash, v, r, s);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        return ECDSA.recover(signedMessageHash, signature);
     }
 
     function computeMerkleRoot(bytes32[] memory leaves) private pure returns (bytes32) {
