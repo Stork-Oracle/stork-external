@@ -32,4 +32,8 @@ contract UpgradeableStork is Initializable, UUPSUpgradeable, OwnableUpgradeable,
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function renounceOwnership() public virtual override onlyOwner {
+        revert("Ownable: renouncing ownership is disabled");
+    }
 }
