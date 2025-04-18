@@ -26,13 +26,16 @@ contract StorkSetters is StorkState, IStorkEvents {
     function setStorkPublicKey(address storkPublicKey) internal {
         require(storkPublicKey != address(0), "Stork public key cannot be 0 address");
         _state.storkPublicKey = storkPublicKey;
+        emit StorkPublicKeyUpdate(storkPublicKey);
     }
 
     function setSingleUpdateFeeInWei(uint fee) internal {
         _state.singleUpdateFeeInWei = fee;
+        emit SingleUpdateFeeUpdate(fee);
     }
 
     function setValidTimePeriodSeconds(uint validTimePeriodSeconds) internal {
         _state.validTimePeriodSeconds = validTimePeriodSeconds;
+        emit ValidTimePeriodUpdate(validTimePeriodSeconds);
     }
 }
