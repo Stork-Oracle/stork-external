@@ -42,7 +42,11 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
 
-	evmInteracter := NewEvmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, verifyPublishers, logger)
+	evmInteracter, err := NewEvmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, verifyPublishers, logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interacter")
+	}
+
 
 	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteracter, &logger)
 	evmPusher.Run()

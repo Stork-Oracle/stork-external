@@ -17,7 +17,7 @@ type AptosContractInteracter struct {
 	pollingFrequencySec int
 }
 
-func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteracter, error) {
+func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteracter, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
 
 	keyFileContent, err := os.ReadFile(privateKeyFile)

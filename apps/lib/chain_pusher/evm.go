@@ -24,32 +24,31 @@ type EvmContractInteracter struct {
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
 
-	pollingFrequencySec int
-	verifyPublishers    bool
+	verifyPublishers bool
 }
 
-func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, pollingFreqSec int, verifyPublishers bool, logger zerolog.Logger) *EvmContractInteracter {
+func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, verifyPublishers bool, logger zerolog.Logger) (*EvmContractInteracter, error) {
 	logger.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to load private key")
+		return nil, err
 	}
 
 	client, err := ethclient.Dial(rpcUrl)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to connect to Ethereum client")
+		return nil, err
 	}
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to get chain ID")
+		return nil, err
 	}
 
 	contractAddress := common.HexToAddress(contractAddr)
 	contract, err := contract.NewStorkContract(contractAddress, client)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize contract")
+		return nil, err
 	}
 
 	return &EvmContractInteracter{
@@ -59,9 +58,8 @@ func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, polling
 		privateKey: privateKey,
 		chainID:    chainID,
 
-		pollingFrequencySec: pollingFreqSec,
-		verifyPublishers:    verifyPublishers,
-	}
+		verifyPublishers: verifyPublishers,
+	}, nil
 }
 
 func (sci *EvmContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
@@ -231,7 +229,7 @@ func (sci *EvmContractInteracter) BatchPushToContract(priceUpdates map[InternalE
 		if err != nil {
 			return err
 		}
-		for i, _ := range publisherVerifyPayloads {
+		for i := range publisherVerifyPayloads {
 			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
 			if err != nil {
 				sci.logger.Error().Err(err).Msg("Failed to verify publisher signatures")

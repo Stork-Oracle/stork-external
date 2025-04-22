@@ -40,7 +40,7 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 
 	logger := AptosPusherLogger(chainRpcUrl, contractAddress)
 
-	aptosInteracter, err := NewAptosContractInteracter(chainRpcUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
+	aptosInteracter, err := NewAptosContractInteracter(chainRpcUrl, contractAddress, privateKeyFile, pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interacter")
 	}
