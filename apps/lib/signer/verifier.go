@@ -75,7 +75,7 @@ func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, qua
 		externalAssetId,
 		publisherAddress,
 	)
-	isValid, err := verifyEvmSignature(publisherAddress, payload, evmSignature)
+	isValid, err := VerifyEvmSignature(publisherAddress, payload, evmSignature)
 	if err != nil {
 		return fmt.Errorf("failed to verify signature: %w", err)
 	}
@@ -85,7 +85,7 @@ func VerifyEvmPublisherPrice(publishTimestamp int64, externalAssetId string, qua
 	return nil
 }
 
-func verifyEvmSignature(publisherAddress common.Address, payload [][]byte, signature EvmSignature) (bool, error) {
+func VerifyEvmSignature(publisherAddress common.Address, payload [][]byte, signature EvmSignature) (bool, error) {
 	_, prefixedHash := getEvmHashes(payload)
 	storkSignatureBytes, err := evmSignatureToBytes(signature)
 	if err != nil {
