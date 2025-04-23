@@ -130,6 +130,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 4158,
     },
+    ethereumMainnet: {
+      url: "https://ethereum-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 1,
+    },
     // not currently deployed, seems to have been reset
     expchainTestnet: {
       url: "https://rpc0-testnet.expchain.ai",
