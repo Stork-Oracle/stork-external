@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type EvmContractInteracter struct {
+type EvmContractInteractor struct {
 	logger zerolog.Logger
 
 	contract *contract.StorkContract
@@ -27,7 +27,7 @@ type EvmContractInteracter struct {
 	verifyPublishers bool
 }
 
-func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, verifyPublishers bool, logger zerolog.Logger) (*EvmContractInteracter, error) {
+func NewEvmContractInteractor(rpcUrl, contractAddr, mnemonicFile string, verifyPublishers bool, logger zerolog.Logger) (*EvmContractInteractor, error) {
 	logger.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
@@ -51,7 +51,7 @@ func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, verifyP
 		return nil, err
 	}
 
-	return &EvmContractInteracter{
+	return &EvmContractInteractor{
 		logger: logger,
 
 		contract:   contract,
@@ -62,7 +62,7 @@ func NewEvmContractInteracter(rpcUrl, contractAddr, mnemonicFile string, verifyP
 	}, nil
 }
 
-func (sci *EvmContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *EvmContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
 	}
@@ -90,7 +90,7 @@ func (sci *EvmContractInteracter) ListenContractEvents(ch chan map[InternalEncod
 	}
 }
 
-func (sci *EvmContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
@@ -223,7 +223,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 	return payloads, nil
 }
 
-func (sci *EvmContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
+func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	if sci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {

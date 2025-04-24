@@ -49,11 +49,11 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	chainPrefix, _ := cmd.Flags().GetString(ChainPrefixFlag)
 	logger := CosmwasmPusherLogger(chainRpcUrl, contractAddress)
 
-	cosmwasmInteracter, err := NewCosmwasmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonicFile, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interacter")
+		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
 	}
 
-	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteracter, &logger)
+	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteractor, &logger)
 	cosmwasmPusher.Run()
 }

@@ -10,14 +10,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type AptosContractInteracter struct {
+type AptosContractInteractor struct {
 	logger   zerolog.Logger
 	contract *contract.StorkContract
 
 	pollingFrequencySec int
 }
 
-func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteracter, error) {
+func NewAptosContractInteractor(rpcUrl, contractAddr, privateKeyFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
 
 	keyFileContent, err := os.ReadFile(privateKeyFile)
@@ -32,7 +32,7 @@ func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, pol
 		return nil, err
 	}
 
-	return &AptosContractInteracter{
+	return &AptosContractInteractor{
 		logger:              logger,
 		contract:            contract,
 		pollingFrequencySec: pollingFreqSec,
@@ -41,11 +41,11 @@ func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, pol
 
 // unfortunately, Aptos doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Aptos re-adds websocket support
-func (aci *AptosContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (aci *AptosContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	aci.logger.Warn().Msg("Aptos does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
 	bindingsEncodedAssetIds := []contract.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
@@ -79,8 +79,7 @@ func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncoded
 	return result, nil
 }
 
-func (aci *AptosContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-
+func (aci *AptosContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	var updateData []contract.UpdateData
 	for _, price := range priceUpdates {
 		update, err := aci.aggregatedSignedPriceToAptosUpdateData(price)
@@ -101,7 +100,7 @@ func (aci *AptosContractInteracter) BatchPushToContract(priceUpdates map[Interna
 	return nil
 }
 
-func (aci *AptosContractInteracter) aggregatedSignedPriceToAptosUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
+func (aci *AptosContractInteractor) aggregatedSignedPriceToAptosUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToByteArray(string(signedPrice.EncodedAssetId))
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type SolanaContractInteracter struct {
+type SolanaContractInteractor struct {
 	logger              zerolog.Logger
 	client              *rpc.Client
 	wsClient            *ws.Client
@@ -39,13 +39,13 @@ const MAX_BATCH_SIZE = 4
 
 const NUM_CONFIRMATION_WORKERS = 10
 
-func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteracter, error) {
+func NewSolanaContractInteractor(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteractor, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
 	if 0 < batchSize && batchSize < MAX_BATCH_SIZE {
 		logger.Fatal().Msgf("Batch size must be between 1 and %d", MAX_BATCH_SIZE)
 	}
-	//calculate the time between requests bases on limitPerSecond
+	// calculate the time between requests bases on limitPerSecond
 	timeBetweenRequestsMs := 1000 / limitPerSecond
 	limiter := rate.NewLimiter(rate.Every(time.Duration(timeBetweenRequestsMs)*time.Millisecond), burstLimit)
 	client := rpc.New(rpcUrl)
@@ -80,7 +80,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to convert encoded asset ID to bytes")
 			return nil, err
 		}
-		//derive pda
+		// derive pda
 		feedAccount, _, err := solana.FindProgramAddress(
 			[][]byte{
 				[]byte("stork_feed"),
@@ -119,7 +119,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 	confirmationOutChan := make(chan solana.Signature)
 
 	contract.SetProgramID(contractPubKey)
-	sci := &SolanaContractInteracter{
+	sci := &SolanaContractInteractor{
 		logger:              logger,
 		client:              client,
 		wsClient:            wsClient,
@@ -140,7 +140,7 @@ func NewSolanaContractInteracter(rpcUrl, wsUrl, contractAddr string, privateKeyF
 	return sci, nil
 }
 
-func (sci *SolanaContractInteracter) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
+func (sci *SolanaContractInteractor) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
 	var queue []solana.Signature
 	for {
 		if len(queue) == 0 {
@@ -155,14 +155,15 @@ func (sci *SolanaContractInteracter) runUnboundedConfirmationBuffer(confirmation
 		}
 	}
 }
-func (sci *SolanaContractInteracter) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
+
+func (sci *SolanaContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
 	for i := 0; i < numWorkers; i++ {
 		go sci.confirmationWorker(ch)
 	}
 	sci.logger.Info().Int("numWorkers", numWorkers).Msg("Started confirmation workers")
 }
 
-func (sci *SolanaContractInteracter) confirmationWorker(ch chan solana.Signature) {
+func (sci *SolanaContractInteractor) confirmationWorker(ch chan solana.Signature) {
 	for sig := range ch {
 		_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
 		if err != nil {
@@ -173,7 +174,7 @@ func (sci *SolanaContractInteracter) confirmationWorker(ch chan solana.Signature
 	}
 }
 
-func (sci *SolanaContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *SolanaContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
 		wg.Add(1)
@@ -183,7 +184,7 @@ func (sci *SolanaContractInteracter) ListenContractEvents(ch chan map[InternalEn
 	wg.Wait()
 }
 
-func (sci *SolanaContractInteracter) listenSingleContractEvent(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+func (sci *SolanaContractInteractor) listenSingleContractEvent(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
 	if err != nil {
@@ -219,10 +220,9 @@ func (sci *SolanaContractInteracter) listenSingleContractEvent(ch chan map[Inter
 
 		ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{account.Id: tv}
 	}
-
 }
 
-func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 
 	for _, encodedAssetId := range encodedAssetIds {
@@ -256,8 +256,7 @@ func (sci *SolanaContractInteracter) PullValues(encodedAssetIds []InternalEncode
 	return polledVals, nil
 }
 
-func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-
+func (sci *SolanaContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(priceUpdates))
 	sigChan := make(chan solana.Signature, len(priceUpdates))
@@ -306,7 +305,7 @@ func (sci *SolanaContractInteracter) BatchPushToContract(priceUpdates map[Intern
 	return nil
 }
 
-func (sci *SolanaContractInteracter) batchPriceUpdates(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) []map[InternalEncodedAssetId]AggregatedSignedPrice {
+func (sci *SolanaContractInteractor) batchPriceUpdates(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) []map[InternalEncodedAssetId]AggregatedSignedPrice {
 	priceUpdatesBatches := []map[InternalEncodedAssetId]AggregatedSignedPrice{}
 
 	priceUpdatesBatch := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
@@ -327,8 +326,7 @@ func (sci *SolanaContractInteracter) batchPriceUpdates(priceUpdates map[Internal
 	return priceUpdatesBatches
 }
 
-func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) (solana.Signature, error) {
-
+func (sci *SolanaContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) (solana.Signature, error) {
 	if len(priceUpdates) > MAX_BATCH_SIZE {
 		return solana.Signature{}, fmt.Errorf("batch size exceeds limit, skipping update")
 	}
@@ -367,7 +365,6 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 	}
 
 	recentBlockHash, err := sci.client.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
-
 	if err != nil {
 		return solana.Signature{}, fmt.Errorf("failed to get recent blockhash: %w", err)
 	}
@@ -408,8 +405,7 @@ func (sci *SolanaContractInteracter) pushLimitedBatchUpdateToContract(priceUpdat
 	return sig, nil
 }
 
-func (sci *SolanaContractInteracter) priceUpdateToTemporalNumericValueEvmInput(priceUpdate AggregatedSignedPrice, encodedAssetId InternalEncodedAssetId, treasuryId uint8) (contract.TemporalNumericValueEvmInput, error) {
-
+func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate AggregatedSignedPrice, encodedAssetId InternalEncodedAssetId, treasuryId uint8) (contract.TemporalNumericValueEvmInput, error) {
 	var assetId [32]uint8
 	copy(assetId[:], encodedAssetId[:])
 
@@ -464,7 +460,7 @@ func (sci *SolanaContractInteracter) priceUpdateToTemporalNumericValueEvmInput(p
 	}, nil
 }
 
-func (sci *SolanaContractInteracter) quantizedPriceToInt128(quantizedPrice QuantizedPrice) bin.Int128 {
+func (sci *SolanaContractInteractor) quantizedPriceToInt128(quantizedPrice QuantizedPrice) bin.Int128 {
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
 

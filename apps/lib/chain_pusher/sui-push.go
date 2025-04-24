@@ -26,7 +26,6 @@ func init() {
 	SuipushCmd.MarkFlagRequired(ContractAddressFlag)
 	SuipushCmd.MarkFlagRequired(AssetConfigFileFlag)
 	SuipushCmd.MarkFlagRequired(PrivateKeyFileFlag)
-
 }
 
 func runSuiPush(cmd *cobra.Command, args []string) {
@@ -41,12 +40,11 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 
 	logger := SuiPusherLogger(chainRpcUrl, contractAddress)
 
-	suiInteracter, err := NewSuiContractInteracter(chainRpcUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
+	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interacter")
+		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interactor")
 	}
 
-	suiPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, suiInteracter, &logger)
+	suiPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, suiInteractor, &logger)
 	suiPusher.Run()
-
 }

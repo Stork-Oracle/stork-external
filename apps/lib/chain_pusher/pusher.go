@@ -17,11 +17,11 @@ type Pusher struct {
 	verifyPublishers bool
 	batchingWindow   int
 	pollingFrequency int
-	interacter       ContractInteracter
+	interactor       ContractInteractor
 	logger           *zerolog.Logger
 }
 
-func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingFrequency int, interacter ContractInteracter, logger *zerolog.Logger) *Pusher {
+func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingFrequency int, interactor ContractInteractor, logger *zerolog.Logger) *Pusher {
 	return &Pusher{
 		storkWsEndpoint:  storkWsEndpoint,
 		storkAuth:        storkAuth,
@@ -30,7 +30,7 @@ func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetCo
 		assetConfigFile:  assetConfigFile,
 		batchingWindow:   batchingWindow,
 		pollingFrequency: pollingFrequency,
-		interacter:       interacter,
+		interactor:       interactor,
 		logger:           logger,
 	}
 }
@@ -63,7 +63,7 @@ func (p *Pusher) Run() {
 	latestContractValueMap := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
 	latestStorkValueMap := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 
-	initialValues, err := p.interacter.PullValues(encodedAssetIds)
+	initialValues, err := p.interactor.PullValues(encodedAssetIds)
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
 	}
@@ -72,7 +72,7 @@ func (p *Pusher) Run() {
 	}
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
-	go p.interacter.ListenContractEvents(contractCh)
+	go p.interactor.ListenContractEvents(contractCh)
 	go p.poll(encodedAssetIds, contractCh)
 
 	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)
@@ -99,7 +99,7 @@ func (p *Pusher) Run() {
 			}
 
 			if len(updates) > 0 {
-				err := p.interacter.BatchPushToContract(updates)
+				err := p.interactor.BatchPushToContract(updates)
 				if err != nil {
 					p.logger.Error().Err(err).Msg("Failed to push batch to contract")
 				}
@@ -164,8 +164,8 @@ func shouldUpdateAsset(latestValue InternalStorkStructsTemporalNumericValue, lat
 
 func (p *Pusher) poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
-	for _ = range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
-		polledVals, err := p.interacter.PullValues(encodedAssetIds)
+	for range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
+		polledVals, err := p.interactor.PullValues(encodedAssetIds)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
 			continue
