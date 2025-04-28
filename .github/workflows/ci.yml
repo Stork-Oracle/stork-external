@@ -295,7 +295,21 @@ jobs:
       - name: Install Aptos CLI
         run: |
           if ! command -v aptos &> /dev/null; then
-            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3 - --cli-version 6.2.0
+            # Create directory for aptos binary
+            mkdir -p ~/.local/bin
+            
+            # Download the specific version binary
+            curl -LO https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.2.0/aptos-cli-6.2.0-Ubuntu-x86_64.zip
+            
+            # Unzip the binary
+            unzip aptos-cli-6.2.0-Ubuntu-x86_64.zip
+            
+            # Make it executable and move to path
+            chmod +x aptos
+            mv aptos ~/.local/bin/
+            
+            # Clean up zip file
+            rm aptos-cli-6.2.0-Ubuntu-x86_64.zip
           fi
           aptos --version
 
