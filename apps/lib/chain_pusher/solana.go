@@ -68,13 +68,6 @@ func NewSolanaContractInteractor(
 		return nil, err
 	}
 
-	// todo: this probably doesn't work, need to parse file somewhere else?
-	payer := solana.PrivateKey(privateKeyFile)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to parse private key")
-		return nil, err
-	}
-
 	assetConfig, err := LoadConfig(assetConfigFile)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to load asset config")
@@ -135,7 +128,7 @@ func NewSolanaContractInteractor(
 		feedAccounts:        feedAccounts,
 		treasuryAccounts:    treasuryAccounts,
 		configAccount:       configAccount,
-		payer:               payer,
+		payer:               privateKeyFile,
 		limiter:             limiter,
 		pollingFrequencySec: pollingFreqSec,
 		batchSize:           batchSize,
