@@ -295,7 +295,7 @@ jobs:
       - name: Install Aptos CLI
         run: |
           if ! command -v aptos &> /dev/null; then
-            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3 - --cli-version 6.2.0
           fi
           aptos --version
 
