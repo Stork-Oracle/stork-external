@@ -81,7 +81,9 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	for {
 		select {
-		// Determine updates after the batching window has passed and push them to the contract
+		case <-ctx.Done():
+			p.logger.Info().Msg("Pusher stopping due to context cancellation")
+			return
 		case <-ticker.C:
 			updates := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 			for encodedAssetId, latestStorkPrice := range latestStorkValueMap {

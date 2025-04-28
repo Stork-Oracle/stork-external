@@ -1,6 +1,6 @@
 # Stork CosmWasm Contract
 
-This directory contains the Stork compatable contract in the form of a [Sylvia](https://github.com/CosmWasm/sylvia) project, as well as a CLI tool used to manage the Stork CosmWasm compatible contract.
+This directory contains the Stork compatible contract in the form of a [Sylvia](https://github.com/CosmWasm/sylvia) project, as well as a CLI tool used to manage the Stork CosmWasm compatible contract.
 
 This contract can be used as an SDK with the `library` feature, and is available on [crates.io](https://crates.io/crates/stork-cw).
 
@@ -14,7 +14,7 @@ For general purpose development and testing, we recommend using the Osmosis test
 
 ### Development
 
-ensure you have the correct target installed for the chain you are developing on. This is typycially `wasm32-unknown-unknown`. 
+ensure you have the correct target installed for the chain you are developing on. This is typically `wasm32-unknown-unknown`. 
 
 ```bash
 rustup target add wasm32-unknown-unknown
