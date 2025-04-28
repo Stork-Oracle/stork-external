@@ -142,7 +142,7 @@ jobs:
         working-directory: ./contracts/solana
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.85.1
         with:
           components: rustfmt
 
