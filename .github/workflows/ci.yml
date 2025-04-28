@@ -196,7 +196,7 @@ jobs:
 
       - name: Run anchor tests
         run: |
-          anchor test
+          RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor test
         working-directory: ./contracts/solana/programs/stork
 
   test-sui:
