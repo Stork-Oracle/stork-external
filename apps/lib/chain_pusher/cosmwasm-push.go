@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -49,11 +51,11 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	chainPrefix, _ := cmd.Flags().GetString(ChainPrefixFlag)
 	logger := CosmwasmPusherLogger(chainRpcUrl, contractAddress)
 
-	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonicFile, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, []byte(mnemonicFile), batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
 	}
 
 	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteractor, &logger)
-	cosmwasmPusher.Run()
+	cosmwasmPusher.Run(context.Background())
 }

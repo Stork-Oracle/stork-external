@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -42,11 +44,11 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
 
-	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, contractAddress, mnemonicFile, verifyPublishers, logger)
+	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, contractAddress, []byte(mnemonicFile), verifyPublishers, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interactor")
 	}
 
 	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteractor, &logger)
-	evmPusher.Run()
+	evmPusher.Run(context.Background())
 }

@@ -1,6 +1,8 @@
 package chain_pusher
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -40,11 +42,11 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 
 	logger := AptosPusherLogger(chainRpcUrl, contractAddress)
 
-	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, privateKeyFile, pollingFrequency, logger)
+	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, []byte(privateKeyFile), pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interactor")
 	}
 
 	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, aptosInteractor, &logger)
-	aptosPusher.Run()
+	aptosPusher.Run(context.Background())
 }

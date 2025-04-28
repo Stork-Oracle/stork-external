@@ -1,10 +1,10 @@
 package chain_pusher
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"strconv"
 	"strings"
 
@@ -19,14 +19,22 @@ type CosmwasmContractInteractor struct {
 	pollingFrequencySec int
 }
 
-func NewCosmwasmContractInteractor(chainGrpcUrl, contractAddress, mnemonicFile string, batchingWindow, pollingFrequency int, logger zerolog.Logger, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*CosmwasmContractInteractor, error) {
+func NewCosmwasmContractInteractor(
+	chainGrpcUrl string,
+	contractAddress string,
+	mnemonicFile []byte,
+	batchingWindow int,
+	pollingFrequency int,
+	logger zerolog.Logger,
+	gasPrice float64,
+	gasAdjustment float64,
+	denom string,
+	chainID string,
+	chainPrefix string,
+) (*CosmwasmContractInteractor, error) {
 	logger = logger.With().Str("component", "cosmwasm-contract-interactor").Logger()
 
-	mnemonic, err := os.ReadFile(mnemonicFile)
-	if err != nil {
-		return nil, err
-	}
-	mnemonicString := strings.TrimSpace(string(mnemonic))
+	mnemonicString := strings.TrimSpace(string(mnemonicFile))
 	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		return nil, err
@@ -38,7 +46,9 @@ func NewCosmwasmContractInteractor(chainGrpcUrl, contractAddress, mnemonicFile s
 	}, nil
 }
 
-func (sci *CosmwasmContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *CosmwasmContractInteractor) ListenContractEvents(
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+) {
 	sci.logger.Warn().Msg("Cosmwasm pusher does not currently support listening to events via websocket, falling back to polling")
 }
 

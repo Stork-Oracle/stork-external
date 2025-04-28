@@ -1,9 +1,9 @@
 package chain_pusher
 
 import (
+	"context"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/aptos"
@@ -17,15 +17,16 @@ type AptosContractInteractor struct {
 	pollingFrequencySec int
 }
 
-func NewAptosContractInteractor(rpcUrl, contractAddr, privateKeyFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteractor, error) {
+func NewAptosContractInteractor(
+	rpcUrl string,
+	contractAddr string,
+	privateKeyFile []byte,
+	pollingFreqSec int,
+	logger zerolog.Logger,
+) (*AptosContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
 
-	keyFileContent, err := os.ReadFile(privateKeyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	privateKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
+	privateKey := strings.TrimSpace(strings.Split(string(privateKeyFile), "\n")[0])
 
 	contract, err := contract.NewStorkContract(rpcUrl, contractAddr, privateKey)
 	if err != nil {
@@ -41,7 +42,9 @@ func NewAptosContractInteractor(rpcUrl, contractAddr, privateKeyFile string, pol
 
 // unfortunately, Aptos doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Aptos re-adds websocket support
-func (aci *AptosContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (aci *AptosContractInteractor) ListenContractEvents(
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+) {
 	aci.logger.Warn().Msg("Aptos does not currently support listening to events via websocket, falling back to polling")
 }
 

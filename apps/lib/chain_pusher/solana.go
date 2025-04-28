@@ -39,7 +39,14 @@ const MAX_BATCH_SIZE = 4
 
 const NUM_CONFIRMATION_WORKERS = 10
 
-func NewSolanaContractInteractor(rpcUrl, wsUrl, contractAddr string, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int) (*SolanaContractInteractor, error) {
+func NewSolanaContractInteractor(
+	rpcUrl string,
+	wsUrl string,
+	contractAddr string,
+	privateKeyFile []byte,
+	assetConfigFile string,
+	pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int,
+) (*SolanaContractInteractor, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
 	if 0 < batchSize && batchSize < MAX_BATCH_SIZE {
@@ -61,7 +68,8 @@ func NewSolanaContractInteractor(rpcUrl, wsUrl, contractAddr string, privateKeyF
 		return nil, err
 	}
 
-	payer, err := solana.PrivateKeyFromSolanaKeygenFile(privateKeyFile)
+	// todo: this probably doesn't work, need to parse file somewhere else?
+	payer := solana.PrivateKey(privateKeyFile)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to parse private key")
 		return nil, err
@@ -174,17 +182,22 @@ func (sci *SolanaContractInteractor) confirmationWorker(ch chan solana.Signature
 	}
 }
 
-func (sci *SolanaContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
-		wg.Add(1)
-		go sci.listenSingleContractEvent(ch, feedAccount, &wg)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			wg.Add(1)
+			go sci.listenSingleContractEvent(ctx, ch, feedAccount, &wg)
+		}
 	}
 	// Wait indefinitely
 	wg.Wait()
 }
 
-func (sci *SolanaContractInteractor) listenSingleContractEvent(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
 	if err != nil {
@@ -194,6 +207,10 @@ func (sci *SolanaContractInteractor) listenSingleContractEvent(ch chan map[Inter
 	defer sub.Unsubscribe()
 
 	for {
+		if ctx.Err() != nil {
+			return
+		}
+
 		msg, err := sub.Recv()
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Error receiving contract events")

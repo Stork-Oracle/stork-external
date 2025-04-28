@@ -27,8 +27,14 @@ type EvmContractInteractor struct {
 	verifyPublishers bool
 }
 
-func NewEvmContractInteractor(rpcUrl, contractAddr, mnemonicFile string, verifyPublishers bool, logger zerolog.Logger) (*EvmContractInteractor, error) {
-	logger.With().Str("component", "stork-contract-interfacer").Logger()
+func NewEvmContractInteractor(
+	rpcUrl string,
+	contractAddr string,
+	mnemonicFile []byte,
+	verifyPublishers bool,
+	logger zerolog.Logger,
+) (*EvmContractInteractor, error) {
+	logger = logger.With().Str("component", "stork-contract-interfacer").Logger()
 
 	privateKey, err := loadPrivateKey(mnemonicFile)
 	if err != nil {
@@ -62,7 +68,9 @@ func NewEvmContractInteractor(rpcUrl, contractAddr, mnemonicFile string, verifyP
 	}, nil
 }
 
-func (sci *EvmContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *EvmContractInteractor) ListenContractEvents(
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+) {
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
 	}
@@ -77,6 +85,8 @@ func (sci *EvmContractInteractor) ListenContractEvents(ch chan map[InternalEncod
 	sci.logger.Info().Msg("Listening for contract events")
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case err := <-sub.Err():
 			// TODO - handle restart
 			log.Fatal().Err(err).Msg("Error watching contract events")

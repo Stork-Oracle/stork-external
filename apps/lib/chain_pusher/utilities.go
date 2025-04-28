@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
-	"os"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -71,13 +70,9 @@ func stringToByte32(input string) ([32]byte, error) {
 }
 
 // For simplicity, this function assumes the mnemonic file contains the private key directly
-func loadPrivateKey(mnemonicFile string) (*ecdsa.PrivateKey, error) {
-	data, err := os.ReadFile(mnemonicFile)
-	if err != nil {
-		return nil, err
-	}
-	// Remove any trailing newline characters
-	dataString := strings.TrimSpace(string(data))
+func loadPrivateKey(mnemonicFile []byte) (*ecdsa.PrivateKey, error) {
+	// remove any trailing newline characters
+	dataString := strings.TrimSpace(string(mnemonicFile))
 
 	privateKey, err := crypto.HexToECDSA(dataString)
 	if err != nil {

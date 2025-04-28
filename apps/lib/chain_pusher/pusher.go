@@ -1,6 +1,7 @@
 package chain_pusher
 
 import (
+	"context"
 	"math/big"
 	"time"
 
@@ -35,7 +36,7 @@ func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetCo
 	}
 }
 
-func (p *Pusher) Run() {
+func (p *Pusher) Run(ctx context.Context) {
 	priceConfig, err := LoadConfig(p.assetConfigFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load price config")
@@ -72,7 +73,7 @@ func (p *Pusher) Run() {
 	}
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
-	go p.interactor.ListenContractEvents(contractCh)
+	go p.interactor.ListenContractEvents(ctx, contractCh)
 	go p.poll(encodedAssetIds, contractCh)
 
 	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)

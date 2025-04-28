@@ -1,9 +1,9 @@
 package chain_pusher
 
 import (
+	"context"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/sui"
@@ -17,15 +17,17 @@ type SuiContractInteractor struct {
 	pollingFrequencySec int
 }
 
-func NewSuiContractInteractor(rpcUrl, contractAddr, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger) (*SuiContractInteractor, error) {
+func NewSuiContractInteractor(
+	rpcUrl string,
+	contractAddr string,
+	privateKeyFile []byte,
+	assetConfigFile string,
+	pollingFreqSec int,
+	logger zerolog.Logger,
+) (*SuiContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
 
-	keyFileContent, err := os.ReadFile(privateKeyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	lines := strings.Split(string(keyFileContent), "\n")
+	lines := strings.Split(string(privateKeyFile), "\n")
 	var privateKey string
 	for _, line := range lines {
 		if strings.HasPrefix(line, "keypair:") {
@@ -49,7 +51,7 @@ func NewSuiContractInteractor(rpcUrl, contractAddr, privateKeyFile string, asset
 
 // unfortunately, Sui doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Sui re-adds websocket support
-func (sci *SuiContractInteractor) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *SuiContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
 	sci.logger.Warn().Msg("Sui does not currently support listening to events via websocket, falling back to polling")
 }
 
