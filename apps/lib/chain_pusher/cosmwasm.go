@@ -47,13 +47,13 @@ func NewCosmwasmContractInteractor(
 }
 
 func (sci *CosmwasmContractInteractor) ListenContractEvents(
-	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	sci.logger.Warn().Msg("Cosmwasm pusher does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
-	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
+	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		var encodeAssetIdInt [32]int
 		for i, b := range encodedAssetId {
@@ -72,7 +72,7 @@ func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []InternalEnco
 		if err != nil {
 			return nil, err
 		}
-		polledVals[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
+		polledVals[encodedAssetId] = InternalTemporalNumericValue{
 			TimestampNs:    timestampNs,
 			QuantizedValue: quantizedValueBigInt,
 		}

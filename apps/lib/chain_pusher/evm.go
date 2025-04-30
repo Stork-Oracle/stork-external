@@ -69,7 +69,7 @@ func NewEvmContractInteractor(
 }
 
 func (sci *EvmContractInteractor) ListenContractEvents(
-	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
@@ -91,17 +91,17 @@ func (sci *EvmContractInteractor) ListenContractEvents(
 			// TODO - handle restart
 			log.Fatal().Err(err).Msg("Error watching contract events")
 		case vLog := <-eventCh:
-			tv := InternalStorkStructsTemporalNumericValue{
+			tv := InternalTemporalNumericValue{
 				QuantizedValue: vLog.QuantizedValue,
 				TimestampNs:    vLog.TimestampNs,
 			}
-			ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{vLog.Id: tv}
+			ch <- map[InternalEncodedAssetId]InternalTemporalNumericValue{vLog.Id: tv}
 		}
 	}
 }
 
-func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
-	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
+	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
 		if err != nil {
@@ -112,7 +112,7 @@ func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 			}
 			continue
 		}
-		polledVals[encodedAssetId] = InternalStorkStructsTemporalNumericValue(storkStructsTemporalNumericValue)
+		polledVals[encodedAssetId] = InternalTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
 	return polledVals, nil
 }

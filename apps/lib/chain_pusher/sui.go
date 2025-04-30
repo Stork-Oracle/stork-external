@@ -51,11 +51,11 @@ func NewSuiContractInteractor(
 
 // unfortunately, Sui doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Sui re-adds websocket support
-func (sci *SuiContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *SuiContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue) {
 	sci.logger.Warn().Msg("Sui does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (sci *SuiContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (sci *SuiContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
 	bindingsEncodedAssetIds := []contract.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
@@ -68,7 +68,7 @@ func (sci *SuiContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 	sci.logger.Debug().Msgf("successfully pulled %d values from contract", len(values))
 
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
-	result := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+	result := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		if value, ok := values[contract.EncodedAssetId(encodedAssetId)]; ok {
 			result[encodedAssetId] = temporalNumericValueToInternal(value)
@@ -98,7 +98,7 @@ func (sci *SuiContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 	return nil
 }
 
-func temporalNumericValueToInternal(value contract.TemporalNumericValue) InternalStorkStructsTemporalNumericValue {
+func temporalNumericValueToInternal(value contract.TemporalNumericValue) InternalTemporalNumericValue {
 	magnitude := value.QuantizedValue.Magnitude
 	negative := value.QuantizedValue.Negative
 	signMultiplier := 1
@@ -107,7 +107,7 @@ func temporalNumericValueToInternal(value contract.TemporalNumericValue) Interna
 	}
 	quantizedValue := new(big.Int).Mul(magnitude, big.NewInt(int64(signMultiplier)))
 
-	return InternalStorkStructsTemporalNumericValue{
+	return InternalTemporalNumericValue{
 		TimestampNs:    value.TimestampNs,
 		QuantizedValue: quantizedValue,
 	}

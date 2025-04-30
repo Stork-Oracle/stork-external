@@ -43,12 +43,12 @@ func NewAptosContractInteractor(
 // unfortunately, Aptos doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Aptos re-adds websocket support
 func (aci *AptosContractInteractor) ListenContractEvents(
-	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	aci.logger.Warn().Msg("Aptos does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
 	bindingsEncodedAssetIds := []contract.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
@@ -61,7 +61,7 @@ func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncoded
 	}
 
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
-	result := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+	result := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		if value, ok := values[contract.EncodedAssetId(encodedAssetId)]; ok {
 
@@ -73,7 +73,7 @@ func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncoded
 			}
 			quantizedValue := new(big.Int).Mul(magnitude, big.NewInt(int64(signMultiplier)))
 
-			result[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
+			result[encodedAssetId] = InternalTemporalNumericValue{
 				TimestampNs:    value.TimestampNs,
 				QuantizedValue: quantizedValue,
 			}

@@ -3,8 +3,8 @@ package chain_pusher
 import "context"
 
 type ContractInteractor interface {
-	ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
-	PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error)
+	ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue)
+	PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error)
 	BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error
 }
 
@@ -14,14 +14,14 @@ type MockContractInteractor struct {
 
 func (m *MockContractInteractor) ListenContractEvents(
 	ctx context.Context,
-	ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue,
+	ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	// Do nothing
 }
 
 func (m *MockContractInteractor) PullValues(
 	encodedAssetIds []InternalEncodedAssetId,
-) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	// Do nothing
 	return nil, nil
 }

@@ -56,12 +56,12 @@ func (p *Pusher) Run(ctx context.Context) {
 	}
 
 	storkWsCh := make(chan AggregatedSignedPrice)
-	contractCh := make(chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+	contractCh := make(chan map[InternalEncodedAssetId]InternalTemporalNumericValue)
 
 	storkWs := NewStorkAggregatorWebsocketClient(p.storkWsEndpoint, p.storkAuth, assetIds, p.logger)
 	go storkWs.Run(storkWsCh)
 
-	latestContractValueMap := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+	latestContractValueMap := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	latestStorkValueMap := make(map[InternalEncodedAssetId]AggregatedSignedPrice)
 
 	initialValues, err := p.interactor.PullValues(encodedAssetIds)
@@ -111,7 +111,7 @@ func (p *Pusher) Run(ctx context.Context) {
 					quantizedValInt := new(big.Int)
 					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
-					latestContractValueMap[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
+					latestContractValueMap[encodedAssetId] = InternalTemporalNumericValue{
 						TimestampNs:    uint64(update.Timestamp),
 						QuantizedValue: quantizedValInt,
 					}
@@ -136,7 +136,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	}
 }
 
-func shouldUpdateAsset(latestValue InternalStorkStructsTemporalNumericValue, latestStorkPrice AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
+func shouldUpdateAsset(latestValue InternalTemporalNumericValue, latestStorkPrice AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
 	if uint64(latestStorkPrice.Timestamp)-latestValue.TimestampNs > fallbackPeriodSecs*1000000000 {
 		return true
 	}
@@ -165,7 +165,7 @@ func shouldUpdateAsset(latestValue InternalStorkStructsTemporalNumericValue, lat
 	return percentChange.Cmp(thresholdBig) > 0
 }
 
-func (p *Pusher) poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (p *Pusher) poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
 	for range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
 		polledVals, err := p.interactor.PullValues(encodedAssetIds)

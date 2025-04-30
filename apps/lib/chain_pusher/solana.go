@@ -175,7 +175,7 @@ func (sci *SolanaContractInteractor) confirmationWorker(ch chan solana.Signature
 	}
 }
 
-func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue) {
 	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
 		select {
@@ -190,7 +190,7 @@ func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, c
 	wg.Wait()
 }
 
-func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
 	if err != nil {
@@ -223,17 +223,17 @@ func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Conte
 		}
 
 		latestValue := account.LatestValue
-		tv := InternalStorkStructsTemporalNumericValue{
+		tv := InternalTemporalNumericValue{
 			QuantizedValue: latestValue.QuantizedValue.BigInt(),
 			TimestampNs:    latestValue.TimestampNs,
 		}
 
-		ch <- map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue{account.Id: tv}
+		ch <- map[InternalEncodedAssetId]InternalTemporalNumericValue{account.Id: tv}
 	}
 }
 
-func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
-	polledVals := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
+	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 
 	for _, encodedAssetId := range encodedAssetIds {
 
@@ -257,7 +257,7 @@ func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []InternalEncode
 			continue
 		}
 
-		polledVals[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
+		polledVals[encodedAssetId] = InternalTemporalNumericValue{
 			QuantizedValue: account.LatestValue.QuantizedValue.BigInt(),
 			TimestampNs:    account.LatestValue.TimestampNs,
 		}
