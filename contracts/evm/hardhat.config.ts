@@ -39,8 +39,8 @@ const config: HardhatUserConfig = {
         version: "0.8.24",
         settings: {
           metadata: {
-        bytecodeHash: 'ipfs',
-        useLiteralContent: true,
+            bytecodeHash: 'ipfs',
+            useLiteralContent: true,
           }
         }
       }
@@ -371,6 +371,12 @@ const config: HardhatUserConfig = {
       chainId: 15000,
       loggingEnabled: false,
     },
+    quaiMainnetCyprus1: {
+      url: "https://rpc.quai.network/cyprus1",
+      accounts: [PRIVATE_KEY],
+      chainId: 9,
+      loggingEnabled: false,
+    }
   },
   etherscan: {
     // enabled: false, // uncomment this for ZKSync verifications
@@ -417,7 +423,8 @@ const config: HardhatUserConfig = {
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake',
-      cyprus1: 'fake',
+      quaiMainnetCyprus1: 'fake',
+      quaiOrchardTestnetCyprus1: 'fake',
     },
     customChains: [
       {
@@ -738,6 +745,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://orchard.rpc.quai.network/cyprus1/api",
           browserURL: "https://orchard.quaiscan.io"
+        }
+      },
+      {
+        network: "quaiMainnetCyprus1",
+        chainId: 9,
+        urls: {
+          apiURL: "https://rpc.quai.network/cyprus1/api",
+          browserURL: "https://quaiscan.io"
         }
       }
     ],
