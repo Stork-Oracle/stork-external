@@ -43,7 +43,7 @@ func NewSolanaContractInteractor(
 	rpcUrl string,
 	wsUrl string,
 	contractAddr string,
-	privateKeyFile []byte,
+	payer []byte,
 	assetConfigFile string,
 	pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int,
 ) (*SolanaContractInteractor, error) {
@@ -128,7 +128,7 @@ func NewSolanaContractInteractor(
 		feedAccounts:        feedAccounts,
 		treasuryAccounts:    treasuryAccounts,
 		configAccount:       configAccount,
-		payer:               privateKeyFile,
+		payer:               payer,
 		limiter:             limiter,
 		pollingFrequencySec: pollingFreqSec,
 		batchSize:           batchSize,

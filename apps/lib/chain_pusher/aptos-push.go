@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -42,7 +43,12 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 
 	logger := AptosPusherLogger(chainRpcUrl, contractAddress)
 
-	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, []byte(privateKeyFile), pollingFrequency, logger)
+	keyFileContent, err := os.ReadFile(privateKeyFile)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to read private key file")
+	}
+
+	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interactor")
 	}

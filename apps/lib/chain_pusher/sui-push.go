@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -42,7 +43,12 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 
 	logger := SuiPusherLogger(chainRpcUrl, contractAddress)
 
-	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, []byte(privateKeyFile), assetConfigFile, pollingFrequency, logger)
+	keyFileContent, err := os.ReadFile(privateKeyFile)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to read private key file")
+	}
+
+	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, keyFileContent, assetConfigFile, pollingFrequency, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interactor")
 	}

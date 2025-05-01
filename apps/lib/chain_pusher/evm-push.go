@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -44,7 +45,12 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
 
-	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, contractAddress, []byte(mnemonicFile), verifyPublishers, logger)
+	mnemonic, err := os.ReadFile(mnemonicFile)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
+	}
+
+	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, contractAddress, mnemonic, verifyPublishers, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interactor")
 	}

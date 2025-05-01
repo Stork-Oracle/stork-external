@@ -20,13 +20,13 @@ type AptosContractInteractor struct {
 func NewAptosContractInteractor(
 	rpcUrl string,
 	contractAddr string,
-	privateKeyFile []byte,
+	keyFileContent []byte,
 	pollingFreqSec int,
 	logger zerolog.Logger,
 ) (*AptosContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
 
-	privateKey := strings.TrimSpace(strings.Split(string(privateKeyFile), "\n")[0])
+	privateKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
 
 	contract, err := contract.NewStorkContract(rpcUrl, contractAddr, privateKey)
 	if err != nil {

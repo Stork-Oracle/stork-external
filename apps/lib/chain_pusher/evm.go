@@ -30,13 +30,13 @@ type EvmContractInteractor struct {
 func NewEvmContractInteractor(
 	rpcUrl string,
 	contractAddr string,
-	mnemonicFile []byte,
+	mnemonic []byte,
 	verifyPublishers bool,
 	logger zerolog.Logger,
 ) (*EvmContractInteractor, error) {
 	logger = logger.With().Str("component", "stork-contract-interfacer").Logger()
 
-	privateKey, err := loadPrivateKey(mnemonicFile)
+	privateKey, err := loadPrivateKey(mnemonic)
 	if err != nil {
 		return nil, err
 	}

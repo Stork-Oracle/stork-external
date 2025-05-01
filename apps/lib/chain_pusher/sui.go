@@ -20,14 +20,14 @@ type SuiContractInteractor struct {
 func NewSuiContractInteractor(
 	rpcUrl string,
 	contractAddr string,
-	privateKeyFile []byte,
+	keyFileContent []byte,
 	assetConfigFile string,
 	pollingFreqSec int,
 	logger zerolog.Logger,
 ) (*SuiContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
 
-	lines := strings.Split(string(privateKeyFile), "\n")
+	lines := strings.Split(string(keyFileContent), "\n")
 	var privateKey string
 	for _, line := range lines {
 		if strings.HasPrefix(line, "keypair:") {

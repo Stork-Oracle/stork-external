@@ -22,7 +22,7 @@ type CosmwasmContractInteractor struct {
 func NewCosmwasmContractInteractor(
 	chainGrpcUrl string,
 	contractAddress string,
-	mnemonicFile []byte,
+	mnemonic []byte,
 	batchingWindow int,
 	pollingFrequency int,
 	logger zerolog.Logger,
@@ -34,7 +34,7 @@ func NewCosmwasmContractInteractor(
 ) (*CosmwasmContractInteractor, error) {
 	logger = logger.With().Str("component", "cosmwasm-contract-interactor").Logger()
 
-	mnemonicString := strings.TrimSpace(string(mnemonicFile))
+	mnemonicString := strings.TrimSpace(string(mnemonic))
 	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		return nil, err
