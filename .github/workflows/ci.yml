@@ -145,6 +145,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+          toolchain: 1.85.1
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
@@ -195,7 +196,7 @@ jobs:
 
       - name: Run anchor tests
         run: |
-          anchor test
+          RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor test
         working-directory: ./contracts/solana/programs/stork
 
   test-sui:
@@ -295,7 +296,11 @@ jobs:
       - name: Install Aptos CLI
         run: |
           if ! command -v aptos &> /dev/null; then
-            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+            mkdir -p ~/.local/bin
+            wget "https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.2.0/aptos-cli-6.2.0-Linux-x86_64.zip"
+            unzip aptos-cli-6.2.0-Linux-x86_64.zip
+            chmod +x aptos
+            mv aptos ~/.local/bin/
           fi
           aptos --version
 
