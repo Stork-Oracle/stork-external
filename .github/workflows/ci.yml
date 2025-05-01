@@ -23,7 +23,7 @@ jobs:
 
       - name: Cache Go modules
         id: go-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -148,7 +148,7 @@ jobs:
           toolchain: 1.85.1
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -159,7 +159,7 @@ jobs:
             ${{ runner.os }}-cargo-solana-
 
       - name: Cache Solana CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.local/share/solana/install
@@ -177,7 +177,7 @@ jobs:
           solana config set --url localhost
 
       - name: Cache Anchor CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/anchor
@@ -210,7 +210,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -221,7 +221,7 @@ jobs:
             ${{ runner.os }}-cargo-sui-
 
       - name: Cache Sui CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/sui
@@ -251,7 +251,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -286,7 +286,7 @@ jobs:
           pip install packaging
           
       - name: Cache Aptos CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.aptos
