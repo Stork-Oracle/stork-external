@@ -101,6 +101,11 @@ func (sci *CosmwasmContractInteractor) BatchPushToContract(priceUpdates map[Inte
 	return nil
 }
 
+// todo: implement
+func (sci *CosmwasmContractInteractor) GetWalletBalance() (float64, error) {
+	return -1, nil
+}
+
 func (sci *CosmwasmContractInteractor) aggregatedSignedPriceToUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToIntArray(string(signedPrice.EncodedAssetId))

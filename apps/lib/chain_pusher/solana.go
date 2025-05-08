@@ -315,6 +315,11 @@ func (sci *SolanaContractInteractor) BatchPushToContract(priceUpdates map[Intern
 	return nil
 }
 
+// todo: implement
+func (sci *SolanaContractInteractor) GetWalletBalance() (float64, error) {
+	return -1, nil
+}
+
 func (sci *SolanaContractInteractor) batchPriceUpdates(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) []map[InternalEncodedAssetId]AggregatedSignedPrice {
 	priceUpdatesBatches := []map[InternalEncodedAssetId]AggregatedSignedPrice{}
 

@@ -98,6 +98,11 @@ func (sci *SuiContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 	return nil
 }
 
+// todo: implement
+func (sci *SuiContractInteractor) GetWalletBalance() (float64, error) {
+	return -1, nil
+}
+
 func temporalNumericValueToInternal(value contract.TemporalNumericValue) InternalTemporalNumericValue {
 	magnitude := value.QuantizedValue.Magnitude
 	negative := value.QuantizedValue.Negative

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,6 +22,7 @@ type EvmContractInteractor struct {
 	logger zerolog.Logger
 
 	contract *contract.StorkContract
+	client   *ethclient.Client
 
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
@@ -61,6 +64,7 @@ func NewEvmContractInteractor(
 		logger: logger,
 
 		contract:   contract,
+		client:     client,
 		privateKey: privateKey,
 		chainID:    chainID,
 
@@ -282,4 +286,25 @@ func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 		Uint64("gasPrice", tx.GasPrice().Uint64()).
 		Msg("Pushed new values to contract")
 	return nil
+}
+
+func (sci *EvmContractInteractor) GetWalletBalance() (float64, error) {
+	publicKey := sci.privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return -1, fmt.Errorf("error casting public key to ECDSA")
+	}
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	balance, err := sci.client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		return -1, err
+	}
+
+	// Convert wei to ETH
+	ethBalance := new(big.Float).Quo(new(big.Float).SetInt(balance), new(big.Float).SetInt(big.NewInt(1e18)))
+	balanceFloat, _ := ethBalance.Float64()
+
+	return balanceFloat, nil
 }

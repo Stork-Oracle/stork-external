@@ -6,6 +6,7 @@ type ContractInteractor interface {
 	ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error)
 	BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error
+	GetWalletBalance() (float64, error)
 }
 
 type MockContractInteractor struct {

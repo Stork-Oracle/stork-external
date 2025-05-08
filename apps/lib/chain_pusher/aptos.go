@@ -103,6 +103,11 @@ func (aci *AptosContractInteractor) BatchPushToContract(priceUpdates map[Interna
 	return nil
 }
 
+// todo: implement
+func (aci *AptosContractInteractor) GetWalletBalance() (float64, error) {
+	return -1, nil
+}
+
 func (aci *AptosContractInteractor) aggregatedSignedPriceToAptosUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToByteArray(string(signedPrice.EncodedAssetId))
