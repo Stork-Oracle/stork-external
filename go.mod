@@ -7,7 +7,7 @@ require (
 	github.com/CosmWasm/wasmd v0.53.2
 	github.com/NethermindEth/juno v0.11.7
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aptos-labs/aptos-go-sdk v1.5.0
+	github.com/aptos-labs/aptos-go-sdk v1.4.1
 	github.com/cometbft/cometbft v0.38.12
 	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/gnark-crypto v0.13.0
