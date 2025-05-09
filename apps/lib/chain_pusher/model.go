@@ -90,7 +90,7 @@ type OraclePricesMessage struct {
 // Internal types
 type InternalEncodedAssetId [32]byte
 
-type InternalStorkStructsTemporalNumericValue struct {
+type InternalTemporalNumericValue struct {
 	TimestampNs    uint64
 	QuantizedValue *big.Int
 }

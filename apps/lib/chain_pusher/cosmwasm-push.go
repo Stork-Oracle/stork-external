@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -51,12 +52,16 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	chainPrefix, _ := cmd.Flags().GetString(ChainPrefixFlag)
 	logger := CosmwasmPusherLogger(chainRpcUrl, contractAddress)
 
-	cosmwasmInteracter, err := NewCosmwasmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	mnemonic, err := os.ReadFile(mnemonicFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interacter")
+		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
 	}
 
-	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteracter, &logger)
-	ctx := context.Background()
-	cosmwasmPusher.Run(ctx)
+	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
+	}
+
+	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteractor, &logger)
+	cosmwasmPusher.Run(context.Background())
 }
