@@ -10,7 +10,6 @@ type ContractInteractor interface {
 }
 
 type MockContractInteractor struct {
-	ContractInteractor
 }
 
 func (m *MockContractInteractor) ListenContractEvents(
@@ -32,4 +31,8 @@ func (m *MockContractInteractor) BatchPushToContract(
 ) error {
 	// Do nothing
 	return nil
+}
+
+func (m *MockContractInteractor) GetWalletBalance() (float64, error) {
+	return 0, nil
 }
