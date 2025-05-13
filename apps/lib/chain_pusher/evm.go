@@ -9,20 +9,20 @@ import (
 	"strconv"
 	"strings"
 
-	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
+	contract_bindings "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type EvmContractInteractor struct {
 	logger zerolog.Logger
 
-	contract *contract.StorkContract
-	client   *ethclient.Client
+	contract   *contract_bindings.StorkContract
+	wsContract *contract_bindings.StorkContract
+	client     *ethclient.Client
 
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
@@ -32,6 +32,7 @@ type EvmContractInteractor struct {
 
 func NewEvmContractInteractor(
 	rpcUrl string,
+	wsUrl string,
 	contractAddr string,
 	mnemonic []byte,
 	verifyPublishers bool,
@@ -49,21 +50,40 @@ func NewEvmContractInteractor(
 		return nil, err
 	}
 
+	var wsClient *ethclient.Client
+	if wsUrl != "" {
+		wsClient, err = ethclient.Dial(wsUrl)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to connect to WebSocket endpoint")
+		} else {
+			logger.Info().Msg("Connected to WebSocket endpoint")
+		}
+	}
+
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	contractAddress := common.HexToAddress(contractAddr)
-	contract, err := contract.NewStorkContract(contractAddress, client)
+	contract, err := contract_bindings.NewStorkContract(contractAddress, client)
 	if err != nil {
 		return nil, err
+	}
+
+	var wsContract *contract_bindings.StorkContract
+	if wsClient != nil {
+		wsContract, err = contract_bindings.NewStorkContract(contractAddress, wsClient)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to create WebSocket contract instance")
+		}
 	}
 
 	return &EvmContractInteractor{
 		logger: logger,
 
 		contract:   contract,
+		wsContract: wsContract,
 		client:     client,
 		privateKey: privateKey,
 		chainID:    chainID,
@@ -75,25 +95,32 @@ func NewEvmContractInteractor(
 func (sci *EvmContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
+	if sci.wsContract == nil {
+		sci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
+		return
+	}
+
 	watchOpts := &bind.WatchOpts{
 		Context: context.Background(),
 	}
 
-	eventCh := make(chan *contract.StorkContractValueUpdate)
-	sub, err := sci.contract.WatchValueUpdate(watchOpts, eventCh, nil)
+	eventCh := make(chan *contract_bindings.StorkContractValueUpdate)
+	sub, err := sci.wsContract.WatchValueUpdate(watchOpts, eventCh, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to watch contract events. Is the RPC URL a WebSocket endpoint?")
+		sci.logger.Warn().Err(err).Msg("Failed to watch contract events. Does contract support eth_subscribe?")
 		return
 	}
 
-	sci.logger.Info().Msg("Listening for contract events")
+	sci.logger.Info().Msg("Listening for contract events via WebSocket")
 	for {
 		select {
 		case <-ctx.Done():
+			sub.Unsubscribe()
 			return
 		case err := <-sub.Err():
-			// TODO - handle restart
-			log.Fatal().Err(err).Msg("Error watching contract events")
+			sci.logger.Error().Err(err).Msg("Error while watching contract events")
+			sub.Unsubscribe()
+			return
 		case vLog := <-eventCh:
 			tv := InternalTemporalNumericValue{
 				QuantizedValue: vLog.QuantizedValue,
@@ -114,6 +141,7 @@ func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 			} else {
 				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
 			}
+
 			continue
 		}
 		polledVals[encodedAssetId] = InternalTemporalNumericValue(storkStructsTemporalNumericValue)
@@ -121,8 +149,8 @@ func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 	return polledVals, nil
 }
 
-func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]contract.StorkStructsTemporalNumericValueInput, error) {
-	updates := make([]contract.StorkStructsTemporalNumericValueInput, len(priceUpdates))
+func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]contract_bindings.StorkStructsTemporalNumericValueInput, error) {
+	updates := make([]contract_bindings.StorkStructsTemporalNumericValueInput, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
 
@@ -159,8 +187,8 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 			return nil, err
 		}
 
-		updates[i] = contract.StorkStructsTemporalNumericValueInput{
-			TemporalNumericValue: contract.StorkStructsTemporalNumericValue{
+		updates[i] = contract_bindings.StorkStructsTemporalNumericValueInput{
+			TemporalNumericValue: contract_bindings.StorkStructsTemporalNumericValue{
 				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
 				QuantizedValue: quantizedPriceBigInt,
 			},
@@ -178,7 +206,7 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 }
 
 type verifyPayload struct {
-	pubSigs    []contract.StorkStructsPublisherSignature
+	pubSigs    []contract_bindings.StorkStructsPublisherSignature
 	merkleRoot [32]byte
 }
 
@@ -192,7 +220,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 		}
 
 		payloads[i] = verifyPayload{
-			pubSigs:    make([]contract.StorkStructsPublisherSignature, len(priceUpdate.SignedPrices)),
+			pubSigs:    make([]contract_bindings.StorkStructsPublisherSignature, len(priceUpdate.SignedPrices)),
 			merkleRoot: merkleRootBytes,
 		}
 		j := 0
@@ -220,7 +248,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 				return nil, err
 			}
 
-			payloads[i].pubSigs[j] = contract.StorkStructsPublisherSignature{
+			payloads[i].pubSigs[j] = contract_bindings.StorkStructsPublisherSignature{
 				PubKey:         pubKeyBytes,
 				AssetPairId:    signedPrice.ExternalAssetId,
 				Timestamp:      uint64(signedPrice.TimestampedSignature.Timestamp) / 1000000000,
