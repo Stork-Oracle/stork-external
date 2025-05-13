@@ -251,6 +251,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 98864
     },
+    plumeMainnet: {
+      url: "https://phoenix-rpc.plumenetwork.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 98866
+    },
     polygon: {
       url: "https://polygon.llamarpc.com",
       accounts: [PRIVATE_KEY],
