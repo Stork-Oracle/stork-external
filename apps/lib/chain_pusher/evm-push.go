@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ func init() {
 	EvmpushCmd.Flags().StringP(StorkWebsocketEndpointFlag, "w", "", StorkWebsocketEndpointDesc)
 	EvmpushCmd.Flags().StringP(StorkAuthCredentialsFlag, "a", "", StorkAuthCredentialsDesc)
 	EvmpushCmd.Flags().StringP(ChainRpcUrlFlag, "c", "", ChainRpcUrlDesc)
+	EvmpushCmd.Flags().StringP(ChainWsUrlFlag, "u", "", ChainWsUrlDesc)
 	EvmpushCmd.Flags().StringP(ContractAddressFlag, "x", "", ContractAddressDesc)
 	EvmpushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	EvmpushCmd.Flags().StringP(MnemonicFileFlag, "m", "", MnemonicFileDesc)
@@ -35,6 +37,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	storkWsEndpoint, _ := cmd.Flags().GetString(StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(ChainRpcUrlFlag)
+	chainWsUrl, _ := cmd.Flags().GetString(ChainWsUrlFlag)
 	contractAddress, _ := cmd.Flags().GetString(ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
@@ -44,9 +47,16 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 
 	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
 
-	evmInteracter := NewEvmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, pollingFrequency, verifyPublishers, logger)
+	mnemonic, err := os.ReadFile(mnemonicFile)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
+	}
 
-	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteracter, &logger)
-	ctx := context.Background()
-	evmPusher.Run(ctx)
+	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, mnemonic, verifyPublishers, logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interactor")
+	}
+
+	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteractor, &logger)
+	evmPusher.Run(context.Background())
 }
