@@ -137,9 +137,9 @@ func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") {
-				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
+				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
 			} else {
-				sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
+				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
 			}
 
 			continue
