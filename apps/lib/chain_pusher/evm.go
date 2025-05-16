@@ -329,10 +329,7 @@ func (sci *EvmContractInteractor) GetWalletBalance() (float64, error) {
 	if err != nil {
 		return -1, err
 	}
-
-	// Convert wei to ETH
-	ethBalance := new(big.Float).Quo(new(big.Float).SetInt(balance), new(big.Float).SetInt(big.NewInt(1e18)))
-	balanceFloat, _ := ethBalance.Float64()
+	balanceFloat, _ := balance.Float64()
 
 	return balanceFloat, nil
 }
