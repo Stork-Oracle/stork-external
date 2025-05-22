@@ -133,6 +133,7 @@ func (sci *EvmContractInteractor) ListenContractEvents(
 
 func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
+	var pollErr error
 	for _, encodedAssetId := range encodedAssetIds {
 		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
 		if err != nil {
@@ -142,11 +143,13 @@ func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAs
 				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
 			}
 
+			pollErr = err
+
 			continue
 		}
 		polledVals[encodedAssetId] = InternalTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
-	return polledVals, nil
+	return polledVals, pollErr
 }
 
 func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) ([]contract_bindings.StorkStructsTemporalNumericValueInput, error) {
