@@ -134,7 +134,7 @@ func (sci *EvmContractInteractor) ListenContractEvents(
 func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
-		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueV1(nil, encodedAssetId)
+		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetId)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") {
 				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
