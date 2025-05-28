@@ -25,6 +25,21 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 98866
     }
+  },
+  etherscan: {
+    apiKey: {
+      plumeMainnet: 'fake',
+    },
+    customChains: [
+      {
+        network: "plumeMainnet",
+        chainId: 98866,
+        urls: {
+          apiURL: "https://explorer-plume-mainnet-1.t.conduit.xyz/api",
+          browserURL: "https://explorer.plume.org"
+        }
+      }
+    ]
   }
 };
 
