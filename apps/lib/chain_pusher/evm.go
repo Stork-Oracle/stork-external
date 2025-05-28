@@ -4,12 +4,15 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	contract_bindings "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/evm"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -30,6 +33,13 @@ type EvmContractInteractor struct {
 	verifyPublishers bool
 }
 
+const (
+	// 1 * (1.5 ^ 10) = 57.66 seconds (last attempt delay)
+	maxRetryAttempts         = 10
+	initialBackoff           = 1 * time.Second
+	exponentialBackoffFactor = 1.5
+)
+
 func NewEvmContractInteractor(
 	rpcUrl string,
 	wsUrl string,
@@ -38,8 +48,6 @@ func NewEvmContractInteractor(
 	verifyPublishers bool,
 	logger zerolog.Logger,
 ) (*EvmContractInteractor, error) {
-	logger = logger.With().Str("component", "stork-contract-interfacer").Logger()
-
 	privateKey, err := loadPrivateKey(mnemonic)
 	if err != nil {
 		return nil, err
@@ -100,35 +108,119 @@ func (sci *EvmContractInteractor) ListenContractEvents(
 		return
 	}
 
-	watchOpts := &bind.WatchOpts{
-		Context: context.Background(),
-	}
+	watchOpts := &bind.WatchOpts{Context: context.Background()}
 
-	eventCh := make(chan *contract_bindings.StorkContractValueUpdate)
-	sub, err := sci.wsContract.WatchValueUpdate(watchOpts, eventCh, nil)
+	sub, eventCh, err := setupSubscription(sci, watchOpts)
 	if err != nil {
-		sci.logger.Warn().Err(err).Msg("Failed to watch contract events. Does contract support eth_subscribe?")
+		sci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
 		return
 	}
 
+	defer func() {
+		sci.logger.Debug().Msg("Exiting ListenContractEvents")
+		if sub != nil {
+			sub.Unsubscribe()
+			close(eventCh)
+		}
+	}()
+
 	sci.logger.Info().Msg("Listening for contract events via WebSocket")
+	for {
+		err := sci.listenLoop(ctx, sub, eventCh, ch)
+		if ctx.Err() != nil {
+			return
+		}
+
+		sci.logger.Warn().Err(err).Msg("Error while watching contract events")
+		if sub != nil {
+			sub.Unsubscribe()
+			close(eventCh)
+			sub = nil
+		}
+
+		sub, eventCh, err = sci.reconnect(ctx, watchOpts)
+		if err != nil {
+			return
+		}
+	}
+}
+
+func setupSubscription(
+	sci *EvmContractInteractor,
+	watchOpts *bind.WatchOpts,
+) (ethereum.Subscription, chan *contract_bindings.StorkContractValueUpdate, error) {
+	eventCh := make(chan *contract_bindings.StorkContractValueUpdate)
+	sub, err := sci.wsContract.WatchValueUpdate(watchOpts, eventCh, nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to watch contract events: %w", err)
+	}
+	return sub, eventCh, nil
+}
+
+func (sci *EvmContractInteractor) listenLoop(
+	ctx context.Context,
+	sub ethereum.Subscription,
+	eventCh chan *contract_bindings.StorkContractValueUpdate,
+	outCh chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
+) error {
 	for {
 		select {
 		case <-ctx.Done():
-			sub.Unsubscribe()
-			return
+			return nil
+
 		case err := <-sub.Err():
-			sci.logger.Error().Err(err).Msg("Error while watching contract events")
-			sub.Unsubscribe()
-			return
-		case vLog := <-eventCh:
+			return err
+
+		case vLog, ok := <-eventCh:
+			if !ok {
+				sci.logger.Warn().Msg("Event channel closed, exiting event listener")
+				return errors.New("event channel closed is closed")
+			}
+
 			tv := InternalTemporalNumericValue{
 				QuantizedValue: vLog.QuantizedValue,
 				TimestampNs:    vLog.TimestampNs,
 			}
-			ch <- map[InternalEncodedAssetId]InternalTemporalNumericValue{vLog.Id: tv}
+			select {
+			case outCh <- map[InternalEncodedAssetId]InternalTemporalNumericValue{vLog.Id: tv}:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
+}
+
+func (sci *EvmContractInteractor) reconnect(
+	ctx context.Context,
+	watchOpts *bind.WatchOpts,
+) (ethereum.Subscription, chan *contract_bindings.StorkContractValueUpdate, error) {
+	backoff := initialBackoff
+	for retryCount := range maxRetryAttempts {
+		backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
+		sci.logger.Info().Dur("backoff", backoff).
+			Int("attempt", retryCount+1).
+			Int("maxAttempts", maxRetryAttempts).
+			Msg("Attempting to reconnect to contract events")
+
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		case <-time.After(backoff):
+			newSub, newEventCh, err := setupSubscription(sci, watchOpts)
+			if err != nil {
+				sci.logger.Error().Err(err).Msg("Failed to reconnect to contract events")
+
+				continue
+			}
+
+			sci.logger.Info().Msg("Successfully reconnected to contract events")
+			return newSub, newEventCh, nil
+		}
+	}
+
+	sci.logger.Error().Int("maxRetryAttempts", maxRetryAttempts).
+		Msg("Max retry attempts reached, giving up on reconnection")
+	return nil, nil, errors.New("max retry attempts reached")
 }
 
 func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
