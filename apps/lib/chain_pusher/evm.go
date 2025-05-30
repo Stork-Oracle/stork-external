@@ -208,7 +208,7 @@ func (sci *EvmContractInteractor) reconnect(
 		case <-time.After(backoff):
 			newSub, newEventCh, err := setupSubscription(sci, watchOpts)
 			if err != nil {
-				sci.logger.Error().Err(err).Msg("Failed to reconnect to contract events")
+				sci.logger.Warn().Err(err).Msg("Failed to reconnect to contract events")
 
 				continue
 			}
