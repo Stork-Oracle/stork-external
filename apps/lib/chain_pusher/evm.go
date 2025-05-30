@@ -29,6 +29,7 @@ type EvmContractInteractor struct {
 
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
+	gasLimit   uint64
 
 	verifyPublishers bool
 }
@@ -47,6 +48,7 @@ func NewEvmContractInteractor(
 	mnemonic []byte,
 	verifyPublishers bool,
 	logger zerolog.Logger,
+	gasLimit uint64,
 ) (*EvmContractInteractor, error) {
 	privateKey, err := loadPrivateKey(mnemonic)
 	if err != nil {
@@ -95,6 +97,7 @@ func NewEvmContractInteractor(
 		client:     client,
 		privateKey: privateKey,
 		chainID:    chainID,
+		gasLimit:   gasLimit,
 
 		verifyPublishers: verifyPublishers,
 	}, nil
@@ -392,7 +395,7 @@ func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 	}
 
 	// let the library auto-estimate the gas price
-	auth.GasLimit = 0
+	auth.GasLimit = sci.gasLimit
 	auth.Value = fee
 
 	tx, err := sci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)

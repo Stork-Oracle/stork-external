@@ -16,6 +16,7 @@ const PollingFrequencyFlag = "polling-frequency"
 const LimitPerSecondFlag = "limit-per-second"
 const BurstLimitFlag = "burst-limit"
 const BatchSizeFlag = "batch-size"
+const GasLimitFlag = "gas-limit"
 
 // Cosmwasm flags
 const GasPriceFlag = "gas-price"
@@ -40,6 +41,7 @@ const PollingFrequencyDesc = "Asset Polling frequency (seconds)"
 const LimitPerSecondDesc = "JSON RPC call limit per second"
 const BurstLimitDesc = "JSON RPC call Burst limit"
 const BatchSizeDesc = "Batch size between 1 and 4"
+const GasLimitDesc = "Gas limit (0 to use estimate)"
 
 // Cosmwasm descriptions
 const GasPriceDesc = "Gas price"
