@@ -5,27 +5,15 @@ use std::bytes_conversions::u64::*;
 use std::crypto::secp256k1::Secp256k1;
 use std::crypto::message::Message;
 use std::string::String;
+use std::logging::log;
+use std::u128::U128;
+
 use standards::src5::*;
+use sway_libs::signed_integers::i128::I128;
 
-enum StorkEvent {
-    ValueUpdate: (b256, u64, [u8; 24])
-}
-
-enum StorkError {
-    InsufficientFee: (),
-    NoFreshUpdate: (),
-    NotFound: (),
-    StaleValue: (),
-    InvalidSignature: (),
-}
-
-struct TemporalNumericValue {
-    // slot 1
-    // nanosecond level precision timestamp of latest publisher update in batch
-    timestamp_ns: u64, // 8 bytes
-    // should be able to hold all necessary numbers (up to 6277101735386680763835789423207666416102355444464034512895)
-    quantized_value: [u8; 24], // 8 bytes
-}
+use stork_sway_sdk::errors::StorkError;
+use stork_sway_sdk::temporal_numeric_value::TemporalNumericValue;
+use stork_sway_sdk::events::StorkEvent;
 
 struct TemporalNumericValueInput {
     temporal_numeric_value: TemporalNumericValue,
@@ -36,25 +24,13 @@ struct TemporalNumericValueInput {
     s: b256, 
 }
 
-struct PublisherSignature {
-    pub_key: Identity,
-    asset_pair_id: String,
-    timestamp: u64, // 8 bytes
-    quantized_value: b256, // 8 bytes
-    r: b256,
-    s: b256,
-}
 
 struct State {
     // For verifying the authenticity of the passed data
     stork_public_key: Identity,
     single_update_fee_in_wei: u64,
-    /// Maximum acceptable time period before value is considered to be stale.
-    /// This includes attestation delay, block time, and potential clock drift
-    /// between the source/target chains.
-    valid_time_period_seconds: u64,
     // Mapping of cached numeric temporal data
-    latest_canonical_temporal_numeric_values: Option<StorageKey<StorageMap<b256, TemporalNumericValue>>>,
+    latest_canonical_temporal_numeric_values: StorageMap<b256, TemporalNumericValue>,
 }
 
 storage {
@@ -62,40 +38,37 @@ storage {
     owner: standards::src5::State = standards::src5::State::Uninitialized,
     initialized: bool = false,
     initializing: bool = false,
-    temporal_numeric_value_mapping_instance_count: u64 = 0,
-    temporal_numeric_value_mapping_instances: StorageMap<u64, StorageMap<b256, TemporalNumericValue>> = StorageMap {},
     state: State = State {
         stork_public_key: Identity::Address(Address::zero()),
         single_update_fee_in_wei: 0,
-        valid_time_period_seconds: 0,
-        latest_canonical_temporal_numeric_values: None,
+        // valid_time_period_seconds: 0,
+        latest_canonical_temporal_numeric_values: StorageMap::<b256, TemporalNumericValue> {},
     },
 }
 
-#[storage(read, write)]
-fn create_temporal_numeric_value_mapping() -> StorageKey<StorageMap<b256, TemporalNumericValue>> {
-    let i = storage.temporal_numeric_value_mapping_instance_count.read();
-    let result = storage.temporal_numeric_value_mapping_instances.get(i);
-    storage.temporal_numeric_value_mapping_instance_count.write(i + 1);
-    result
-}
 
 #[storage(read)]
-fn latest_canonical_temporal_numeric_value(id: b256) -> TemporalNumericValue {
-    storage.state.read().latest_canonical_temporal_numeric_values.unwrap().get(id).read()
+fn latest_canonical_temporal_numeric_value(id: b256) -> Result<TemporalNumericValue, StorkError> {
+    let map: StorageKey<StorageMap<b256, TemporalNumericValue>> = storage.state.latest_canonical_temporal_numeric_values;
+    match map.get(id).try_read() {
+        Some(tnv) => Ok(tnv),
+        None => Err(StorkError::FeedNotFound),
+    }
 }
 
 #[storage(read, write)]
 fn update_latest_value_if_necessary(input: TemporalNumericValueInput) -> bool {
-    let mut _state = storage.state.read();
-    let latestReceiveTime = _state.latest_canonical_temporal_numeric_values.unwrap().get(input.id).read().timestamp_ns;
+    let mut latestReceiveTime = 0;
+    match latest_canonical_temporal_numeric_value(input.id) {
+        Ok(tnv) => {
+            latestReceiveTime = tnv.get_timestamp_ns();
+        },
+        _ => {},
+    }
     if (input.temporal_numeric_value.timestamp_ns > latestReceiveTime) {
-        _state.latest_canonical_temporal_numeric_values.unwrap().insert(input.id, input.temporal_numeric_value);
-        log(StorkEvent::ValueUpdate((
-            input.id,
-            input.temporal_numeric_value.timestamp_ns,
-            input.temporal_numeric_value.quantized_value
-        )));
+        storage.state.latest_canonical_temporal_numeric_values.insert(input.id, input.temporal_numeric_value);
+        let event = StorkEvent::ValueUpdate((input.id, input.temporal_numeric_value));
+        log(event);
         return true;
     }
     false
@@ -115,12 +88,6 @@ fn set_single_update_fee_in_wei(fee: u64) {
     storage.state.write(state);
 }
 
-#[storage(read, write)]
-fn set_valid_time_period_seconds(valid_time_period_seconds: u64) {
-    let mut state = storage.state.read();
-    state.valid_time_period_seconds = valid_time_period_seconds;
-    storage.state.write(state);
-}
 
 fn get_eth_signed_message_hash32(message: b256) -> b256 {
     let mut bytes = Bytes::new();
@@ -185,40 +152,6 @@ fn get_stork_message_hash_v1(
     std::hash::keccak256(bytes)
 }
 
-fn get_publisher_message_hash(
-    oracleName: Identity,
-    asset_pair_id: String,
-    timestamp: u64,
-    value: b256
-) -> b256 {
-    let mut bytes = Bytes::new();
-
-    let oracleName = Bytes::from(match oracleName {
-        Identity::Address(x) => b256::from(x),
-        Identity::ContractId(x) => b256::from(x),
-    });
-    for x in oracleName.iter() {
-        bytes.push(x);
-    }
-
-    
-    let asset_pair_id = asset_pair_id.as_bytes();
-    for x in asset_pair_id.iter() {
-        bytes.push(x);
-    }
-
-    let timestamp = timestamp.to_be_bytes();
-    for x in timestamp.iter() {
-        bytes.push(x);
-    }
-
-    let value = Bytes::from(value);
-    for x in value.iter() {
-        bytes.push(x);
-    }
-
-    std::hash::keccak256(bytes)
-}
 
 fn get_signer(
     signedMessageHash: b256,
@@ -228,66 +161,57 @@ fn get_signer(
     Identity::Address(Address::from(Secp256k1::from((r, s)).address(Message::from(signedMessageHash)).unwrap()))
 }
 
-fn compute_merkle_root(leaves: Vec<b256>) -> b256 {
-    require(leaves.len() > 0, "No leaves provided");
-
-    let mut leaves = leaves;
-
-    while (leaves.len() > 1) {
-        if (leaves.len() % 2 != 0) {
-            // If odd number of leaves, duplicate the last one
-            let mut extendedLeaves = Vec::with_capacity(leaves.len() + 1);
-            let mut i = 0;
-            while i < leaves.len() {
-                extendedLeaves.set(i, leaves.get(i).unwrap());
-                i += 1;
-            }
-            extendedLeaves.set(leaves.len(), leaves.get(leaves.len() - 1).unwrap());
-            leaves = extendedLeaves;
-        }
-
-        let mut nextLevel = Vec::with_capacity(leaves.len() / 2);
-        let mut i = 0;
-        while i < leaves.len() {
-            let mut bytes = Bytes::new();
-            for x in Bytes::from(leaves.get(i).unwrap()).iter() {
-                bytes.push(x);
-            }
-
-            for x in Bytes::from(leaves.get(i + 1).unwrap()).iter() {
-                bytes.push(x);
-            }
-
-            nextLevel.set(i / 2, std::hash::keccak256(bytes));
-            i += 1;
-        }
-        leaves = nextLevel;
+// helper function to convert I128 to [u8; 24]
+fn i128_to_be_bytes(value: I128) -> [u8; 24] {
+    let mut bytes = [0u8; 24];
+    
+    // Get the underlying U128 value
+    let mut u128_value = value.underlying();
+    
+    // If the value is greater than indent (positive number)
+    // subtract indent to get the actual positive value
+    if u128_value > I128::indent() {
+        u128_value = u128_value - I128::indent();
+    } else if u128_value < I128::indent() {
+        // For negative numbers, calculate two's complement
+        // First get the absolute value (distance from indent)
+        u128_value = I128::indent() - u128_value;
+        // Then convert to two's complement
+        u128_value = !u128_value + U128::from(1u64);
+        // Set the sign bit
+        bytes[8] = 0x80;
     }
-
-    leaves.get(0).unwrap()
-}
-
-#[storage(read, write)]
-fn _initialize(stork_public_key: Identity, valid_time_period_seconds: u64, single_update_fee_in_wei: u64) {
-    let mut state = storage.state.read();
-    state.latest_canonical_temporal_numeric_values = Some(create_temporal_numeric_value_mapping());
-    storage.state.write(state);
-
-    set_valid_time_period_seconds(valid_time_period_seconds);
-    set_single_update_fee_in_wei(single_update_fee_in_wei);
-    set_stork_public_key(stork_public_key);
+    
+    // Convert U128 to bytes, filling the last 16 bytes
+    let mut i = 23;
+    while i >= 8 {
+        let bytes_val = (u128_value.binary_and(U128::from((0, 255)))).as_u64().unwrap().try_as_u8();
+        if bytes_val.is_none() {
+            log(StorkError::InvalidSignature);
+            revert(0);
+        }
+        // safe unwrap
+        bytes[i] = bytes_val.unwrap();
+        u128_value = u128_value >> 8;
+        i -= 1;
+    }
+    
+    bytes
 }
 
 fn _verify_stork_signature_v1(
     storkPubKey: Identity,
     id: b256,
     recvTime: u64,
-    quantized_value: [u8; 24],
+    quantized_value: I128,
     publisher_merkle_root: b256,
     value_compute_alg_hash: b256,
     r: b256,
     s: b256,
 ) -> bool {
+    // convert quantized_value to [u8; 24]
+    let quantized_value = i128_to_be_bytes(quantized_value);
+
     let msgHash = get_stork_message_hash_v1(
         storkPubKey,
         id,
@@ -319,41 +243,6 @@ fn get_total_fee(totalNumUpdates: u64) -> u64 {
     totalNumUpdates * _single_update_fee_in_wei()
 }
 
-#[storage(read)]
-fn _valid_time_period_seconds() -> u64 {
-    storage.state.read().valid_time_period_seconds
-}
-
-fn _verify_merkle_root(leaves: Vec<b256>, root: b256) -> bool {
-    compute_merkle_root(leaves) == root
-}
-
-fn _verify_publisher_signature_v1(
-    oraclePubKey: Identity,
-    asset_pair_id: String,
-    timestamp: u64,
-    value: b256,
-    r: b256,
-    s: b256,
-) -> bool {
-    let msgHash = get_publisher_message_hash(
-        oraclePubKey,
-        asset_pair_id,
-        timestamp,
-        value
-    );
-    let signedMessageHash = get_eth_signed_message_hash32(msgHash);
-
-    // Verify hash was generated by the actual user
-    let signer = get_signer(signedMessageHash, r, s);
-    signer == oraclePubKey
-}
-
-#[storage(read, write)]
-fn _update_valid_time_period_seconds(valid_time_period_seconds: u64) {
-    only_owner();
-    set_valid_time_period_seconds(valid_time_period_seconds);
-}
 
 #[storage(read, write)]
 fn _update_single_update_fee_in_wei(maxStorkPerBlock: u64) {
@@ -383,35 +272,23 @@ abi Stork {
     fn initialize(
         initialOwner: Identity,
         stork_public_key: Identity,
-        valid_time_period_seconds: u64,
         single_update_fee_in_wei: u64
     );
 
     #[storage(read)]
     fn single_update_fee_in_wei() -> u64;
     
-    #[storage(read)]
-    fn valid_time_period_seconds() -> u64;
+ 
     
     #[storage(read)]
     fn stork_public_key() -> Identity;
 
-    fn verify_merkle_root(leaves: Vec<b256>, root: b256) -> bool;
-
-    fn verify_publisher_signature_v1(
-        oraclePubKey: Identity,
-        asset_pair_id: String,
-        timestamp: u64,
-        value: b256,
-        r: b256,
-        s: b256,
-    ) -> bool;
 
     fn verify_stork_signature_v1(
         storkPubKey: Identity,
         id: b256,
         recvTime: u64,
-        quantized_value: [u8; 24],
+        quantized_value: I128,
         publisher_merkle_root: b256,
         value_compute_alg_hash: b256,
         r: b256,
@@ -425,17 +302,9 @@ abi Stork {
     fn get_update_fee_v1(updateData: Vec<TemporalNumericValueInput>) -> u64;
 
     #[storage(read)]
-    fn get_temporal_numeric_value_v1(id: b256) -> TemporalNumericValue;
-
-    #[storage(read)]
-    fn get_temporal_numeric_value_unsafe_v1(id: b256) -> TemporalNumericValue;
-
-    fn verify_publisher_signatures_v1(signatures: Vec<PublisherSignature>, merkleRoot: b256) -> bool;
+    fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue;
 
     fn version() -> String;
-
-    #[storage(read, write)]
-    fn update_valid_time_period_seconds(valid_time_period_seconds: u64);
 
     #[storage(read, write)]
     fn update_single_update_fee_in_wei(single_update_fee_in_wei: u64);
@@ -449,7 +318,6 @@ impl Stork for Contract {
     fn initialize(
         initialOwner: Identity,
         stork_public_key: Identity,
-        valid_time_period_seconds: u64,
         single_update_fee_in_wei: u64
     ) {
         require(!storage.initialized.read(), "Already initialized");
@@ -458,8 +326,8 @@ impl Stork for Contract {
 
         storage.owner.write(standards::src5::State::Initialized(initialOwner));
 
-        _initialize(stork_public_key, valid_time_period_seconds, single_update_fee_in_wei);
-
+        set_single_update_fee_in_wei(single_update_fee_in_wei);
+        set_stork_public_key(stork_public_key);
         storage.initialized.write(true);
     }
 
@@ -468,36 +336,17 @@ impl Stork for Contract {
         _single_update_fee_in_wei()
     }
     
-    #[storage(read)]
-    fn valid_time_period_seconds() -> u64 {
-        _valid_time_period_seconds()
-    }
     
     #[storage(read)]
     fn stork_public_key() -> Identity {
         _stork_public_key()
     }
 
-    fn verify_merkle_root(leaves: Vec<b256>, root: b256) -> bool {
-        _verify_merkle_root(leaves, root)
-    }
-
-    fn verify_publisher_signature_v1(
-        oraclePubKey: Identity,
-        asset_pair_id: String,
-        timestamp: u64,
-        value: b256,
-        r: b256,
-        s: b256,
-    ) -> bool {
-        _verify_publisher_signature_v1(oraclePubKey, asset_pair_id, timestamp, value, r, s)
-    }
-
     fn verify_stork_signature_v1(
         storkPubKey: Identity,
         id: b256,
         recvTime: u64,
-        quantized_value: [u8; 24],
+        quantized_value: I128,
         publisher_merkle_root: b256,
         value_compute_alg_hash: b256,
         r: b256,
@@ -561,68 +410,21 @@ impl Stork for Contract {
         get_total_fee(updateData.len())
     }
 
-    #[storage(read)]
-    fn get_temporal_numeric_value_v1(id: b256) -> TemporalNumericValue {
-        let numericValue = latest_canonical_temporal_numeric_value(id);
-        if (numericValue.timestamp_ns == 0) {
-            log(StorkError::NotFound);
-            revert(0);
-        }
-
-        if (std::block::timestamp() - (numericValue.timestamp_ns / 1000000000) > _valid_time_period_seconds()) {
-            log(StorkError::StaleValue);
-            revert(0);
-        }
-        numericValue
-    }
 
     #[storage(read)]
-    fn get_temporal_numeric_value_unsafe_v1(id: b256) -> TemporalNumericValue {
-        let numericValue = latest_canonical_temporal_numeric_value(id);
-        if (numericValue.timestamp_ns == 0) {
-            log(StorkError::NotFound);
+    fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue {
+        let latestValueResult: Result<TemporalNumericValue, StorkError> = latest_canonical_temporal_numeric_value(id);
+        if (latestValueResult.is_err()) {
+            log(StorkError::FeedNotFound);
             revert(0);
         }
 
-        numericValue
-    }
-
-    fn verify_publisher_signatures_v1(signatures: Vec<PublisherSignature>, merkleRoot: b256) -> bool {
-        let mut hashes = Vec::with_capacity(signatures.len());
-
-        let mut i = 0;
-        while i < signatures.len() {
-            let s = signatures.get(i).unwrap();
-            if(!_verify_publisher_signature_v1(
-                s.pub_key,
-                s.asset_pair_id,
-                s.timestamp,
-                s.quantized_value,
-                s.r,
-                s.s,
-            )) {
-                return false;
-            }
-
-            let computed = get_publisher_message_hash(
-                s.pub_key,
-                s.asset_pair_id,
-                s.timestamp,
-                s.quantized_value
-            );
-            hashes.set(i, computed);
-        }
-        
-        _verify_merkle_root(hashes, merkleRoot)
+        // This unwrap is safe as we've checked the error case
+        latestValueResult.unwrap()
     }
 
     fn version() -> String {
         return String::from_ascii_str("1.0.2");
-    }
-
-    #[storage(read, write)]
-    fn update_valid_time_period_seconds(valid_time_period_seconds: u64) {
-        _update_valid_time_period_seconds(valid_time_period_seconds)
     }
 
     #[storage(read, write)]

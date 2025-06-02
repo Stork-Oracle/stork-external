@@ -21,6 +21,16 @@ source = "member"
 dependencies = [
     "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.7.1#1b00ccc05af5886ae3abd07a9a0ce6122738fc48",
     "std",
+    "stork_sway_sdk",
+    "sway_libs",
+]
+
+[[package]]
+name = "stork_sway_sdk"
+source = "path+from-root-495AB94B79E67027"
+dependencies = [
+    "std",
+    "sway_libs",
 ]
 
 [[package]]
