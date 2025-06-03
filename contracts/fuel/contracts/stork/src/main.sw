@@ -1,5 +1,7 @@
 contract;
 
+mod verify;
+
 use std::bytes::*;
 use std::bytes_conversions::u64::*;
 use std::crypto::secp256k1::Secp256k1;
@@ -7,9 +9,15 @@ use std::crypto::message::Message;
 use std::string::String;
 use std::logging::log;
 use std::u128::U128;
+use std::address::Address;
+use std::storage::storage_bytes::*;
+use std::bytes::Bytes;
+use std::b512::B512;
 
 use standards::src5::*;
 use sway_libs::signed_integers::i128::I128;
+
+use verify::verify_stork_signature;
 
 use stork_sway_sdk::errors::StorkError;
 use stork_sway_sdk::temporal_numeric_value::TemporalNumericValue;
@@ -27,7 +35,7 @@ struct TemporalNumericValueInput {
 
 struct State {
     // For verifying the authenticity of the passed data
-    stork_public_key: Identity,
+    stork_public_key: StorageBytes,
     single_update_fee_in_wei: u64,
     // Mapping of cached numeric temporal data
     latest_canonical_temporal_numeric_values: StorageMap<b256, TemporalNumericValue>,
@@ -39,7 +47,7 @@ storage {
     initialized: bool = false,
     initializing: bool = false,
     state: State = State {
-        stork_public_key: Identity::Address(Address::zero()),
+        stork_public_key: StorageBytes {},
         single_update_fee_in_wei: 0,
         // valid_time_period_seconds: 0,
         latest_canonical_temporal_numeric_values: StorageMap::<b256, TemporalNumericValue> {},
@@ -75,10 +83,9 @@ fn update_latest_value_if_necessary(input: TemporalNumericValueInput) -> bool {
 }
 
 #[storage(read, write)]
-fn set_stork_public_key(stork_public_key: Identity) {
-    let mut state = storage.state.read();
-    state.stork_public_key = stork_public_key;
-    storage.state.write(state);
+fn set_stork_public_key(stork_public_key: Bytes) {
+    require(stork_public_key.len() == 20, StorkError::InvalidStorkPublicKey);
+    storage.state.stork_public_key.write_slice(stork_public_key);
 }
 
 #[storage(read, write)]
@@ -89,148 +96,10 @@ fn set_single_update_fee_in_wei(fee: u64) {
 }
 
 
-fn get_eth_signed_message_hash32(message: b256) -> b256 {
-    let mut bytes = Bytes::new();
-    
-    let s = "\x19Ethereum Signed Message:\n32";
-    let a = Bytes::from(raw_slice::from_parts::<u8>(s.as_ptr(), s.len()));
-    for x in a.iter() {
-        bytes.push(x);
-    }
-
-    let b = Bytes::from(message);
-    for x in b.iter() {
-        bytes.push(x);
-    }
-
-    std::hash::keccak256(bytes)
-}
-
-fn get_stork_message_hash_v1(
-    storkPubKey: Identity,
-    id: b256,
-    recvTime: u64,
-    quantized_value: [u8; 24],
-    publisher_merkle_root: b256,
-    value_compute_alg_hash: b256
-) -> b256 {
-    let mut bytes = Bytes::new();
-    
-    let storkPubKey = Bytes::from(match storkPubKey {
-        Identity::Address(x) => b256::from(x),
-        Identity::ContractId(x) => b256::from(x),
-    });
-    for x in storkPubKey.iter() {
-        bytes.push(x);
-    }
-    
-    let id = Bytes::from(id);
-    for x in id.iter() {
-        bytes.push(x);
-    }
-    
-    let recvTime = recvTime.to_be_bytes();
-    for x in recvTime.iter() {
-        bytes.push(x);
-    }
-
-    let mut i = 0;
-    while i < 24 {
-        bytes.push(quantized_value[i]);
-        i += 1;
-    }
-    
-    let publisher_merkle_root = Bytes::from(publisher_merkle_root);
-    for x in publisher_merkle_root.iter() {
-        bytes.push(x);
-    }
-    
-    let value_compute_alg_hash = Bytes::from(value_compute_alg_hash);
-    for x in value_compute_alg_hash.iter() {
-        bytes.push(x);
-    }
-    std::hash::keccak256(bytes)
-}
-
-
-fn get_signer(
-    signedMessageHash: b256,
-    r: b256,
-    s: b256,
-) -> Identity {
-    Identity::Address(Address::from(Secp256k1::from((r, s)).address(Message::from(signedMessageHash)).unwrap()))
-}
-
-// helper function to convert I128 to [u8; 24]
-fn i128_to_be_bytes(value: I128) -> [u8; 24] {
-    let mut bytes = [0u8; 24];
-    
-    // Get the underlying U128 value
-    let mut u128_value = value.underlying();
-    
-    // If the value is greater than indent (positive number)
-    // subtract indent to get the actual positive value
-    if u128_value > I128::indent() {
-        u128_value = u128_value - I128::indent();
-    } else if u128_value < I128::indent() {
-        // For negative numbers, calculate two's complement
-        // First get the absolute value (distance from indent)
-        u128_value = I128::indent() - u128_value;
-        // Then convert to two's complement
-        u128_value = !u128_value + U128::from(1u64);
-        // Set the sign bit
-        bytes[8] = 0x80;
-    }
-    
-    // Convert U128 to bytes, filling the last 16 bytes
-    let mut i = 23;
-    while i >= 8 {
-        let bytes_val = (u128_value.binary_and(U128::from((0, 255)))).as_u64().unwrap().try_as_u8();
-        if bytes_val.is_none() {
-            log(StorkError::InvalidSignature);
-            revert(0);
-        }
-        // safe unwrap
-        bytes[i] = bytes_val.unwrap();
-        u128_value = u128_value >> 8;
-        i -= 1;
-    }
-    
-    bytes
-}
-
-fn _verify_stork_signature_v1(
-    storkPubKey: Identity,
-    id: b256,
-    recvTime: u64,
-    quantized_value: I128,
-    publisher_merkle_root: b256,
-    value_compute_alg_hash: b256,
-    r: b256,
-    s: b256,
-) -> bool {
-    // convert quantized_value to [u8; 24]
-    let quantized_value = i128_to_be_bytes(quantized_value);
-
-    let msgHash = get_stork_message_hash_v1(
-        storkPubKey,
-        id,
-        recvTime,
-        quantized_value,
-        publisher_merkle_root,
-        value_compute_alg_hash
-    );
-
-    let signedMessageHash = get_eth_signed_message_hash32(msgHash);
-
-    // Verify hash was generated by the actual user
-    let signer = get_signer(signedMessageHash, r, s);
-    signer == storkPubKey
-}
 
 #[storage(read)]
-fn _stork_public_key() -> Identity {
-    storage.state.read().stork_public_key
+fn _stork_public_key() -> Bytes {
+    storage.state.stork_public_key.read_slice().unwrap()
 }
 
 #[storage(read)]
@@ -251,10 +120,11 @@ fn _update_single_update_fee_in_wei(maxStorkPerBlock: u64) {
 }
 
 #[storage(read, write)]
-fn _update_stork_public_key(stork_public_key: Identity) {
+fn _update_stork_public_key(stork_public_key: Bytes) {
     only_owner();
     set_stork_public_key(stork_public_key);
 }
+   
 
 #[storage(read)]
 fn only_owner() {
@@ -271,7 +141,7 @@ abi Stork {
     #[storage(read, write)]
     fn initialize(
         initialOwner: Identity,
-        stork_public_key: Identity,
+        stork_public_key: Bytes,
         single_update_fee_in_wei: u64
     );
 
@@ -281,11 +151,11 @@ abi Stork {
  
     
     #[storage(read)]
-    fn stork_public_key() -> Identity;
+    fn stork_public_key() -> Bytes;
 
 
     fn verify_stork_signature_v1(
-        storkPubKey: Identity,
+        storkPubKey: Bytes,
         id: b256,
         recvTime: u64,
         quantized_value: I128,
@@ -310,14 +180,14 @@ abi Stork {
     fn update_single_update_fee_in_wei(single_update_fee_in_wei: u64);
 
     #[storage(read, write)]
-    fn update_stork_public_key(stork_public_key: Identity);
+    fn update_stork_public_key(stork_public_key: Bytes);
 }
 
 impl Stork for Contract {
     #[storage(read, write)]
     fn initialize(
         initialOwner: Identity,
-        stork_public_key: Identity,
+        stork_public_key: Bytes,
         single_update_fee_in_wei: u64
     ) {
         require(!storage.initialized.read(), "Already initialized");
@@ -338,12 +208,12 @@ impl Stork for Contract {
     
     
     #[storage(read)]
-    fn stork_public_key() -> Identity {
+    fn stork_public_key() -> Bytes {
         _stork_public_key()
     }
 
     fn verify_stork_signature_v1(
-        storkPubKey: Identity,
+        storkPubKey: Bytes,
         id: b256,
         recvTime: u64,
         quantized_value: I128,
@@ -352,7 +222,8 @@ impl Stork for Contract {
         r: b256,
         s: b256,
     ) -> bool {
-        _verify_stork_signature_v1(
+        require(storkPubKey.len() == 20, StorkError::InvalidStorkPublicKey);
+        verify_stork_signature(
             storkPubKey,
             id,
             recvTime,
@@ -370,7 +241,7 @@ impl Stork for Contract {
         let mut i = 0;
         while i < updateData.len() {
             let x = updateData.get(i).unwrap();
-            let verified = _verify_stork_signature_v1(
+            let verified = verify_stork_signature(
                 _stork_public_key(),
                 x.id,
                 x.temporal_numeric_value.timestamp_ns,
@@ -433,7 +304,7 @@ impl Stork for Contract {
     }
 
     #[storage(read, write)]
-    fn update_stork_public_key(stork_public_key: Identity) {
+    fn update_stork_public_key(stork_public_key: Bytes) {
         _update_stork_public_key(stork_public_key)
     }
 }
