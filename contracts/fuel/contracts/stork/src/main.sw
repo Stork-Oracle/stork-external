@@ -88,6 +88,7 @@ fn update_latest_value_if_necessary(input: TemporalNumericValueInput) -> bool {
 fn set_stork_public_key(stork_public_key: EvmAddress) {
     let mut state = storage.state.read();
     state.stork_public_key = stork_public_key;
+    storage.state.write(state);
 }
 
 #[storage(read, write)]
@@ -300,7 +301,7 @@ impl Stork for Contract {
     }
 
     fn version() -> String {
-        return String::from_ascii_str("1.0.2");
+        return String::from_ascii_str("1.0.0");
     }
 
     #[storage(read, write)]

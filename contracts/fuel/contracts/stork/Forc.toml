@@ -1,5 +1,5 @@
 [project]
-authors = ["Georgios Delkos", "Henry Baldwin"]
+authors = ["Georgios Delkos <georgios.delkos@ourovoros.io>", "Henry Baldwin <henry@stork.xyz>"]
 entry = "main.sw"
 license = "Apache-2.0"
 name = "stork"
