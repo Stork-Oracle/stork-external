@@ -31,6 +31,7 @@ struct TemporalNumericValueInput {
     value_compute_alg_hash: b256,
     r: b256, 
     s: b256, 
+    v: u8,
 }
 
 
@@ -164,13 +165,14 @@ abi Stork {
         value_compute_alg_hash: b256,
         r: b256,
         s: b256,
+        v: u8,
     ) -> bool;
 
     #[storage(read, write), payable]
-    fn update_temporal_numeric_values_v1(updateData: Vec<TemporalNumericValueInput>);
+    fn update_temporal_numeric_values_v1(update_data: Vec<TemporalNumericValueInput>);
 
     #[storage(read)]
-    fn get_update_fee_v1(updateData: Vec<TemporalNumericValueInput>) -> u64;
+    fn get_update_fee_v1(update_data: Vec<TemporalNumericValueInput>) -> u64;
 
     #[storage(read)]
     fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue;
@@ -187,7 +189,7 @@ abi Stork {
 impl Stork for Contract {
     #[storage(read, write)]
     fn initialize(
-        initialOwner: Identity,
+        initial_owner: Identity,
         stork_public_key: EvmAddress,
         single_update_fee_in_wei: u64
     ) {
@@ -195,7 +197,7 @@ impl Stork for Contract {
         require(!storage.initializing.read(), "Already initializing");
         storage.initializing.write(true);
 
-        storage.owner.write(standards::src5::State::Initialized(initialOwner));
+        storage.owner.write(standards::src5::State::Initialized(initial_owner));
 
         set_single_update_fee_in_wei(single_update_fee_in_wei);
         set_stork_public_key(stork_public_key);
@@ -214,33 +216,35 @@ impl Stork for Contract {
     }
 
     fn verify_stork_signature_v1(
-        storkPubKey: EvmAddress,
+        stork_pubkey: EvmAddress,
         id: b256,
-        recvTime: u64,
+        recv_time: u64,
         quantized_value: I128,
         publisher_merkle_root: b256,
         value_compute_alg_hash: b256,
         r: b256,
         s: b256,
+        v: u8,
     ) -> bool {
         verify_stork_signature(
-            storkPubKey,
+            stork_pubkey,
             id,
-            recvTime,
+            recv_time,
             quantized_value,
             publisher_merkle_root,
             value_compute_alg_hash,
             r,
             s,
+            v,
         )
     }
 
     #[storage(read, write), payable]
-    fn update_temporal_numeric_values_v1(updateData: Vec<TemporalNumericValueInput>) {
-        let mut numUpdates = 0;
+    fn update_temporal_numeric_values_v1(update_data: Vec<TemporalNumericValueInput>) {
+        let mut num_updates = 0;
         let mut i = 0;
-        while i < updateData.len() {
-            let x = updateData.get(i).unwrap();
+        while i < update_data.len() {
+            let x = update_data.get(i).unwrap();
             let verified = verify_stork_signature(
                 _stork_public_key(),
                 x.id,
@@ -250,26 +254,27 @@ impl Stork for Contract {
                 x.value_compute_alg_hash,
                 x.r,
                 x.s,
+                x.v,
             );
 
             if (!verified) {
                 log(StorkError::InvalidSignature);
                 revert(0);
             }
-            let updated = update_latest_value_if_necessary(updateData.get(i).unwrap());
+            let updated = update_latest_value_if_necessary(update_data.get(i).unwrap());
             if (updated) {
-                numUpdates += 1;
+                num_updates += 1;
             }
 
             i += 1;
         }
-        if (numUpdates == 0) {
+        if (num_updates == 0) {
             log(StorkError::NoFreshUpdate);
             revert(0);
         }
 
-        let requiredFee = get_total_fee(numUpdates);
-        if (std::context::msg_amount() < requiredFee) {
+        let required_fee = get_total_fee(num_updates);
+        if (std::context::msg_amount() < required_fee) {
             log(StorkError::InsufficientFee);
             revert(0);
         }
@@ -277,21 +282,21 @@ impl Stork for Contract {
     }
 
     #[storage(read)]
-    fn get_update_fee_v1(updateData: Vec<TemporalNumericValueInput>) -> u64 {
-        get_total_fee(updateData.len())
+    fn get_update_fee_v1(update_data: Vec<TemporalNumericValueInput>) -> u64 {
+        get_total_fee(update_data.len())
     }
 
 
     #[storage(read)]
     fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue {
-        let latestValueResult: Result<TemporalNumericValue, StorkError> = latest_canonical_temporal_numeric_value(id);
-        if (latestValueResult.is_err()) {
-            log(StorkError::FeedNotFound);
-            revert(0);
-        }
-
-        // This unwrap is safe as we've checked the error case
-        latestValueResult.unwrap()
+        let latest_value = match latest_canonical_temporal_numeric_value(id) {
+            Ok(value) => value,
+            Err(error) => {
+                log(error);
+                revert(0);
+            }
+        };
+        latest_value
     }
 
     fn version() -> String {

@@ -21,9 +21,10 @@ pub fn verify_stork_signature(
     value_compute_alg_hash: b256,
     r: b256,
     s: b256,
+    v: u8,
 ) -> bool {
     let quantized_value = i128_to_be_bytes(quantized_value);
-
+    
     let msg_hash = get_stork_message_hash(
         stork_pubkey,
         id,
@@ -32,11 +33,18 @@ pub fn verify_stork_signature(
         publisher_merkle_root,
         value_compute_alg_hash,
     );
-
+    log(msg_hash); // Log the initial message hash
+    
     let signed_message_hash = get_eth_signed_message_hash(msg_hash);
-
-    let signature = Secp256k1::from((r, s));
-
+    log(signed_message_hash.bytes()); // Log the signed message hash
+    
+    let signature = match try_get_rsv_signature_from_parts(r, s, v) {
+        Some(sig) => sig,
+        None => return false,
+    };
+    
+    log(signature);
+    log(signature.evm_address(signed_message_hash).unwrap());
     match signature.verify_evm_address(stork_pubkey, signed_message_hash) {
         Ok(_) => true,
         Err(_) => false,
@@ -72,17 +80,46 @@ fn get_stork_message_hash(
 }
 
 fn get_eth_signed_message_hash(msg_hash: b256) -> Message {
-    let eip_191_prefix = "\x19Ethereum Signed Message:\n32";
+    // Construct prefix bytes
+    let mut padded_prefix_bytes = Bytes::from(0x0000000019457468657265756D205369676E6564204D6573736167653A0A3332);
+    let (_, prefix_bytes) = padded_prefix_bytes.split_at(4);
     let mut data = Bytes::new();
-    data.append(Bytes::from(encode(eip_191_prefix)));
-    data.append(Bytes::from(encode(msg_hash)));
+    data.append(prefix_bytes);
+    data.append(Bytes::from(msg_hash));
     let hash = keccak256(data);
     Message::from(hash)
+}
+
+fn try_get_rsv_signature_from_parts(r: b256, s: b256, v: u8) -> Option<Secp256k1> {
+    // make most significant bit of s 0 or 1 depending on v
+    match v {
+        27 => {
+            // Create a b256 mask with all 1s except the highest bit
+            let mask = b256::max() & !(b256::from(0x8000000000000000000000000000000000000000000000000000000000000000));
+            let s_cleared = s & mask;
+            Some(Secp256k1::from((r, s_cleared)))
+        }
+        28 => {
+            // Create a b256 mask with only the highest bit set
+            let mask = b256::from(0x8000000000000000000000000000000000000000000000000000000000000000);
+            let s_set = s | mask;
+            Some(Secp256k1::from((r, s_set)))
+        }
+        _ => None,
+    }
 }
 
 
 // helper function to convert I128 to Bytes
 fn i128_to_be_bytes(value: I128) -> Bytes {
+    
+    // fast track for zero
+    if value == I128::zero() {
+        let mut bytes = Bytes::new();
+        bytes.resize(16, 0u8);
+        return bytes;
+    }
+
     let mut bytes = [0u8; 16];  // 16 bytes
     
     let mut u128_value = value.underlying();
@@ -102,15 +139,13 @@ fn i128_to_be_bytes(value: I128) -> Bytes {
         let and_result = magnitude_minus_one.binary_and(all_ones);
         u128_value = or_result.binary_and(!and_result);
     }
-    
     // Convert U128 to bytes, filling all 16 bytes
-    let mut i = 15;
-    while i >= 0 {
+    let mut i = 16;
+    while i > 0 {
+        i -= 1;
         bytes[i] = (u128_value.binary_and(U128::from((0, 255)))).as_u64().unwrap().try_as_u8().unwrap();
         u128_value = u128_value >> 8;
-        i -= 1;
     }
-    
     return Bytes::from(encode(bytes));
 }
 
@@ -137,7 +172,7 @@ fn test_verify_stork_signature() {
     let value_compute_alg_hash = b256::from(0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba);
     let r = b256::from(0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741);
     let s = b256::from(0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758);
-
+    let v = 28;
     let result = verify_stork_signature(
         stork_pubkey,
         id,
@@ -146,7 +181,8 @@ fn test_verify_stork_signature() {
         publisher_merkle_root,
         value_compute_alg_hash,
         r,
-        s
+        s,
+        v,
     );
     assert(result == true);
 }
@@ -179,24 +215,66 @@ fn test_get_stork_message_hash() {
         publisher_merkle_root,
         value_compute_alg_hash,
     );
-    log(message_hash);
+
     assert(message_hash == b256::from(0x3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084));
 }
 
-// #[test]
-// fn test_get_eth_signed_message_hash() {
-// }
+#[test]
+fn test_get_eth_signed_message_hash() {
+    let msg_hash = b256::from(0x3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084);
+    let signed_message_hash = get_eth_signed_message_hash(msg_hash);
+    log(signed_message_hash.bytes());
+    let expected_message = Message::from(b256::from(0xbfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272));
+    log(expected_message.bytes());
+    assert(signed_message_hash.bytes() == expected_message.bytes());
+}
+
+#[test]
+fn test_i128_to_be_bytes_zero() {
+    let value: I128 = I128::zero();
+    let bytes = i128_to_be_bytes(value);
+    let mut expected_bytes = Bytes::new();
+    expected_bytes.resize(16, 0u8);
+
+    assert(bytes == expected_bytes);
+}
 
 #[test]
 fn test_i128_to_be_bytes_positive() {
-    let value: I128 = I128::zero();
+    let value_u64 = 1u64;
+    let value_u128 = U128::from(value_u64);
+    let value = I128::try_from(value_u128).unwrap();
     let bytes = i128_to_be_bytes(value);
-    log("hello world");
-    log(bytes);
-    assert(bytes == Bytes::from(0x0000000000000000000000000000000000000000000000000000000000000000));
+    let mut expected_bytes = Bytes::new();
+    expected_bytes.resize(16, 0u8);
+    expected_bytes.set(15, 1u8);
+    assert(bytes == expected_bytes);
+
+    let value = I128::from(I128::MAX);
+    let bytes = i128_to_be_bytes(value);
+    let mut max_expected_bytes = Bytes::new();
+    max_expected_bytes.resize(16, 0xFFu8);
+    max_expected_bytes.set(0, 0x7Fu8); 
+
+    assert(bytes == max_expected_bytes);
 }
 
 #[test]
-fn test_log() {
-    log("hello world");
+fn test_try_get_rsv_signature_from_parts() {
+    let r = b256::from(0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741);
+    let s = b256::from(0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758);
+    let v = 28;
+    let signature = try_get_rsv_signature_from_parts(r, s, v);
 }
+
+#[test]
+fn test_i128_to_be_bytes_negative() {
+    let value = I128::from(I128::MIN);
+    let bytes = i128_to_be_bytes(value);
+    let mut min_expected_bytes = Bytes::new();
+    min_expected_bytes.resize(16, 0x00u8);
+    min_expected_bytes.set(0, 0x80u8);
+
+    assert(bytes == min_expected_bytes);
+}
+
