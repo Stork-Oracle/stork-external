@@ -13,6 +13,7 @@ use std::address::Address;
 use std::storage::storage_bytes::*;
 use std::bytes::Bytes;
 use std::b512::B512;
+use std::vm::evm::evm_address::EvmAddress;
 
 use standards::src5::*;
 use sway_libs::signed_integers::i128::I128;
@@ -35,7 +36,7 @@ struct TemporalNumericValueInput {
 
 struct State {
     // For verifying the authenticity of the passed data
-    stork_public_key: StorageBytes,
+    stork_public_key: EvmAddress,
     single_update_fee_in_wei: u64,
     // Mapping of cached numeric temporal data
     latest_canonical_temporal_numeric_values: StorageMap<b256, TemporalNumericValue>,
@@ -47,7 +48,7 @@ storage {
     initialized: bool = false,
     initializing: bool = false,
     state: State = State {
-        stork_public_key: StorageBytes {},
+        stork_public_key: EvmAddress::zero(),
         single_update_fee_in_wei: 0,
         // valid_time_period_seconds: 0,
         latest_canonical_temporal_numeric_values: StorageMap::<b256, TemporalNumericValue> {},
@@ -83,9 +84,9 @@ fn update_latest_value_if_necessary(input: TemporalNumericValueInput) -> bool {
 }
 
 #[storage(read, write)]
-fn set_stork_public_key(stork_public_key: Bytes) {
-    require(stork_public_key.len() == 20, StorkError::InvalidStorkPublicKey);
-    storage.state.stork_public_key.write_slice(stork_public_key);
+fn set_stork_public_key(stork_public_key: EvmAddress) {
+    let mut state = storage.state.read();
+    state.stork_public_key = stork_public_key;
 }
 
 #[storage(read, write)]
@@ -98,8 +99,8 @@ fn set_single_update_fee_in_wei(fee: u64) {
 
 
 #[storage(read)]
-fn _stork_public_key() -> Bytes {
-    storage.state.stork_public_key.read_slice().unwrap()
+fn _stork_public_key() -> EvmAddress {
+    storage.state.read().stork_public_key
 }
 
 #[storage(read)]
@@ -120,7 +121,7 @@ fn _update_single_update_fee_in_wei(maxStorkPerBlock: u64) {
 }
 
 #[storage(read, write)]
-fn _update_stork_public_key(stork_public_key: Bytes) {
+fn _update_stork_public_key(stork_public_key: EvmAddress) {
     only_owner();
     set_stork_public_key(stork_public_key);
 }
@@ -140,8 +141,8 @@ fn only_owner() {
 abi Stork {    
     #[storage(read, write)]
     fn initialize(
-        initialOwner: Identity,
-        stork_public_key: Bytes,
+        initial_owner: Identity,
+        stork_public_key: EvmAddress,
         single_update_fee_in_wei: u64
     );
 
@@ -151,13 +152,13 @@ abi Stork {
  
     
     #[storage(read)]
-    fn stork_public_key() -> Bytes;
+    fn stork_public_key() -> EvmAddress;
 
 
     fn verify_stork_signature_v1(
-        storkPubKey: Bytes,
+        stork_pubkey: EvmAddress,
         id: b256,
-        recvTime: u64,
+        recv_time: u64,
         quantized_value: I128,
         publisher_merkle_root: b256,
         value_compute_alg_hash: b256,
@@ -180,14 +181,14 @@ abi Stork {
     fn update_single_update_fee_in_wei(single_update_fee_in_wei: u64);
 
     #[storage(read, write)]
-    fn update_stork_public_key(stork_public_key: Bytes);
+    fn update_stork_public_key(stork_public_key: EvmAddress);
 }
 
 impl Stork for Contract {
     #[storage(read, write)]
     fn initialize(
         initialOwner: Identity,
-        stork_public_key: Bytes,
+        stork_public_key: EvmAddress,
         single_update_fee_in_wei: u64
     ) {
         require(!storage.initialized.read(), "Already initialized");
@@ -208,12 +209,12 @@ impl Stork for Contract {
     
     
     #[storage(read)]
-    fn stork_public_key() -> Bytes {
+    fn stork_public_key() -> EvmAddress {
         _stork_public_key()
     }
 
     fn verify_stork_signature_v1(
-        storkPubKey: Bytes,
+        storkPubKey: EvmAddress,
         id: b256,
         recvTime: u64,
         quantized_value: I128,
@@ -222,7 +223,6 @@ impl Stork for Contract {
         r: b256,
         s: b256,
     ) -> bool {
-        require(storkPubKey.len() == 20, StorkError::InvalidStorkPublicKey);
         verify_stork_signature(
             storkPubKey,
             id,
@@ -304,7 +304,7 @@ impl Stork for Contract {
     }
 
     #[storage(read, write)]
-    fn update_stork_public_key(stork_public_key: Bytes) {
+    fn update_stork_public_key(stork_public_key: EvmAddress) {
         _update_stork_public_key(stork_public_key)
     }
 }
