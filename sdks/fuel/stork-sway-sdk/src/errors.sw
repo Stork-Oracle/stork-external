@@ -11,6 +11,4 @@ pub enum StorkError {
     StaleValue: (),
     // Signature is invalid.
     InvalidSignature: (),
-    // Invalid stork public key.
-    InvalidStorkPublicKey: (),
 }
