@@ -1,7 +1,6 @@
 use fuels::{
     prelude::*,
     types::{
-        ContractId,
         Bits256,
         EvmAddress,
     },
@@ -15,7 +14,7 @@ abigen!(Contract(
 ));
 
 // sets up the test environment, returns two wallets (first is the stork owner, second is not), the stork contract instance and its id
-async fn setup_tests() -> (WalletUnlocked, WalletUnlocked, Stork<WalletUnlocked>, ContractId) {
+async fn setup_tests() -> (WalletUnlocked, WalletUnlocked, Stork<WalletUnlocked>) {
     let mut wallets = launch_custom_provider_and_get_wallets(
         WalletsConfig::new(
             Some(2),             /* two wallets */
@@ -30,12 +29,12 @@ async fn setup_tests() -> (WalletUnlocked, WalletUnlocked, Stork<WalletUnlocked>
     let stork_owner = wallets.pop().unwrap();
     let not_stork_owner = wallets.pop().unwrap();
 
-    let (stork_instance, stork_id) = get_contract_instance(stork_owner.clone()).await;
+    let stork_instance = get_contract_instance(stork_owner.clone()).await;
 
-    (stork_owner, not_stork_owner, stork_instance, stork_id)
+    (stork_owner, not_stork_owner, stork_instance)
 }
 
-async fn get_contract_instance(wallet: WalletUnlocked) -> (Stork<WalletUnlocked>, ContractId) {
+async fn get_contract_instance(wallet: WalletUnlocked) -> Stork<WalletUnlocked> {
     // Launch a local network and deploy the contract
     
     let id = Contract::load_from(
@@ -49,7 +48,7 @@ async fn get_contract_instance(wallet: WalletUnlocked) -> (Stork<WalletUnlocked>
 
     let instance = Stork::new(id.clone(), wallet);
 
-    (instance, id.into())
+    instance
 }
 
 async fn initialize_stork_default(stork_instance: &Stork<WalletUnlocked>, stork_owner: WalletUnlocked) -> Result<CallResponse<()>> {
@@ -66,7 +65,7 @@ async fn initialize_stork_default(stork_instance: &Stork<WalletUnlocked>, stork_
 
 #[tokio::test]
 async fn test_initialization() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     // construct evm address
     let stork_pub_key_bits = Bits256::from_hex_str("0x0000000000000000000000000a803F9b1CCe32e2773e0d2e98b37E0775cA5d44").unwrap();
@@ -86,7 +85,7 @@ async fn test_initialization() {
 
 #[tokio::test]
 async fn test_no_duplicate_initialization() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     // construct evm address
     let stork_pub_key_bits = Bits256::from_hex_str("0x0000000000000000000000000a803F9b1CCe32e2773e0d2e98b37E0775cA5d44").unwrap();
@@ -113,7 +112,7 @@ async fn test_no_duplicate_initialization() {
 
 #[tokio::test]
 async fn test_update_stork_public_key_owner() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -128,7 +127,7 @@ async fn test_update_stork_public_key_owner() {
 
 #[tokio::test]
 async fn test_update_stork_public_key_not_owner() {
-    let (stork_owner, not_stork_owner, stork_instance, _) = setup_tests().await;
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -146,7 +145,7 @@ async fn test_update_stork_public_key_not_owner() {
 
 #[tokio::test]
 async fn test_update_stork_single_update_fee_in_wei_owner() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -158,7 +157,7 @@ async fn test_update_stork_single_update_fee_in_wei_owner() {
 
 #[tokio::test]
 async fn test_update_stork_single_update_fee_in_wei_not_owner() {
-    let (stork_owner, not_stork_owner, stork_instance, _) = setup_tests().await;
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -173,7 +172,7 @@ async fn test_update_stork_single_update_fee_in_wei_not_owner() {
 
 #[tokio::test]
 async fn test_version() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -183,7 +182,7 @@ async fn test_version() {
 
 #[tokio::test]
 async fn test_verify_stork_signature_v1_valid() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -212,7 +211,7 @@ async fn test_verify_stork_signature_v1_valid() {
 
 #[tokio::test]
 async fn test_verify_stork_signature_v1_invalid() {
-    let (stork_owner, _, stork_instance, _) = setup_tests().await;
+    let (stork_owner, _, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -240,7 +239,7 @@ async fn test_verify_stork_signature_v1_invalid() {
 
 #[tokio::test]
 async fn test_update_temporal_numeric_value_v1_valid() {
-    let (stork_owner, not_stork_owner, stork_instance, _) = setup_tests().await;
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -298,7 +297,7 @@ async fn test_update_temporal_numeric_value_v1_valid() {
 
 #[tokio::test]
 async fn test_invalid_update() {
-    let (stork_owner, not_stork_owner, stork_instance, _) = setup_tests().await;
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
 
@@ -354,7 +353,7 @@ async fn test_invalid_update() {
 
 #[tokio::test]
 async fn test_update_temporal_numeric_values_v1_insufficient_fee() {
-    let (stork_owner, not_stork_owner, stork_instance, _) = setup_tests().await;
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     // Set fee to 2 using owner
     stork_instance
