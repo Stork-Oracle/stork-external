@@ -4,7 +4,7 @@ use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError};
 
 // The sv module is the module that contains the sylvia macro expansion of the stork contract
 // It is not present when reading the stork contract unless you expand the macro with a tool like rust-analyzer
-// It containes useful things like the QueryMsg, ExecuteMsg, and more, and those messages can be imported like this:
+// It contains useful things like the QueryMsg, ExecuteMsg, and more, and those messages can be imported like this:
 use stork_cw::contract::sv::QueryMsg::GetLatestCanonicalTemporalNumericValueUnchecked;
 
 use stork_cw::responses::GetTemporalNumericValueResponse;
