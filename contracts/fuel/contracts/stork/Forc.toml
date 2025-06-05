@@ -5,6 +5,7 @@ license = "Apache-2.0"
 name = "stork"
 
 [dependencies]
+std = { git = "https://github.com/fuellabs/sway", tag = "v0.68.4" }
 standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.7.0" }
 sway_libs = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.25.2" }
 stork_sway_sdk = { path = "../../../../sdks/fuel/stork-sway-sdk" }
