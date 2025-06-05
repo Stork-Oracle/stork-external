@@ -32,8 +32,8 @@ export type IdentityInput = Enum<{ Address: AddressInput, ContractId: ContractId
 export type IdentityOutput = Enum<{ Address: AddressOutput, ContractId: ContractIdOutput }>;
 export type StateInput = Enum<{ Uninitialized: undefined, Initialized: IdentityInput, Revoked: undefined }>;
 export type StateOutput = Enum<{ Uninitialized: void, Initialized: IdentityOutput, Revoked: void }>;
-export enum StorkErrorInput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature', InvalidStorkPublicKey = 'InvalidStorkPublicKey' };
-export enum StorkErrorOutput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature', InvalidStorkPublicKey = 'InvalidStorkPublicKey' };
+export enum StorkErrorInput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
+export enum StorkErrorOutput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
 export type StorkEventInput = Enum<{ ValueUpdate: [], Initialized: undefined }>;
 export type StorkEventOutput = Enum<{ ValueUpdate: [], Initialized: void }>;
 
@@ -224,10 +224,6 @@ const abi = {
         },
         {
           "name": "InvalidSignature",
-          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
-        },
-        {
-          "name": "InvalidStorkPublicKey",
           "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         }
       ]
