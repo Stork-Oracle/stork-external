@@ -1,0 +1,8 @@
+[project]
+authors = ["Henry Baldwin"]
+entry = "lib.sw"
+license = "Apache-2.0"
+name = "stork_sway_sdk"
+
+[dependencies]
+sway_libs = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.25.2" }
