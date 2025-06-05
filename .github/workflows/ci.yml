@@ -334,6 +334,9 @@ jobs:
         run: |
           yes | curl https://install.fuel.network | sh
           echo "${HOME}/.fuelup/bin" >> $GITHUB_PATH
+
+      - name: Pin Forc Version
+        run: |
           fuelup toolchain new pinned-forc
           fuelup component add forc@0.68.4
 
