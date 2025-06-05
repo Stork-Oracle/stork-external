@@ -33,18 +33,14 @@ pub fn verify_stork_signature(
         publisher_merkle_root,
         value_compute_alg_hash,
     );
-    log(msg_hash); // Log the initial message hash
     
     let signed_message_hash = get_eth_signed_message_hash(msg_hash);
-    log(signed_message_hash.bytes()); // Log the signed message hash
     
     let signature = match try_get_rsv_signature_from_parts(r, s, v) {
         Some(sig) => sig,
         None => return false,
     };
     
-    log(signature);
-    log(signature.evm_address(signed_message_hash).unwrap());
     match signature.verify_evm_address(stork_pubkey, signed_message_hash) {
         Ok(_) => true,
         Err(_) => false,
@@ -223,9 +219,7 @@ fn test_get_stork_message_hash() {
 fn test_get_eth_signed_message_hash() {
     let msg_hash = b256::from(0x3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084);
     let signed_message_hash = get_eth_signed_message_hash(msg_hash);
-    log(signed_message_hash.bytes());
     let expected_message = Message::from(b256::from(0xbfaa04ab8f3947f4687a0cb441f673ac3c2233ec3170e37986ff07e09aa50272));
-    log(expected_message.bytes());
     assert(signed_message_hash.bytes() == expected_message.bytes());
 }
 
@@ -265,6 +259,15 @@ fn test_try_get_rsv_signature_from_parts() {
     let s = b256::from(0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758);
     let v = 28;
     let signature = try_get_rsv_signature_from_parts(r, s, v);
+    assert(signature.is_some());
+    let sig = signature.unwrap();
+    let sig_bytes: Bytes = sig.into();
+    
+    let mut expected_bytes = Bytes::new();
+    expected_bytes.append(Bytes::from(r));
+    expected_bytes.append(Bytes::from(s | b256::from(0x8000000000000000000000000000000000000000000000000000000000000000)));
+    
+    assert(sig_bytes == expected_bytes);
 }
 
 #[test]
