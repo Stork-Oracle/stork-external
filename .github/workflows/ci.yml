@@ -339,7 +339,7 @@ jobs:
         run: |
           fuelup toolchain new pinned-forc
           fuelup component add forc@0.68.4
-          fuelup component add fuels-core@0.43.2
+          fuelup component add fuel-core@0.43.2
 
       - name: Run Unit Tests
         run: |
