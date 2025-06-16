@@ -20,7 +20,7 @@ const STORK_EVM_PUBLIC_KEY: string = process.env.STORK_EVM_PUBLIC_KEY || "0x0a80
 const UPDATE_FEE_IN_WEI: number = parseInt(process.env.UPDATE_FEE_IN_WEI || "1");
 
 function getEvmPubKey(evmPubKey: string): EvmAddress {
-    // cut of the 0x prefix
+    // cut off the 0x prefix
     const evmPubKeyWithout0x = evmPubKey.slice(2);
     if (evmPubKeyWithout0x.length !== 40) {
         throw new Error("Invalid EVM public key");

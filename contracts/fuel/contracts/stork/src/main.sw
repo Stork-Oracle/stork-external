@@ -29,11 +29,10 @@ struct TemporalNumericValueInput {
     id: b256,
     publisher_merkle_root: b256,
     value_compute_alg_hash: b256,
-    r: b256, 
-    s: b256, 
+    r: b256,
+    s: b256,
     v: u8,
 }
-
 
 struct State {
     // For verifying the authenticity of the passed data
@@ -56,7 +55,6 @@ storage {
     },
 }
 
-
 #[storage(read)]
 fn latest_canonical_temporal_numeric_value(id: b256) -> Result<TemporalNumericValue, StorkError> {
     let map: StorageKey<StorageMap<b256, TemporalNumericValue>> = storage.state.latest_canonical_temporal_numeric_values;
@@ -75,8 +73,12 @@ fn update_latest_value_if_necessary(input: TemporalNumericValueInput) -> bool {
         },
         _ => {},
     }
-    if (input.temporal_numeric_value.timestamp_ns > latestReceiveTime) {
-        storage.state.latest_canonical_temporal_numeric_values.insert(input.id, input.temporal_numeric_value);
+    if (input.temporal_numeric_value.timestamp_ns > latestReceiveTime)
+    {
+        storage
+            .state
+            .latest_canonical_temporal_numeric_values
+            .insert(input.id, input.temporal_numeric_value);
         let event = StorkEvent::ValueUpdate((input.id, input.temporal_numeric_value));
         log(event);
         return true;
@@ -98,8 +100,6 @@ fn set_single_update_fee_in_wei(fee: u64) {
     storage.state.write(state);
 }
 
-
-
 #[storage(read)]
 fn _stork_public_key() -> EvmAddress {
     storage.state.read().stork_public_key
@@ -115,7 +115,6 @@ fn get_total_fee(totalNumUpdates: u64) -> u64 {
     totalNumUpdates * _single_update_fee_in_wei()
 }
 
-
 #[storage(read, write)]
 fn _update_single_update_fee_in_wei(maxStorkPerBlock: u64) {
     only_owner();
@@ -127,7 +126,6 @@ fn _update_stork_public_key(stork_public_key: EvmAddress) {
     only_owner();
     set_stork_public_key(stork_public_key);
 }
-   
 
 #[storage(read)]
 fn only_owner() {
@@ -140,22 +138,19 @@ fn only_owner() {
     }
 }
 
-abi Stork {    
+abi Stork {
     #[storage(read, write)]
     fn initialize(
         initial_owner: Identity,
         stork_public_key: EvmAddress,
-        single_update_fee_in_wei: u64
+        single_update_fee_in_wei: u64,
     );
 
     #[storage(read)]
     fn single_update_fee_in_wei() -> u64;
-    
- 
-    
+
     #[storage(read)]
     fn stork_public_key() -> EvmAddress;
-
 
     fn verify_stork_signature_v1(
         stork_pubkey: EvmAddress,
@@ -192,13 +187,15 @@ impl Stork for Contract {
     fn initialize(
         initial_owner: Identity,
         stork_public_key: EvmAddress,
-        single_update_fee_in_wei: u64
+        single_update_fee_in_wei: u64,
     ) {
         require(!storage.initialized.read(), "Already initialized");
         require(!storage.initializing.read(), "Already initializing");
         storage.initializing.write(true);
 
-        storage.owner.write(standards::src5::State::Initialized(initial_owner));
+        storage
+            .owner
+            .write(standards::src5::State::Initialized(initial_owner));
 
         set_single_update_fee_in_wei(single_update_fee_in_wei);
         set_stork_public_key(stork_public_key);
@@ -209,8 +206,7 @@ impl Stork for Contract {
     fn single_update_fee_in_wei() -> u64 {
         _single_update_fee_in_wei()
     }
-    
-    
+
     #[storage(read)]
     fn stork_public_key() -> EvmAddress {
         _stork_public_key()
@@ -249,8 +245,10 @@ impl Stork for Contract {
             let verified = verify_stork_signature(
                 _stork_public_key(),
                 x.id,
-                x.temporal_numeric_value.timestamp_ns,
-                x.temporal_numeric_value.quantized_value,
+                x.temporal_numeric_value
+                    .timestamp_ns,
+                x.temporal_numeric_value
+                    .quantized_value,
                 x.publisher_merkle_root,
                 x.value_compute_alg_hash,
                 x.r,
@@ -279,14 +277,12 @@ impl Stork for Contract {
             log(StorkError::InsufficientFee);
             revert(0);
         }
-    
     }
 
     #[storage(read)]
     fn get_update_fee_v1(update_data: Vec<TemporalNumericValueInput>) -> u64 {
         get_total_fee(update_data.len())
     }
-
 
     #[storage(read)]
     fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue {
@@ -321,4 +317,3 @@ impl standards::src5::SRC5 for Contract {
         storage.owner.read()
     }
 }
-

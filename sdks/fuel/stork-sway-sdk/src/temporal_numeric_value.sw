@@ -13,7 +13,7 @@ pub struct TemporalNumericValue {
 impl TemporalNumericValue {
     // Creates a new temporal numeric value
     pub fn new(timestamp_ns: u64, quantized_value: I128) -> Self {
-        Self { 
+        Self {
             timestamp_ns,
             quantized_value,
         }
@@ -28,10 +28,7 @@ impl TemporalNumericValue {
     pub fn get_quantized_value(self) -> I128 {
         self.quantized_value
     }
-    
-    
 }
-
 
 #[test]
 fn test_get_timestamp_ns() {

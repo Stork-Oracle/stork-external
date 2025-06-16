@@ -24,7 +24,7 @@ pub fn verify_stork_signature(
     v: u8,
 ) -> bool {
     let quantized_value = i128_to_be_bytes(quantized_value);
-    
+
     let msg_hash = get_stork_message_hash(
         stork_pubkey,
         id,
@@ -33,14 +33,14 @@ pub fn verify_stork_signature(
         publisher_merkle_root,
         value_compute_alg_hash,
     );
-    
+
     let signed_message_hash = get_eth_signed_message_hash(msg_hash);
-    
+
     let signature = match try_get_rsv_signature_from_parts(r, s, v) {
         Some(sig) => sig,
         None => return false,
     };
-    
+
     match signature.verify_evm_address(stork_pubkey, signed_message_hash) {
         Ok(_) => true,
         Err(_) => false,
@@ -105,10 +105,8 @@ fn try_get_rsv_signature_from_parts(r: b256, s: b256, v: u8) -> Option<Secp256k1
     }
 }
 
-
 // helper function to convert I128 to Bytes
 fn i128_to_be_bytes(value: I128) -> Bytes {
-    
     // fast track for zero
     if value == I128::zero() {
         let mut bytes = Bytes::new();
@@ -116,15 +114,14 @@ fn i128_to_be_bytes(value: I128) -> Bytes {
         return bytes;
     }
 
-    let mut bytes = [0u8; 16];  // 16 bytes
-    
+    let mut bytes = [0u8; 16]; // 16 bytes
     let mut u128_value = value.underlying();
-    
+
     if u128_value > I128::indent() {
         // Positive number
         u128_value = u128_value - I128::indent();
     } else if u128_value < I128::indent() {
-        // Negative number - use same two's complement as Move
+        // Negative number - use two's complement
         let magnitude = I128::indent() - u128_value;
         // Create a mask of all 1's using NOT of zero
         let mask = !U128::from(0u64);
@@ -154,7 +151,6 @@ fn test_verify_stork_signature() {
     let (_, evm_address_bytes) = padded_evm_address_bytes.split_at(12);
     let stork_pubkey = EvmAddress::try_from(evm_address_bytes).unwrap();
 
-    
     // construct quantized value
     let quantized_value_u64 = 62507457175499998u64;
     let mut quantized_value_u128 = U128::from(quantized_value_u64);
@@ -189,7 +185,6 @@ fn test_get_stork_message_hash() {
     let (_, evm_address_bytes) = padded_evm_address_bytes.split_at(12);
     let stork_pubkey = EvmAddress::try_from(evm_address_bytes).unwrap();
 
-
     // construct quantized value
     let quantized_value_u64 = 62507457175499998u64;
     let mut quantized_value_u128 = U128::from(quantized_value_u64);
@@ -212,7 +207,9 @@ fn test_get_stork_message_hash() {
         value_compute_alg_hash,
     );
 
-    assert(message_hash == b256::from(0x3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084));
+    assert(
+        message_hash == b256::from(0x3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084),
+    );
 }
 
 #[test]
@@ -248,8 +245,7 @@ fn test_i128_to_be_bytes_positive() {
     let bytes = i128_to_be_bytes(value);
     let mut max_expected_bytes = Bytes::new();
     max_expected_bytes.resize(16, 0xFFu8);
-    max_expected_bytes.set(0, 0x7Fu8); 
-
+    max_expected_bytes.set(0, 0x7Fu8);
     assert(bytes == max_expected_bytes);
 }
 
@@ -262,11 +258,14 @@ fn test_try_get_rsv_signature_from_parts() {
     assert(signature.is_some());
     let sig = signature.unwrap();
     let sig_bytes: Bytes = sig.into();
-    
+
     let mut expected_bytes = Bytes::new();
     expected_bytes.append(Bytes::from(r));
-    expected_bytes.append(Bytes::from(s | b256::from(0x8000000000000000000000000000000000000000000000000000000000000000)));
-    
+    expected_bytes.append(Bytes::from(
+        s
+        | b256::from(0x8000000000000000000000000000000000000000000000000000000000000000),
+    ));
+
     assert(sig_bytes == expected_bytes);
 }
 
@@ -280,4 +279,3 @@ fn test_i128_to_be_bytes_negative() {
 
     assert(bytes == min_expected_bytes);
 }
-
