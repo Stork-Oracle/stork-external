@@ -16,7 +16,7 @@ type CosmwasmContractInteractor struct {
 	logger   zerolog.Logger
 	contract *contract.StorkContract
 
-	pollingFrequencySec int
+	pollingPeriodSec int
 }
 
 func NewCosmwasmContractInteractor(
@@ -24,7 +24,7 @@ func NewCosmwasmContractInteractor(
 	contractAddress string,
 	mnemonic []byte,
 	batchingWindow int,
-	pollingFrequency int,
+	pollingPeriod int,
 	logger zerolog.Logger,
 	gasPrice float64,
 	gasAdjustment float64,
@@ -40,9 +40,9 @@ func NewCosmwasmContractInteractor(
 		return nil, err
 	}
 	return &CosmwasmContractInteractor{
-		logger:              logger,
-		contract:            contract,
-		pollingFrequencySec: pollingFrequency,
+		logger:           logger,
+		contract:         contract,
+		pollingPeriodSec: pollingPeriod,
 	}, nil
 }
 

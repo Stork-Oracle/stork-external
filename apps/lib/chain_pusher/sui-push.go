@@ -21,7 +21,7 @@ func init() {
 	SuipushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	SuipushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
 	SuipushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	SuipushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	SuipushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 
 	SuipushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
 	SuipushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
@@ -39,7 +39,7 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 
 	logger := SuiPusherLogger(chainRpcUrl, contractAddress)
 
@@ -48,11 +48,11 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, keyFileContent, assetConfigFile, pollingFrequency, logger)
+	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, keyFileContent, assetConfigFile, pollingPeriod, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interactor")
 	}
 
-	suiPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, suiInteractor, &logger)
+	suiPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, suiInteractor, &logger)
 	suiPusher.Run(context.Background())
 }

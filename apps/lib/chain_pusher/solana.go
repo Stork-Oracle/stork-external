@@ -20,18 +20,18 @@ import (
 )
 
 type SolanaContractInteractor struct {
-	logger              zerolog.Logger
-	client              *rpc.Client
-	wsClient            *ws.Client
-	contractAddr        solana.PublicKey
-	feedAccounts        map[InternalEncodedAssetId]solana.PublicKey
-	treasuryAccounts    map[uint8]solana.PublicKey
-	configAccount       solana.PublicKey
-	payer               solana.PrivateKey
-	limiter             *rate.Limiter
-	pollingFrequencySec int
-	batchSize           int
-	confirmationInChan  chan solana.Signature
+	logger             zerolog.Logger
+	client             *rpc.Client
+	wsClient           *ws.Client
+	contractAddr       solana.PublicKey
+	feedAccounts       map[InternalEncodedAssetId]solana.PublicKey
+	treasuryAccounts   map[uint8]solana.PublicKey
+	configAccount      solana.PublicKey
+	payer              solana.PrivateKey
+	limiter            *rate.Limiter
+	pollingPeriodSec   int
+	batchSize          int
+	confirmationInChan chan solana.Signature
 }
 
 // this is a limit imposed by the Solana blockchain and the size of the instruction
@@ -45,7 +45,7 @@ func NewSolanaContractInteractor(
 	contractAddr string,
 	payer []byte,
 	assetConfigFile string,
-	pollingFreqSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int,
+	pollingPeriodSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int,
 ) (*SolanaContractInteractor, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
@@ -121,18 +121,18 @@ func NewSolanaContractInteractor(
 
 	contract.SetProgramID(contractPubKey)
 	sci := &SolanaContractInteractor{
-		logger:              logger,
-		client:              client,
-		wsClient:            wsClient,
-		contractAddr:        contractPubKey,
-		feedAccounts:        feedAccounts,
-		treasuryAccounts:    treasuryAccounts,
-		configAccount:       configAccount,
-		payer:               payer,
-		limiter:             limiter,
-		pollingFrequencySec: pollingFreqSec,
-		batchSize:           batchSize,
-		confirmationInChan:  confirmationInChan,
+		logger:             logger,
+		client:             client,
+		wsClient:           wsClient,
+		contractAddr:       contractPubKey,
+		feedAccounts:       feedAccounts,
+		treasuryAccounts:   treasuryAccounts,
+		configAccount:      configAccount,
+		payer:              payer,
+		limiter:            limiter,
+		pollingPeriodSec:   pollingPeriodSec,
+		batchSize:          batchSize,
+		confirmationInChan: confirmationInChan,
 	}
 
 	go sci.runUnboundedConfirmationBuffer(confirmationOutChan)

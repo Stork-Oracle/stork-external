@@ -21,7 +21,7 @@ func init() {
 	AptospushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	AptospushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
 	AptospushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	AptospushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	AptospushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 
 	AptospushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
 	AptospushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
@@ -39,7 +39,7 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 
 	logger := AptosPusherLogger(chainRpcUrl, contractAddress)
 
@@ -48,11 +48,11 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingFrequency, logger)
+	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingPeriod, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interactor")
 	}
 
-	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, aptosInteractor, &logger)
+	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, aptosInteractor, &logger)
 	aptosPusher.Run(context.Background())
 }
