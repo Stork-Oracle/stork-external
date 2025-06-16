@@ -21,7 +21,7 @@ func init() {
 	CosmwasmPushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	CosmwasmPushCmd.Flags().StringP(MnemonicFileFlag, "m", "", MnemonicFileDesc)
 	CosmwasmPushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	CosmwasmPushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	CosmwasmPushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 	CosmwasmPushCmd.Flags().Float64P(GasPriceFlag, "g", 0.0, GasPriceDesc)
 	CosmwasmPushCmd.Flags().Float64P(GasAdjustmentFlag, "j", 1.0, GasAdjustmentDesc)
 	CosmwasmPushCmd.Flags().StringP(DenomFlag, "d", "", DenomDesc)
@@ -43,7 +43,7 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 
 	gasPrice, _ := cmd.Flags().GetFloat64(GasPriceFlag)
 	gasAdjustment, _ := cmd.Flags().GetFloat64(GasAdjustmentFlag)
@@ -57,11 +57,11 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
 	}
 
-	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingPeriod, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
 	}
 
-	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteractor, &logger)
+	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, cosmwasmInteractor, &logger)
 	cosmwasmPusher.Run(context.Background())
 }

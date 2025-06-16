@@ -14,14 +14,14 @@ type AptosContractInteractor struct {
 	logger   zerolog.Logger
 	contract *contract.StorkContract
 
-	pollingFrequencySec int
+	pollingPeriodSec int
 }
 
 func NewAptosContractInteractor(
 	rpcUrl string,
 	contractAddr string,
 	keyFileContent []byte,
-	pollingFreqSec int,
+	pollingPeriodSec int,
 	logger zerolog.Logger,
 ) (*AptosContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
@@ -34,9 +34,9 @@ func NewAptosContractInteractor(
 	}
 
 	return &AptosContractInteractor{
-		logger:              logger,
-		contract:            contract,
-		pollingFrequencySec: pollingFreqSec,
+		logger:           logger,
+		contract:         contract,
+		pollingPeriodSec: pollingPeriodSec,
 	}, nil
 }
 

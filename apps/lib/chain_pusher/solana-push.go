@@ -22,7 +22,7 @@ func init() {
 	SolanapushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	SolanapushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
 	SolanapushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	SolanapushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	SolanapushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 	SolanapushCmd.Flags().IntP(LimitPerSecondFlag, "l", 40, LimitPerSecondDesc)
 	SolanapushCmd.Flags().IntP(BurstLimitFlag, "r", 10, BurstLimitDesc)
 	SolanapushCmd.Flags().IntP(BatchSizeFlag, "s", 4, BatchSizeDesc)
@@ -44,7 +44,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 	limitPerSecond, _ := cmd.Flags().GetInt(LimitPerSecondFlag)
 	burstLimit, _ := cmd.Flags().GetInt(BurstLimitFlag)
 	batchSize, _ := cmd.Flags().GetInt(BatchSizeFlag)
@@ -56,10 +56,10 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to parse private key")
 	}
 
-	solanaInteractor, err := NewSolanaContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, payer, assetConfigFile, pollingFrequency, logger, limitPerSecond, burstLimit, batchSize)
+	solanaInteractor, err := NewSolanaContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, payer, assetConfigFile, pollingPeriod, logger, limitPerSecond, burstLimit, batchSize)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Solana contract interactor")
 	}
-	solanaPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, solanaInteractor, &logger)
+	solanaPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, solanaInteractor, &logger)
 	solanaPusher.Run(context.Background())
 }

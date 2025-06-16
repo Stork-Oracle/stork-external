@@ -17,22 +17,22 @@ type Pusher struct {
 	assetConfigFile  string
 	verifyPublishers bool
 	batchingWindow   int
-	pollingFrequency int
+	pollingPeriod    int
 	interactor       ContractInteractor
 	logger           *zerolog.Logger
 }
 
-func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingFrequency int, interactor ContractInteractor, logger *zerolog.Logger) *Pusher {
+func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingPeriod int, interactor ContractInteractor, logger *zerolog.Logger) *Pusher {
 	return &Pusher{
-		storkWsEndpoint:  storkWsEndpoint,
-		storkAuth:        storkAuth,
-		chainRpcUrl:      chainRpcUrl,
-		contractAddress:  contractAddress,
-		assetConfigFile:  assetConfigFile,
-		batchingWindow:   batchingWindow,
-		pollingFrequency: pollingFrequency,
-		interactor:       interactor,
-		logger:           logger,
+		storkWsEndpoint: storkWsEndpoint,
+		storkAuth:       storkAuth,
+		chainRpcUrl:     chainRpcUrl,
+		contractAddress: contractAddress,
+		assetConfigFile: assetConfigFile,
+		batchingWindow:  batchingWindow,
+		pollingPeriod:   pollingPeriod,
+		interactor:      interactor,
+		logger:          logger,
 	}
 }
 
@@ -167,7 +167,7 @@ func shouldUpdateAsset(latestValue InternalTemporalNumericValue, latestStorkPric
 
 func (p *Pusher) poll(encodedAssetIds []InternalEncodedAssetId, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
-	for range time.Tick(time.Duration(p.pollingFrequency) * time.Second) {
+	for range time.Tick(time.Duration(p.pollingPeriod) * time.Second) {
 		polledVals, err := p.interactor.PullValues(encodedAssetIds)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")

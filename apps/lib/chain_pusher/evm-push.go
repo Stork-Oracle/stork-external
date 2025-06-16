@@ -23,7 +23,7 @@ func init() {
 	EvmpushCmd.Flags().StringP(MnemonicFileFlag, "m", "", MnemonicFileDesc)
 	EvmpushCmd.Flags().BoolP(VerifyPublishersFlag, "v", false, VerifyPublishersDesc)
 	EvmpushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	EvmpushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	EvmpushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 	EvmpushCmd.Flags().Uint64P(GasLimitFlag, "g", 0, GasLimitDesc)
 
 	EvmpushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
@@ -44,7 +44,7 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
 	verifyPublishers, _ := cmd.Flags().GetBool(VerifyPublishersFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(GasLimitFlag)
 
 	logger := EvmPusherLogger(chainRpcUrl, contractAddress)
@@ -59,6 +59,6 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interactor")
 	}
 
-	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, evmInteractor, &logger)
+	evmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, evmInteractor, &logger)
 	evmPusher.Run(context.Background())
 }

@@ -14,7 +14,7 @@ type SuiContractInteractor struct {
 	logger   zerolog.Logger
 	contract *contract.StorkContract
 
-	pollingFrequencySec int
+	pollingPeriodSec int
 }
 
 func NewSuiContractInteractor(
@@ -22,7 +22,7 @@ func NewSuiContractInteractor(
 	contractAddr string,
 	keyFileContent []byte,
 	assetConfigFile string,
-	pollingFreqSec int,
+	pollingPeriodSec int,
 	logger zerolog.Logger,
 ) (*SuiContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
@@ -43,9 +43,9 @@ func NewSuiContractInteractor(
 		return nil, err
 	}
 	return &SuiContractInteractor{
-		logger:              logger,
-		contract:            contract,
-		pollingFrequencySec: pollingFreqSec,
+		logger:           logger,
+		contract:         contract,
+		pollingPeriodSec: pollingPeriodSec,
 	}, nil
 }
 
