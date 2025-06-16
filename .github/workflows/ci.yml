@@ -168,7 +168,7 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.18/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Solana
