@@ -2,3 +2,4 @@
 .lib
 .bin
 .env.local
+node_modules

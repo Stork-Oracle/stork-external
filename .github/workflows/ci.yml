@@ -308,3 +308,46 @@ jobs:
         run: |
           aptos move test --move-2 --dev
         working-directory: ./contracts/aptos/contracts
+  
+  test-fuel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-fuel-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fuel-
+
+      - name: Install Fuel Toolchain
+        run: |
+          yes | curl https://install.fuel.network | sh
+          echo "${HOME}/.fuelup/bin" >> $GITHUB_PATH
+
+      - name: Pin Forc Version
+        run: |
+          fuelup toolchain new pinned-forc
+          fuelup component add forc@0.68.4
+          fuelup component add fuel-core@0.43.2
+
+      - name: Run Unit Tests
+        run: |
+          forc test
+        working-directory: ./contracts/fuel/contracts/stork/
+
+      - name: Run integration tests
+        run: |
+          cargo test
+        working-directory: ./contracts/fuel/contracts/stork/
+        
