@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"runtime"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
@@ -41,6 +42,8 @@ type Config struct {
 	PullBasedWsReadTimeout           string
 	SignEveryUpdate                  bool
 	IncomingWsPort                   int
+	NumSignerWorkers                 int
+	DatadogUrl                       string
 }
 
 type Keys struct {
@@ -250,6 +253,11 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		publisherMetadataBaseUrl = DefaultPublisherMetadataBaseUrl
 	}
 
+	numSignerWorkers := configFile.NumSignerWorkers
+	if numSignerWorkers == 0 {
+		numSignerWorkers = max(runtime.NumCPU()/len(configFile.SignatureTypes), 1)
+	}
+
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
 		keys.EvmPublicKey,
@@ -269,6 +277,8 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 		pullBasedWsReadTimeout,
 		configFile.SignEveryUpdate,
 		configFile.IncomingWsPort,
+		numSignerWorkers,
+		configFile.DatadogUrl,
 	)
 
 	secrets := NewStorkPublisherAgentSecrets(
@@ -317,6 +327,8 @@ type StorkPublisherAgentConfig struct {
 	PullBasedWsReadTimeout          time.Duration
 	SignEveryUpdate                 bool
 	IncomingWsPort                  int
+	NumSignerWorkers                int
+	DatadogUrl                      string
 }
 
 func NewStorkPublisherAgentConfig(
@@ -338,6 +350,8 @@ func NewStorkPublisherAgentConfig(
 	pullBasedWsReadTimeout time.Duration,
 	signEveryUpdate bool,
 	incomingWsPort int,
+	numSignerWorkers int,
+	datadogUrl string,
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
 		SignatureTypes:                  signatureTypes,
@@ -358,5 +372,7 @@ func NewStorkPublisherAgentConfig(
 		PullBasedWsReadTimeout:          pullBasedWsReadTimeout,
 		SignEveryUpdate:                 signEveryUpdate,
 		IncomingWsPort:                  incomingWsPort,
+		NumSignerWorkers:                numSignerWorkers,
+		DatadogUrl:                      datadogUrl,
 	}
 }

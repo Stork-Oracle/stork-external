@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/rs/zerolog"
 )
@@ -29,9 +30,10 @@ type ValueUpdateProcessor[T signer.Signature] struct {
 	changeThresholdProportion float64 // 0-1
 	signEveryUpdate           bool
 	logger                    zerolog.Logger
-	totalSignatures           int
-	totalSigningNs            int64
-	signQueueSize             int32
+	signQueueSize             *atomic.Int64
+	latestUpdateAgeNs         *atomic.Int64
+	signedCount               *atomic.Int64
+	datadogClient             *statsd.Client
 }
 
 func NewPriceUpdateProcessor[T signer.Signature](
@@ -45,6 +47,7 @@ func NewPriceUpdateProcessor[T signer.Signature](
 	valueUpdateCh chan ValueUpdate,
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T],
 	logger zerolog.Logger,
+	datadogClient *statsd.Client,
 ) *ValueUpdateProcessor[T] {
 	return &ValueUpdateProcessor[T]{
 		valueUpdateCh:             valueUpdateCh,
@@ -59,6 +62,10 @@ func NewPriceUpdateProcessor[T signer.Signature](
 		changeThresholdProportion: changeThresholdProportion,
 		signEveryUpdate:           signEveryUpdate,
 		logger:                    logger,
+		datadogClient:             datadogClient,
+		signedCount:               new(atomic.Int64),
+		signQueueSize:             new(atomic.Int64),
+		latestUpdateAgeNs:         new(atomic.Int64),
 	}
 }
 
@@ -114,7 +121,24 @@ func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
 	return updates
 }
 
+func (vup *ValueUpdateProcessor[T]) monitor() {
+	tags := []string{
+		getPublisherKeyTag(vup.signer.GetPublisherKey()),
+		getSignatureTypeTag(vup.signer.GetSignatureType()),
+	}
+	for range time.Tick(datadogMonitorPeriod) {
+		signedCount := vup.signedCount.Swap(0)
+		reportDatadogCount(SignedUpdateCountMetric, signedCount, tags, vup.datadogClient, vup.logger)
+		signQueueSize := vup.signQueueSize.Load()
+		reportDatadogGauge(SignQueueSizeMetric, float64(signQueueSize), tags, vup.datadogClient, vup.logger)
+		latestUpdateAgeNs := vup.latestUpdateAgeNs.Load()
+		reportDatadogGauge(LatestSignedUpdateAgeNsMetric, float64(latestUpdateAgeNs), tags, vup.datadogClient, vup.logger)
+	}
+}
+
 func (vup *ValueUpdateProcessor[T]) Run() {
+	go vup.monitor()
+
 	queue := make(chan any, 4096)
 	priceUpdatesToSignCh := make(chan ValueUpdateWithTrigger, 4096)
 	signedPriceUpdateCh := make(chan SignedPriceUpdate[T], 4096)
@@ -150,6 +174,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 	for i := 0; i < numSignerThreads; i++ {
 		go func(updates chan ValueUpdateWithTrigger, signedUpdates chan SignedPriceUpdate[T], threadNum int) {
 			for update := range updates {
+
 				start := time.Now()
 
 				quantizedPrice := FloatToQuantizedPrice(update.ValueUpdate.Value)
@@ -175,9 +200,12 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 
 				signedUpdates <- priceUpdate
 				elapsed := time.Since(start).Microseconds()
-				atomic.AddInt32(&vup.signQueueSize, -1)
-				ageMs := (time.Now().UnixNano() - update.ValueUpdate.PublishTimestamp) / 1_000_000
-				vup.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, vup.signQueueSize)
+				vup.signedCount.Add(1)
+				signQueueSize := vup.signQueueSize.Add(-1)
+				updateAgeNs := time.Now().UnixNano() - update.ValueUpdate.PublishTimestamp
+				vup.latestUpdateAgeNs.Store(updateAgeNs)
+				updateAgeMs := updateAgeNs / 1_000_000
+				vup.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, updateAgeMs, signQueueSize)
 			}
 		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)
 	}
@@ -212,7 +240,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 		case ValueUpdate:
 			if vup.signEveryUpdate {
 				priceUpdatesToSignCh <- ValueUpdateWithTrigger{ValueUpdate: msg, TriggerType: UnspecifiedTriggerType}
-				atomic.AddInt32(&vup.signQueueSize, 1)
+				vup.signQueueSize.Add(1)
 			}
 			vup.valueUpdates[msg.Asset] = msg
 		}
@@ -220,7 +248,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 		if len(valueUpdates) > 0 {
 			for _, priceUpdate := range valueUpdates {
 				priceUpdatesToSignCh <- priceUpdate
-				atomic.AddInt32(&vup.signQueueSize, 1)
+				vup.signQueueSize.Add(1)
 				lastReportedPrice, _ := priceUpdate.ValueUpdate.Value.Float64()
 				vup.lastReportedPrice[priceUpdate.ValueUpdate.Asset] = lastReportedPrice
 			}

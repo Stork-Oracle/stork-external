@@ -4,23 +4,36 @@ import (
 	"encoding/json"
 	"math/big"
 	"net/http"
+	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
 
 type IncomingWebsocketPuller struct {
-	Auth                AuthToken
-	Url                 string
-	SubscriptionRequest string
-	ReconnectDelay      time.Duration
-	ValueUpdateChannels []chan ValueUpdate
-	Logger              zerolog.Logger
-	ReadTimeout         time.Duration
+	Auth                     AuthToken
+	Url                      string
+	SubscriptionRequest      string
+	ReconnectDelay           time.Duration
+	ValueUpdateChannels      []chan ValueUpdate
+	Logger                   zerolog.Logger
+	ReadTimeout              time.Duration
+	datadogClient            *statsd.Client
+	incomingPriceUpdateCount *atomic.Int64
+}
+
+func (p *IncomingWebsocketPuller) monitor() {
+	for range time.Tick(datadogMonitorPeriod) {
+		incomingCount := p.incomingPriceUpdateCount.Swap(0)
+		reportDatadogCount(IncomingPullerUpdateCountMetric, incomingCount, nil, p.datadogClient, p.Logger)
+	}
 }
 
 func (p *IncomingWebsocketPuller) Run() {
+	go p.monitor()
+
 	for {
 		p.Logger.Debug().Msgf("Connecting to pull-based WebSocket with url %s", p.Url)
 
@@ -93,6 +106,7 @@ func (p *IncomingWebsocketPuller) Run() {
 						}
 					}
 				}
+				p.incomingPriceUpdateCount.Add(1)
 			}
 		}
 

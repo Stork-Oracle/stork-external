@@ -2,8 +2,10 @@ package publisher_agent
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
@@ -22,6 +24,8 @@ type PublisherAgentRunner[T signer.Signature] struct {
 	signer                      signer.Signer[T]
 	storkAuthSigner             signer.StorkAuthSigner
 	publisherMetadataReporter   *PublisherMetadataReporter
+	datadogClient               *statsd.Client
+	outgoingPriceUpdateCount    *atomic.Int64
 }
 
 func NewPublisherAgentRunner[T signer.Signature](
@@ -30,6 +34,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 	storkAuthSigner signer.StorkAuthSigner,
 	signatureType signer.SignatureType,
 	logger zerolog.Logger,
+	datadogClient *statsd.Client,
 ) *PublisherAgentRunner[T] {
 	registryClient := NewRegistryClient(
 		config.StorkRegistryBaseUrl,
@@ -60,6 +65,8 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signer:                      signer,
 		storkAuthSigner:             storkAuthSigner,
 		publisherMetadataReporter:   publisherMetadataReporter,
+		datadogClient:               datadogClient,
+		outgoingPriceUpdateCount:    new(atomic.Int64),
 	}
 }
 
@@ -107,7 +114,20 @@ func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 	}
 }
 
+func (r *PublisherAgentRunner[T]) monitor() {
+	tags := []string{
+		getPublisherKeyTag(r.signer.GetPublisherKey()),
+		getSignatureTypeTag(r.signer.GetSignatureType()),
+	}
+	for range time.Tick(datadogMonitorPeriod) {
+		outgoingCount := r.outgoingPriceUpdateCount.Swap(0)
+		reportDatadogCount(OutgoingUpdateCountMetric, outgoingCount, tags, r.datadogClient, r.logger)
+	}
+}
+
 func (r *PublisherAgentRunner[T]) Run() {
+	go r.monitor()
+
 	processor := NewPriceUpdateProcessor[T](
 		r.signer,
 		r.config.OracleId,
@@ -119,6 +139,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 		r.ValueUpdateCh,
 		r.signedPriceBatchCh,
 		r.logger,
+		r.datadogClient,
 	)
 
 	// fan out the signed update to all subscriber websockets
@@ -129,6 +150,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 				outgoingConnection.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
 			}
 			r.outgoingConnectionsLock.RUnlock()
+			r.outgoingPriceUpdateCount.Add(int64(len(signedPriceUpdateBatch)))
 		}
 	}(r.signedPriceBatchCh)
 

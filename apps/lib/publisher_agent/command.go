@@ -3,8 +3,10 @@ package publisher_agent
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
@@ -46,6 +48,22 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	mainLogger := MainLogger()
 	mainLogger.Info().Msg("initializing publisher agent")
 
+	var datadogClient *statsd.Client
+	if len(config.DatadogUrl) > 0 {
+		mainLogger.Info().Msgf("initializing datadog client with URL %s", config.DatadogUrl)
+		datadogClient, err = statsd.New(config.DatadogUrl)
+		if err != nil {
+			mainLogger.Error().Err(err).Msg("Failed to initialize datadog client")
+		} else {
+			if len(config.EvmPublicKey) > 0 {
+				datadogClient.Tags = append(datadogClient.Tags, fmt.Sprintf("evm_publisher_key:%s", config.EvmPublicKey))
+			}
+			if len(config.StarkPublicKey) > 0 {
+				datadogClient.Tags = append(datadogClient.Tags, fmt.Sprintf("stark_publisher_key:%s", config.StarkPublicKey))
+			}
+		}
+	}
+
 	valueUpdateChannels := make([]chan ValueUpdate, 0)
 	var evmRunner *PublisherAgentRunner[*signer.EvmSignature]
 	var starkRunner *PublisherAgentRunner[*signer.StarkSignature]
@@ -62,7 +80,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create EVM auth signer: %v", err)
 			}
-			evmRunner = NewPublisherAgentRunner[*signer.EvmSignature](*config, thisSigner, evmAuthSigner, signatureType, logger)
+			evmRunner = NewPublisherAgentRunner[*signer.EvmSignature](*config, thisSigner, evmAuthSigner, signatureType, logger, datadogClient)
 			valueUpdateChannels = append(valueUpdateChannels, evmRunner.ValueUpdateCh)
 			go evmRunner.Run()
 		case StarkSignatureType:
@@ -76,7 +94,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create Stark auth signer: %v", err)
 			}
-			starkRunner = NewPublisherAgentRunner[*signer.StarkSignature](*config, thisSigner, starkAuthSigner, signatureType, logger)
+			starkRunner = NewPublisherAgentRunner[*signer.StarkSignature](*config, thisSigner, starkAuthSigner, signatureType, logger, datadogClient)
 			valueUpdateChannels = append(valueUpdateChannels, starkRunner.ValueUpdateCh)
 			go starkRunner.Run()
 		default:
@@ -86,13 +104,15 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 
 	if len(config.PullBasedWsUrl) > 0 {
 		incomingWsPuller := IncomingWebsocketPuller{
-			Auth:                secrets.PullBasedAuth,
-			Url:                 config.PullBasedWsUrl,
-			SubscriptionRequest: config.PullBasedWsSubscriptionRequest,
-			ReconnectDelay:      config.PullBasedWsReconnectDelay,
-			ValueUpdateChannels: valueUpdateChannels,
-			Logger:              IncomingLogger(),
-			ReadTimeout:         config.PullBasedWsReadTimeout,
+			Auth:                     secrets.PullBasedAuth,
+			Url:                      config.PullBasedWsUrl,
+			SubscriptionRequest:      config.PullBasedWsSubscriptionRequest,
+			ReconnectDelay:           config.PullBasedWsReconnectDelay,
+			ValueUpdateChannels:      valueUpdateChannels,
+			Logger:                   IncomingLogger(),
+			ReadTimeout:              config.PullBasedWsReadTimeout,
+			datadogClient:            datadogClient,
+			incomingPriceUpdateCount: new(atomic.Int64),
 		}
 		go incomingWsPuller.Run()
 	}
@@ -104,6 +124,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 				req,
 				IncomingLogger(),
 				valueUpdateChannels,
+				datadogClient,
 			)
 		})
 		mainLogger.Info().Msgf("starting incoming http server on port %d", config.IncomingWsPort)

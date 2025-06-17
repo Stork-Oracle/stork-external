@@ -11,8 +11,10 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/Stork-Oracle/stork-external/apps/lib/signer"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -64,13 +66,17 @@ func (ws *WebsocketConnection) IsClosed() bool {
 
 type IncomingWebsocketConnection struct {
 	WebsocketConnection
-	logger zerolog.Logger
+	logger              zerolog.Logger
+	datadogClient       *statsd.Client
+	incomingUpdateCount *atomic.Int64
 }
 
-func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Logger) *IncomingWebsocketConnection {
+func NewIncomingWebsocketConnection(conn WebsocketConnection, logger zerolog.Logger, datadogClient *statsd.Client) *IncomingWebsocketConnection {
 	return &IncomingWebsocketConnection{
 		WebsocketConnection: conn,
 		logger:              logger,
+		datadogClient:       datadogClient,
+		incomingUpdateCount: new(atomic.Int64),
 	}
 }
 
@@ -110,7 +116,15 @@ func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*V
 	}
 }
 
+func (iwc *IncomingWebsocketConnection) monitor() {
+	for range time.Tick(datadogMonitorPeriod) {
+		incomingCount := iwc.incomingUpdateCount.Swap(0)
+		reportDatadogCount(IncomingPusherUpdateCountMetric, incomingCount, nil, iwc.datadogClient, iwc.logger)
+	}
+}
+
 func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueUpdate) {
+	go iwc.monitor()
 	logger := iwc.logger.With().Str("op", "reader").Logger()
 
 	var lastDropLogTime time.Time
@@ -155,6 +169,7 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 							}
 						}
 					}
+					iwc.incomingUpdateCount.Add(1)
 				}
 			}
 		}
@@ -416,7 +431,7 @@ func getWsUpgrader() websocket.Upgrader {
 	}
 }
 
-func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, valueUpdateChannels []chan ValueUpdate) {
+func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, valueUpdateChannels []chan ValueUpdate, datadogClient *statsd.Client) {
 	conn, err := upgradeAndEnforceCompression(resp, req, false, getWsUpgrader(), logger, "")
 	if err != nil {
 		// debug log because err could be rate limit violation
@@ -435,7 +450,7 @@ func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, 
 			logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
 		},
 	)
-	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger)
+	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger, datadogClient)
 
 	// kick off the reader thread for the publisher
 	go incomingWebsocketConn.Reader(valueUpdateChannels)
