@@ -269,7 +269,7 @@ cliProgram
         const fields = result.data.content.fields;
         const evmPubkey = byteArrayToHexString(fields['stork_evm_public_key'].fields.bytes);
         console.log({
-            stork_sui_public_key: fields['stork_sui_public_key'],
+            stork_sui_address: fields['stork_sui_address'],
             stork_evm_public_key: evmPubkey,
             single_update_fee_in_mist: fields['single_update_fee_in_mist'],
             version: fields['version']
@@ -303,21 +303,21 @@ cliProgram
     });
 
 cliProgram
-    .command("update-sui-key")
-    .description("Update the Stork SUI public key")
-    .argument("<new_key>", "New SUI public key address")
-    .action(async (new_key: string) => {
+    .command("update-sui-address")
+    .description("Update the Stork SUI address")
+    .argument("<new_address>", "New SUI address")
+    .action(async (new_address: string) => {
         const keypair = loadKeypairFromKeystore();
         const adminCap = await getAdminCap(keypair);
         const storkState = await getStorkStateId();
         
         const tx = new Transaction();
         tx.moveCall({
-            target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_sui_public_key`,
+            target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_sui_address`,
             arguments: [
                 tx.object(adminCap.objectId),
                 tx.object(storkState),
-                tx.pure.address(new_key),
+                tx.pure.address(new_address),
             ]
         });
         
