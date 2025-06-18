@@ -22,6 +22,7 @@ const (
 
 	OutgoingUpdateCountMetric = "stork.publisher_agent.outgoing.update.count"
 	SentUpdateCountMetric     = "stork.publisher_agent.sent.update.count"
+	SentMessageCountMetric    = "stork.publisher_agent.sent.message.count"
 
 	IncomingPullerUpdateCountMetric = "stork.publisher_agent.incoming.puller.update.count"
 	IncomingPusherUpdateCountMetric = "stork.publisher_agent.incoming.pusher.update.count"
