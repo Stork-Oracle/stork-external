@@ -20,7 +20,9 @@ const (
 	LatestSignedUpdateAgeNsMetric = "stork.publisher_agent.signer.signed.update.age.latest.ns"
 	SignQueueSizeMetric           = "stork.publisher_agent.signer.queue.size"
 
-	OutgoingUpdateCountMetric       = "stork.publisher_agent.outgoing.update.count"
+	OutgoingUpdateCountMetric = "stork.publisher_agent.outgoing.update.count"
+	SentUpdateCountMetric     = "stork.publisher_agent.sent.update.count"
+
 	IncomingPullerUpdateCountMetric = "stork.publisher_agent.incoming.puller.update.count"
 	IncomingPusherUpdateCountMetric = "stork.publisher_agent.incoming.pusher.update.count"
 )

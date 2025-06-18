@@ -193,14 +193,18 @@ type OutgoingWebsocketConnection[T signer.Signature] struct {
 	removed                  bool
 	logger                   zerolog.Logger
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
+	datadogClient            *statsd.Client
+	sentMessageCount         *atomic.Int64
 }
 
-func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, datadogClient *statsd.Client, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
 		WebsocketConnection:      conn,
 		assetIds:                 assetIds,
 		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
 		logger:                   logger,
+		datadogClient:            datadogClient,
+		sentMessageCount:         new(atomic.Int64),
 	}
 }
 
@@ -216,7 +220,19 @@ func (owc *OutgoingWebsocketConnection[T]) Remove() {
 	owc.Close()
 }
 
+func (owc *OutgoingWebsocketConnection[T]) monitor() {
+	tags := []string{
+		fmt.Sprintf("remote_address:%s", owc.conn.RemoteAddr().String()),
+	}
+	for range time.Tick(datadogMonitorPeriod) {
+		sentMessageCount := owc.sentMessageCount.Swap(0)
+		reportDatadogCount(SentUpdateCountMetric, sentMessageCount, tags, owc.datadogClient, owc.logger)
+	}
+}
+
 func (owc *OutgoingWebsocketConnection[T]) Writer() {
+	go owc.monitor()
+
 	logger := owc.logger.With().Str("op", "writer").Logger()
 
 	// log fatal errors
@@ -257,6 +273,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 				if err != nil {
 					logger.Warn().Err(err).Msg("failed to send signed prices")
 				}
+				owc.sentMessageCount.Add(int64(len(signedPriceUpdateBatch)))
 			}
 		case _ = <-owc.closed:
 			logger.Warn().Msg("Close() called, exiting write loop")

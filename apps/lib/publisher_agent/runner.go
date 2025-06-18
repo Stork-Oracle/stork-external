@@ -191,7 +191,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
-		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assetIds, r.logger)
+		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assetIds, r.datadogClient, r.logger)
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()
