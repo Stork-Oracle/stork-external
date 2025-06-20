@@ -8,23 +8,40 @@ import (
 )
 
 func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
-	signer, err := NewEvmSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	signer, err := NewEvmSigner("0x28253097630cca4158c909efa1af971e7aa759eb3d966cdb34e50f5ca1916ac7", zerolog.Logger{})
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
 	expectedTimestampedSig := &TimestampedSignature[*EvmSignature]{
-		Timestamp: 1710191092123456789,
-		MsgHash:   "0x4a8e2a9c736a3a2e315facf28ba95e126e37b57646481078e4f0809262c6560b",
+		Timestamp: 1720730544719000064,
+		MsgHash:   "0x94796ac50f614eaec60734ffb48577da56f6cb4d9cf4ce5c61c222f1d3693be1",
 		Signature: &EvmSignature{
-			R: "0x14e378dcf486b15c157fb6af80fc275b895bd1cae818fc4597a6b4a1571a831e",
-			S: "0x79b4823a159988c04576ff71bc3ca168a631ac666094b0f4157e59b2892f6490",
+			R: "0x8ac298121624afad3057ec39bd5d7d08dbccd98453b67add7d871d94a18c3302",
+			S: "0x3cf613d9bee0cbc01073ac7b23ca3e86eb34bc2bd5748f07cab984377b4291b3",
+			V: "0x1c",
+		},
+	}
+	signedPriceUpdate, assetId, err := signer.SignPublisherPrice(1720730544719000064, "BTCUSD", "60000000000000000000000")
+	assert.NoError(t, err)
+	assert.Equal(t, "BTCUSD", assetId)
+	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// negative test
+	expectedTimestampedSig = &TimestampedSignature[*EvmSignature]{
+		Timestamp: 1720730544719000064,
+		MsgHash:   "0xd99492ba51f81523d0d917a56a7d38d3bacf664f0962a1d4ce31fde91176139a",
+		Signature: &EvmSignature{
+			R: "0xa30f3fffd4b62de8c6a6db613b802b38444462829af690e7fb9964636b0122c1",
+			S: "0x774dc61280953ef8dce3a8f12ac8cea11eea65629d5e8ebc93ea8e9ec2e83d26",
 			V: "0x1b",
 		},
 	}
-	signedPriceUpdate, assetId, err := signer.SignPublisherPrice(1710191092123456789, "BTCUSDMARK", "72147681412670819000000")
+
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1720730544719000064, "BTCUSD", "-60000000000000000000000")
 	assert.NoError(t, err)
-	assert.Equal(t, "BTCUSDMARK", assetId)
-	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
+	assert.Equal(t, "BTCUSD", assetId)
+	assert.Equal(t, expectedTimestampedSig, signedNegativePriceUpdate)
 }
 
 func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
@@ -45,6 +62,21 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// negative
+	expectedNegativeTimestampedSig := &TimestampedSignature[*StarkSignature]{
+		Timestamp: 1708940577123456789,
+		MsgHash:   "0x223b3bf417894341325c99275acb14714f3f94caf7386f434dafd496443eb1",
+		Signature: &StarkSignature{
+			R: "0x9dffaea089d280d45180cbbddde9336a4e2c926234ae4d58ae9be8878821e6",
+			S: "0x6777f741610f8ebe69707ab12bda9c6efc03cf6aafe919b187d226ac8ece6b8",
+		},
+	}
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "-3335950349880000000")
+	assert.NoError(t, err)
+	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
+	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
+	assert.Equal(t, expectedNegativeTimestampedSig, signedNegativePriceUpdate)
 
 	// long asset name
 	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
