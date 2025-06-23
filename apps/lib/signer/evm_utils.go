@@ -19,12 +19,13 @@ func getPublisherEvmPricePayload(
 	timestampBigInt := big.NewInt(timestamp / 1_000_000_000)
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(quantizedPrice, 10)
+	quantizedPriceBytes := bigIntToTwosComplement32(quantizedPriceBigInt)
 
 	return [][]byte{
 		publicAddress.Bytes(),
 		[]byte(assetId),
 		common.LeftPadBytes(timestampBigInt.Bytes(), 32),
-		common.LeftPadBytes(quantizedPriceBigInt.Bytes(), 32),
+		quantizedPriceBytes,
 	}
 }
 
