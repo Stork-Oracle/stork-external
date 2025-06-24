@@ -66,6 +66,10 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 
 	// negative
+	// WARNING: While this test demonstrates that negative and positive prices yield different signatures,
+	// this is not a guarantee that payloads with negative prices are signed correctly.
+	// Testing against starknet should be done with negative prices in order to confirm that the stark signer can
+	// properly handle negative prices.
 	expectedNegativeTimestampedSig := &TimestampedSignature[*StarkSignature]{
 		Timestamp: 1708940577123456789,
 		MsgHash:   "0x223b3bf417894341325c99275acb14714f3f94caf7386f434dafd496443eb1",
