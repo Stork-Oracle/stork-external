@@ -1,6 +1,8 @@
 package signer
 
 import (
+	"encoding/hex"
+	"math/big"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -29,11 +31,11 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 	// negative test
 	expectedTimestampedSig = &TimestampedSignature[*EvmSignature]{
 		Timestamp: 1720730544719000064,
-		MsgHash:   "0xd99492ba51f81523d0d917a56a7d38d3bacf664f0962a1d4ce31fde91176139a",
+		MsgHash:   "0x2aa596404bdb22d180d4a6d297a7781aa9590300ac66124f59ece77c25acad4e",
 		Signature: &EvmSignature{
-			R: "0xa30f3fffd4b62de8c6a6db613b802b38444462829af690e7fb9964636b0122c1",
-			S: "0x774dc61280953ef8dce3a8f12ac8cea11eea65629d5e8ebc93ea8e9ec2e83d26",
-			V: "0x1b",
+			R: "0xf7f78a5074adc80dccc6a5abfbf47b993ff4ee50b6e09c8db08a0d99b37b9637",
+			S: "0x5b057e5d67bb77eab748e47653bdf9b34225a7de1f1af333e953bc79f6991212",
+			V: "0x1c",
 		},
 	}
 
@@ -131,4 +133,21 @@ func BenchmarkSigner_SignPublisherPrice_Stark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "3335950349880000000")
 	}
+}
+
+func TestBigIntBytesToTwosComplement(t *testing.T) {
+	// negative
+	intString := "-17725899000000"
+	intBigInt := new(big.Int)
+	intBigInt.SetString(intString, 10)
+
+	twosComplement := bigIntToTwosComplement32(intBigInt)
+	assert.Equal(t, "ffffffffffffffffffffffffffffffffffffffffffffffffffffefe0de163740", hex.EncodeToString(twosComplement))
+
+	// positive
+	intString = "12500000000000"
+	intBigInt.SetString(intString, 10)
+
+	twosComplement = bigIntToTwosComplement32(intBigInt)
+	assert.Equal(t, "00000000000000000000000000000000000000000000000000000b5e620f4800", hex.EncodeToString(twosComplement))
 }

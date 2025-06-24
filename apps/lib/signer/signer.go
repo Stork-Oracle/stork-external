@@ -365,16 +365,19 @@ func bigIntToTwosComplement32(x *big.Int) []byte {
 		return common.LeftPadBytes(x.Bytes(), 32)
 	}
 
-	// For negative numbers, convert to two's complement.
-	bytes := x.Abs(new(big.Int).Set(x)).Bytes()
-	inverted := new(big.Int).Not(new(big.Int).SetBytes(bytes))
-	twosComplement := new(big.Int).Add(inverted, big.NewInt(1))
-	result := common.LeftPadBytes(twosComplement.Bytes(), 32)
+	// For negative numbers:
+	// First, get the absolute value
+	absX := new(big.Int).Abs(x)
 
-	// Ensure sign extension for negative numbers (fill with 0xFF)
-	for i := 0; i < len(result) && result[i] == 0; i++ {
-		result[i] = 0xFF
-	}
+	// Create a 256-bit (32 byte) mask
+	mask := new(big.Int).Lsh(big.NewInt(1), 256)
+	mask.Sub(mask, big.NewInt(1))
 
-	return result
+	// Perform two's complement on full 256 bits
+	// First invert (subtract from 2^256 - 1)
+	inverted := new(big.Int).Sub(mask, absX)
+	// Then add 1
+	twosComp := new(big.Int).Add(inverted, big.NewInt(1))
+
+	return twosComp.Bytes()
 }
