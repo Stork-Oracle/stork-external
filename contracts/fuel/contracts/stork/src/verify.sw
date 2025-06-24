@@ -3,10 +3,8 @@ library;
 use std::bytes::Bytes;
 use std::codec::encode;
 use std::hash::*;
-use std::b512::B512;
 use std::crypto::secp256k1::Secp256k1;
 use std::crypto::message::Message;
-use std::option::Option;
 use std::u128::U128;
 use std::vm::evm::evm_address::EvmAddress;
 
