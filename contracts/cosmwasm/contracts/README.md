@@ -4,11 +4,11 @@ This is the Stork CosmWasm compatible contract. This crate is maintained by [Sto
 
 It is available on [crates.io](https://crates.io/crates/stork-cw).
 
-This crate can be used as an SDK to build contracts that interact with the Stork Contract by including it as a depency and enabling the `library` feature.
+This crate can be used as an SDK to build contracts that interact with the Stork Contract by including it as a dependency and enabling the `library` feature.
 
 ## Pull Model
 
-The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/apps/docs/chain_pusher) in order to do this.
+The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/Stork-Oracle/stork-external/blob/main/apps/docs/chain_pusher.md) in order to do this.
 
 ## Stork Feeds
 

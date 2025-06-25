@@ -1,6 +1,8 @@
 package signer
 
 import (
+	"encoding/hex"
+	"math/big"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -25,6 +27,23 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "BTCUSDMARK", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// negative test
+	expectedTimestampedSig = &TimestampedSignature[*EvmSignature]{
+		Timestamp: 1710191092123456789,
+		MsgHash:   "0x73355dda199a6c0d3e18538067a5e9a87b4442322b374ff5bb34dda618071dc9",
+		Signature: &EvmSignature{
+			R: "0x663b3662c8ee3de785341c9844b9a001a1270b9502b6896f4bbb237f41a65daa",
+			S: "0x58537b09639fc399745cd9c5d6dbeb21fccc385d5c6d661e48bc3b84cd36b0c6",
+			V: "0x1c",
+		},
+	}
+
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1710191092123456789, "BTCUSDMARK", "-72147681412670819000000")
+	assert.NoError(t, err)
+	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
+	assert.Equal(t, "BTCUSDMARK", assetId)
+	assert.Equal(t, expectedTimestampedSig, signedNegativePriceUpdate)
 }
 
 func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
@@ -45,6 +64,25 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// negative
+	// WARNING: While this test demonstrates that negative and positive prices yield different signatures,
+	// this is not a guarantee that payloads with negative prices are signed correctly.
+	// Testing against starknet should be done with negative prices in order to confirm that the stark signer can
+	// properly handle negative prices.
+	expectedNegativeTimestampedSig := &TimestampedSignature[*StarkSignature]{
+		Timestamp: 1708940577123456789,
+		MsgHash:   "0x223b3bf417894341325c99275acb14714f3f94caf7386f434dafd496443eb1",
+		Signature: &StarkSignature{
+			R: "0x9dffaea089d280d45180cbbddde9336a4e2c926234ae4d58ae9be8878821e6",
+			S: "0x6777f741610f8ebe69707ab12bda9c6efc03cf6aafe919b187d226ac8ece6b8",
+		},
+	}
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "-3335950349880000000")
+	assert.NoError(t, err)
+	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
+	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
+	assert.Equal(t, expectedNegativeTimestampedSig, signedNegativePriceUpdate)
 
 	// long asset name
 	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
@@ -99,4 +137,21 @@ func BenchmarkSigner_SignPublisherPrice_Stark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "3335950349880000000")
 	}
+}
+
+func TestBigIntBytesToTwosComplement(t *testing.T) {
+	// negative
+	intString := "-17725899000000"
+	intBigInt := new(big.Int)
+	intBigInt.SetString(intString, 10)
+
+	twosComplement := bigIntToTwosComplement32(intBigInt)
+	assert.Equal(t, "ffffffffffffffffffffffffffffffffffffffffffffffffffffefe0de163740", hex.EncodeToString(twosComplement))
+
+	// positive
+	intString = "12500000000000"
+	intBigInt.SetString(intString, 10)
+
+	twosComplement = bigIntToTwosComplement32(intBigInt)
+	assert.Equal(t, "00000000000000000000000000000000000000000000000000000b5e620f4800", hex.EncodeToString(twosComplement))
 }

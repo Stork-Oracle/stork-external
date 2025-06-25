@@ -14,16 +14,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
+          go-version: '1.24.3'
 
       - name: Cache Go modules
         id: go-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -62,12 +62,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
+          go-version: '1.24.3'
 
       - name: Install CLI directly
         run: |
@@ -90,10 +90,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -128,10 +128,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -145,9 +145,10 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+          toolchain: 1.85.1
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -158,7 +159,7 @@ jobs:
             ${{ runner.os }}-cargo-solana-
 
       - name: Cache Solana CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.local/share/solana/install
@@ -167,7 +168,7 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.solana.com/v1.18.18/install)"
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.18/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Solana
@@ -176,7 +177,7 @@ jobs:
           solana config set --url localhost
 
       - name: Cache Anchor CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/anchor
@@ -195,7 +196,7 @@ jobs:
 
       - name: Run anchor tests
         run: |
-          anchor test
+          RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor test
         working-directory: ./contracts/solana/programs/stork
 
   test-sui:
@@ -203,13 +204,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -220,7 +221,7 @@ jobs:
             ${{ runner.os }}-cargo-sui-
 
       - name: Cache Sui CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/sui
@@ -244,13 +245,13 @@ jobs:
     steps:
       
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -270,7 +271,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -285,7 +286,7 @@ jobs:
           pip install packaging
           
       - name: Cache Aptos CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.aptos
@@ -295,7 +296,11 @@ jobs:
       - name: Install Aptos CLI
         run: |
           if ! command -v aptos &> /dev/null; then
-            curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+            mkdir -p ~/.local/bin
+            wget "https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.2.0/aptos-cli-6.2.0-Linux-x86_64.zip"
+            unzip aptos-cli-6.2.0-Linux-x86_64.zip
+            chmod +x aptos
+            mv aptos ~/.local/bin/
           fi
           aptos --version
 
@@ -303,3 +308,46 @@ jobs:
         run: |
           aptos move test --move-2 --dev
         working-directory: ./contracts/aptos/contracts
+  
+  test-fuel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-fuel-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fuel-
+
+      - name: Install Fuel Toolchain
+        run: |
+          yes | curl https://install.fuel.network | sh
+          echo "${HOME}/.fuelup/bin" >> $GITHUB_PATH
+
+      - name: Pin Forc Version
+        run: |
+          fuelup toolchain new pinned-forc
+          fuelup component add forc@0.68.4
+          fuelup component add fuel-core@0.43.2
+
+      - name: Run Unit Tests
+        run: |
+          forc test
+        working-directory: ./contracts/fuel/contracts/stork/
+
+      - name: Run integration tests
+        run: |
+          cargo test
+        working-directory: ./contracts/fuel/contracts/stork/
+        

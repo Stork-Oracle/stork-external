@@ -12,10 +12,11 @@ const PrivateKeyFileFlag = "private-key-file"
 
 const VerifyPublishersFlag = "verify-publishers"
 const BatchingWindowFlag = "batching-window"
-const PollingFrequencyFlag = "polling-frequency"
+const PollingPeriodFlag = "polling-period"
 const LimitPerSecondFlag = "limit-per-second"
 const BurstLimitFlag = "burst-limit"
 const BatchSizeFlag = "batch-size"
+const GasLimitFlag = "gas-limit"
 
 // Cosmwasm flags
 const GasPriceFlag = "gas-price"
@@ -36,10 +37,11 @@ const MnemonicFileDesc = "Mnemonic file"
 const PrivateKeyFileDesc = "Private key file"
 const VerifyPublishersDesc = "Verify the publisher signed prices before pushing stork signed value to contract"
 const BatchingWindowDesc = "Batching window (seconds)"
-const PollingFrequencyDesc = "Asset Polling frequency (seconds)"
+const PollingPeriodDesc = "Asset Polling Period (seconds)"
 const LimitPerSecondDesc = "JSON RPC call limit per second"
 const BurstLimitDesc = "JSON RPC call Burst limit"
 const BatchSizeDesc = "Batch size between 1 and 4"
+const GasLimitDesc = "Gas limit (0 to use estimate)"
 
 // Cosmwasm descriptions
 const GasPriceDesc = "Gas price"

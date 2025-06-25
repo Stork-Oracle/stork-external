@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ func init() {
 	CosmwasmPushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	CosmwasmPushCmd.Flags().StringP(MnemonicFileFlag, "m", "", MnemonicFileDesc)
 	CosmwasmPushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	CosmwasmPushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	CosmwasmPushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 	CosmwasmPushCmd.Flags().Float64P(GasPriceFlag, "g", 0.0, GasPriceDesc)
 	CosmwasmPushCmd.Flags().Float64P(GasAdjustmentFlag, "j", 1.0, GasAdjustmentDesc)
 	CosmwasmPushCmd.Flags().StringP(DenomFlag, "d", "", DenomDesc)
@@ -42,7 +43,7 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	mnemonicFile, _ := cmd.Flags().GetString(MnemonicFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 
 	gasPrice, _ := cmd.Flags().GetFloat64(GasPriceFlag)
 	gasAdjustment, _ := cmd.Flags().GetFloat64(GasAdjustmentFlag)
@@ -51,12 +52,16 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 	chainPrefix, _ := cmd.Flags().GetString(ChainPrefixFlag)
 	logger := CosmwasmPusherLogger(chainRpcUrl, contractAddress)
 
-	cosmwasmInteracter, err := NewCosmwasmContractInteracter(chainRpcUrl, contractAddress, mnemonicFile, batchingWindow, pollingFrequency, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	mnemonic, err := os.ReadFile(mnemonicFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interacter")
+		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
 	}
 
-	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, cosmwasmInteracter, &logger)
-	ctx := context.Background()
-	cosmwasmPusher.Run(ctx)
+	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingPeriod, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
+	}
+
+	cosmwasmPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, cosmwasmInteractor, &logger)
+	cosmwasmPusher.Run(context.Background())
 }

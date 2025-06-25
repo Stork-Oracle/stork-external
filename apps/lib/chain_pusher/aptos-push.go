@@ -2,6 +2,7 @@ package chain_pusher
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ func init() {
 	AptospushCmd.Flags().StringP(AssetConfigFileFlag, "f", "", AssetConfigFileDesc)
 	AptospushCmd.Flags().StringP(PrivateKeyFileFlag, "k", "", PrivateKeyFileDesc)
 	AptospushCmd.Flags().IntP(BatchingWindowFlag, "b", 5, BatchingWindowDesc)
-	AptospushCmd.Flags().IntP(PollingFrequencyFlag, "p", 3, PollingFrequencyDesc)
+	AptospushCmd.Flags().IntP(PollingPeriodFlag, "p", 3, PollingPeriodDesc)
 
 	AptospushCmd.MarkFlagRequired(StorkWebsocketEndpointFlag)
 	AptospushCmd.MarkFlagRequired(StorkAuthCredentialsFlag)
@@ -38,16 +39,20 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(BatchingWindowFlag)
-	pollingFrequency, _ := cmd.Flags().GetInt(PollingFrequencyFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(PollingPeriodFlag)
 
 	logger := AptosPusherLogger(chainRpcUrl, contractAddress)
 
-	aptosInteracter, err := NewAptosContractInteracter(chainRpcUrl, contractAddress, privateKeyFile, assetConfigFile, pollingFrequency, logger)
+	keyFileContent, err := os.ReadFile(privateKeyFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interacter")
+		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingFrequency, aptosInteracter, &logger)
-	ctx := context.Background()
-	aptosPusher.Run(ctx)
+	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingPeriod, logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interactor")
+	}
+
+	aptosPusher := NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, aptosInteractor, &logger)
+	aptosPusher.Run(context.Background())
 }

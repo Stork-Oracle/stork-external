@@ -63,6 +63,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 8453,
     },
+    baseSepolia: {
+      url: "https://sepolia.base.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 84532,
+    },
     // you might need to use a custom RPC URL for this chain, get one from quicknode
     berachainTestnet: {
       url: "https://bartio.rpc.berachain.com/",
@@ -129,6 +134,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.mainnet.ms/",
       accounts: [PRIVATE_KEY],
       chainId: 4158,
+    },
+    ethereumMainnet: {
+      url: "https://ethereum-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 1,
     },
     // not currently deployed, seems to have been reset
     expchainTestnet: {
@@ -241,10 +251,15 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 98865
     },
-    plumeDevnet: {
-      url: "https://test-rpc.plumenetwork.xyz",
+    plumeTestnet: {
+      url: "https://testnet-rpc.plumenetwork.xyz",
       accounts: [PRIVATE_KEY],
-      chainId: 98864
+      chainId: 98867
+    },
+    plumeMainnet: {
+      url: "https://phoenix-rpc.plumenetwork.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 98866
     },
     polygon: {
       url: "https://polygon.llamarpc.com",

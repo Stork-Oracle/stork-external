@@ -4,6 +4,7 @@ package signer
 #include "signing.h"
 */
 import "C"
+
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
@@ -23,15 +24,19 @@ import (
 )
 
 // gmorkworld in ascii
-const StorkMagicNumber = "103109111114107119111114108100"
-const StorkAuthAssetId = "STORKAUTH"
-const StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
-const StorkAuthOracleId = "sauth"
+const (
+	StorkMagicNumber             = "103109111114107119111114108100"
+	StorkAuthAssetId             = "STORKAUTH"
+	StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
+	StorkAuthOracleId            = "sauth"
+)
 
-const publicKeyHeader = "X-Public-Key"
-const timestampHeader = "X-Timestamp"
-const signatureHeader = "X-Signature"
-const signatureTypeHeader = "X-Signature-Type"
+const (
+	publicKeyHeader     = "X-Public-Key"
+	timestampHeader     = "X-Timestamp"
+	signatureHeader     = "X-Signature"
+	signatureTypeHeader = "X-Signature-Type"
+)
 
 type Signer[T Signature] interface {
 	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
@@ -54,7 +59,6 @@ type StarkSigner struct {
 
 func NewEvmSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmSigner, error) {
 	evmPrivateKey, err := convertHexToECDSA(privateKeyStr)
-
 	if err != nil {
 		return nil, err
 	}
@@ -95,13 +99,14 @@ func (s *EvmSigner) SignPublisherPrice(publishTimestamp int64, asset string, qua
 
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedValue), 10)
+	quantizedPriceBytes := bigIntToTwosComplement32(quantizedPriceBigInt)
 
 	publicAddress := crypto.PubkeyToAddress(s.privateKey.PublicKey)
 	payload := [][]byte{
 		publicAddress.Bytes(),
 		[]byte(asset),
 		common.LeftPadBytes(timestampBigInt.Bytes(), 32),
-		common.LeftPadBytes(quantizedPriceBigInt.Bytes(), 32),
+		quantizedPriceBytes,
 	}
 
 	msgHash, signature, err := signData(s.privateKey, payload)
@@ -267,7 +272,6 @@ func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
 	sHex := fmt.Sprintf("%064s", strip0x(signature.S))
 	signatureStr := "0x" + rHex + sHex
 	return signatureStr, nil
-
 }
 
 func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
@@ -312,7 +316,6 @@ func getHashes(payload [][]byte) (common.Hash, common.Hash) {
 func signData(privateKey *ecdsa.PrivateKey, payload [][]byte) (string, []byte, error) {
 	payloadHash, prefixedHash := getHashes(payload)
 	signature, err := crypto.Sign(prefixedHash.Bytes(), privateKey)
-
 	if err != nil {
 		return "", nil, err
 	}
@@ -353,4 +356,28 @@ func createBufferFromBigInt(i *big.Int) *C.uint8_t {
 	bytes := make([]byte, 32)
 	i.FillBytes(bytes)
 	return (*C.uint8_t)(unsafe.Pointer(&bytes[0]))
+}
+
+// bigIntToTwosComplement32 converts a big.Int to a 32-byte two's complement representation.
+// This matches Ethereum's signed integer encoding where negative numbers are represented in two's complement.
+func bigIntToTwosComplement32(x *big.Int) []byte {
+	if x.Sign() >= 0 {
+		return common.LeftPadBytes(x.Bytes(), 32)
+	}
+
+	// For negative numbers:
+	// First, get the absolute value
+	absX := new(big.Int).Abs(x)
+
+	// Create a 256-bit (32 byte) mask
+	mask := new(big.Int).Lsh(big.NewInt(1), 256)
+	mask.Sub(mask, big.NewInt(1))
+
+	// Perform two's complement on full 256 bits
+	// First invert (subtract from 2^256 - 1)
+	inverted := new(big.Int).Sub(mask, absX)
+	// Then add 1
+	twosComp := new(big.Int).Add(inverted, big.NewInt(1))
+
+	return twosComp.Bytes()
 }

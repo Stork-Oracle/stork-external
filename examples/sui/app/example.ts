@@ -36,7 +36,7 @@ function loadKeypairFromKeystore(): Ed25519Keypair {
     return Ed25519Keypair.fromSecretKey(actualPrivateKey);
 }
 
-// This is necessary because contract addresses change on upgrade, while their types retain the package ID of the origional deployment.
+// This is necessary because contract addresses change on upgrade, while their types retain the package ID of the original deployment.
 async function getOrigionalContractId(storkContractAddress: string): Promise<string> {
     const modules: SuiMoveNormalizedModules = await client.getNormalizedMoveModulesByPackage({
         package: storkContractAddress

@@ -438,7 +438,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 	}
 
 	storkEvmPublicKey := hex.EncodeToString(byteSlice)
-	storkSuiPublicKeyString := fields["stork_sui_public_key"].(string)
+	storkSuiPublicKeyString := fields["stork_sui_address"].(string)
 	storkSuiPublicKey, err := sui_types.NewAddressFromHex(storkSuiPublicKeyString)
 	if err != nil {
 		return StorkState{}, err

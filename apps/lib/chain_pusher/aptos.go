@@ -1,29 +1,30 @@
 package chain_pusher
 
 import (
+	"context"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	contract "github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/aptos"
 	"github.com/rs/zerolog"
 )
 
-type AptosContractInteracter struct {
+type AptosContractInteractor struct {
 	logger   zerolog.Logger
 	contract *contract.StorkContract
 
-	pollingFrequencySec int
+	pollingPeriodSec int
 }
 
-func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, assetConfigFile string, pollingFreqSec int, logger zerolog.Logger) (*AptosContractInteracter, error) {
+func NewAptosContractInteractor(
+	rpcUrl string,
+	contractAddr string,
+	keyFileContent []byte,
+	pollingPeriodSec int,
+	logger zerolog.Logger,
+) (*AptosContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
-
-	keyFileContent, err := os.ReadFile(privateKeyFile)
-	if err != nil {
-		return nil, err
-	}
 
 	privateKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
 
@@ -32,20 +33,22 @@ func NewAptosContractInteracter(rpcUrl, contractAddr, privateKeyFile string, ass
 		return nil, err
 	}
 
-	return &AptosContractInteracter{
-		logger:              logger,
-		contract:            contract,
-		pollingFrequencySec: pollingFreqSec,
+	return &AptosContractInteractor{
+		logger:           logger,
+		contract:         contract,
+		pollingPeriodSec: pollingPeriodSec,
 	}, nil
 }
 
 // unfortunately, Aptos doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Aptos re-adds websocket support
-func (aci *AptosContractInteracter) ListenContractEvents(ch chan map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue) {
+func (aci *AptosContractInteractor) ListenContractEvents(
+	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
+) {
 	aci.logger.Warn().Msg("Aptos does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue, error) {
+func (aci *AptosContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
 	bindingsEncodedAssetIds := []contract.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
@@ -58,7 +61,7 @@ func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncoded
 	}
 
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
-	result := make(map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue)
+	result := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		if value, ok := values[contract.EncodedAssetId(encodedAssetId)]; ok {
 
@@ -70,7 +73,7 @@ func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncoded
 			}
 			quantizedValue := new(big.Int).Mul(magnitude, big.NewInt(int64(signMultiplier)))
 
-			result[encodedAssetId] = InternalStorkStructsTemporalNumericValue{
+			result[encodedAssetId] = InternalTemporalNumericValue{
 				TimestampNs:    value.TimestampNs,
 				QuantizedValue: quantizedValue,
 			}
@@ -79,8 +82,7 @@ func (aci *AptosContractInteracter) PullValues(encodedAssetIds []InternalEncoded
 	return result, nil
 }
 
-func (aci *AptosContractInteracter) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-
+func (aci *AptosContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
 	var updateData []contract.UpdateData
 	for _, price := range priceUpdates {
 		update, err := aci.aggregatedSignedPriceToAptosUpdateData(price)
@@ -101,7 +103,12 @@ func (aci *AptosContractInteracter) BatchPushToContract(priceUpdates map[Interna
 	return nil
 }
 
-func (aci *AptosContractInteracter) aggregatedSignedPriceToAptosUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
+// todo: implement
+func (aci *AptosContractInteractor) GetWalletBalance() (float64, error) {
+	return -1, nil
+}
+
+func (aci *AptosContractInteractor) aggregatedSignedPriceToAptosUpdateData(price AggregatedSignedPrice) (contract.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToByteArray(string(signedPrice.EncodedAssetId))
 	if err != nil {
