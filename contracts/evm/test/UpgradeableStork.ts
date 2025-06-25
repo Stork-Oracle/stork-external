@@ -371,6 +371,26 @@ describe("UpgradeableStork", function() {
       ], { value: 1 });
     });
 
+    it("Should update with negative value successfully", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // set to dev key
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1750794968021348308",
+            quantizedValue: "-3020199000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("HL_BTC_CURRENT_FUNDING")),
+          publisherMerkleRoot: "0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878",
+          valueComputeAlgHash: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
+          r: "0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696",
+          s: "0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0",
+          v: "0x1b"
+        }
+      ], { value: 1 });
+    });
+
     it("Should update multiple successfully", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
@@ -518,6 +538,36 @@ describe("UpgradeableStork", function() {
       ]);
     });
 
+    it("Should return expected negative value", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      // set to dev key
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+
+      // to avoid time period check
+      await deployed.updateValidTimePeriodSeconds(100000000000);
+
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1750794968021348308",
+            quantizedValue: "-3020199000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("HL_BTC_CURRENT_FUNDING")),
+          publisherMerkleRoot: "0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878",
+          valueComputeAlgHash: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
+          r: "0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696",
+          s: "0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0",
+          v: "0x1b"
+        }
+      ], { value: 1 });
+      
+      expect(await deployed.getTemporalNumericValueV1(ethers.keccak256(ethers.toUtf8Bytes("HL_BTC_CURRENT_FUNDING")))).to.deep.equal([
+        1750794968021348308n,
+        -3020199000000n
+      ]);
+    });
+    
     it("Should return expected value if second value reverts", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
       
