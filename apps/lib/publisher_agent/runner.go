@@ -76,6 +76,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	}
 
 	// add or update desired connections
+	r.outgoingConnectionsLock.RLock()
 	for brokerUrl, newAssetIdMap := range newBrokerMap {
 		outgoingConnection, outgoingConnectionExists := r.outgoingConnectionsByBroker[brokerUrl]
 		if outgoingConnectionExists {
@@ -87,8 +88,10 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 		}
 		r.assetsByBroker[brokerUrl] = newAssetIdMap
 	}
+	r.outgoingConnectionsLock.RUnlock()
 
 	// remove undesired connections
+	r.outgoingConnectionsLock.Lock()
 	for url, _ := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
@@ -96,6 +99,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			delete(r.assetsByBroker, url)
 		}
 	}
+	r.outgoingConnectionsLock.Unlock()
 
 	r.logger.Debug().Msg("Broker connection updater finished")
 }
