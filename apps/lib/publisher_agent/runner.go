@@ -142,6 +142,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 }
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}) {
+	outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](assetIds, r.logger)
 	for {
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
@@ -169,7 +170,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
-		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assetIds, r.logger)
+		outgoingWebsocketConn.SetWebsocketConn(websocketConn)
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()

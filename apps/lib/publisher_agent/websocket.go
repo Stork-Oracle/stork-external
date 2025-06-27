@@ -180,13 +180,16 @@ type OutgoingWebsocketConnection[T signer.Signature] struct {
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T signer.Signature](assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
-		WebsocketConnection:      conn,
 		assetIds:                 assetIds,
 		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
 		logger:                   logger,
 	}
+}
+
+func (owc *OutgoingWebsocketConnection[T]) SetWebsocketConn(conn WebsocketConnection) {
+	owc.WebsocketConnection = conn
 }
 
 func (owc *OutgoingWebsocketConnection[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
