@@ -237,7 +237,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 			}
 			owc.assetIdsLock.RUnlock()
 
-			if len(signedPriceUpdateBatch) > 0 {
+			if len(filteredPriceUpdates) > 0 {
 				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredPriceUpdates, "", "", logger)
 				if err != nil {
 					logger.Warn().Err(err).Msg("failed to send signed prices")
