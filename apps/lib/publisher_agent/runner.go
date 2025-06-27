@@ -80,7 +80,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 		outgoingConnection, outgoingConnectionExists := r.outgoingConnectionsByBroker[brokerUrl]
 		if outgoingConnectionExists {
 			// update connection
-			outgoingConnection.UpdateAssets(newAssetIdMap)
+			outgoingConnection.assets.UpdateAssets(newAssetIdMap)
 		} else {
 			// create connection
 			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap)
@@ -142,7 +142,8 @@ func (r *PublisherAgentRunner[T]) Run() {
 }
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}) {
-	outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](assetIds, r.logger)
+	assets := NewOutgoingWebsocketConnectionAssets[T](assetIds)
+
 	for {
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
@@ -170,7 +171,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
-		outgoingWebsocketConn.SetWebsocketConn(websocketConn)
+		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assets, r.logger)
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()

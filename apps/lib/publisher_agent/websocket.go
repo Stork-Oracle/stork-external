@@ -168,34 +168,59 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 	}
 
 	iwc.Close()
+}
 
+type OutgoingWebsocketConnectionAssets[T signer.Signature] struct {
+	assetIds     map[AssetId]struct{}
+	assetIdsLock sync.RWMutex
+}
+
+func NewOutgoingWebsocketConnectionAssets[T signer.Signature](assetIds map[AssetId]struct{}) *OutgoingWebsocketConnectionAssets[T] {
+	return &OutgoingWebsocketConnectionAssets[T]{
+		assetIds:     assetIds,
+		assetIdsLock: sync.RWMutex{},
+	}
+}
+
+func (a *OutgoingWebsocketConnectionAssets[T]) filterSignedPriceUpdateBatch(signedPriceUpdateBatch SignedPriceUpdateBatch[T]) SignedPriceUpdateBatch[T] {
+	filteredPriceUpdates := make(SignedPriceUpdateBatch[T])
+	a.assetIdsLock.RLock()
+	_, allAssets := a.assetIds[WildcardSubscriptionAsset]
+	if allAssets {
+		filteredPriceUpdates = signedPriceUpdateBatch
+	} else {
+		for asset, signedPriceUpdate := range signedPriceUpdateBatch {
+			_, exists := a.assetIds[asset]
+			if exists {
+				filteredPriceUpdates[asset] = signedPriceUpdate
+			}
+		}
+	}
+	a.assetIdsLock.RUnlock()
+	return filteredPriceUpdates
+}
+
+func (a *OutgoingWebsocketConnectionAssets[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
+	a.assetIdsLock.Lock()
+	a.assetIds = assetIds
+	a.assetIdsLock.Unlock()
 }
 
 type OutgoingWebsocketConnection[T signer.Signature] struct {
 	WebsocketConnection
-	assetIds                 map[AssetId]struct{}
-	assetIdsLock             sync.RWMutex
+	assets                   *OutgoingWebsocketConnectionAssets[T]
 	removed                  bool
 	logger                   zerolog.Logger
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T signer.Signature](assetIds map[AssetId]struct{}, logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assets *OutgoingWebsocketConnectionAssets[T], logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
-		assetIds:                 assetIds,
+		WebsocketConnection:      conn,
+		assets:                   assets,
 		signedPriceUpdateBatchCh: make(chan SignedPriceUpdateBatch[T], 4096),
 		logger:                   logger,
 	}
-}
-
-func (owc *OutgoingWebsocketConnection[T]) SetWebsocketConn(conn WebsocketConnection) {
-	owc.WebsocketConnection = conn
-}
-
-func (owc *OutgoingWebsocketConnection[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
-	owc.assetIdsLock.Lock()
-	owc.assetIds = assetIds
-	owc.assetIdsLock.Unlock()
 }
 
 func (owc *OutgoingWebsocketConnection[T]) Remove() {
@@ -225,21 +250,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 				return
 			}
 
-			filteredPriceUpdates := make(SignedPriceUpdateBatch[T])
-			owc.assetIdsLock.RLock()
-			_, allAssets := owc.assetIds[WildcardSubscriptionAsset]
-			if allAssets {
-				filteredPriceUpdates = signedPriceUpdateBatch
-			} else {
-				for asset, signedPriceUpdate := range signedPriceUpdateBatch {
-					_, exists := owc.assetIds[asset]
-					if exists {
-						filteredPriceUpdates[asset] = signedPriceUpdate
-					}
-				}
-			}
-			owc.assetIdsLock.RUnlock()
-
+			filteredPriceUpdates := owc.assets.filterSignedPriceUpdateBatch(signedPriceUpdateBatch)
 			if len(filteredPriceUpdates) > 0 {
 				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredPriceUpdates, "", "", logger)
 				if err != nil {
