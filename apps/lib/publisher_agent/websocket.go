@@ -252,7 +252,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 
 			filteredPriceUpdates := owc.assets.filterSignedPriceUpdateBatch(signedPriceUpdateBatch)
 			if len(filteredPriceUpdates) > 0 {
-				err = SendWebsocketMsg[SignedPriceUpdateBatch[T]](owc.conn, "signed_prices", filteredPriceUpdates, "", "", logger)
+				err = SendWebsocketMsg(owc.conn, "signed_prices", filteredPriceUpdates, "", "", logger)
 				if err != nil {
 					logger.Warn().Err(err).Msg("failed to send signed prices")
 				}
@@ -329,7 +329,7 @@ func SendWebsocketMsg[T any](conn *websocket.Conn, msgType string, data T, trace
 		Data:    data,
 	}
 
-	return sendWebsocketResponse[WebsocketMessage[T]](conn, msg, logger, OutgoingWriteTimeout)
+	return sendWebsocketResponse(conn, msg, logger, OutgoingWriteTimeout)
 }
 
 func sendWebsocketResponse[T any](conn *websocket.Conn, msg T, logger zerolog.Logger, writeTimeout time.Duration) error {
