@@ -112,7 +112,7 @@ func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 }
 
 func (r *PublisherAgentRunner[T]) Run() {
-	processor := NewPriceUpdateProcessor[T](
+	processor := NewPriceUpdateProcessor(
 		r.signer,
 		r.config.OracleId,
 		len(r.config.SignatureTypes),
@@ -175,7 +175,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
-		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assets, r.logger)
+		outgoingWebsocketConn := NewOutgoingWebsocketConnection(websocketConn, assets, r.logger)
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()
