@@ -296,7 +296,69 @@ async fn test_update_temporal_numeric_value_v1_valid() {
 }
 
 #[tokio::test]
-async fn test_invalid_update() {
+async fn test_update_temporal_numeric_value_v1_negative() {
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
+
+    initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
+    
+    // construct quantized value
+    let quantized_value_u128 = 3020199000000u128;
+    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let quantized_value = I128 { underlying: indent - quantized_value_u128 };
+
+    let id = Bits256::from_hex_str("0x281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf").unwrap();
+    let recv_time = 1750794968021348308u64;
+    let publisher_merkle_root = Bits256::from_hex_str("0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878").unwrap();
+    let value_compute_alg_hash = Bits256::from_hex_str("0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba").unwrap();
+    let r = Bits256::from_hex_str("0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696").unwrap();
+    let s = Bits256::from_hex_str("0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0").unwrap();
+    let v = 27;
+
+    let temporal_numeric_value = TemporalNumericValue {
+        timestamp_ns: recv_time,
+        quantized_value: quantized_value.clone(),
+    };
+
+    let temporal_numeric_value_input = TemporalNumericValueInput {
+        temporal_numeric_value,
+        id,
+        publisher_merkle_root,
+        value_compute_alg_hash,
+        r,
+        s,
+        v,
+    };
+
+    let temporal_numeric_value_input_vec = vec![temporal_numeric_value_input];
+
+    // set public key to dev key
+    let stork_pub_key_bits = Bits256::from_hex_str("0x0000000000000000000000003db9E960ECfCcb11969509FAB000c0c96DC51830").unwrap();
+    let stork_pub_key = EvmAddress::from(stork_pub_key_bits);
+    stork_instance.methods().update_stork_public_key(stork_pub_key).call().await.unwrap();
+
+    // Get the required fee
+    let fee = stork_instance.methods().get_update_fee_v1(temporal_numeric_value_input_vec.clone()).call().await.unwrap().value;
+
+    let tx_policies = TxPolicies::default();
+    let call_params = CallParameters::default().with_amount(fee);
+
+    stork_instance.clone()
+        .with_account(not_stork_owner)
+        .methods()
+        .update_temporal_numeric_values_v1(temporal_numeric_value_input_vec)
+        .with_tx_policies(tx_policies)
+        .call_params(call_params).unwrap()
+        .call()
+        .await.unwrap();
+
+    // get the temporal numeric value
+    let temporal_numeric_value = stork_instance.methods().get_temporal_numeric_value_unchecked_v1(id).call().await.unwrap().value;
+    assert_eq!(temporal_numeric_value.timestamp_ns, recv_time);
+    assert_eq!(temporal_numeric_value.quantized_value, quantized_value);
+}
+
+#[tokio::test]
+async fn test_update_temporal_numeric_value_v1_invalid() {
     let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
     initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
