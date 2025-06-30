@@ -318,6 +318,42 @@ module stork::stork {
 
         let stored_value = get_temporal_numeric_value_unchecked(asset_id);
         assert!(temporal_numeric_value::get_timestamp_ns(&stored_value) == timestamp, 0);
+        assert!(temporal_numeric_value::get_quantized_value(&stored_value) == i128::new(magnitude, negative), 1);
+    }
+
+    #[test]
+    fun test_update_single_temporal_numeric_value_evm_negative_value() {
+        let (deployer_signer, user_signer) = setup_test();
+        
+        let asset_id = x"281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf";
+        let timestamp = 1750794968021348308;
+        let magnitude = 3020199000000;
+        let negative = true;
+        let merkle_root = x"5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878";
+        let alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696";
+        let s = x"79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0";
+        let v = 27;
+
+        // update public key
+        state::set_stork_evm_public_key(&deployer_signer, x"3db9E960ECfCcb11969509FAB000c0c96DC51830");
+
+        update_single_temporal_numeric_value_evm(
+            &user_signer,
+            asset_id,
+            timestamp,
+            magnitude,
+            negative,
+            merkle_root,
+            alg_hash,
+            r,
+            s,
+            v
+        );
+        
+        let stored_value = get_temporal_numeric_value_unchecked(asset_id);
+        assert!(temporal_numeric_value::get_timestamp_ns(&stored_value) == timestamp, 0);
+        assert!(temporal_numeric_value::get_quantized_value(&stored_value) == i128::new(magnitude, negative), 1);
     }
 
     #[test]
