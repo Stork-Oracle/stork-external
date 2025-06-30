@@ -41,7 +41,9 @@ fn get_stork_message_hash(
     data.extend_from_slice(&id);
     data.extend_from_slice(&[0u8; 24]); // Left pad with 24 zero bytes
     data.extend_from_slice(&recv_time.to_be_bytes());
-    data.extend_from_slice(&[0u8; 16]); // Left pad with 16 zero bytes
+    
+    let sign_extension_byte = if quantized_value < 0 { 0xFF } else { 0x00 };
+    data.extend_from_slice(&[sign_extension_byte; 16]); // Sign extend with 16 bytes
     data.extend_from_slice(&quantized_value.to_be_bytes());
     data.extend_from_slice(&publisher_merkle_root);
     data.extend_from_slice(&value_compute_alg_hash);
@@ -147,6 +149,48 @@ mod tests {
             .try_into()
             .unwrap();
         let v = 28;
+
+        assert!(verify_stork_evm_signature(
+            &stork_public_key,
+            id,
+            recv_time,
+            quantized_value,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v,
+        ));
+    }
+
+    #[test]
+    fn test_verify_stork_evm_signature_negative_value() {
+        let stork_public_key = hex_to_bytes("3db9E960ECfCcb11969509FAB000c0c96DC51830")[..20]
+            .try_into()
+            .unwrap();
+        let id = hex_to_bytes("281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf")
+            [..32]
+            .try_into()
+            .unwrap();
+        let recv_time = 1750794968021348308;
+        let quantized_value = -3020199000000;
+        let publisher_merkle_root =
+            hex_to_bytes("5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878")[..32]
+                .try_into()
+                .unwrap();
+        let value_compute_alg_hash =
+            hex_to_bytes("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba")[..32]
+                .try_into()
+                .unwrap();
+        let r = hex_to_bytes("14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696")
+            [..32]
+            .try_into()
+            .unwrap();
+        let s = hex_to_bytes("79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0")
+            [..32]
+            .try_into()
+            .unwrap();
+        let v = 27;
 
         assert!(verify_stork_evm_signature(
             &stork_public_key,
