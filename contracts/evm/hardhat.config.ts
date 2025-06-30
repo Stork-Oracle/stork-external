@@ -349,6 +349,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1301,
     },
+    victionMainnet: {
+      url: "https://rpc.viction.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 88,
+    },
     volmexTestnet: {
       url: "https://volmex-testnet-custom-gas-0.rpc.caldera.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -423,6 +428,7 @@ const config: HardhatUserConfig = {
       tacTurin: 'fake',
       taraxaMainnet: 'fake',
       unichainSepolia: 'fake',
+      victionMainnet: 'fake',
       volmexTestnet: 'fake',
       xlayerTestnet: 'fake',
       zetachainTestnet: 'fake',
@@ -732,6 +738,15 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-sepolia.uniscan.xyz/api",
           browserURL: "https://sepolia.uniscan.xyz/"
+        }
+      },
+      {
+        network: "victionMainnet",
+        chainId: 88, // for mainnet
+        urls: {
+          apiURL: "https://www.vicscan.xyz/api/contract/hardhat/verify", // for mainnet
+          browserURL: "https://vicscan.xyz", // for mainnet
+
         }
       },
       {
