@@ -61,7 +61,8 @@ module stork::verify {
         vector::append(&mut data, recv_time_bytes);
         
         // Left pad with 16 zero bytes
-        vector::append(&mut data, vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        let sign_extension_byte = if (i128::is_negative(&quantized_value)) { 0xFF } else { 0x00 };
+        vector::append(&mut data, vector[sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte, sign_extension_byte]);
         
         let value_bytes = i128::to_bytes(quantized_value);
         vector::append(&mut data, value_bytes);
@@ -161,6 +162,31 @@ module stork::verify {
         let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
         let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
         let v = 28;
+
+        assert!(verify_stork_evm_signature(
+            &stork_public_key,
+            id,
+            recv_time,
+            quantized_value,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v,
+        ));
+    }
+
+    #[test]
+    fun test_verify_stork_evm_signature_negative_value() {
+        let stork_public_key = evm_pubkey::from_bytes(x"3db9E960ECfCcb11969509FAB000c0c96DC51830");
+        let id = x"281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf";
+        let recv_time = 1750794968021348308;
+        let quantized_value = i128::new(3020199000000, true);
+        let publisher_merkle_root = x"5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878";
+        let value_compute_alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696";
+        let s = x"79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0";
+        let v = 27;
 
         assert!(verify_stork_evm_signature(
             &stork_public_key,

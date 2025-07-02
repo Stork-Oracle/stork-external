@@ -12,7 +12,8 @@ module stork::stork_tests {
     use stork::update_temporal_numeric_value_evm_input;
     use stork::update_temporal_numeric_value_evm_input_vec;
     use sui::test_utils::Self;
-
+    use stork::i128;
+    
     // === Constants ===
 
     const DEPLOYER: address = @0x26;
@@ -21,7 +22,7 @@ module stork::stork_tests {
     const VERSION: u64 = 1;
     const STORK_EVM_PUBLIC_KEY: vector<u8> = x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
 
-    // Constants from verify.move test cases
+    // Constants for verify.move test cases
     const VALID_ID: vector<u8> = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
     const VALID_RECV_TIME: u64 = 1722632569208762117;
     const VALID_MERKLE_ROOT: vector<u8> = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
@@ -30,6 +31,14 @@ module stork::stork_tests {
     const VALID_S: vector<u8> = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
     const VALID_V: u8 = 28;
 
+    // Constants for verify.mov negative value test case
+    const NEGATIVE_ID: vector<u8> = x"281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf";
+    const NEGATIVE_RECV_TIME: u64 = 1750794968021348308;
+    const NEGATIVE_MERKLE_ROOT: vector<u8> = x"5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878";
+    const NEGATIVE_ALG_HASH: vector<u8> = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+    const NEGATIVE_R: vector<u8> = x"14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696";
+    const NEGATIVE_S: vector<u8> = x"79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0";
+    const NEGATIVE_V: u8 = 27;
     // === Tests ===
 
     #[test]
@@ -188,7 +197,67 @@ module stork::stork_tests {
             // Verify feed was created and updated
             let feed_value = stork::get_temporal_numeric_value_unchecked(&state, VALID_ID);
             assert!(feed_value.get_timestamp_ns() == VALID_RECV_TIME, 0);
+            assert!(feed_value.get_quantized_value() == i128::from_u128(62507457175499998000000), 0);
+
+            test_scenario::return_shared(state);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_feed_operations_negative_value() {
+        let mut scenario = test_scenario::begin(DEPLOYER);
+        
+        // Setup initial state
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            stork::init_stork(
+                &admin_cap,
+                STORK_SUI_PUBLIC_KEY,
+                x"3db9E960ECfCcb11969509FAB000c0c96DC51830",
+                SINGLE_UPDATE_FEE,
+                VERSION,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        // Test valid feed update
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+            let update = update_temporal_numeric_value_evm_input::new(
+                NEGATIVE_ID,
+                NEGATIVE_RECV_TIME,
+                3020199000000,
+                true,
+                NEGATIVE_MERKLE_ROOT,
+                NEGATIVE_ALG_HASH,
+                NEGATIVE_R,
+                NEGATIVE_S,
+                NEGATIVE_V
+            );
+
+            let fee = coin::mint_for_testing<SUI>(2000, test_scenario::ctx(&mut scenario));
             
+            stork::update_single_temporal_numeric_value_evm(
+                &mut state,
+                update,
+                fee,
+                test_scenario::ctx(&mut scenario)  
+            );
+
+            // Verify feed was created and updated
+            let feed_value = stork::get_temporal_numeric_value_unchecked(&state, NEGATIVE_ID);
+            assert!(feed_value.get_timestamp_ns() == NEGATIVE_RECV_TIME, 0);
+            assert!(feed_value.get_quantized_value() == i128::new(3020199000000, true), 0);
+            assert!(feed_value.get_quantized_value().is_negative(), 0);
+
             test_scenario::return_shared(state);
         };
 
