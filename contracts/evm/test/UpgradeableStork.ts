@@ -23,7 +23,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.2");
+      expect(await deployed.version()).to.equal("1.0.3");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +63,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.2");
+      expect(await upgraded.version()).to.equal("1.0.3");
     });
 
     it("Should revert if not owner", async function () {

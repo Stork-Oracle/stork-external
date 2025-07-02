@@ -13,4 +13,16 @@ interface IStorkEvents {
         uint64 timestampNs,
         int192 quantizedValue
     );
+
+    /// @dev Emitted when the Stork public key is updated.
+    /// @param newStorkPublicKey The new Stork public key.
+    event StorkPublicKeyUpdate(address indexed newStorkPublicKey);
+
+    /// @dev Emitted when the Stork single update fee is updated.
+    /// @param newSingleUpdateFee The new Stork single update fee.
+    event SingleUpdateFeeUpdate(uint256 newSingleUpdateFee);
+
+    /// @dev Emitted when the Stork valid time period is updated.
+    /// @param newValidTimePeriod The new Stork valid time period.
+    event ValidTimePeriodUpdate(uint256 newValidTimePeriod);
 }
