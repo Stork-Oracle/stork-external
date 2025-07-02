@@ -180,7 +180,7 @@ docker run \
     -v /home/ec2-user/polygon.asset-config.yaml:/etc/asset-config.yaml \
     -v /home/ec2-user/polygon-testnet.secret:/etc/private-key.secret \
     -itd --restart=on-failure \
-    storknetwork/chain-pusher:v1.0.1 evm \
+    storknetwork/chain-pusher:latest evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c https://rpc-amoy.polygon.technology \

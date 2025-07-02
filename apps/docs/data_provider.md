@@ -36,7 +36,7 @@ make start-data-provider ARGS="-c apps/lib/data_provider/configs/example_data_so
 ## Running Published Docker Image
 If all the data sources you want to use are already merged into Stork's repo, you can just pull the latest published Data Provider docker image and supply your own config: 
 ```
-docker run --platform linux/arm64 --pull always --restart always --name data-provider -v ./sample.data-provider.config.json:/etc/config.json -d --log-opt max-size=1g storknetwork/data-provider:v1.0.4 start -c /etc/config.json -o ws://localhost:5216/
+docker run --platform linux/arm64 --pull always --restart always --name data-provider -v ./sample.data-provider.config.json:/etc/config.json -d --log-opt max-size=1g storknetwork/data-provider:latest start -c /etc/config.json -o ws://localhost:5216/
 ```
 
 
