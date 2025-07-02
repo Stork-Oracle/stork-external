@@ -4,15 +4,9 @@ mod verify;
 
 use std::bytes::*;
 use std::bytes_conversions::u64::*;
-use std::crypto::secp256k1::Secp256k1;
-use std::crypto::message::Message;
 use std::string::String;
 use std::logging::log;
-use std::u128::U128;
-use std::address::Address;
 use std::storage::storage_bytes::*;
-use std::bytes::Bytes;
-use std::b512::B512;
 use std::vm::evm::evm_address::EvmAddress;
 
 use standards::src5::*;
