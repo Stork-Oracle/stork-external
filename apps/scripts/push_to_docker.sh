@@ -16,15 +16,16 @@ if [ -z "$TYPE" ]; then
 fi
 
 if [ "$TYPE" == "release" ]; then
+  TAG=$(cat version.txt)
   TYPE_TAG="latest"
 elif [ "$TYPE" == "dev" ]; then
+  TAG=$(git rev-parse --short=7 HEAD)
   TYPE_TAG="dev"
 else
   echo "Invalid type"
   exit 1
 fi
 
-TAG=$(cat version.txt)
 DOCKERHUB_USERNAME="storknetwork"
 
 # Convert underscores to dashes in image name
