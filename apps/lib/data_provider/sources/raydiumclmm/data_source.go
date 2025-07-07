@@ -144,7 +144,7 @@ func (r raydiumCLMMDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 	updates[r.valueId] = types.DataSourceValueUpdate{
 		ValueId:      r.valueId,
 		DataSourceId: RaydiumCLMMDataSourceId,
-		Timestamp:    time.UnixMilli(updateTime),
+		Time:         time.UnixMilli(updateTime),
 		Value:        calculatePrice(poolState),
 	}
 

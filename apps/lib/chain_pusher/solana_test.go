@@ -182,7 +182,7 @@ func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 					},
 					TimestampedSignature: TimestampedSignature{
-						Timestamp: 1722632569208762117,
+						TimestampNano: 1722632569208762117,
 						Signature: EvmSignature{
 							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
 							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
@@ -205,7 +205,7 @@ func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 					},
 					TimestampedSignature: TimestampedSignature{
-						Timestamp: 1722632569208762117,
+						TimestampNano: 1722632569208762117,
 						Signature: EvmSignature{
 							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
 							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
@@ -234,8 +234,8 @@ func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 			if !bytes.Equal(tt.assetId[:], got.Id[:]) {
 				t.Errorf("AssetId = %v, want %v", got.Id, tt.assetId)
 			}
-			if got.TemporalNumericValue.TimestampNs != uint64(tt.priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp) {
-				t.Errorf("TimestampNs = %v, want %v", got.TemporalNumericValue.TimestampNs, tt.priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp)
+			if got.TemporalNumericValue.TimestampNs != uint64(tt.priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano) {
+				t.Errorf("TimestampNs = %v, want %v", got.TemporalNumericValue.TimestampNs, tt.priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano)
 			}
 			if got.TreasuryId != tt.treasuryId {
 				t.Errorf("TreasuryId = %v, want %v", got.TreasuryId, tt.treasuryId)

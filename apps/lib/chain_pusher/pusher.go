@@ -112,7 +112,7 @@ func (p *Pusher) Run(ctx context.Context) {
 					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
 					latestContractValueMap[encodedAssetId] = InternalTemporalNumericValue{
-						TimestampNs:    uint64(update.Timestamp),
+						TimestampNs:    uint64(update.TimestampNano),
 						QuantizedValue: quantizedValInt,
 					}
 				}
@@ -137,7 +137,7 @@ func (p *Pusher) Run(ctx context.Context) {
 }
 
 func shouldUpdateAsset(latestValue InternalTemporalNumericValue, latestStorkPrice AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
-	if uint64(latestStorkPrice.Timestamp)-latestValue.TimestampNs > fallbackPeriodSecs*1000000000 {
+	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*1000000000 {
 		return true
 	}
 

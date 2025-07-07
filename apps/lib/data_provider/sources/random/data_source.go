@@ -54,7 +54,7 @@ func (r randomDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 		r.valueId: types.DataSourceValueUpdate{
 			ValueId:      r.valueId,
 			DataSourceId: RandomDataSourceId,
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        randValue,
 		},
 	}

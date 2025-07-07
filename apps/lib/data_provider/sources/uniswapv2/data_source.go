@@ -76,7 +76,7 @@ func (c *uniswapV2DataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 
 	updateTime := time.Now().UTC().UnixMilli()
 	updates[c.valueId] = types.DataSourceValueUpdate{
-		Timestamp:    time.UnixMilli(updateTime),
+		Time:         time.UnixMilli(updateTime),
 		ValueId:      c.valueId,
 		Value:        updateValue,
 		DataSourceId: UniswapV2DataSourceId,

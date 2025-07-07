@@ -462,7 +462,7 @@ func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(p
 
 	return contract.TemporalNumericValueEvmInput{
 		TemporalNumericValue: contract.TemporalNumericValue{
-			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
+			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 			QuantizedValue: quantizedPrice,
 		},
 		Id:                  assetId,

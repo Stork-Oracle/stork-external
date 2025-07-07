@@ -284,7 +284,7 @@ func getUpdatePayload(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPr
 
 		updates[i] = contract_bindings.StorkStructsTemporalNumericValueInput{
 			TemporalNumericValue: contract_bindings.StorkStructsTemporalNumericValue{
-				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
+				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 				QuantizedValue: quantizedPriceBigInt,
 			},
 			Id:                  encodedAssetId,
@@ -346,7 +346,7 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 			payloads[i].pubSigs[j] = contract_bindings.StorkStructsPublisherSignature{
 				PubKey:         pubKeyBytes,
 				AssetPairId:    signedPrice.ExternalAssetId,
-				Timestamp:      uint64(signedPrice.TimestampedSignature.Timestamp) / 1000000000,
+				Timestamp:      uint64(signedPrice.TimestampedSignature.TimestampNano) / 1000000000,
 				QuantizedValue: quantizedPriceBigInt,
 				R:              rBytes,
 				S:              sBytes,
