@@ -3,10 +3,8 @@ library;
 use std::bytes::Bytes;
 use std::codec::encode;
 use std::hash::*;
-use std::b512::B512;
 use std::crypto::secp256k1::Secp256k1;
 use std::crypto::message::Message;
-use std::option::Option;
 use std::u128::U128;
 use std::vm::evm::evm_address::EvmAddress;
 
@@ -63,9 +61,14 @@ fn get_stork_message_hash(
     pad_24.resize(24, 0u8);
     data.append(pad_24);
     data.append(Bytes::from(encode(recv_time)));
-    // left pad with 16 0 bytes
+    // left pad with 16 bytes
+    let sign_extension_byte = if quantized_value.len() == 16 {
+        quantized_value.get(0).unwrap()
+    } else {
+        0u8
+    };
     let mut pad_16 = Bytes::new();
-    pad_16.resize(16, 0u8);
+    pad_16.resize(16, sign_extension_byte);
     data.append(pad_16);
     data.append(quantized_value);
     data.append(Bytes::from(encode(publisher_merkle_root)));
@@ -180,6 +183,42 @@ fn test_verify_stork_signature() {
 }
 
 #[test]
+fn test_verify_stork_signature_negative_value() {
+    // construct stork pubkey
+    let mut padded_evm_address_bytes = Bytes::from(0x0000000000000000000000003db9E960ECfCcb11969509FAB000c0c96DC51830);
+    let (_, evm_address_bytes) = padded_evm_address_bytes.split_at(12);
+    let stork_pubkey = EvmAddress::try_from(evm_address_bytes).unwrap();
+
+    // construct quantized value
+    let quantized_value_u64 = 3020199u64;
+    let mut quantized_value_u128 = U128::from(quantized_value_u64);
+    let quantized_value_u128 = quantized_value_u128 * U128::from(1000000u64);
+    let quantized_value = I128::neg_try_from(quantized_value_u128).unwrap();
+
+    // other vars that don't need multi step construction
+    let id = b256::from(0x281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf);
+    let recv_time = 1750794968021348308;
+    let publisher_merkle_root = b256::from(0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878);
+    let value_compute_alg_hash = b256::from(0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba);
+    let r = b256::from(0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696);
+    let s = b256::from(0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0);
+    let v = 27;
+
+    let result = verify_stork_signature(
+        stork_pubkey,
+        id,
+        recv_time,
+        quantized_value,
+        publisher_merkle_root,
+        value_compute_alg_hash,
+        r,
+        s,
+        v,
+    );
+    assert(result == true);
+}
+
+#[test]
 fn test_get_stork_message_hash() {
     let mut padded_evm_address_bytes = Bytes::from(0x0000000000000000000000000a803F9b1CCe32e2773e0d2e98b37E0775cA5d44);
     let (_, evm_address_bytes) = padded_evm_address_bytes.split_at(12);
@@ -250,6 +289,28 @@ fn test_i128_to_be_bytes_positive() {
 }
 
 #[test]
+fn test_i128_to_be_bytes_negative() {
+    let abs_value_u64 = 17725899000000u64;
+    let value_u128 = U128::from(abs_value_u64);
+    let value = I128::neg_try_from(value_u128).unwrap();
+    let bytes = i128_to_be_bytes(value);
+
+    // expected ffffffffffffffffffffefe0de163740
+    let mut expected_bytes = Bytes::new();
+    expected_bytes.resize(16, 0xffu8);
+    expected_bytes.set(10, 0xefu8);
+    expected_bytes.set(11, 0xe0u8);
+    expected_bytes.set(12, 0xdeu8);
+    expected_bytes.set(13, 0x16u8);
+    expected_bytes.set(14, 0x37u8);
+    expected_bytes.set(15, 0x40u8);
+
+    log(expected_bytes);
+
+    assert(bytes == expected_bytes);
+}
+
+#[test]
 fn test_try_get_rsv_signature_from_parts() {
     let r = b256::from(0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741);
     let s = b256::from(0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758);
@@ -267,15 +328,4 @@ fn test_try_get_rsv_signature_from_parts() {
     ));
 
     assert(sig_bytes == expected_bytes);
-}
-
-#[test]
-fn test_i128_to_be_bytes_negative() {
-    let value = I128::from(I128::MIN);
-    let bytes = i128_to_be_bytes(value);
-    let mut min_expected_bytes = Bytes::new();
-    min_expected_bytes.resize(16, 0x00u8);
-    min_expected_bytes.set(0, 0x80u8);
-
-    assert(bytes == min_expected_bytes);
 }
