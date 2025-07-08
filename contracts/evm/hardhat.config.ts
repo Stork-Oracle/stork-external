@@ -211,6 +211,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 124864
     },
+    mitosisDognet: {
+      url: "https://rpc.dognet.mitosis.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 124859
+    },
     molten: {
       url: "https://molten.calderachain.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -257,7 +262,7 @@ const config: HardhatUserConfig = {
       chainId: 98867
     },
     plumeMainnet: {
-      url: "https://phoenix-rpc.plumenetwork.xyz",
+      url: "https://rpc-plume-mainnet-1.t.conduit.xyz",
       accounts: [PRIVATE_KEY],
       chainId: 98866
     },
