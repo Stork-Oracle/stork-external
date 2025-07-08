@@ -35,16 +35,16 @@ type (
 	DataSourceValueUpdate struct {
 		ValueId      ValueId
 		DataSourceId DataSourceId
-		Timestamp    time.Time
+		Time         time.Time
 		Value        float64
 	}
 
 	DataSourceUpdateMap map[ValueId]DataSourceValueUpdate
 
 	ValueUpdate struct {
-		PublishTimestamp int64   `json:"t"`
-		ValueId          ValueId `json:"a"`
-		Value            string  `json:"v"`
+		PublishTimestampNano int64   `json:"t"`
+		ValueId              ValueId `json:"a"`
+		Value                string  `json:"v"`
 	}
 
 	ValueUpdateWebsocketMessage struct {

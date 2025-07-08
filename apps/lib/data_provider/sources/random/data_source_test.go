@@ -33,7 +33,7 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	assert.True(t, exists)
 	assert.Equal(t, RandomDataSourceId, update1.DataSourceId)
 	assert.Equal(t, valueId, update1.ValueId)
-	time1 := update1.Timestamp
+	time1 := update1.Time
 	assert.Greater(t, time1, now)
 	value1 := update1.Value
 	assert.GreaterOrEqual(t, value1, minValue)
@@ -46,7 +46,7 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	assert.True(t, exists)
 	assert.Equal(t, RandomDataSourceId, update2.DataSourceId)
 	assert.Equal(t, valueId, update2.ValueId)
-	time2 := update2.Timestamp
+	time2 := update2.Time
 	assert.Greater(t, time2, time1)
 	value2 := update2.Value
 	assert.GreaterOrEqual(t, value2, minValue)

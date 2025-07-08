@@ -78,10 +78,10 @@ func (p *IncomingWebsocketPuller) Run() {
 			}
 			for _, priceUpdatePullWebsocket := range message.Data {
 				valueUpdate := ValueUpdate{
-					PublishTimestamp: priceUpdatePullWebsocket.PublishTimestamp,
-					Asset:            priceUpdatePullWebsocket.Asset,
-					Value:            new(big.Float).SetFloat64(priceUpdatePullWebsocket.Price),
-					Metadata:         priceUpdatePullWebsocket.Metadata,
+					PublishTimestampNano: priceUpdatePullWebsocket.PublishTimestampNano,
+					Asset:                priceUpdatePullWebsocket.Asset,
+					Value:                new(big.Float).SetFloat64(priceUpdatePullWebsocket.Price),
+					Metadata:             priceUpdatePullWebsocket.Metadata,
 				}
 				for _, valueUpdateCh := range p.ValueUpdateChannels {
 					select {

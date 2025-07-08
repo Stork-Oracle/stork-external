@@ -9,8 +9,10 @@ type (
 	StarkPrivateKey   string
 )
 
-const EvmSignatureType = SignatureType("evm")
-const StarkSignatureType = SignatureType("stark")
+const (
+	EvmSignatureType   = SignatureType("evm")
+	StarkSignatureType = SignatureType("stark")
+)
 
 type Signature interface {
 	*StarkSignature | *EvmSignature
@@ -28,7 +30,7 @@ type EvmSignature struct {
 }
 
 type TimestampedSignature[T Signature] struct {
-	Signature T      `json:"signature"`
-	Timestamp int64  `json:"timestamp"`
-	MsgHash   string `json:"msg_hash"`
+	Signature     T      `json:"signature"`
+	TimestampNano int64  `json:"timestamp"`
+	MsgHash       string `json:"msg_hash"`
 }

@@ -97,10 +97,10 @@ func (vup *ValueUpdateProcessor[T]) ClockUpdate() []ValueUpdateWithTrigger {
 
 	for _, valueUpdate := range vup.valueUpdates {
 		currentTimeValueUpdate := ValueUpdate{
-			PublishTimestamp: time.Now().UnixNano(),
-			Value:            valueUpdate.Value,
-			Asset:            valueUpdate.Asset,
-			Metadata:         valueUpdate.Metadata,
+			PublishTimestampNano: time.Now().UnixNano(),
+			Value:                valueUpdate.Value,
+			Asset:                valueUpdate.Asset,
+			Metadata:             valueUpdate.Metadata,
 		}
 		updates = append(
 			updates,
@@ -153,7 +153,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 				start := time.Now()
 
 				quantizedPrice := FloatToQuantizedPrice(update.ValueUpdate.Value)
-				timestampedSig, externalAssetId, err := vup.signer.SignPublisherPrice(update.ValueUpdate.PublishTimestamp, string(update.ValueUpdate.Asset), string(quantizedPrice))
+				timestampedSig, externalAssetId, err := vup.signer.SignPublisherPrice(update.ValueUpdate.PublishTimestampNano, string(update.ValueUpdate.Asset), string(quantizedPrice))
 				if err != nil {
 					vup.logger.Error().Err(err).Msg("Failed to sign update")
 					continue
@@ -176,7 +176,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 				signedUpdates <- priceUpdate
 				elapsed := time.Since(start).Microseconds()
 				atomic.AddInt32(&vup.signQueueSize, -1)
-				ageMs := (time.Now().UnixNano() - update.ValueUpdate.PublishTimestamp) / 1_000_000
+				ageMs := (time.Now().UnixNano() - update.ValueUpdate.PublishTimestampNano) / 1_000_000
 				vup.logger.Debug().Msgf("Signing update on thread %v took %v microseconds (age %v ms, queue size: %v)", threadNum, elapsed, ageMs, vup.signQueueSize)
 			}
 		}(priceUpdatesToSignCh, signedPriceUpdateCh, i)

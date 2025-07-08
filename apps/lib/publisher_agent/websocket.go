@@ -19,11 +19,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const FullQueueLogFrequency = time.Second * 10
-const HandshakeTimeout = time.Second * 10
-const ReadBufferSize = 1048576
-const WriteBufferSize = 1048576
-const OutgoingWriteTimeout = time.Second * 10
+const (
+	FullQueueLogFrequency = time.Second * 10
+	HandshakeTimeout      = time.Second * 10
+	ReadBufferSize        = 1048576
+	WriteBufferSize       = 1048576
+	OutgoingWriteTimeout  = time.Second * 10
+)
 
 type WebsocketConnection struct {
 	conn    *websocket.Conn
@@ -101,10 +103,10 @@ func convertToValueUpdate(valueUpdatePushWebsocket ValueUpdatePushWebsocket) (*V
 		return nil, err
 	} else {
 		valueUpdate := ValueUpdate{
-			PublishTimestamp: valueUpdatePushWebsocket.PublishTimestamp,
-			Asset:            valueUpdatePushWebsocket.Asset,
-			Value:            bigFloatVal,
-			Metadata:         valueUpdatePushWebsocket.Metadata,
+			PublishTimestampNano: valueUpdatePushWebsocket.PublishTimestampNano,
+			Asset:                valueUpdatePushWebsocket.Asset,
+			Value:                bigFloatVal,
+			Metadata:             valueUpdatePushWebsocket.Metadata,
 		}
 		return &valueUpdate, nil
 	}
