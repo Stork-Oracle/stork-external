@@ -110,27 +110,35 @@ fn update_temporal_numeric_value_helper(
     >,
     user: &str,
     update_fee: u128,
+    id_hex: &str,
+    recv_time: u64,
+    quantized_value: i128,
+    publisher_merkle_root_hex: &str,
+    value_compute_alg_hash_hex: &str,
+    r_hex: &str,
+    s_hex: &str,
+    v: u8,
 ) -> UpdateData {
-    let id = hex_to_bytes("7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de")[..32]
+    let id = hex_to_bytes(id_hex)[..32]
         .try_into()
         .unwrap();
-    let recv_time: u64 = 1722632569208762117;
-    let quantized_value: i128 = 62507457175499998000000;
+    let recv_time: u64 = recv_time;
+    let quantized_value: i128 = quantized_value;
     let publisher_merkle_root =
-        hex_to_bytes("e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318")[..32]
+        hex_to_bytes(publisher_merkle_root_hex)[..32]
             .try_into()
             .unwrap();
     let value_compute_alg_hash =
-        hex_to_bytes("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba")[..32]
+        hex_to_bytes(value_compute_alg_hash_hex)[..32]
             .try_into()
             .unwrap();
-    let r = hex_to_bytes("b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741")[..32]
+    let r = hex_to_bytes(r_hex)[..32]
         .try_into()
         .unwrap();
-    let s = hex_to_bytes("16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758")[..32]
+    let s = hex_to_bytes(s_hex)[..32]
         .try_into()
         .unwrap();
-    let v = 28;
+    let v = v;
 
     let temporal_numeric_value = TemporalNumericValue {
         timestamp_ns: recv_time.into(),
@@ -162,7 +170,7 @@ fn update_temporal_numeric_value_helper(
 fn test_update_temporal_numeric_value_and_get_value() {
     let mut app = App::default();
     let mut contract = instantiate(&mut app);
-    let update_data = update_temporal_numeric_value_helper(&mut contract, USER, SINGLE_UPDATE_FEE);
+    let update_data = update_temporal_numeric_value_helper(&mut contract, USER, SINGLE_UPDATE_FEE, "7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de", 1722632569208762117, 62507457175499998000000, "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318", "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba", "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741", "16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758", 28);
     let response = contract.get_latest_canonical_temporal_numeric_value_unchecked(update_data.id);
     assert_eq!(
         response.unwrap().temporal_numeric_value,
@@ -171,11 +179,33 @@ fn test_update_temporal_numeric_value_and_get_value() {
 }
 
 #[test]
+fn test_update_temporal_numeric_value_negative_value() {
+    let mut app = App::default();
+    let mut contract = instantiate(&mut app);
+
+    // set to dev key
+    let pubkey: [u8; 20] = hex_to_bytes("3db9E960ECfCcb11969509FAB000c0c96DC51830")
+        .try_into()
+        .unwrap();
+    contract
+        .set_stork_evm_public_key(pubkey)
+        .call(&OWNER.into_addr())
+        .unwrap();
+
+    let update_data = update_temporal_numeric_value_helper(&mut contract, USER, SINGLE_UPDATE_FEE, "281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf", 1750794968021348308, -3020199000000, "5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878", "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba", "14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696", "79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0", 27);
+
+    let response = contract.get_latest_canonical_temporal_numeric_value_unchecked(update_data.id);
+    assert_eq!(
+        response.unwrap().temporal_numeric_value,
+        update_data.temporal_numeric_value
+    );
+}
+#[test]
 #[should_panic(expected = "Feed not found")]
 fn test_get_latest_canonical_temporal_numeric_value_unchecked_invalid_id() {
     let mut app = App::default();
     let mut contract = instantiate(&mut app);
-    let update_data = update_temporal_numeric_value_helper(&mut contract, USER, SINGLE_UPDATE_FEE);
+    let update_data = update_temporal_numeric_value_helper(&mut contract, USER, SINGLE_UPDATE_FEE, "7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de", 1722632569208762117, 62507457175499998000000, "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318", "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba", "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741", "16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758", 28);
     let id = hex_to_bytes("0000000000000000000000000000000000000000000000000000000000000000")[..32]
         .try_into()
         .unwrap();
@@ -191,7 +221,7 @@ fn test_get_latest_canonical_temporal_numeric_value_unchecked_invalid_id() {
 fn test_update_temporal_numeric_value_insufficient_funds() {
     let mut app = App::default();
     let mut contract = instantiate(&mut app);
-    update_temporal_numeric_value_helper(&mut contract, UNDERFUNDED_USER, 1);
+    update_temporal_numeric_value_helper(&mut contract, UNDERFUNDED_USER, 1, "7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de", 1722632569208762117, 62507457175499998000000, "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318", "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba", "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741", "16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758", 28);
 }
 
 #[test]

@@ -53,9 +53,9 @@ type StorkCalculationAlg struct {
 }
 
 type TimestampedSignature struct {
-	Signature EvmSignature `json:"signature"`
-	Timestamp int64        `json:"timestamp"`
-	MsgHash   string       `json:"msg_hash"`
+	Signature     EvmSignature `json:"signature"`
+	TimestampNano int64        `json:"timestamp"`
+	MsgHash       string       `json:"msg_hash"`
 }
 
 type StorkSignedPrice struct {
@@ -75,7 +75,7 @@ type PublisherSignedPrice struct {
 }
 
 type AggregatedSignedPrice struct {
-	Timestamp        int64                   `json:"timestamp"`
+	TimestampNano    int64                   `json:"timestamp"`
 	AssetId          AssetId                 `json:"asset_id"`
 	StorkSignedPrice *StorkSignedPrice       `json:"stork_signed_price,omitempty"`
 	SignedPrices     []*PublisherSignedPrice `json:"signed_prices"`

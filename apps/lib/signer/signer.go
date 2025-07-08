@@ -120,9 +120,9 @@ func (s *EvmSigner) SignPublisherPrice(publishTimestamp int64, asset string, qua
 	}
 
 	timestampedSignature := TimestampedSignature[*EvmSignature]{
-		Signature: rsv,
-		Timestamp: publishTimestamp,
-		MsgHash:   msgHash,
+		Signature:     rsv,
+		TimestampNano: publishTimestamp,
+		MsgHash:       msgHash,
 	}
 	return &timestampedSignature, asset, nil
 }
@@ -186,9 +186,9 @@ func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, q
 	// trim leading 0s
 	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHashFelt.String())))
 	timestampedSignature := TimestampedSignature[*StarkSignature]{
-		Signature: starkSignature,
-		Timestamp: publishTimestamp,
-		MsgHash:   msgHash,
+		Signature:     starkSignature,
+		TimestampNano: publishTimestamp,
+		MsgHash:       msgHash,
 	}
 	externalAssetId := "0x" + assetHexPadded + s.oracleNameInt.Text(16)
 

@@ -80,7 +80,7 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 			computed := types.DataSourceValueUpdate{
 				ValueId:      transformationValueId,
 				DataSourceId: TransformationDataSourceId,
-				Timestamp:    updateTime,
+				Time:         updateTime,
 				Value:        transformationValue,
 			}
 			finalUpdateMap[transformationValueId] = computed

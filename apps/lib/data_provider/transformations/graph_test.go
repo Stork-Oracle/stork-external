@@ -153,7 +153,7 @@ func TestProcessSourceUpdates(t *testing.T) {
 		"test1": {
 			ValueId:      "test1",
 			DataSourceId: "",
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        10.0,
 		},
 	})
@@ -172,7 +172,7 @@ func TestProcessSourceUpdates(t *testing.T) {
 		"test2": {
 			ValueId:      "test2",
 			DataSourceId: "",
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        100.0,
 		},
 	})
@@ -195,13 +195,13 @@ func TestProcessSourceUpdates(t *testing.T) {
 		"test1": {
 			ValueId:      "test1",
 			DataSourceId: "",
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        20.0,
 		},
 		"test2": {
 			ValueId:      "test2",
 			DataSourceId: "",
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        200.0,
 		},
 	})
@@ -232,7 +232,7 @@ func TestProcessSourceUpdates(t *testing.T) {
 		"test3": {
 			ValueId:      "test3",
 			DataSourceId: "",
-			Timestamp:    time.Now(),
+			Time:         time.Now(),
 			Value:        1.0,
 		},
 	})
@@ -283,7 +283,7 @@ func BenchmarkTransformationGraph_ProcessSourceUpdates(b *testing.B) {
 			"test_source_a": {
 				ValueId:      "test_source_a",
 				DataSourceId: "",
-				Timestamp:    now,
+				Time:         now,
 				Value:        10.0,
 			},
 		})

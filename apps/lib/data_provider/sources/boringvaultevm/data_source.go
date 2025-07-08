@@ -82,7 +82,7 @@ func (r boringVaultEvmDataSource) getUpdate() (types.DataSourceUpdateMap, error)
 
 	updateTime := time.Now().UTC().UnixMilli()
 	updates[r.valueId] = types.DataSourceValueUpdate{
-		Timestamp:    time.UnixMilli(updateTime),
+		Time:         time.UnixMilli(updateTime),
 		ValueId:      r.valueId,
 		Value:        updateValue,
 		DataSourceId: BoringVaultEvmDataSourceId,

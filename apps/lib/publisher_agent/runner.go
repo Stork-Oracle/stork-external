@@ -76,19 +76,22 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	}
 
 	// add or update desired connections
+	r.outgoingConnectionsLock.RLock()
 	for brokerUrl, newAssetIdMap := range newBrokerMap {
 		outgoingConnection, outgoingConnectionExists := r.outgoingConnectionsByBroker[brokerUrl]
 		if outgoingConnectionExists {
 			// update connection
-			outgoingConnection.UpdateAssets(newAssetIdMap)
+			outgoingConnection.assets.UpdateAssets(newAssetIdMap)
 		} else {
 			// create connection
 			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap)
 		}
 		r.assetsByBroker[brokerUrl] = newAssetIdMap
 	}
+	r.outgoingConnectionsLock.RUnlock()
 
 	// remove undesired connections
+	r.outgoingConnectionsLock.Lock()
 	for url, _ := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
@@ -96,6 +99,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			delete(r.assetsByBroker, url)
 		}
 	}
+	r.outgoingConnectionsLock.Unlock()
 
 	r.logger.Debug().Msg("Broker connection updater finished")
 }
@@ -108,7 +112,7 @@ func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 }
 
 func (r *PublisherAgentRunner[T]) Run() {
-	processor := NewPriceUpdateProcessor[T](
+	processor := NewPriceUpdateProcessor(
 		r.signer,
 		r.config.OracleId,
 		len(r.config.SignatureTypes),
@@ -142,6 +146,8 @@ func (r *PublisherAgentRunner[T]) Run() {
 }
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}) {
+	assets := NewOutgoingWebsocketConnectionAssets[T](assetIds)
+
 	for {
 		r.logger.Debug().Msgf("Connecting to receiver WebSocket with url %s", url)
 
@@ -169,7 +175,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 				r.outgoingConnectionsLock.Unlock()
 			},
 		)
-		outgoingWebsocketConn := NewOutgoingWebsocketConnection[T](websocketConn, assetIds, r.logger)
+		outgoingWebsocketConn := NewOutgoingWebsocketConnection(websocketConn, assets, r.logger)
 
 		// add subscriber to list
 		r.outgoingConnectionsLock.Lock()

@@ -462,7 +462,7 @@ func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(p
 
 	return contract.TemporalNumericValueEvmInput{
 		TemporalNumericValue: contract.TemporalNumericValue{
-			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.Timestamp),
+			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 			QuantizedValue: quantizedPrice,
 		},
 		Id:                  assetId,
@@ -479,10 +479,26 @@ func (sci *SolanaContractInteractor) quantizedPriceToInt128(quantizedPrice Quant
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
 
-	quantizedPrice128 := bin.Int128{
-		Lo: quantizedPriceBigInt.Uint64(),
-		Hi: quantizedPriceBigInt.Rsh(quantizedPriceBigInt, 64).Uint64(),
-	}
+	// Handle two's complement for signed 128-bit representation
+	if quantizedPriceBigInt.Sign() >= 0 {
+		quantizedPrice128 := bin.Int128{
+			Lo: quantizedPriceBigInt.Uint64(),
+			Hi: new(big.Int).Rsh(quantizedPriceBigInt, 64).Uint64(),
+		}
+		return quantizedPrice128
+	} else {
+		maxUint128 := new(big.Int).Lsh(big.NewInt(1), 128)
+		maxUint128.Sub(maxUint128, big.NewInt(1))
 
-	return quantizedPrice128
+		absValue := new(big.Int).Abs(quantizedPriceBigInt)
+
+		twosComplement := new(big.Int).Sub(maxUint128, absValue)
+		twosComplement.Add(twosComplement, big.NewInt(1))
+
+		quantizedPrice128 := bin.Int128{
+			Lo: twosComplement.Uint64(),
+			Hi: new(big.Int).Rsh(twosComplement, 64).Uint64(),
+		}
+		return quantizedPrice128
+	}
 }

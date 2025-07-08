@@ -235,6 +235,70 @@ describe("Stork", () => {
       }
     });
 
+    it("Creates feed with initial negative value", async () => {
+      const id = hexStringToByteArray("281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf");
+      const treasuryId = 1;
+      const [treasuryPda] = await anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("stork_treasury"), Buffer.from([treasuryId])],
+        program.programId
+      );
+      const updateData = {
+        temporalNumericValue: {
+          timestampNs: new anchor.BN("1750794968021348308"),
+          quantizedValue: new anchor.BN("-3020199000000"),
+        },
+        id: id,
+        publisherMerkleRoot: hexStringToByteArray("5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878"),
+        valueComputeAlgHash: hexStringToByteArray("9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"),
+        r: hexStringToByteArray("14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696"),
+        s: hexStringToByteArray("79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0"),
+        v: 27,
+        treasuryId,
+      };
+
+      // update public key
+      await program.methods
+        .updateStorkEvmPublicKey(hexStringToByteArray("3db9E960ECfCcb11969509FAB000c0c96DC51830"))
+        .accounts({
+          owner: deployerKeypair.publicKey,
+        })
+        .signers([deployerKeypair])
+        .rpc();
+        
+      const tx = await program.methods
+        .updateTemporalNumericValueEvm(updateData)
+        .accounts({
+          payer: provider.wallet.publicKey,
+          treasury: treasuryPda
+        })
+        .rpc();
+
+      const [feedPda, _] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("stork_feed"), id],
+        program.programId
+      );
+      const feedAccount = await program.account.temporalNumericValueFeed.fetch(
+        feedPda
+      );
+      for (let i = 0; i < 32; i++) {
+        assert.strictEqual(
+          feedAccount.id[i],
+          parseInt(id[i].toFixed(0)),
+          `Feed ID byte at position ${i} does not match`
+        );
+      }
+      assert.strictEqual(
+        feedAccount.latestValue.timestampNs.toString(),
+        updateData.temporalNumericValue.timestampNs.toString(),
+        "Timestamp not updated correctly"
+      );
+      assert.strictEqual(
+        feedAccount.latestValue.quantizedValue.toString(),
+        updateData.temporalNumericValue.quantizedValue.toString(),
+        "Quantized value not updated correctly"
+      );
+    });
+
     it("Fails with malicious treasury account", async () => {
       const maliciousKeypair = anchor.web3.Keypair.generate();
       const treasuryId = 1;

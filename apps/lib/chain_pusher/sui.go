@@ -124,7 +124,7 @@ func (sci *SuiContractInteractor) aggregatedSignedPriceToUpdateData(price Aggreg
 	if err != nil {
 		return contract.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
-	timestampNs := uint64(signedPrice.TimestampedSignature.Timestamp)
+	timestampNs := uint64(signedPrice.TimestampedSignature.TimestampNano)
 	magnitude_string := string(signedPrice.QuantizedPrice)
 	magnitude, ok := new(big.Int).SetString(magnitude_string, 10)
 	if !ok {
