@@ -19,7 +19,7 @@ module stork::stork_tests {
     const DEPLOYER: address = @0x26;
     const STORK_SUI_PUBLIC_KEY: address = @0x42;
     const SINGLE_UPDATE_FEE: u64 = 1000;
-    const VERSION: u64 = 1;
+    const VERSION: u64 = 2;
     const STORK_EVM_PUBLIC_KEY: vector<u8> = x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
 
     // Constants for verify.move test cases
