@@ -19,7 +19,7 @@ module stork::state {
 
     // === Constants ===
 
-    const VERSION: u64 = 1;
+    const VERSION: u64 = 2;
     const TNV_FEEDS_REGISTRY_NAME: vector<u8> = b"temporal_numeric_value_feed_registry";
     const TREASURY_NAME: vector<u8> = b"treasury";
 
