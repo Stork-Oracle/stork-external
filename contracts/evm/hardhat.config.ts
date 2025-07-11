@@ -156,6 +156,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 48816,
     },
+    goatMainnet: {
+      url: "https://rpc.goat.network",
+      accounts: [PRIVATE_KEY],
+      chainId: 2345,
+    },
     glueTestnet: {
       url: "https://testnet-ws-1.server-1.glue.net/",
       accounts: [PRIVATE_KEY],
