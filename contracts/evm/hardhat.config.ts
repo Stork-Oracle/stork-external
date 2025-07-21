@@ -6,6 +6,8 @@ require("@openzeppelin/hardhat-upgrades");
 import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-upgradable";
 
+import '@moved/hardhat-plugin';
+
 import './tasks/deploy';
 import './tasks/upgrade';
 import './tasks/interact';
@@ -353,6 +355,10 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 841,
       hardfork: 'berlin',
+    },
+    umiDevnet: {
+      url: "https://devnet.uminetwork.com",
+      accounts: [PRIVATE_KEY],
     },
     unichainSepolia: {
       url: "https://rough-misty-frog.unichain-sepolia.quiknode.pro/ddb18152added7093553cbefdb422162f325ac7a",
