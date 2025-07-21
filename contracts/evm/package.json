@@ -22,6 +22,7 @@
     "zksync-ethers": "^6.15.0"
   },
   "dependencies": {
+    "@mysten/bcs": "^1.6.4",
     "@openzeppelin/contracts-upgradeable": "^5.0.2"
   }
 }
