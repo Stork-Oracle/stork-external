@@ -15,3 +15,4 @@ stork_sway_sdk = { path = "../../../../sdks/fuel/stork-sway-sdk" }
 
 [proxy]
 enabled = true
+address = "0x4b26da4f9d2e102177906075e9d729980228a54ee927a055df461b6c6c7798d3"
