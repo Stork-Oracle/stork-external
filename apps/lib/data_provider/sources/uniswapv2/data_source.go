@@ -123,7 +123,7 @@ func (c *uniswapV2DataSource) getPrice() (float64, error) {
 
 // helper function to convert the result object to a useful price
 func calculatePrice(
-	result []interface{},
+	result []any,
 	baseTokenIndex int8,
 	quoteTokenIndex int8,
 	baseTokenDecimals int8,

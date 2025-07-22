@@ -35,9 +35,9 @@ func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFact
 	return factory, nil
 }
 
-func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, map[types.ValueId]interface{}, error) {
+func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, map[types.ValueId]any, error) {
 	dataSources := make([]types.DataSource, 0)
-	valueIds := make(map[types.ValueId]interface{})
+	valueIds := make(map[types.ValueId]any)
 	for _, source := range sourceConfigs {
 		_, exists := valueIds[source.Id]
 		if exists {
