@@ -15,7 +15,6 @@ import './tasks/print-abi';
 import './tasks/deploy-zk';
 import './tasks/upgrade-zk';
 import './tasks/get-impl';
-import './tasks/compile-umi-bytecode';
 
 import { vars } from "hardhat/config";
 
