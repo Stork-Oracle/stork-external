@@ -148,9 +148,6 @@ The Fuel pusher uses the Rust Fuel SDK (version 0.70.4) under the hood via FFI (
    ./build.sh
    ```
 
-### Wallet Setup
-Create a `fuel-private-key.secret` file containing your Fuel wallet's private key (64-character hex string without "0x" prefix).
-
 ### Running the Fuel Pusher
 For full explanation of the flags, run:
 ```bash
@@ -165,21 +162,9 @@ go run ./cmd/chain_pusher/main.go fuel \
     -c <fuel-rpc-url> \
     -x <contract-id> \
     -f <asset-config-file> \
-    -k <fuel-private-key-file>
+    -m <private-key-file>
 ```
 
-Example with Fuel testnet:
-```bash
-go run ./cmd/chain_pusher/main.go fuel \
-    -w wss://api.jp.stork-oracle.network \
-    -a YOUR_STORK_API_KEY \
-    -c https://testnet.fuel.network/graphql \
-    -x 0x1234567890abcdef1234567890abcdef12345678 \
-    -f ./fuel.asset-config.yaml \
-    -k ./fuel-private-key.secret \
-    -b 30 \
-    -p 5
-```
 
 ### Fuel Development Setup
 The Fuel pusher uses Rust FFI bindings that wrap the official Fuel Rust SDK. The contract interactions are defined in the Fuel Sway smart contract located at `contracts/fuel/contracts/stork/`.
