@@ -72,7 +72,7 @@ func loadSchema(resourcesFS embed.FS) (*gojsonschema.Schema, error) {
 }
 
 func validateConfig(configBytes []byte, schema *gojsonschema.Schema) error {
-	var dataProviderConfig map[string]interface{}
+	var dataProviderConfig map[string]any
 	if err := json.Unmarshal(configBytes, &dataProviderConfig); err != nil {
 		return fmt.Errorf("failed to parse config JSON: %v", err)
 	}

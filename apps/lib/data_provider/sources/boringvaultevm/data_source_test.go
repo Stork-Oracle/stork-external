@@ -11,14 +11,14 @@ import (
 func TestCalculatePrice(t *testing.T) {
 	tests := []struct {
 		name          string
-		result        []interface{}
+		result        []any
 		decimals      int8
 		expectedPrice float64
 		expectedError bool
 	}{
 		{
 			name: "normal case",
-			result: []interface{}{
+			result: []any{
 				big.NewInt(2000000000), // 2 with 9 decimals
 			},
 			decimals:      9,
@@ -27,7 +27,7 @@ func TestCalculatePrice(t *testing.T) {
 		},
 		{
 			name: "zero price",
-			result: []interface{}{
+			result: []any{
 				big.NewInt(0),
 			},
 			decimals:      18,
@@ -36,7 +36,7 @@ func TestCalculatePrice(t *testing.T) {
 		},
 		{
 			name: "large number",
-			result: []interface{}{
+			result: []any{
 				big.NewInt(1000000000000000000), // 1 with 18 decimals
 			},
 			decimals:      18,
@@ -45,7 +45,7 @@ func TestCalculatePrice(t *testing.T) {
 		},
 		{
 			name: "invalid result type",
-			result: []interface{}{
+			result: []any{
 				"not a big.Int",
 			},
 			decimals:      18,

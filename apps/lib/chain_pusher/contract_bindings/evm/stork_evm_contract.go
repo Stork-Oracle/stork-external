@@ -174,7 +174,7 @@ func bindStorkContract(address common.Address, caller bind.ContractCaller, trans
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_StorkContract *StorkContractRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_StorkContract *StorkContractRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _StorkContract.Contract.StorkContractCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -185,7 +185,7 @@ func (_StorkContract *StorkContractRaw) Transfer(opts *bind.TransactOpts) (*type
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_StorkContract *StorkContractRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_StorkContract *StorkContractRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _StorkContract.Contract.StorkContractTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -193,7 +193,7 @@ func (_StorkContract *StorkContractRaw) Transact(opts *bind.TransactOpts, method
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_StorkContract *StorkContractCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_StorkContract *StorkContractCallerRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _StorkContract.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -204,7 +204,7 @@ func (_StorkContract *StorkContractTransactorRaw) Transfer(opts *bind.TransactOp
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_StorkContract *StorkContractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_StorkContract *StorkContractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _StorkContract.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -212,9 +212,8 @@ func (_StorkContract *StorkContractTransactorRaw) Transact(opts *bind.TransactOp
 //
 // Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
 func (_StorkContract *StorkContractCaller) UPGRADEINTERFACEVERSION(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "UPGRADE_INTERFACE_VERSION")
-
 	if err != nil {
 		return *new(string), err
 	}
@@ -222,7 +221,6 @@ func (_StorkContract *StorkContractCaller) UPGRADEINTERFACEVERSION(opts *bind.Ca
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
 
 	return out0, err
-
 }
 
 // UPGRADEINTERFACEVERSION is a free data retrieval call binding the contract method 0xad3cb1cc.
@@ -243,9 +241,8 @@ func (_StorkContract *StorkContractCallerSession) UPGRADEINTERFACEVERSION() (str
 //
 // Solidity: function getTemporalNumericValueUnsafeV1(bytes32 id) view returns((uint64,int192) value)
 func (_StorkContract *StorkContractCaller) GetTemporalNumericValueUnsafeV1(opts *bind.CallOpts, id [32]byte) (StorkStructsTemporalNumericValue, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "getTemporalNumericValueUnsafeV1", id)
-
 	if err != nil {
 		return *new(StorkStructsTemporalNumericValue), err
 	}
@@ -253,7 +250,6 @@ func (_StorkContract *StorkContractCaller) GetTemporalNumericValueUnsafeV1(opts 
 	out0 := *abi.ConvertType(out[0], new(StorkStructsTemporalNumericValue)).(*StorkStructsTemporalNumericValue)
 
 	return out0, err
-
 }
 
 // GetTemporalNumericValueUnsafeV1 is a free data retrieval call binding the contract method 0xf69058c1.
@@ -274,9 +270,8 @@ func (_StorkContract *StorkContractCallerSession) GetTemporalNumericValueUnsafeV
 //
 // Solidity: function getTemporalNumericValueV1(bytes32 id) view returns((uint64,int192) value)
 func (_StorkContract *StorkContractCaller) GetTemporalNumericValueV1(opts *bind.CallOpts, id [32]byte) (StorkStructsTemporalNumericValue, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "getTemporalNumericValueV1", id)
-
 	if err != nil {
 		return *new(StorkStructsTemporalNumericValue), err
 	}
@@ -284,7 +279,6 @@ func (_StorkContract *StorkContractCaller) GetTemporalNumericValueV1(opts *bind.
 	out0 := *abi.ConvertType(out[0], new(StorkStructsTemporalNumericValue)).(*StorkStructsTemporalNumericValue)
 
 	return out0, err
-
 }
 
 // GetTemporalNumericValueV1 is a free data retrieval call binding the contract method 0x19af7a40.
@@ -305,9 +299,8 @@ func (_StorkContract *StorkContractCallerSession) GetTemporalNumericValueV1(id [
 //
 // Solidity: function getUpdateFeeV1(((uint64,int192),bytes32,bytes32,bytes32,bytes32,bytes32,uint8)[] updateData) view returns(uint256 feeAmount)
 func (_StorkContract *StorkContractCaller) GetUpdateFeeV1(opts *bind.CallOpts, updateData []StorkStructsTemporalNumericValueInput) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "getUpdateFeeV1", updateData)
-
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -315,7 +308,6 @@ func (_StorkContract *StorkContractCaller) GetUpdateFeeV1(opts *bind.CallOpts, u
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
-
 }
 
 // GetUpdateFeeV1 is a free data retrieval call binding the contract method 0xb2255ba3.
@@ -336,9 +328,8 @@ func (_StorkContract *StorkContractCallerSession) GetUpdateFeeV1(updateData []St
 //
 // Solidity: function owner() view returns(address)
 func (_StorkContract *StorkContractCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "owner")
-
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -346,7 +337,6 @@ func (_StorkContract *StorkContractCaller) Owner(opts *bind.CallOpts) (common.Ad
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
-
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -367,9 +357,8 @@ func (_StorkContract *StorkContractCallerSession) Owner() (common.Address, error
 //
 // Solidity: function proxiableUUID() view returns(bytes32)
 func (_StorkContract *StorkContractCaller) ProxiableUUID(opts *bind.CallOpts) ([32]byte, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "proxiableUUID")
-
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -377,7 +366,6 @@ func (_StorkContract *StorkContractCaller) ProxiableUUID(opts *bind.CallOpts) ([
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
 
 	return out0, err
-
 }
 
 // ProxiableUUID is a free data retrieval call binding the contract method 0x52d1902d.
@@ -398,9 +386,8 @@ func (_StorkContract *StorkContractCallerSession) ProxiableUUID() ([32]byte, err
 //
 // Solidity: function singleUpdateFeeInWei() view returns(uint256)
 func (_StorkContract *StorkContractCaller) SingleUpdateFeeInWei(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "singleUpdateFeeInWei")
-
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -408,7 +395,6 @@ func (_StorkContract *StorkContractCaller) SingleUpdateFeeInWei(opts *bind.CallO
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
-
 }
 
 // SingleUpdateFeeInWei is a free data retrieval call binding the contract method 0x48b6404d.
@@ -429,9 +415,8 @@ func (_StorkContract *StorkContractCallerSession) SingleUpdateFeeInWei() (*big.I
 //
 // Solidity: function storkPublicKey() view returns(address)
 func (_StorkContract *StorkContractCaller) StorkPublicKey(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "storkPublicKey")
-
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -439,7 +424,6 @@ func (_StorkContract *StorkContractCaller) StorkPublicKey(opts *bind.CallOpts) (
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
-
 }
 
 // StorkPublicKey is a free data retrieval call binding the contract method 0x8eeae4a7.
@@ -460,9 +444,8 @@ func (_StorkContract *StorkContractCallerSession) StorkPublicKey() (common.Addre
 //
 // Solidity: function validTimePeriodSeconds() view returns(uint256)
 func (_StorkContract *StorkContractCaller) ValidTimePeriodSeconds(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "validTimePeriodSeconds")
-
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -470,7 +453,6 @@ func (_StorkContract *StorkContractCaller) ValidTimePeriodSeconds(opts *bind.Cal
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
-
 }
 
 // ValidTimePeriodSeconds is a free data retrieval call binding the contract method 0xcb718a9b.
@@ -491,9 +473,8 @@ func (_StorkContract *StorkContractCallerSession) ValidTimePeriodSeconds() (*big
 //
 // Solidity: function verifyMerkleRoot(bytes32[] leaves, bytes32 root) pure returns(bool)
 func (_StorkContract *StorkContractCaller) VerifyMerkleRoot(opts *bind.CallOpts, leaves [][32]byte, root [32]byte) (bool, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "verifyMerkleRoot", leaves, root)
-
 	if err != nil {
 		return *new(bool), err
 	}
@@ -501,7 +482,6 @@ func (_StorkContract *StorkContractCaller) VerifyMerkleRoot(opts *bind.CallOpts,
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
-
 }
 
 // VerifyMerkleRoot is a free data retrieval call binding the contract method 0x44ecc82c.
@@ -522,9 +502,8 @@ func (_StorkContract *StorkContractCallerSession) VerifyMerkleRoot(leaves [][32]
 //
 // Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, uint256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
 func (_StorkContract *StorkContractCaller) VerifyPublisherSignatureV1(opts *bind.CallOpts, oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "verifyPublisherSignatureV1", oraclePubKey, assetPairId, timestamp, value, r, s, v)
-
 	if err != nil {
 		return *new(bool), err
 	}
@@ -532,7 +511,6 @@ func (_StorkContract *StorkContractCaller) VerifyPublisherSignatureV1(opts *bind
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
-
 }
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0xd83cfe2c.
@@ -553,9 +531,8 @@ func (_StorkContract *StorkContractCallerSession) VerifyPublisherSignatureV1(ora
 //
 // Solidity: function verifyPublisherSignaturesV1((address,string,uint64,uint256,bytes32,bytes32,uint8)[] signatures, bytes32 merkleRoot) pure returns(bool)
 func (_StorkContract *StorkContractCaller) VerifyPublisherSignaturesV1(opts *bind.CallOpts, signatures []StorkStructsPublisherSignature, merkleRoot [32]byte) (bool, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "verifyPublisherSignaturesV1", signatures, merkleRoot)
-
 	if err != nil {
 		return *new(bool), err
 	}
@@ -563,7 +540,6 @@ func (_StorkContract *StorkContractCaller) VerifyPublisherSignaturesV1(opts *bin
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
-
 }
 
 // VerifyPublisherSignaturesV1 is a free data retrieval call binding the contract method 0x1519e36c.
@@ -584,9 +560,8 @@ func (_StorkContract *StorkContractCallerSession) VerifyPublisherSignaturesV1(si
 //
 // Solidity: function verifyStorkSignatureV1(address storkPubKey, bytes32 id, uint256 recvTime, int256 quantizedValue, bytes32 publisherMerkleRoot, bytes32 valueComputeAlgHash, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
 func (_StorkContract *StorkContractCaller) VerifyStorkSignatureV1(opts *bind.CallOpts, storkPubKey common.Address, id [32]byte, recvTime *big.Int, quantizedValue *big.Int, publisherMerkleRoot [32]byte, valueComputeAlgHash [32]byte, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "verifyStorkSignatureV1", storkPubKey, id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)
-
 	if err != nil {
 		return *new(bool), err
 	}
@@ -594,7 +569,6 @@ func (_StorkContract *StorkContractCaller) VerifyStorkSignatureV1(opts *bind.Cal
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
-
 }
 
 // VerifyStorkSignatureV1 is a free data retrieval call binding the contract method 0x2a6cd210.
@@ -615,9 +589,8 @@ func (_StorkContract *StorkContractCallerSession) VerifyStorkSignatureV1(storkPu
 //
 // Solidity: function version() pure returns(string)
 func (_StorkContract *StorkContractCaller) Version(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
+	var out []any
 	err := _StorkContract.contract.Call(opts, &out, "version")
-
 	if err != nil {
 		return *new(string), err
 	}
@@ -625,7 +598,6 @@ func (_StorkContract *StorkContractCaller) Version(opts *bind.CallOpts) (string,
 	out0 := *abi.ConvertType(out[0], new(string)).(*string)
 
 	return out0, err
-
 }
 
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
@@ -887,7 +859,6 @@ type StorkContractInitialized struct {
 //
 // Solidity: event Initialized(uint64 version)
 func (_StorkContract *StorkContractFilterer) FilterInitialized(opts *bind.FilterOpts) (*StorkContractInitializedIterator, error) {
-
 	logs, sub, err := _StorkContract.contract.FilterLogs(opts, "Initialized")
 	if err != nil {
 		return nil, err
@@ -899,7 +870,6 @@ func (_StorkContract *StorkContractFilterer) FilterInitialized(opts *bind.Filter
 //
 // Solidity: event Initialized(uint64 version)
 func (_StorkContract *StorkContractFilterer) WatchInitialized(opts *bind.WatchOpts, sink chan<- *StorkContractInitialized) (event.Subscription, error) {
-
 	logs, sub, err := _StorkContract.contract.WatchLogs(opts, "Initialized")
 	if err != nil {
 		return nil, err
@@ -1022,12 +992,11 @@ type StorkContractOwnershipTransferred struct {
 //
 // Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 func (_StorkContract *StorkContractFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*StorkContractOwnershipTransferredIterator, error) {
-
-	var previousOwnerRule []interface{}
+	var previousOwnerRule []any
 	for _, previousOwnerItem := range previousOwner {
 		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
 	}
-	var newOwnerRule []interface{}
+	var newOwnerRule []any
 	for _, newOwnerItem := range newOwner {
 		newOwnerRule = append(newOwnerRule, newOwnerItem)
 	}
@@ -1043,12 +1012,11 @@ func (_StorkContract *StorkContractFilterer) FilterOwnershipTransferred(opts *bi
 //
 // Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 func (_StorkContract *StorkContractFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *StorkContractOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
-
-	var previousOwnerRule []interface{}
+	var previousOwnerRule []any
 	for _, previousOwnerItem := range previousOwner {
 		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
 	}
-	var newOwnerRule []interface{}
+	var newOwnerRule []any
 	for _, newOwnerItem := range newOwner {
 		newOwnerRule = append(newOwnerRule, newOwnerItem)
 	}
@@ -1174,8 +1142,7 @@ type StorkContractUpgraded struct {
 //
 // Solidity: event Upgraded(address indexed implementation)
 func (_StorkContract *StorkContractFilterer) FilterUpgraded(opts *bind.FilterOpts, implementation []common.Address) (*StorkContractUpgradedIterator, error) {
-
-	var implementationRule []interface{}
+	var implementationRule []any
 	for _, implementationItem := range implementation {
 		implementationRule = append(implementationRule, implementationItem)
 	}
@@ -1191,8 +1158,7 @@ func (_StorkContract *StorkContractFilterer) FilterUpgraded(opts *bind.FilterOpt
 //
 // Solidity: event Upgraded(address indexed implementation)
 func (_StorkContract *StorkContractFilterer) WatchUpgraded(opts *bind.WatchOpts, sink chan<- *StorkContractUpgraded, implementation []common.Address) (event.Subscription, error) {
-
-	var implementationRule []interface{}
+	var implementationRule []any
 	for _, implementationItem := range implementation {
 		implementationRule = append(implementationRule, implementationItem)
 	}
@@ -1320,8 +1286,7 @@ type StorkContractValueUpdate struct {
 //
 // Solidity: event ValueUpdate(bytes32 indexed id, uint64 timestampNs, int192 quantizedValue)
 func (_StorkContract *StorkContractFilterer) FilterValueUpdate(opts *bind.FilterOpts, id [][32]byte) (*StorkContractValueUpdateIterator, error) {
-
-	var idRule []interface{}
+	var idRule []any
 	for _, idItem := range id {
 		idRule = append(idRule, idItem)
 	}
@@ -1337,8 +1302,7 @@ func (_StorkContract *StorkContractFilterer) FilterValueUpdate(opts *bind.Filter
 //
 // Solidity: event ValueUpdate(bytes32 indexed id, uint64 timestampNs, int192 quantizedValue)
 func (_StorkContract *StorkContractFilterer) WatchValueUpdate(opts *bind.WatchOpts, sink chan<- *StorkContractValueUpdate, id [][32]byte) (event.Subscription, error) {
-
-	var idRule []interface{}
+	var idRule []any
 	for _, idItem := range id {
 		idRule = append(idRule, idItem)
 	}

@@ -132,7 +132,7 @@ func (r *boringVaultEvmDataSource) getPrice() (float64, error) {
 	return calculatePrice(result, r.decimals)
 }
 
-func calculatePrice(result []interface{}, decimals int8) (float64, error) {
+func calculatePrice(result []any, decimals int8) (float64, error) {
 	price, ok := result[0].(*big.Int)
 	if !ok {
 		return -1, fmt.Errorf("failed to convert price to big int: %v", ok)

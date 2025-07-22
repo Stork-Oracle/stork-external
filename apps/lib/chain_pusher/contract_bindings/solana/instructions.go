@@ -6,6 +6,7 @@ package contract_bindings_solana
 import (
 	"bytes"
 	"fmt"
+
 	ag_spew "github.com/davecgh/go-spew/spew"
 	ag_binary "github.com/gagliardetto/binary"
 	ag_solanago "github.com/gagliardetto/solana-go"
@@ -130,7 +131,7 @@ func (inst *Instruction) MarshalWithEncoder(encoder *ag_binary.Encoder) error {
 	return encoder.Encode(inst.Impl)
 }
 
-func registryDecodeInstruction(accounts []*ag_solanago.AccountMeta, data []byte) (interface{}, error) {
+func registryDecodeInstruction(accounts []*ag_solanago.AccountMeta, data []byte) (any, error) {
 	inst, err := decodeInstruction(accounts, data)
 	if err != nil {
 		return nil, err

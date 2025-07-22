@@ -56,9 +56,9 @@ func CallEthereumFunction(
 	functionName string,
 	valueId types.ValueId,
 	logger zerolog.Logger,
-) ([]interface{}, error) {
+) ([]any, error) {
 	// retry with exponential backoff
-	var result []interface{}
+	var result []any
 	delay := baseRetryDelay
 	var queryError error
 	for attempt := 0; attempt < maxQueryAttempts; attempt++ {

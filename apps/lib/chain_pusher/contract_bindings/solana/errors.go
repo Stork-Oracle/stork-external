@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	ag_jsonrpc "github.com/gagliardetto/solana-go/rpc/jsonrpc"
 )
 
@@ -15,6 +16,7 @@ var (
 	_ fmt.Formatter        = nil
 	_                      = errors.ErrUnsupported
 )
+
 var (
 	ErrInsufficientFunds = &customErrorDef{
 		code: 6000,
@@ -88,12 +90,12 @@ func DecodeCustomError(rpcErr error) (err error, ok bool) {
 func decodeErrorCode(rpcErr error) (errorCode int, ok bool) {
 	var jErr *ag_jsonrpc.RPCError
 	if errors.As(rpcErr, &jErr) && jErr.Data != nil {
-		if root, o := jErr.Data.(map[string]interface{}); o {
-			if rootErr, o := root["err"].(map[string]interface{}); o {
+		if root, o := jErr.Data.(map[string]any); o {
+			if rootErr, o := root["err"].(map[string]any); o {
 				if rootErrInstructionError, o := rootErr["InstructionError"]; o {
-					if rootErrInstructionErrorItems, o := rootErrInstructionError.([]interface{}); o {
+					if rootErrInstructionErrorItems, o := rootErrInstructionError.([]any); o {
 						if len(rootErrInstructionErrorItems) == 2 {
-							if v, o := rootErrInstructionErrorItems[1].(map[string]interface{}); o {
+							if v, o := rootErrInstructionErrorItems[1].(map[string]any); o {
 								if v2, o := v["Custom"].(json.Number); o {
 									if code, err := v2.Int64(); err == nil {
 										ok = true

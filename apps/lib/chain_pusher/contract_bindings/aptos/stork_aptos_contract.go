@@ -65,7 +65,6 @@ func NewStorkContract(rpcUrl string, contractAddress string, key string) (*Stork
 
 	privateKey := &crypto.Ed25519PrivateKey{}
 	err = privateKey.FromHex(formattedPrivateKey)
-
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +107,13 @@ func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetId) (Te
 		return TemporalNumericValue{}, fmt.Errorf("empty response")
 	}
 
-	responseMap := value[0].(map[string]interface{})
+	responseMap := value[0].(map[string]any)
 	timestamp, err := strconv.ParseUint(responseMap["timestamp_ns"].(string), 10, 64)
 	if err != nil {
 		return TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp: %w", err)
 	}
 
-	quantizedValue := responseMap["quantized_value"].(map[string]interface{})
+	quantizedValue := responseMap["quantized_value"].(map[string]any)
 	magnitude := new(big.Int)
 	magnitude.SetString(quantizedValue["magnitude"].(string), 10)
 	negative := quantizedValue["negative"].(bool)

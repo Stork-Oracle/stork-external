@@ -28,13 +28,13 @@ func TestDuplicateValueId(t *testing.T) {
 	_, _, err := BuildDataSources([]types.DataProviderSourceConfig{
 		{
 			Id: "fake1",
-			Config: map[string]interface{}{
+			Config: map[string]any{
 				"dataSource": fakeDataSourceId,
 			},
 		},
 		{
 			Id: "fake1",
-			Config: map[string]interface{}{
+			Config: map[string]any{
 				"dataSource": fakeDataSourceId,
 			},
 		},
