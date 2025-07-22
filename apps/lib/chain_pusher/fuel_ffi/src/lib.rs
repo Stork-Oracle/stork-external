@@ -43,9 +43,7 @@ pub struct FuelConfig {
 }
 
 pub struct FuelClient {
-    provider: Provider,
     wallet: WalletUnlocked,
-    contract_id: ContractId,
     contract: StorkContract<WalletUnlocked>,
     rt: Arc<Runtime>,
 }
@@ -70,9 +68,7 @@ impl FuelClient {
         let contract = StorkContract::new(contract_id, wallet.clone());
 
         Ok(FuelClient {
-            provider,
             wallet,
-            contract_id,
             contract,
             rt,
         })
