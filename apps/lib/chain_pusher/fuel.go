@@ -21,47 +21,45 @@ import (
 )
 
 type FuelContractInteractor struct {
-	logger      zerolog.Logger
-	client      *C.FuelClient
-	rpcUrl      string
-	contractId  string
-	pollingPeriod int
+	logger     zerolog.Logger
+	client     *C.FuelClient
+	rpcUrl     string
+	contractId string
 }
 
 type FuelConfig struct {
-	RpcUrl         string `json:"rpc_url"`
+	RpcUrl          string `json:"rpc_url"`
 	ContractAddress string `json:"contract_address"`
-	PrivateKey     string `json:"private_key"`
+	PrivateKey      string `json:"private_key"`
 }
 
 type FuelTemporalNumericValue struct {
-	TimestampNs     uint64 `json:"timestamp_ns"`
-	QuantizedValue  string `json:"quantized_value"` // Using string for i128
+	TimestampNs    uint64 `json:"timestamp_ns"`
+	QuantizedValue string `json:"quantized_value"` // Using string for i128
 }
 
 type FuelTemporalNumericValueInput struct {
-	TemporalNumericValue    FuelTemporalNumericValue `json:"temporal_numeric_value"`
-	Id                      string                   `json:"id"`
-	PublisherMerkleRoot     string                   `json:"publisher_merkle_root"`
-	ValueComputeAlgHash     string                   `json:"value_compute_alg_hash"`
-	R                       string                   `json:"r"`
-	S                       string                   `json:"s"`
-	V                       uint8                    `json:"v"`
+	TemporalNumericValue FuelTemporalNumericValue `json:"temporal_numeric_value"`
+	Id                   string                   `json:"id"`
+	PublisherMerkleRoot  string                   `json:"publisher_merkle_root"`
+	ValueComputeAlgHash  string                   `json:"value_compute_alg_hash"`
+	R                    string                   `json:"r"`
+	S                    string                   `json:"s"`
+	V                    uint8                    `json:"v"`
 }
 
 func NewFuelContractInteractor(
 	rpcUrl string,
 	contractAddress string,
 	privateKey string,
-	pollingPeriod int,
 	logger zerolog.Logger,
 ) (*FuelContractInteractor, error) {
 	logger = logger.With().Str("component", "fuel-contract-interactor").Logger()
 
 	config := FuelConfig{
-		RpcUrl:         rpcUrl,
+		RpcUrl:          rpcUrl,
 		ContractAddress: contractAddress,
-		PrivateKey:     privateKey,
+		PrivateKey:      privateKey,
 	}
 
 	configJson, err := json.Marshal(config)
@@ -78,16 +76,15 @@ func NewFuelContractInteractor(
 	}
 
 	return &FuelContractInteractor{
-		logger:        logger,
-		client:        client,
-		rpcUrl:        rpcUrl,
-		contractId:    contractAddress,
-		pollingPeriod: pollingPeriod,
+		logger:     logger,
+		client:     client,
+		rpcUrl:     rpcUrl,
+		contractId: contractAddress,
 	}, nil
 }
 
 func (fci *FuelContractInteractor) ListenContractEvents(
-	ctx context.Context, 
+	ctx context.Context,
 	ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	fci.logger.Warn().Msg("Fuel does not currently support listening to events via websocket, falling back to polling")
@@ -139,8 +136,8 @@ func (fci *FuelContractInteractor) PullValues(
 		quantizedValueBig.SetString(fuelValue.QuantizedValue, 10)
 
 		internalValue := InternalTemporalNumericValue{
-			TimestampNs:     fuelValue.TimestampNs,
-			QuantizedValue:  quantizedValueBig,
+			TimestampNs:    fuelValue.TimestampNs,
+			QuantizedValue: quantizedValueBig,
 		}
 
 		result[assetId] = internalValue
@@ -157,7 +154,7 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 	}
 
 	var inputs []FuelTemporalNumericValueInput
-	
+
 	for _, update := range priceUpdates {
 		if update.StorkSignedPrice == nil {
 			fci.logger.Error().Str("asset_id", string(update.AssetId)).Msg("StorkSignedPrice is nil")
@@ -255,10 +252,10 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 
 func (fci *FuelContractInteractor) GetWalletBalance() (float64, error) {
 	balance := C.fuel_get_wallet_balance(fci.client)
-	
+
 	// Convert from wei to ETH (assuming Fuel uses similar units)
 	balanceFloat := float64(balance) / 1e9 // Fuel uses 9 decimals
-	
+
 	return balanceFloat, nil
 }
 

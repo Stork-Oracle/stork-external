@@ -71,7 +71,7 @@ func runFuelPush(cmd *cobra.Command, args []string) {
 		privateKeyStr = privateKeyStr[:len(privateKeyStr)-1]
 	}
 
-	fuelInteractor, err := NewFuelContractInteractor(chainRpcUrl, contractAddress, privateKeyStr, pollingPeriod, logger)
+	fuelInteractor, err := NewFuelContractInteractor(chainRpcUrl, contractAddress, privateKeyStr, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize Fuel contract interactor")
 	}
