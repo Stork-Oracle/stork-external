@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.101.3
+  Fuels version: 0.100.6
   Forc version: 0.68.4
   Fuel-Core version: 0.43.2
 */
@@ -34,8 +34,8 @@ export type StateInput = Enum<{ Uninitialized: undefined, Initialized: IdentityI
 export type StateOutput = Enum<{ Uninitialized: void, Initialized: IdentityOutput, Revoked: void }>;
 export enum StorkErrorInput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
 export enum StorkErrorOutput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
-export type StorkEventInput = Enum<{ ValueUpdate: [] }>;
-export type StorkEventOutput = StorkEventInput;
+export type StorkEventInput = Enum<{ ValueUpdate: [], Initialized: undefined }>;
+export type StorkEventOutput = Enum<{ ValueUpdate: [], Initialized: void }>;
 
 export type AddressInput = { bits: string };
 export type AddressOutput = AddressInput;
@@ -43,6 +43,8 @@ export type ContractIdInput = { bits: string };
 export type ContractIdOutput = ContractIdInput;
 export type I128Input = { underlying: U128Input };
 export type I128Output = { underlying: U128Output };
+export type Secp256k1Input = { bits: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish] };
+export type Secp256k1Output = { bits: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number] };
 export type TemporalNumericValueInput = { timestamp_ns: BigNumberish, quantized_value: I128Input };
 export type TemporalNumericValueOutput = { timestamp_ns: BN, quantized_value: I128Output };
 export type TemporalNumericValueInputInput = { temporal_numeric_value: TemporalNumericValueInput, id: string, publisher_merkle_root: string, value_compute_alg_hash: string, r: string, s: string, v: BigNumberish };
@@ -70,22 +72,22 @@ const abi = {
     {
       "type": "enum standards::src5::State",
       "concreteTypeId": "192bc7098e2fe60635a9918afb563e4e5419d386da2bdbf0d716b4bc8549802c",
-      "metadataTypeId": 1
+      "metadataTypeId": 2
     },
     {
       "type": "enum std::identity::Identity",
       "concreteTypeId": "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
-      "metadataTypeId": 2
+      "metadataTypeId": 3
     },
     {
       "type": "enum stork_sway_sdk::errors::StorkError",
       "concreteTypeId": "475d2d1b9b9adb315310b755e85d29aa6af66cc924069dc12bf2fa5b03de5339",
-      "metadataTypeId": 3
+      "metadataTypeId": 4
     },
     {
       "type": "enum stork_sway_sdk::events::StorkEvent",
       "concreteTypeId": "5a53bb2dd5fdf498df0233d9317f6c4235a9448fb63f5201eda779999df4ec0c",
-      "metadataTypeId": 4
+      "metadataTypeId": 5
     },
     {
       "type": "str",
@@ -94,22 +96,27 @@ const abi = {
     {
       "type": "struct TemporalNumericValueInput",
       "concreteTypeId": "e8a21696c4a15bbe0ae8d47a8d211519ed08608f38f3773dec46c2dc7b4a07b1",
-      "metadataTypeId": 7
+      "metadataTypeId": 8
     },
     {
       "type": "struct std::bytes::Bytes",
       "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-      "metadataTypeId": 9
+      "metadataTypeId": 10
+    },
+    {
+      "type": "struct std::crypto::secp256k1::Secp256k1",
+      "concreteTypeId": "6d4d0ccd6814bec591db0dbab58858957ed1d2a8ff11b10068141d6fa80e6b51",
+      "metadataTypeId": 13
     },
     {
       "type": "struct std::string::String",
       "concreteTypeId": "9a7f1d3e963c10e0a4ea70a8e20a4813d1dc5682e28f74cb102ae50d32f7f98c",
-      "metadataTypeId": 12
+      "metadataTypeId": 14
     },
     {
       "type": "struct std::vec::Vec<struct TemporalNumericValueInput>",
       "concreteTypeId": "253572200a9a05ec2068dd7b1ca0b715698384a2f2031a891048be42b845b24b",
-      "metadataTypeId": 15,
+      "metadataTypeId": 17,
       "typeArguments": [
         "e8a21696c4a15bbe0ae8d47a8d211519ed08608f38f3773dec46c2dc7b4a07b1"
       ]
@@ -117,17 +124,17 @@ const abi = {
     {
       "type": "struct std::vm::evm::evm_address::EvmAddress",
       "concreteTypeId": "05a44d8c3e00faf7ed545823b7a2b32723545d8715d87a0ab3cf65904948e8d2",
-      "metadataTypeId": 16
+      "metadataTypeId": 18
     },
     {
       "type": "struct stork_sway_sdk::temporal_numeric_value::TemporalNumericValue",
       "concreteTypeId": "6972e006137b782c482ffc099e21cc55fce9151a2096dd6582df22c9dc81bd9c",
-      "metadataTypeId": 17
+      "metadataTypeId": 19
     },
     {
       "type": "struct sway_libs::signed_integers::i128::I128",
       "concreteTypeId": "800c79ceece84e53174717a2a815bd77b362c31413c682c610e5b4954b4d1c10",
-      "metadataTypeId": 18
+      "metadataTypeId": 20
     },
     {
       "type": "u64",
@@ -149,13 +156,23 @@ const abi = {
         },
         {
           "name": "__tuple_element",
-          "typeId": 17
+          "typeId": 19
+        }
+      ]
+    },
+    {
+      "type": "[_; 64]",
+      "metadataTypeId": 1,
+      "components": [
+        {
+          "name": "__array_element",
+          "typeId": "c89951a24c6ca28c13fd1cfdc646b2b656d69e61a92b91023be7eb58eb914b6b"
         }
       ]
     },
     {
       "type": "enum standards::src5::State",
-      "metadataTypeId": 1,
+      "metadataTypeId": 2,
       "components": [
         {
           "name": "Uninitialized",
@@ -163,7 +180,7 @@ const abi = {
         },
         {
           "name": "Initialized",
-          "typeId": 2
+          "typeId": 3
         },
         {
           "name": "Revoked",
@@ -173,21 +190,21 @@ const abi = {
     },
     {
       "type": "enum std::identity::Identity",
-      "metadataTypeId": 2,
+      "metadataTypeId": 3,
       "components": [
         {
           "name": "Address",
-          "typeId": 8
+          "typeId": 9
         },
         {
           "name": "ContractId",
-          "typeId": 11
+          "typeId": 12
         }
       ]
     },
     {
       "type": "enum stork_sway_sdk::errors::StorkError",
-      "metadataTypeId": 3,
+      "metadataTypeId": 4,
       "components": [
         {
           "name": "InsufficientFee",
@@ -213,29 +230,33 @@ const abi = {
     },
     {
       "type": "enum stork_sway_sdk::events::StorkEvent",
-      "metadataTypeId": 4,
+      "metadataTypeId": 5,
       "components": [
         {
           "name": "ValueUpdate",
           "typeId": 0
+        },
+        {
+          "name": "Initialized",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         }
       ]
     },
     {
       "type": "generic T",
-      "metadataTypeId": 5
-    },
-    {
-      "type": "raw untyped ptr",
       "metadataTypeId": 6
     },
     {
+      "type": "raw untyped ptr",
+      "metadataTypeId": 7
+    },
+    {
       "type": "struct TemporalNumericValueInput",
-      "metadataTypeId": 7,
+      "metadataTypeId": 8,
       "components": [
         {
           "name": "temporal_numeric_value",
-          "typeId": 17
+          "typeId": 19
         },
         {
           "name": "id",
@@ -265,7 +286,7 @@ const abi = {
     },
     {
       "type": "struct std::address::Address",
-      "metadataTypeId": 8,
+      "metadataTypeId": 9,
       "components": [
         {
           "name": "bits",
@@ -275,11 +296,11 @@ const abi = {
     },
     {
       "type": "struct std::bytes::Bytes",
-      "metadataTypeId": 9,
+      "metadataTypeId": 10,
       "components": [
         {
           "name": "buf",
-          "typeId": 10
+          "typeId": 11
         },
         {
           "name": "len",
@@ -289,11 +310,11 @@ const abi = {
     },
     {
       "type": "struct std::bytes::RawBytes",
-      "metadataTypeId": 10,
+      "metadataTypeId": 11,
       "components": [
         {
           "name": "ptr",
-          "typeId": 6
+          "typeId": 7
         },
         {
           "name": "cap",
@@ -303,7 +324,7 @@ const abi = {
     },
     {
       "type": "struct std::contract_id::ContractId",
-      "metadataTypeId": 11,
+      "metadataTypeId": 12,
       "components": [
         {
           "name": "bits",
@@ -312,18 +333,28 @@ const abi = {
       ]
     },
     {
+      "type": "struct std::crypto::secp256k1::Secp256k1",
+      "metadataTypeId": 13,
+      "components": [
+        {
+          "name": "bits",
+          "typeId": 1
+        }
+      ]
+    },
+    {
       "type": "struct std::string::String",
-      "metadataTypeId": 12,
+      "metadataTypeId": 14,
       "components": [
         {
           "name": "bytes",
-          "typeId": 9
+          "typeId": 10
         }
       ]
     },
     {
       "type": "struct std::u128::U128",
-      "metadataTypeId": 13,
+      "metadataTypeId": 15,
       "components": [
         {
           "name": "upper",
@@ -337,11 +368,11 @@ const abi = {
     },
     {
       "type": "struct std::vec::RawVec",
-      "metadataTypeId": 14,
+      "metadataTypeId": 16,
       "components": [
         {
           "name": "ptr",
-          "typeId": 6
+          "typeId": 7
         },
         {
           "name": "cap",
@@ -349,20 +380,20 @@ const abi = {
         }
       ],
       "typeParameters": [
-        5
+        6
       ]
     },
     {
       "type": "struct std::vec::Vec",
-      "metadataTypeId": 15,
+      "metadataTypeId": 17,
       "components": [
         {
           "name": "buf",
-          "typeId": 14,
+          "typeId": 16,
           "typeArguments": [
             {
               "name": "",
-              "typeId": 5
+              "typeId": 6
             }
           ]
         },
@@ -372,12 +403,12 @@ const abi = {
         }
       ],
       "typeParameters": [
-        5
+        6
       ]
     },
     {
       "type": "struct std::vm::evm::evm_address::EvmAddress",
-      "metadataTypeId": 16,
+      "metadataTypeId": 18,
       "components": [
         {
           "name": "bits",
@@ -387,7 +418,7 @@ const abi = {
     },
     {
       "type": "struct stork_sway_sdk::temporal_numeric_value::TemporalNumericValue",
-      "metadataTypeId": 17,
+      "metadataTypeId": 19,
       "components": [
         {
           "name": "timestamp_ns",
@@ -395,17 +426,17 @@ const abi = {
         },
         {
           "name": "quantized_value",
-          "typeId": 18
+          "typeId": 20
         }
       ]
     },
     {
       "type": "struct sway_libs::signed_integers::i128::I128",
-      "metadataTypeId": 18,
+      "metadataTypeId": 20,
       "components": [
         {
           "name": "underlying",
-          "typeId": 13
+          "typeId": 15
         }
       ]
     }
@@ -634,12 +665,24 @@ const abi = {
       "concreteTypeId": "8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a"
     },
     {
-      "logId": "6508751692018611352",
-      "concreteTypeId": "5a53bb2dd5fdf498df0233d9317f6c4235a9448fb63f5201eda779999df4ec0c"
+      "logId": "8961848586872524460",
+      "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
     },
     {
       "logId": "14832741149864513620",
       "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb"
+    },
+    {
+      "logId": "7875965399694884549",
+      "concreteTypeId": "6d4d0ccd6814bec591db0dbab58858957ed1d2a8ff11b10068141d6fa80e6b51"
+    },
+    {
+      "logId": "406535131101199095",
+      "concreteTypeId": "05a44d8c3e00faf7ed545823b7a2b32723545d8715d87a0ab3cf65904948e8d2"
+    },
+    {
+      "logId": "6508751692018611352",
+      "concreteTypeId": "5a53bb2dd5fdf498df0233d9317f6c4235a9448fb63f5201eda779999df4ec0c"
     }
   ],
   "messagesTypes": [],
