@@ -174,11 +174,6 @@ Key components:
 - **Go Bindings**: `apps/lib/chain_pusher/fuel.go` - Go wrapper that calls FFI functions via CGO
 - **Contract Interface**: Implements the `ContractInteractor` interface for consistent API
 
-To rebuild the FFI library after making changes:
-```bash
-cd apps/lib/chain_pusher/fuel_ffi
-cargo build --release
-```
 
 ## CosmWasm Chain Setup
 
