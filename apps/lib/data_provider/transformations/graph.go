@@ -45,7 +45,7 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 	updateTime := time.Now()
 
 	// do a breadth-first traversal get all affected nodes
-	dirtyTransformationNodes := make(map[graph.Node]interface{})
+	dirtyTransformationNodes := make(map[graph.Node]any)
 	queue := make([]graph.Node, 0)
 	for valueId, sourceUpdate := range sourceUpdates {
 		queue = append(queue, tg.valueIdToNode[valueId])
@@ -91,7 +91,7 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 	return finalUpdateMap
 }
 
-func BuildTransformationGraph(transformations []types.DataProviderTransformationConfig, sourceIds map[types.ValueId]interface{}) (*TransformationGraph, error) {
+func BuildTransformationGraph(transformations []types.DataProviderTransformationConfig, sourceIds map[types.ValueId]any) (*TransformationGraph, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> value id

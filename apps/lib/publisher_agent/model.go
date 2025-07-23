@@ -40,7 +40,7 @@ const (
 
 // Incoming
 type (
-	Metadata                 map[string]interface{}
+	Metadata                 map[string]any
 	PriceUpdatePullWebsocket struct {
 		PublishTimestampNano int64    `json:"t"`
 		Asset                AssetId  `json:"a"`
@@ -50,10 +50,10 @@ type (
 )
 
 type ValueUpdatePushWebsocket struct {
-	PublishTimestampNano int64       `json:"t"`
-	Asset                AssetId     `json:"a"`
-	Value                interface{} `json:"v"`
-	Metadata             Metadata    `json:"m,omitempty"`
+	PublishTimestampNano int64    `json:"t"`
+	Asset                AssetId  `json:"a"`
+	Value                any      `json:"v"`
+	Metadata             Metadata `json:"m,omitempty"`
 }
 
 // Intermediate

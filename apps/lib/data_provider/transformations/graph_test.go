@@ -15,7 +15,7 @@ func TestBuildTransformations(t *testing.T) {
 	tests := []struct {
 		name            string
 		transformations []types.DataProviderTransformationConfig
-		knownSources    map[types.ValueId]interface{}
+		knownSources    map[types.ValueId]any
 		expectedOrder   []types.ValueId
 	}{
 		{
@@ -26,7 +26,7 @@ func TestBuildTransformations(t *testing.T) {
 					Formula: "test1 + 2",
 				},
 			},
-			knownSources: map[types.ValueId]interface{}{
+			knownSources: map[types.ValueId]any{
 				"test1": nil,
 			},
 			expectedOrder: []types.ValueId{"test1", "vtest1"},
@@ -43,7 +43,7 @@ func TestBuildTransformations(t *testing.T) {
 					Formula: "median(vtest1, 5)",
 				},
 			},
-			knownSources: map[types.ValueId]interface{}{
+			knownSources: map[types.ValueId]any{
 				"test1": nil,
 			},
 			expectedOrder: []types.ValueId{"test1", "vtest1", "vtest3"},
@@ -67,7 +67,7 @@ func TestInvalidConfigs(t *testing.T) {
 	tests := []struct {
 		name            string
 		transformations []types.DataProviderTransformationConfig
-		knownSources    map[types.ValueId]interface{}
+		knownSources    map[types.ValueId]any
 		expectedError   string
 	}{
 		{
@@ -78,7 +78,7 @@ func TestInvalidConfigs(t *testing.T) {
 					Formula: "test1 + 2",
 				},
 			},
-			knownSources: map[types.ValueId]interface{}{
+			knownSources: map[types.ValueId]any{
 				"test1": nil,
 			},
 			expectedError: "duplicate value id: test1",
@@ -91,7 +91,7 @@ func TestInvalidConfigs(t *testing.T) {
 					Formula: "test2 + 2",
 				},
 			},
-			knownSources: map[types.ValueId]interface{}{
+			knownSources: map[types.ValueId]any{
 				"test1": nil,
 			},
 			expectedError: "no such source or transformation id: test2",
@@ -108,7 +108,7 @@ func TestInvalidConfigs(t *testing.T) {
 					Formula: "t1 + 2",
 				},
 			},
-			knownSources: map[types.ValueId]interface{}{
+			knownSources: map[types.ValueId]any{
 				"test1": nil,
 			},
 			expectedError: "could not linearize price id graph - there may be circular dependencies",
@@ -139,7 +139,7 @@ func TestProcessSourceUpdates(t *testing.T) {
 		},
 	}
 
-	knownSourceIds := map[types.ValueId]interface{}{
+	knownSourceIds := map[types.ValueId]any{
 		"test1": nil,
 		"test2": nil,
 		"test3": nil,
@@ -268,7 +268,7 @@ func BenchmarkTransformationGraph_ProcessSourceUpdates(b *testing.B) {
 		})
 	}
 
-	knownSourceIds := map[types.ValueId]interface{}{
+	knownSourceIds := map[types.ValueId]any{
 		"test_source_a": nil,
 		"test_source_b": nil,
 	}
