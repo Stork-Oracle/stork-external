@@ -1,7 +1,7 @@
 package chain_pusher
 
 /*
-#cgo LDFLAGS: -L./fuel_ffi/target/release -lfuel_ffi
+#cgo LDFLAGS: -L../../../.lib -lfuel_ffi
 #cgo CFLAGS: -I./fuel_ffi/src
 #include "fuel.h"
 #include <stdlib.h>
