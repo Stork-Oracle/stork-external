@@ -289,14 +289,26 @@ pub extern "C" fn fuel_update_values(
         Err(_) => return std::ptr::null_mut(),
     };
 
-    match client.rt.block_on(client.update_temporal_numeric_values(inputs)) {
-        Ok(tx_hash) => {
+    // Use catch_unwind to handle panics from the fuels SDK
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        client.rt.block_on(client.update_temporal_numeric_values(inputs))
+    }));
+    
+    match result {
+        Ok(Ok(tx_hash)) => {
             match CString::new(tx_hash) {
                 Ok(c_str) => c_str.into_raw(),
                 Err(_) => std::ptr::null_mut(),
             }
         }
-        Err(_) => std::ptr::null_mut(),
+        Ok(Err(e)) => {
+            eprintln!("Transaction failed: {}", e);
+            std::ptr::null_mut()
+        }
+        Err(_) => {
+            eprintln!("Panic caught in fuel_update_values - transaction failed without revert_id");
+            std::ptr::null_mut()
+        }
     }
 }
 

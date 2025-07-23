@@ -235,7 +235,10 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 
 	txHashPtr := C.fuel_update_values(fci.client, inputsCStr)
 	if txHashPtr == nil {
-		return fmt.Errorf("failed to update values on fuel contract")
+		fci.logger.Error().
+			Int("num_inputs", len(inputs)).
+			Msg("Failed to update values on fuel contract - transaction failed or panicked")
+		return fmt.Errorf("failed to update values on fuel contract - this may be due to insufficient balance, invalid transaction parameters, or network issues")
 	}
 
 	// Get transaction hash and free it
