@@ -58,6 +58,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 421614,
     },
+    avalanceCChain: {
+      url: "https://avalanche-c-chain-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 43114,
+    },
     baseMainnet: {
       url: "https://mainnet.base.org",
       accounts: [PRIVATE_KEY],
@@ -395,6 +400,7 @@ const config: HardhatUserConfig = {
     // enabled: false, // uncomment this for ZKSync verifications
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
+      avalanceCChain: 'fake',
       berachainTestnet: 'fake',
       bevmTestnet: 'fake',
       bitlayerTestnet: 'fake',
@@ -447,6 +453,14 @@ const config: HardhatUserConfig = {
           apiURL: "https://api-sepolia.arbiscan.io/api",
           browserURL: "https://sepolia.arbiscan.io/",
         },
+      },
+      {
+        network: "avalanceCChain",
+        chainId: 43114,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api",
+          browserURL: "https://snowtrace.io/"
+        }
       },
       {
         network: "berachainTestnet",
