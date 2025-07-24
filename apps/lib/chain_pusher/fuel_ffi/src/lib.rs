@@ -8,14 +8,21 @@ use fuels::{
     prelude::*,
     crypto::SecretKey,
     types::{AssetId, ContractId, Bits256},
+    programs::calls::Execution,
 };
 use serde::{Deserialize, Serialize};
 
 // Generate the contract bindings from ABI
-abigen!(Contract(
-    name = "StorkContract", 
-    abi = "stork_abi.json"
-));
+abigen!(
+    Contract(
+        name = "StorkContract", 
+        abi = "stork_abi.json"
+    ),
+    Contract(
+        name = "ProxyContract",
+        abi = "proxy_abi.json"
+    )
+);
 
 // FFI-compatible structures for JSON serialization
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -44,6 +51,7 @@ pub struct FuelConfig {
 
 pub struct FuelClient {
     wallet: WalletUnlocked,
+    proxy_contract: ProxyContract<WalletUnlocked>,
     contract: StorkContract<WalletUnlocked>,
     rt: Arc<Runtime>,
 }
@@ -55,8 +63,9 @@ impl FuelClient {
         let secret_key = SecretKey::from_str(&config.private_key)?;
         let wallet = WalletUnlocked::new_from_private_key(secret_key, Some(provider.clone()));
         
-        // Parse contract address as hex string to ContractId
-        let contract_id = ContractId::from_str(&config.contract_address)?;
+        // Parse proxy contract address as hex string to ContractId
+        let proxy_contract_id = ContractId::from_str(&config.contract_address)?;
+        println!("Proxy Contract ID: {}", proxy_contract_id);
         
         let rt = Arc::new(
             tokio::runtime::Builder::new_multi_thread()
@@ -64,11 +73,25 @@ impl FuelClient {
                 .build()?
         );
 
-        // Create contract instance with generated bindings
-        let contract = StorkContract::new(contract_id, wallet.clone());
+        // Create proxy contract instance
+        let proxy_contract = ProxyContract::new(proxy_contract_id, wallet.clone());
+        
+        // Get the implementation contract ID from proxy
+        let implementation_result = proxy_contract
+            .methods()
+            .proxy_target()
+            .simulate(Execution::StateReadOnly)
+            .await?;
+            
+        let implementation_contract_id = implementation_result.value.1;
+        println!("Implementation Contract ID: {}", implementation_contract_id);
+
+        // Create implementation contract instance
+        let contract = StorkContract::new(implementation_contract_id, wallet.clone());
 
         Ok(FuelClient {
             wallet,
+            proxy_contract,
             contract,
             rt,
         })
@@ -79,10 +102,11 @@ impl FuelClient {
         let id_hex = hex::encode(id);
         let id_bits256 = Bits256::from_hex_str(&format!("0x{}", id_hex))?;
 
-        // Call the contract method get_temporal_numeric_value_unchecked_v1
-        let result = self.contract
+        // Call the implementation contract method
+        let result = self.proxy_contract
             .methods()
             .get_temporal_numeric_value_unchecked_v1(id_bits256)
+            .with_contracts(&[&self.contract])
             .simulate(Execution::StateReadOnly)
             .await;
 
@@ -106,7 +130,7 @@ impl FuelClient {
     pub async fn update_temporal_numeric_values(&self, inputs: Vec<FuelTemporalNumericValueInput>) -> std::result::Result<String, Box<dyn std::error::Error + Send + Sync>> {
         // Convert inputs to the generated contract types
         let mut contract_inputs = Vec::new();
-        
+
         for input in inputs {
             // Parse hex strings to Bits256
             let id = Bits256::from_hex_str(&input.id)?;
@@ -114,22 +138,22 @@ impl FuelClient {
             let value_compute_alg_hash = Bits256::from_hex_str(&input.value_compute_alg_hash)?;
             let r = Bits256::from_hex_str(&input.r)?;
             let s = Bits256::from_hex_str(&input.s)?;
-            
+
             // Parse quantized value as I128 with proper encoding (matching TypeScript logic)
             let quantized_value_num: i128 = input.temporal_numeric_value.quantized_value.parse()
                 .map_err(|e| format!("Failed to parse quantized value: {}", e))?;
-            
+
             // Create the generated I128 type with 2^127 offset (matching TypeScript stringToI128Input)
             use abigen_bindings::stork_contract_mod::sway_libs::signed_integers::i128::I128;
-            
+
             // Add 2^127 offset for proper signed integer representation
             let offset = 1u128 << 127; // 2^127
             let quantized_with_offset = (quantized_value_num as u128).wrapping_add(offset);
-            
+
             let i128_value = I128 {
                 underlying: quantized_with_offset,
             };
-            
+
             // Create the contract input using generated types
             let contract_input = TemporalNumericValueInput {
                 temporal_numeric_value: TemporalNumericValue {
@@ -143,14 +167,15 @@ impl FuelClient {
                 s,
                 v: input.v,
             };
-            
+
             contract_inputs.push(contract_input);
         }
 
-        // Get the update fee first
-        let fee_result = self.contract
+        // Get the update fee from implementation contract
+        let fee_result = self.proxy_contract
             .methods()
             .get_update_fee_v1(contract_inputs.clone())
+            .with_contracts(&[&self.contract])
             .simulate(Execution::StateReadOnly)
             .await
             .map_err(|e| {
@@ -160,10 +185,11 @@ impl FuelClient {
 
         let fee = fee_result.value;
 
-        // Call the update method with payment
-        let tx_response = self.contract
+        // Call through proxy contract with payment
+        let tx_response = self.proxy_contract
             .methods()
             .update_temporal_numeric_values_v1(contract_inputs.clone())
+            .with_contracts(&[&self.contract])
             .call_params(CallParameters::new(fee, AssetId::from_str("0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07").unwrap(), 1_000_000))
             .map_err(|e| {
                 eprintln!("Failed to set call parameters (fee: {}, gas_limit: 1000000): {}", fee, e);

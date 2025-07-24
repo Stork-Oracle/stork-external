@@ -30,7 +30,7 @@ type FuelContractInteractor struct {
 
 type FuelConfig struct {
 	RpcUrl          string `json:"rpc_url"`
-	ContractAddress string `json:"contract_address"`
+	ContractAddress string `json:"contract_address"` // This is the proxy contract address
 	PrivateKey      string `json:"private_key"`
 }
 
