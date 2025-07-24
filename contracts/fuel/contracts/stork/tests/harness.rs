@@ -7,6 +7,8 @@ use fuels::{
     programs::responses::CallResponse,
 };
 
+const CUSTOM_ASSET_ID: [u8; 32] = [1u8; 32];
+
 // Load abi from json
 abigen!(Contract(
     name = "Stork",
@@ -15,11 +17,23 @@ abigen!(Contract(
 
 // sets up the test environment, returns two wallets (first is the stork owner, second is not), the stork contract instance and its id
 async fn setup_tests() -> (WalletUnlocked, WalletUnlocked, Stork<WalletUnlocked>) {
+
+    let base_asset_config = AssetConfig {
+        id: AssetId::BASE,
+        num_coins: 1,
+        coin_amount: 1_000,
+    };
+
+    let custom_asset_config = AssetConfig {
+        id: AssetId::new(CUSTOM_ASSET_ID),
+        num_coins: 1,
+        coin_amount: 1_000,
+    };
+
     let mut wallets = launch_custom_provider_and_get_wallets(
-        WalletsConfig::new(
-            Some(2),             /* two wallets */
-            Some(1),             /* one coin per wallet */
-            Some(1_000), /* 1000 amount per coin */
+        WalletsConfig::new_multiple_assets(
+            2,
+            vec![base_asset_config, custom_asset_config],
         ),
         None,
         None,
@@ -190,9 +204,8 @@ async fn test_verify_stork_signature_v1_valid() {
     let stork_pub_key_bits = Bits256::from_hex_str("0x0000000000000000000000000a803F9b1CCe32e2773e0d2e98b37E0775cA5d44").unwrap();
     let stork_pub_key = EvmAddress::from(stork_pub_key_bits);
 
-    // construct quantized value - exactly matching the contract test
     let quantized_value_u128 = 62507457175499998000000u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let value_with_indent = quantized_value_u128 + indent;
     let quantized_value = I128 { underlying: value_with_indent };
 
@@ -221,7 +234,7 @@ async fn test_verify_stork_signature_v1_invalid() {
 
     // construct quantized value - exactly matching the contract test - just a little too high
     let quantized_value_u128 = 62507457175499999000000u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let value_with_indent = quantized_value_u128 + indent;
     let quantized_value = I128 { underlying: value_with_indent };
 
@@ -245,7 +258,7 @@ async fn test_update_temporal_numeric_value_v1_valid() {
 
     // construct quantized value - exactly matching the contract test
     let quantized_value_u128 = 62507457175499998000000u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let value_with_indent = quantized_value_u128 + indent;
     let quantized_value = I128 { underlying: value_with_indent };
     
@@ -303,7 +316,7 @@ async fn test_update_temporal_numeric_value_v1_negative() {
     
     // construct quantized value
     let quantized_value_u128 = 3020199000000u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let quantized_value = I128 { underlying: indent - quantized_value_u128 };
 
     let id = Bits256::from_hex_str("0x281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf").unwrap();
@@ -365,7 +378,7 @@ async fn test_update_temporal_numeric_value_v1_invalid() {
 
     // construct quantized value - just a little too high
     let quantized_value_u128 = 62507457175499998000001u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let value_with_indent = quantized_value_u128 + indent;
     let quantized_value = I128 { underlying: value_with_indent };
     
@@ -429,7 +442,7 @@ async fn test_update_temporal_numeric_values_v1_insufficient_fee() {
 
     // Use valid signature values
     let quantized_value_u128 = 62507457175499998000000u128;
-    let indent = 1u128 << 127;  // This is I128::indent() in Sway
+    let indent = 1u128 << 127;  
     let value_with_indent = quantized_value_u128 + indent;
     let quantized_value = I128 { underlying: value_with_indent };
     
@@ -473,6 +486,62 @@ async fn test_update_temporal_numeric_values_v1_insufficient_fee() {
 
     assert!(result.is_err());
 }
+
+#[tokio::test]
+async fn test_update_temporal_numeric_values_v1_wrong_asset() {
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
+
+    initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
+
+    let quantized_value_u128 = 62507457175499998000000u128;
+    let indent = 1u128 << 127;  
+    let value_with_indent = quantized_value_u128 + indent;
+    let quantized_value = I128 { underlying: value_with_indent };
+
+    let id = Bits256::from_hex_str("0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de").unwrap();
+    let recv_time = 1722632569208762117;
+    let publisher_merkle_root = Bits256::from_hex_str("0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318").unwrap();
+    let value_compute_alg_hash = Bits256::from_hex_str("0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba").unwrap();
+    let r = Bits256::from_hex_str("0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741").unwrap();
+    let s = Bits256::from_hex_str("0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758").unwrap();
+    let v = 28;
+
+    let temporal_numeric_value = TemporalNumericValue {
+        timestamp_ns: recv_time,
+        quantized_value: quantized_value.clone(),
+    };
+
+    let temporal_numeric_value_input = TemporalNumericValueInput {
+        temporal_numeric_value,
+        id,
+        publisher_merkle_root,
+        value_compute_alg_hash,
+        r,
+        s,
+        v,
+    };
+
+    let temporal_numeric_value_input_vec = vec![temporal_numeric_value_input];
+
+    let tx_policies = TxPolicies::default();
+
+    let asset_id = AssetId::new(CUSTOM_ASSET_ID);
+    
+    // Mint custom asset
+    let call_params = CallParameters::default().with_amount(1).with_asset_id(asset_id);
+    
+    let result = stork_instance
+        .with_account(not_stork_owner)
+        .methods()
+        .update_temporal_numeric_values_v1(temporal_numeric_value_input_vec)
+        .with_tx_policies(tx_policies)
+        .call_params(call_params).unwrap()
+        .call()
+        .await;
+
+    assert!(result.is_err());
+}
+
 
 
 

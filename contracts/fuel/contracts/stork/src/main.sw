@@ -267,6 +267,10 @@ impl Stork for Contract {
         }
 
         let required_fee = get_total_fee(num_updates);
+        if (std::call_frames::msg_asset_id() != AssetId::base()) {
+            log(StorkError::InsufficientFee);
+            revert(0)
+        }
         if (std::context::msg_amount() < required_fee) {
             log(StorkError::InsufficientFee);
             revert(0);
