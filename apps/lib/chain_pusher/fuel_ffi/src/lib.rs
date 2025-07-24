@@ -83,7 +83,7 @@ impl FuelClient {
         let result = self.contract
             .methods()
             .get_temporal_numeric_value_unchecked_v1(id_bits256)
-            .simulate()
+            .simulate(Execution::StateReadOnly)
             .await;
 
         match result {
@@ -151,7 +151,7 @@ impl FuelClient {
         let fee_result = self.contract
             .methods()
             .get_update_fee_v1(contract_inputs.clone())
-            .simulate()
+            .simulate(Execution::StateReadOnly)
             .await
             .map_err(|e| {
                 eprintln!("Failed to get update fee: {}", e);
@@ -265,6 +265,23 @@ pub extern "C" fn fuel_get_latest_value(
     }
 }
 
+static mut LAST_ERROR: Option<String> = None;
+
+#[no_mangle]
+pub extern "C" fn fuel_get_last_error() -> *mut c_char {
+    unsafe {
+        match &LAST_ERROR {
+            Some(error) => {
+                match CString::new(error.clone()) {
+                    Ok(c_str) => c_str.into_raw(),
+                    Err(_) => std::ptr::null_mut(),
+                }
+            }
+            None => std::ptr::null_mut(),
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn fuel_update_values(
     client: *mut FuelClient,
@@ -297,15 +314,34 @@ pub extern "C" fn fuel_update_values(
         Ok(Ok(tx_hash)) => {
             match CString::new(tx_hash) {
                 Ok(c_str) => c_str.into_raw(),
-                Err(_) => std::ptr::null_mut(),
+                Err(_) => {
+                    eprintln!("Failed to convert transaction hash to C string");
+                    std::ptr::null_mut()
+                }
             }
         }
         Ok(Err(e)) => {
-            eprintln!("Transaction failed: {}", e);
+            let error_msg = format!("{}", e);
+            unsafe {
+                LAST_ERROR = Some(error_msg.clone());
+            }
+            if error_msg.contains("UTXO input") && error_msg.contains("was already spent") {
+                eprintln!("UTXO_SPENT_ERROR: {}", e);
+            } else if error_msg.contains("insufficient funds") || error_msg.contains("InsufficientBalance") {
+                eprintln!("Transaction failed due to insufficient balance: {}", e);
+            } else if error_msg.contains("InvalidTransaction") || error_msg.contains("invalid") {
+                eprintln!("Transaction failed due to invalid parameters: {}", e);
+            } else if error_msg.contains("network") || error_msg.contains("connection") || error_msg.contains("timeout") {
+                eprintln!("Transaction failed due to network issues: {}", e);
+            } else if error_msg.contains("gas") || error_msg.contains("limit") {
+                eprintln!("Transaction failed due to gas limit exceeded: {}", e);
+            } else {
+                eprintln!("Transaction failed with unknown error: {}", e);
+            }
             std::ptr::null_mut()
         }
         Err(_) => {
-            eprintln!("Panic caught in fuel_update_values - transaction failed without revert_id");
+            eprintln!("Panic caught in fuel_update_values - transaction failed due to SDK panic (likely network timeout or contract error)");
             std::ptr::null_mut()
         }
     }
@@ -314,12 +350,16 @@ pub extern "C" fn fuel_update_values(
 #[no_mangle]
 pub extern "C" fn fuel_get_wallet_balance(client: *mut FuelClient) -> u64 {
     if client.is_null() {
+        eprintln!("fuel_get_wallet_balance called with null client");
         return 0;
     }
 
     let client = unsafe { &mut *client };
 
-    client.rt.block_on(client.get_wallet_balance()).unwrap_or_else(|_| 0)
+    client.rt.block_on(client.get_wallet_balance()).unwrap_or_else(|e| {
+        eprintln!("Failed to get wallet balance: {}", e);
+        0
+    })
 }
 
 #[no_mangle]

@@ -17,6 +17,7 @@ void fuel_client_free(FuelClient* client);
 char* fuel_get_latest_value(FuelClient* client, const uint8_t* id);
 char* fuel_update_values(FuelClient* client, const char* inputs_json);
 uint64_t fuel_get_wallet_balance(FuelClient* client);
+char* fuel_get_last_error();
 
 // Memory management
 void fuel_free_string(char* s);

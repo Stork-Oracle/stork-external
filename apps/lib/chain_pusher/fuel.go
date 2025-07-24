@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/rs/zerolog"
@@ -229,12 +230,45 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to marshal fuel inputs: %w", err)
 	}
 
+	// Validate inputs before FFI call
+	for i, input := range inputs {
+		if input.Id == "" || input.PublisherMerkleRoot == "" || input.ValueComputeAlgHash == "" {
+			fci.logger.Error().Int("input_index", i).Msg("Invalid input: missing required fields")
+			return fmt.Errorf("invalid input at index %d: missing required fields", i)
+		}
+		if input.R == "" || input.S == "" {
+			fci.logger.Error().Int("input_index", i).Msg("Invalid input: missing signature components")
+			return fmt.Errorf("invalid input at index %d: missing signature components", i)
+		}
+	}
+
 	// Call FFI function
 	inputsCStr := C.CString(string(inputsJson))
 	defer C.free(unsafe.Pointer(inputsCStr))
 
 	txHashPtr := C.fuel_update_values(fci.client, inputsCStr)
 	if txHashPtr == nil {
+		// Check if this was a UTXO spent error
+		lastErrorPtr := C.fuel_get_last_error()
+		if lastErrorPtr != nil {
+			lastError := C.GoString(lastErrorPtr)
+			C.fuel_free_string(lastErrorPtr)
+
+			if strings.Contains(lastError, "UTXO input") && strings.Contains(lastError, "was already spent") {
+				fci.logger.Warn().
+					Int("num_inputs", len(inputs)).
+					Str("error_details", lastError).
+					Msg("Transaction failed due to spent UTXO - likely concurrent transaction or wallet state issue")
+				return fmt.Errorf("transaction failed due to spent UTXO (concurrent transaction detected): %s", lastError)
+			} else {
+				fci.logger.Error().
+					Str("lastError", lastError).
+					Int("num_inputs", len(inputs)).
+					Msg("Failed to update values on fuel contract - transaction failed or panicked")
+				return fmt.Errorf("failed to update values on fuel contract")
+			}
+		}
+
 		fci.logger.Error().
 			Int("num_inputs", len(inputs)).
 			Msg("Failed to update values on fuel contract - transaction failed or panicked")
