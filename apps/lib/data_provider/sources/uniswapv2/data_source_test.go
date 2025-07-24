@@ -8,7 +8,7 @@ import (
 func TestCalculatePrice(t *testing.T) {
 	tests := []struct {
 		name               string
-		result             []interface{}
+		result             []any
 		baseTokenIndex     int8
 		quoteTokenIndex    int8
 		baseTokenDecimals  int8
@@ -17,7 +17,7 @@ func TestCalculatePrice(t *testing.T) {
 		expectedError      bool
 	}{
 		{
-			result: []interface{}{
+			result: []any{
 				big.NewInt(1000000),
 				big.NewInt(2000000000000000000),
 			},
@@ -29,7 +29,7 @@ func TestCalculatePrice(t *testing.T) {
 			expectedError:      false,
 		},
 		{
-			result: []interface{}{
+			result: []any{
 				big.NewInt(1000000),
 				big.NewInt(2000000000000000000),
 			},
@@ -41,7 +41,7 @@ func TestCalculatePrice(t *testing.T) {
 			expectedError:      false,
 		},
 		{
-			result: []interface{}{
+			result: []any{
 				big.NewInt(1000000),
 				big.NewInt(2000000000000000000),
 			},
@@ -53,7 +53,7 @@ func TestCalculatePrice(t *testing.T) {
 			expectedError:      false,
 		},
 		{
-			result: []interface{}{
+			result: []any{
 				big.NewInt(0),
 				big.NewInt(2000000000000000000),
 			},
@@ -65,7 +65,7 @@ func TestCalculatePrice(t *testing.T) {
 			expectedError:      true,
 		},
 		{
-			result: []interface{}{
+			result: []any{
 				big.NewInt(0),
 				big.NewInt(2000000000000000000),
 			},

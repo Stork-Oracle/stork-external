@@ -25,14 +25,16 @@ const CORE_MAINNET_API_KEY = vars.get("CORE_MAINNET_API_KEY");
 const ROOTSTOCK_TESTNET_API_KEY = vars.get("ROOTSTOCK_TESTNET_API_KEY");
 const SCROLL_MAINNET_API_KEY = vars.get("SCROLL_MAINNET_API_KEY");
 const SONEIUM_MAINNET_RPC_URL = vars.get("SONEIUM_MAINNET_RPC_URL");
+const ETHERSCAN_SOPHON_API_KEY = vars.get("ETHERSCAN_SOPHON_API_KEY");
 const SONEIUM_MAINNET_BLOCKSCOUT_URL = vars.get("SONEIUM_MAINNET_BLOCKSCOUT_URL");
 const CRONOS_L2_API_KEY = vars.get("CRONOS_L2_API_KEY");
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
   zksolc: {
-    version: "latest",
+    version: "1.5.15",
     settings: {
+      codegen: "yul",
       // find all available options in the official documentation
       // https://era.zksync.io/docs/tools/hardhat/hardhat-zksync-solc.html#configuration
     },
@@ -57,6 +59,11 @@ const config: HardhatUserConfig = {
       url: "https://sepolia-rollup.arbitrum.io/rpc",
       accounts: [PRIVATE_KEY],
       chainId: 421614,
+    },
+    avalanceCChain: {
+      url: "https://avalanche-c-chain-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 43114,
     },
     baseMainnet: {
       url: "https://mainnet.base.org",
@@ -395,6 +402,7 @@ const config: HardhatUserConfig = {
     // enabled: false, // uncomment this for ZKSync verifications
     apiKey: {
       arbitrumSepolia: ARBISCAN_API_KEY,
+      avalanceCChain: 'fake',
       berachainTestnet: 'fake',
       bevmTestnet: 'fake',
       bitlayerTestnet: 'fake',
@@ -429,6 +437,7 @@ const config: HardhatUserConfig = {
       scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
       soneiumMinato: 'fake',
+      sophonMainnet: ETHERSCAN_SOPHON_API_KEY,
       storyOdysseyTestnet: 'fake',
       tacTurin: 'fake',
       taraxaMainnet: 'fake',
@@ -447,6 +456,14 @@ const config: HardhatUserConfig = {
           apiURL: "https://api-sepolia.arbiscan.io/api",
           browserURL: "https://sepolia.arbiscan.io/",
         },
+      },
+      {
+        network: "avalanceCChain",
+        chainId: 43114,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api",
+          browserURL: "https://snowtrace.io/"
+        }
       },
       {
         network: "berachainTestnet",
@@ -711,6 +728,14 @@ const config: HardhatUserConfig = {
           apiURL: "https://explorer-testnet.soneium.org/api/",
           browserURL: "https://explorer-testnet.soneium.org/"
         }
+      },
+      {
+        network: "sophonMainnet",
+        chainId: 50104,
+        urls: {
+          apiURL: "https://api.sophscan.xyz/api",
+          browserURL: "https://sophscan.xyz",
+        },
       },
       {
         network: "storyOdysseyTestnet",
