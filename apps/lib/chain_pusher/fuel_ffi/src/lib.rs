@@ -296,7 +296,7 @@ static mut LAST_ERROR: Option<String> = None;
 #[no_mangle]
 pub extern "C" fn fuel_get_last_error() -> *mut c_char {
     unsafe {
-        match &LAST_ERROR {
+        match &raw const LAST_ERROR {
             Some(error) => {
                 match CString::new(error.clone()) {
                     Ok(c_str) => c_str.into_raw(),
