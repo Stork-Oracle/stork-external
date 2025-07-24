@@ -83,7 +83,7 @@ impl FuelClient {
         let result = self.contract
             .methods()
             .get_temporal_numeric_value_unchecked_v1(id_bits256)
-            .call()
+            .simulate()
             .await;
 
         match result {
@@ -151,7 +151,7 @@ impl FuelClient {
         let fee_result = self.contract
             .methods()
             .get_update_fee_v1(contract_inputs.clone())
-            .call()
+            .simulate()
             .await
             .map_err(|e| {
                 eprintln!("Failed to get update fee: {}", e);
@@ -159,7 +159,6 @@ impl FuelClient {
             })?;
 
         let fee = fee_result.value;
-        eprintln!("Update fee: {} (asset: BASE)", fee);
 
         // Call the update method with payment
         let tx_response = self.contract
