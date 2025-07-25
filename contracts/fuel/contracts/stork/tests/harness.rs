@@ -564,6 +564,14 @@ async fn test_ownership_transfer_owner() {
     
     // Verify the fee was actually updated
     assert_eq!(stork_instance.methods().single_update_fee_in_wei().call().await.unwrap().value, new_fee);
+
+    // Verify old owner can no longer call only_owner() guarded functions
+    let newer_fee = 10;
+    let res = stork_instance.clone().with_account(stork_owner).methods().update_single_update_fee_in_wei(newer_fee).call().await;
+    assert!(res.is_err());
+
+    // Verify the fee was not updated
+    assert_eq!(stork_instance.methods().single_update_fee_in_wei().call().await.unwrap().value, new_fee);
 }
 
 #[tokio::test]
