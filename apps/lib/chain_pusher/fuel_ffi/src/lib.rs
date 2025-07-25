@@ -47,6 +47,7 @@ pub struct FuelConfig {
     pub rpc_url: String,
     pub contract_address: String,
     pub private_key: String,
+    pub gas_asset_id: String,
 }
 
 pub struct FuelClient {
@@ -54,6 +55,7 @@ pub struct FuelClient {
     proxy_contract: ProxyContract<WalletUnlocked>,
     contract: StorkContract<WalletUnlocked>,
     rt: Arc<Runtime>,
+    gas_asset_id: AssetId,
 }
 
 impl FuelClient {
@@ -89,11 +91,15 @@ impl FuelClient {
         // Create implementation contract instance
         let contract = StorkContract::new(implementation_contract_id, wallet.clone());
 
+        // Parse gas asset ID
+        let gas_asset_id = AssetId::from_str(&config.gas_asset_id)?;
+
         Ok(FuelClient {
             wallet,
             proxy_contract,
             contract,
             rt,
+            gas_asset_id,
         })
     }
 
@@ -190,7 +196,7 @@ impl FuelClient {
             .methods()
             .update_temporal_numeric_values_v1(contract_inputs.clone())
             .with_contracts(&[&self.contract])
-            .call_params(CallParameters::new(fee, AssetId::from_str("0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07").unwrap(), 1_000_000))
+            .call_params(CallParameters::new(fee, self.gas_asset_id, 1_000_000))
             .map_err(|e| {
                 eprintln!("Failed to set call parameters (fee: {}, gas_limit: 1000000): {}", fee, e);
                 format!("Failed to set call parameters (fee: {}, gas_limit: 1000000): {}", fee, e)
@@ -211,7 +217,7 @@ impl FuelClient {
     }
 
     pub async fn get_wallet_balance(&self) -> std::result::Result<u64, Box<dyn std::error::Error + Send + Sync>> {
-        let balance = self.wallet.get_asset_balance(&AssetId::from_str("0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07").unwrap()).await?;
+        let balance = self.wallet.get_asset_balance(&self.gas_asset_id).await?;
         Ok(balance)
     }
 }

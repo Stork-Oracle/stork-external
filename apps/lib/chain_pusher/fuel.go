@@ -21,6 +21,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const GasAssetId = "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07" // Fuel ETH
+
 type FuelContractInteractor struct {
 	logger zerolog.Logger
 	client *C.FuelClient
@@ -30,6 +32,7 @@ type FuelConfig struct {
 	RpcUrl          string `json:"rpc_url"`
 	ContractAddress string `json:"contract_address"` // This is the proxy contract address
 	PrivateKey      string `json:"private_key"`
+	GasAssetId      string `json:"gas_asset_id"`
 }
 
 type FuelTemporalNumericValue struct {
@@ -59,6 +62,7 @@ func NewFuelContractInteractor(
 		RpcUrl:          rpcUrl,
 		ContractAddress: contractAddress,
 		PrivateKey:      privateKey,
+		GasAssetId:      GasAssetId,
 	}
 
 	configJson, err := json.Marshal(config)
