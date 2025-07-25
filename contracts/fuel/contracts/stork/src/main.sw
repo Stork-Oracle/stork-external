@@ -128,7 +128,9 @@ fn only_owner() {
         standards::src5::State::Initialized(owner) => {
             require(msg_sender().unwrap() == owner, "Only Owner");
         },
-        standards::src5::State::Revoked => {}
+        standards::src5::State::Revoked => {
+            revert(0);
+        }
     }
 }
 
