@@ -22,10 +22,8 @@ import (
 )
 
 type FuelContractInteractor struct {
-	logger     zerolog.Logger
-	client     *C.FuelClient
-	rpcUrl     string
-	contractId string
+	logger zerolog.Logger
+	client *C.FuelClient
 }
 
 type FuelConfig struct {
@@ -77,10 +75,8 @@ func NewFuelContractInteractor(
 	}
 
 	return &FuelContractInteractor{
-		logger:     logger,
-		client:     client,
-		rpcUrl:     rpcUrl,
-		contractId: contractAddress,
+		logger: logger,
+		client: client,
 	}, nil
 }
 
@@ -89,7 +85,6 @@ func (fci *FuelContractInteractor) ListenContractEvents(
 	ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
 	fci.logger.Warn().Msg("Fuel does not currently support listening to events via websocket, falling back to polling")
-	// TODO: Implement event listening when Fuel supports it
 }
 
 func (fci *FuelContractInteractor) PullValues(
@@ -228,18 +223,6 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 	inputsJson, err := json.Marshal(inputs)
 	if err != nil {
 		return fmt.Errorf("failed to marshal fuel inputs: %w", err)
-	}
-
-	// Validate inputs before FFI call
-	for i, input := range inputs {
-		if input.Id == "" || input.PublisherMerkleRoot == "" || input.ValueComputeAlgHash == "" {
-			fci.logger.Error().Int("input_index", i).Msg("Invalid input: missing required fields")
-			return fmt.Errorf("invalid input at index %d: missing required fields", i)
-		}
-		if input.R == "" || input.S == "" {
-			fci.logger.Error().Int("input_index", i).Msg("Invalid input: missing signature components")
-			return fmt.Errorf("invalid input at index %d: missing signature components", i)
-		}
 	}
 
 	// Call FFI function
