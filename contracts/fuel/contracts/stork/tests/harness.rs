@@ -1,10 +1,8 @@
 use fuels::{
-    prelude::*,
-    types::{
+    prelude::*, programs::responses::CallResponse, types::{
         Bits256,
-        EvmAddress,
-    },
-    programs::responses::CallResponse,
+        EvmAddress, Identity,
+    }
 };
 
 const CUSTOM_ASSET_ID: [u8; 32] = [1u8; 32];
@@ -542,6 +540,82 @@ async fn test_update_temporal_numeric_values_v1_wrong_asset() {
     assert!(result.is_err());
 }
 
+#[tokio::test]
+async fn test_ownership_transfer_owner() {
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
 
+    initialize_stork_default(&stork_instance, stork_owner.clone()).await.unwrap();
+
+    let new_owner = not_stork_owner.address();
+    
+    // Owner proposes new owner
+    stork_instance.methods().propose_owner(new_owner).call().await.unwrap();
+
+    // Proposed owner accepts ownership
+    stork_instance.clone().with_account(not_stork_owner.clone()).methods().accept_ownership().call().await.unwrap();
+
+    // Verify ownership has transferred by checking owner state
+    let owner_state = stork_instance.methods().owner().call().await.unwrap().value;
+    assert_eq!(owner_state, State::Initialized(Identity::Address(new_owner.into())));
+
+    // Verify new owner can call only_owner() guarded functions
+    let new_fee = 5;
+    stork_instance.clone().with_account(not_stork_owner).methods().update_single_update_fee_in_wei(new_fee).call().await.unwrap();
+    
+    // Verify the fee was actually updated
+    assert_eq!(stork_instance.methods().single_update_fee_in_wei().call().await.unwrap().value, new_fee);
+}
+
+#[tokio::test]
+async fn test_ownership_transfer_not_owner() {
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
+
+    initialize_stork_default(&stork_instance, stork_owner).await.unwrap();
+
+    let new_owner = not_stork_owner.address().clone();
+    
+    // Non-owner tries to propose new owner - should fail
+    let res = stork_instance.clone().with_account(not_stork_owner).methods().propose_owner(new_owner).call().await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
+async fn test_ownership_transfer_wrong_acceptor() {
+    let (stork_owner, not_stork_owner, stork_instance) = setup_tests().await;
+
+    initialize_stork_default(&stork_instance, stork_owner.clone()).await.unwrap();
+
+    // Create a third wallet for this test
+    let base_asset_config = AssetConfig {
+        id: AssetId::BASE,
+        num_coins: 1,
+        coin_amount: 1_000,
+    };
+
+    let mut wallets = launch_custom_provider_and_get_wallets(
+        WalletsConfig::new_multiple_assets(
+            1,
+            vec![base_asset_config],
+        ),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
+    let wrong_acceptor = wallets.pop().unwrap();
+
+    let proposed_owner = not_stork_owner.address();
+    
+    // Owner proposes new owner
+    stork_instance.methods().propose_owner(proposed_owner).call().await.unwrap();
+
+    // Wrong account tries to accept ownership - should fail
+    let res = stork_instance.clone().with_account(wrong_acceptor).methods().accept_ownership().call().await;
+    assert!(res.is_err());
+
+    // Verify ownership hasn't changed
+    let owner_state = stork_instance.methods().owner().call().await.unwrap().value;
+    assert_eq!(owner_state, State::Initialized(stork_owner.address().into()));
+}
 
 

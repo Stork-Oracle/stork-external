@@ -39,12 +39,12 @@ struct State {
 storage {
     /// The owner in storage.
     owner: standards::src5::State = standards::src5::State::Uninitialized,
+    proposed_owner: Identity = Identity::Address(Address::zero()),
     initialized: bool = false,
     initializing: bool = false,
     state: State = State {
         stork_public_key: EvmAddress::zero(),
         single_update_fee_in_wei: 0,
-        // valid_time_period_seconds: 0,
         latest_canonical_temporal_numeric_values: StorageMap::<b256, TemporalNumericValue> {},
     },
 }
@@ -174,6 +174,12 @@ abi Stork {
 
     #[storage(read, write)]
     fn update_stork_public_key(stork_public_key: EvmAddress);
+
+    #[storage(read, write)]
+    fn propose_owner(new_owner: Address);
+
+    #[storage(read, write)]
+    fn accept_ownership();
 }
 
 impl Stork for Contract {
@@ -306,6 +312,19 @@ impl Stork for Contract {
     #[storage(read, write)]
     fn update_stork_public_key(stork_public_key: EvmAddress) {
         _update_stork_public_key(stork_public_key)
+    }
+
+    #[storage(read, write)]
+    fn propose_owner(new_owner: Address) {
+        only_owner();
+        storage.proposed_owner.write(Identity::Address(new_owner));
+    }
+
+    #[storage(read, write)]
+    fn accept_ownership() {
+        require(storage.proposed_owner.read() == msg_sender().unwrap(), "Only proposed owner can accept ownership");
+        storage.owner.write(standards::src5::State::Initialized(storage.proposed_owner.read()));
+        storage.proposed_owner.write(Identity::Address(Address::zero()));
     }
 }
 
