@@ -20,7 +20,7 @@ mocks: $(GOBIN)/mockery
 # TODO: Add race checker
 .PHONY: test
 ## Run all Go tests
-test: $(LIBSTORK)
+test: $(LIBSTORK) $(LIBFUEL_FFI)
 	@$(GO) test -v ./...
 
 .PHONY: install-cosmwasm-libs
