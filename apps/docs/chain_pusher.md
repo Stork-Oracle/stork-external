@@ -138,8 +138,15 @@ go run ./cmd/chain_pusher/main.go aptos \
 
 ## Fuel Chain Setup
 
+The Fuel pusher uses Rust FFI bindings that wrap the official Fuel Rust SDK. The contract interactions are defined in the Fuel Sway smart contract located at `contracts/fuel/contracts/stork/`.
+
+Key components:
+- **FFI Library**: `apps/lib/chain_pusher/fuel_ffi/` - Rust library that provides C-compatible functions
+- **Go Bindings**: `apps/lib/chain_pusher/fuel.go` - Go wrapper that calls FFI functions via CGO
+- **Contract Interface**: Implements the `ContractInteractor` interface for consistent API
+
 ### Prerequisites
-The Fuel pusher uses the Rust Fuel SDK (version 0.70.4) under the hood via FFI (Foreign Function Interface). Before using the Fuel pusher, you need to:
+The Fuel pusher uses the Rust Fuel SDK under the hood via FFI (Foreign Function Interface). Before using the Fuel pusher, you need to:
 
 1. Install Rust: https://rustup.rs/
 2. Build the Fuel FFI library:
@@ -151,7 +158,7 @@ The Fuel pusher uses the Rust Fuel SDK (version 0.70.4) under the hood via FFI (
 ### Running the Fuel Pusher
 For full explanation of the flags, run:
 ```bash
-go run . fuel --help
+go run ./cmd/chain_pusher/main.go fuel --help
 ```
 
 Basic usage:
@@ -164,16 +171,6 @@ go run ./cmd/chain_pusher/main.go fuel \
     -f <asset-config-file> \
     -m <private-key-file>
 ```
-
-
-### Fuel Development Setup
-The Fuel pusher uses Rust FFI bindings that wrap the official Fuel Rust SDK. The contract interactions are defined in the Fuel Sway smart contract located at `contracts/fuel/contracts/stork/`.
-
-Key components:
-- **FFI Library**: `apps/lib/chain_pusher/fuel_ffi/` - Rust library that provides C-compatible functions
-- **Go Bindings**: `apps/lib/chain_pusher/fuel.go` - Go wrapper that calls FFI functions via CGO
-- **Contract Interface**: Implements the `ContractInteractor` interface for consistent API
-
 
 ## CosmWasm Chain Setup
 
