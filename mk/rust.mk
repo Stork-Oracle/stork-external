@@ -7,10 +7,6 @@ RUST_LIB_DIR:= $(CURDIR)/.lib
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-# Detect the host operating system
-UNAME_S := $(shell uname -s)
-UNAME_M := $(shell uname -m)
-
 # Define targets based on the host operating system. We compile for Linux within
 # docker, where we can respect the TARGETPLATFORM variable (set by docker itself
 # during the build). On macOS, we just want to compile something that will run
