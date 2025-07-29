@@ -67,3 +67,13 @@ func AptosPusherLogger(
 		Str("contractAddress", contractAddress).
 		Logger()
 }
+
+func FuelPusherLogger(
+	rpcUrl string,
+	contractAddress string,
+) zerolog.Logger {
+	return AppLogger("fuel").With().
+		Str("chainRpcUrl", rpcUrl).
+		Str("contractAddress", contractAddress).
+		Logger()
+}

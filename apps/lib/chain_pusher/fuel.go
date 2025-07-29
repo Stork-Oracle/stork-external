@@ -1,53 +1,19 @@
 package chain_pusher
 
-/*
-#cgo LDFLAGS: -L../../../.lib -lfuel_ffi
-#cgo CFLAGS: -I./fuel_ffi/src
-#include "fuel.h"
-#include <stdlib.h>
-*/
-import "C"
-
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
-	"strings"
-	"unsafe"
 
+	"github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/fuel"
 	"github.com/rs/zerolog"
 )
 
-const GasAssetId = "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07" // Fuel ETH
-
 type FuelContractInteractor struct {
-	logger zerolog.Logger
-	client *C.FuelClient
-}
-
-type FuelConfig struct {
-	RpcUrl          string `json:"rpc_url"`
-	ContractAddress string `json:"contract_address"` // This is the proxy contract address
-	PrivateKey      string `json:"private_key"`
-	GasAssetId      string `json:"gas_asset_id"`
-}
-
-type FuelTemporalNumericValue struct {
-	TimestampNs    uint64 `json:"timestamp_ns"`
-	QuantizedValue string `json:"quantized_value"` // Using string for i128
-}
-
-type FuelTemporalNumericValueInput struct {
-	TemporalNumericValue FuelTemporalNumericValue `json:"temporal_numeric_value"`
-	Id                   string                   `json:"id"`
-	PublisherMerkleRoot  string                   `json:"publisher_merkle_root"`
-	ValueComputeAlgHash  string                   `json:"value_compute_alg_hash"`
-	R                    string                   `json:"r"`
-	S                    string                   `json:"s"`
-	V                    uint8                    `json:"v"`
+	logger   zerolog.Logger
+	contract *fuel.StorkContract
 }
 
 func NewFuelContractInteractor(
@@ -58,29 +24,20 @@ func NewFuelContractInteractor(
 ) (*FuelContractInteractor, error) {
 	logger = logger.With().Str("component", "fuel-contract-interactor").Logger()
 
-	config := FuelConfig{
+	config := fuel.FuelConfig{
 		RpcUrl:          rpcUrl,
 		ContractAddress: contractAddress,
 		PrivateKey:      privateKey,
-		GasAssetId:      GasAssetId,
 	}
 
-	configJson, err := json.Marshal(config)
+	contract, err := fuel.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal fuel config: %w", err)
-	}
-
-	configCStr := C.CString(string(configJson))
-	defer C.free(unsafe.Pointer(configCStr))
-
-	client := C.fuel_client_new(configCStr)
-	if client == nil {
 		return nil, fmt.Errorf("failed to create fuel client")
 	}
 
 	return &FuelContractInteractor{
-		logger: logger,
-		client: client,
+		logger:   logger,
+		contract: contract,
 	}, nil
 }
 
@@ -114,30 +71,17 @@ func (fci *FuelContractInteractor) PullValues(
 		}
 
 		// Call FFI function
-		valueJson := C.fuel_get_latest_value(fci.client, (*C.uchar)(unsafe.Pointer(&idBytes[0])))
-		if valueJson == nil {
-			// No value found for this asset
-			continue
-		}
-
-		// Convert C string to Go string and free it
-		valueStr := C.GoString(valueJson)
-		C.fuel_free_string(valueJson)
-
-		// Parse the JSON response
-		var fuelValue FuelTemporalNumericValue
-		if err := json.Unmarshal([]byte(valueStr), &fuelValue); err != nil {
-			fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to parse temporal numeric value")
+		valueJson, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
+		if err != nil {
+			fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
 			continue
 		}
 
 		// Convert to internal format
-		quantizedValueBig := new(big.Int)
-		quantizedValueBig.SetString(fuelValue.QuantizedValue, 10)
 
 		internalValue := InternalTemporalNumericValue{
-			TimestampNs:    fuelValue.TimestampNs,
-			QuantizedValue: quantizedValueBig,
+			TimestampNs:    valueJson.TimestampNs,
+			QuantizedValue: valueJson.QuantizedValue,
 		}
 
 		result[assetId] = internalValue
@@ -153,7 +97,7 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 		return nil
 	}
 
-	var inputs []FuelTemporalNumericValueInput
+	var inputs []fuel.FuelTemporalNumericValueInput
 
 	for _, update := range priceUpdates {
 		if update.StorkSignedPrice == nil {
@@ -207,10 +151,10 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 		}
 
 		// Convert internal format to Fuel format
-		fuelInput := FuelTemporalNumericValueInput{
-			TemporalNumericValue: FuelTemporalNumericValue{
+		fuelInput := fuel.FuelTemporalNumericValueInput{
+			TemporalNumericValue: fuel.FuelTemporalNumericValue{
 				TimestampNs:    uint64(update.StorkSignedPrice.TimestampedSignature.TimestampNano),
-				QuantizedValue: quantizedPriceBigInt.String(),
+				QuantizedValue: quantizedPriceBigInt,
 			},
 			Id:                  hex.EncodeToString(encodedAssetIdBytes[:]),
 			PublisherMerkleRoot: hex.EncodeToString(publisherMerkleRootBytes[:]),
@@ -223,48 +167,11 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 		inputs = append(inputs, fuelInput)
 	}
 
-	// Serialize inputs to JSON
-	inputsJson, err := json.Marshal(inputs)
-	if err != nil {
-		return fmt.Errorf("failed to marshal fuel inputs: %w", err)
-	}
-
 	// Call FFI function
-	inputsCStr := C.CString(string(inputsJson))
-	defer C.free(unsafe.Pointer(inputsCStr))
-
-	txHashPtr := C.fuel_update_values(fci.client, inputsCStr)
-	if txHashPtr == nil {
-		// Check if this was a UTXO spent error
-		lastErrorPtr := C.fuel_get_last_error()
-		if lastErrorPtr != nil {
-			lastError := C.GoString(lastErrorPtr)
-			C.fuel_free_string(lastErrorPtr)
-
-			if strings.Contains(lastError, "UTXO input") && strings.Contains(lastError, "was already spent") {
-				fci.logger.Warn().
-					Int("num_inputs", len(inputs)).
-					Str("error_details", lastError).
-					Msg("Transaction failed due to spent UTXO - likely concurrent transaction or wallet state issue")
-				return fmt.Errorf("transaction failed due to spent UTXO (concurrent transaction detected): %s", lastError)
-			} else {
-				fci.logger.Error().
-					Str("lastError", lastError).
-					Int("num_inputs", len(inputs)).
-					Msg("Failed to update values on fuel contract - transaction failed or panicked")
-				return fmt.Errorf("failed to update values on fuel contract")
-			}
-		}
-
-		fci.logger.Error().
-			Int("num_inputs", len(inputs)).
-			Msg("Failed to update values on fuel contract - transaction failed or panicked")
-		return fmt.Errorf("failed to update values on fuel contract - this may be due to insufficient balance, invalid transaction parameters, or network issues")
+	txHash, err := fci.contract.UpdateTemporalNumericValuesV1(inputs)
+	if err != nil {
+		return fmt.Errorf("failed to update values on fuel contract: %w", err)
 	}
-
-	// Get transaction hash and free it
-	txHash := C.GoString(txHashPtr)
-	C.fuel_free_string(txHashPtr)
 
 	fci.logger.Info().
 		Str("tx_hash", txHash).
@@ -275,25 +182,16 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 }
 
 func (fci *FuelContractInteractor) GetWalletBalance() (float64, error) {
-	balance := C.fuel_get_wallet_balance(fci.client)
+	balance, err := fci.contract.GetWalletBalance()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
+	}
 
-	// Convert from wei to ETH (assuming Fuel uses similar units)
-	balanceFloat := float64(balance) / 1e9 // Fuel uses 9 decimals
-
-	return balanceFloat, nil
+	return balance, nil
 }
 
 func (fci *FuelContractInteractor) Close() {
-	if fci.client != nil {
-		C.fuel_client_free(fci.client)
-		fci.client = nil
+	if fci.contract != nil {
+		fci.contract.Close()
 	}
-}
-
-// Helper function to create a logger for Fuel pusher
-func FuelPusherLogger(rpcUrl, contractAddress string) zerolog.Logger {
-	return AppLogger("fuel").With().
-		Str("chainRpcUrl", rpcUrl).
-		Str("contractAddress", contractAddress).
-		Logger()
 }
