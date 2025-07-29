@@ -355,6 +355,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 2390
     },
+    tacMainnet: {
+      url: "https://rpc.tac.build",
+      accounts: [PRIVATE_KEY],
+      chainId: 239
+    },
     taraxaMainnet: {
       url: "https://841.rpc.thirdweb.com/fake/anotherfake",
       accounts: [PRIVATE_KEY],
