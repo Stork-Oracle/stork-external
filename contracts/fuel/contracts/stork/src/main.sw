@@ -48,7 +48,7 @@ fn latest_canonical_temporal_numeric_value(id: b256) -> Result<TemporalNumericVa
     let map: StorageKey<StorageMap<b256, TemporalNumericValue>> = storage.state.latest_canonical_temporal_numeric_values;
     match map.get(id).try_read() {
         Some(tnv) => Ok(tnv),
-        None => Err(StorkError::FeedNotFound),
+        None => Err(StorkError::FeedNotFound(id)),
     }
 }
 
@@ -203,8 +203,7 @@ impl Stork for Contract {
             );
 
             if (!verified) {
-                log(StorkError::InvalidSignature);
-                revert(0);
+                panic StorkError::InvalidSignature(x);
             }
             let updated = update_latest_value_if_necessary(update_data.get(i).unwrap());
             if (updated) {
@@ -214,18 +213,15 @@ impl Stork for Contract {
             i += 1;
         }
         if (num_updates == 0) {
-            log(StorkError::NoFreshUpdate);
-            revert(0);
+            panic StorkError::NoFreshUpdate;
         }
 
         let required_fee = get_total_fee(num_updates);
         if (std::call_frames::msg_asset_id() != AssetId::base()) {
-            log(StorkError::InsufficientFee);
-            revert(0)
+            panic StorkError::IncorrectFeeAsset(std::call_frames::msg_asset_id());
         }
         if (std::context::msg_amount() < required_fee) {
-            log(StorkError::InsufficientFee);
-            revert(0);
+            panic StorkError::InsufficientFee(std::context::msg_amount());
         }
     }
 
@@ -239,8 +235,7 @@ impl Stork for Contract {
         let latest_value = match latest_canonical_temporal_numeric_value(id) {
             Ok(value) => value,
             Err(error) => {
-                log(error);
-                revert(0);
+                panic error;
             }
         };
         latest_value

@@ -95,7 +95,7 @@ fn try_get_rsv_signature_from_parts(r: b256, s: b256, v: u8) -> Option<Secp256k1
     require( 
         s <= 
 b256::from(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0), 
-        "InvalidSignature" 
+        None 
     );
     // make most significant bit of s 0 or 1 depending on v
     match v {
@@ -311,8 +311,6 @@ fn test_i128_to_be_bytes_negative() {
     expected_bytes.set(13, 0x16u8);
     expected_bytes.set(14, 0x37u8);
     expected_bytes.set(15, 0x40u8);
-
-    log(expected_bytes);
 
     assert(bytes == expected_bytes);
 }
