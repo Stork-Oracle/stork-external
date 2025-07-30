@@ -14,7 +14,7 @@ use fuels::{
 use serde::{Deserialize, Serialize};
 
 // Generate the contract bindings from ABI
-abigen!(Contract(name = "StorkContract", abi = "stork_abi.json"),);
+abigen!(Contract(name = "StorkContract", abi = "stork-abi.json"),);
 
 // FFI-compatible structures for JSON serialization
 #[derive(Serialize, Deserialize, Debug, Clone)]
