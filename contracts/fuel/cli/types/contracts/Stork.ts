@@ -32,13 +32,15 @@ export type IdentityInput = Enum<{ Address: AddressInput, ContractId: ContractId
 export type IdentityOutput = Enum<{ Address: AddressOutput, ContractId: ContractIdOutput }>;
 export type StateInput = Enum<{ Uninitialized: undefined, Initialized: IdentityInput, Revoked: undefined }>;
 export type StateOutput = Enum<{ Uninitialized: void, Initialized: IdentityOutput, Revoked: void }>;
-export enum StorkErrorInput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
-export enum StorkErrorOutput { InsufficientFee = 'InsufficientFee', NoFreshUpdate = 'NoFreshUpdate', FeedNotFound = 'FeedNotFound', StaleValue = 'StaleValue', InvalidSignature = 'InvalidSignature' };
+export type StorkErrorInput = Enum<{ IncorrectFeeAsset: AssetIdInput, InsufficientFee: BigNumberish, NoFreshUpdate: undefined, FeedNotFound: string, InvalidSignature: TemporalNumericValueInputInput }>;
+export type StorkErrorOutput = Enum<{ IncorrectFeeAsset: AssetIdOutput, InsufficientFee: BN, NoFreshUpdate: void, FeedNotFound: string, InvalidSignature: TemporalNumericValueInputOutput }>;
 export type StorkEventInput = Enum<{ ValueUpdate: [] }>;
 export type StorkEventOutput = StorkEventInput;
 
 export type AddressInput = { bits: string };
 export type AddressOutput = AddressInput;
+export type AssetIdInput = { bits: string };
+export type AssetIdOutput = AssetIdInput;
 export type ContractIdInput = { bits: string };
 export type ContractIdOutput = ContractIdInput;
 export type I128Input = { underlying: U128Input };
@@ -102,19 +104,14 @@ const abi = {
       "metadataTypeId": 8
     },
     {
-      "type": "struct std::bytes::Bytes",
-      "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-      "metadataTypeId": 9
-    },
-    {
       "type": "struct std::string::String",
       "concreteTypeId": "9a7f1d3e963c10e0a4ea70a8e20a4813d1dc5682e28f74cb102ae50d32f7f98c",
-      "metadataTypeId": 12
+      "metadataTypeId": 13
     },
     {
       "type": "struct std::vec::Vec<struct stork_sway_sdk::interface::TemporalNumericValueInput>",
       "concreteTypeId": "e67278f564f3da524afebc87950681dff66e11946370df7f4c68b5f01329590b",
-      "metadataTypeId": 15,
+      "metadataTypeId": 16,
       "typeArguments": [
         "672654baba0e998dd82f818c92c2b544c9275ee09007b0f65f59195a94a916d6"
       ]
@@ -122,17 +119,17 @@ const abi = {
     {
       "type": "struct std::vm::evm::evm_address::EvmAddress",
       "concreteTypeId": "05a44d8c3e00faf7ed545823b7a2b32723545d8715d87a0ab3cf65904948e8d2",
-      "metadataTypeId": 16
+      "metadataTypeId": 17
     },
     {
       "type": "struct stork_sway_sdk::interface::TemporalNumericValueInput",
       "concreteTypeId": "672654baba0e998dd82f818c92c2b544c9275ee09007b0f65f59195a94a916d6",
-      "metadataTypeId": 17
+      "metadataTypeId": 18
     },
     {
       "type": "struct stork_sway_sdk::temporal_numeric_value::TemporalNumericValue",
       "concreteTypeId": "6972e006137b782c482ffc099e21cc55fce9151a2096dd6582df22c9dc81bd9c",
-      "metadataTypeId": 18
+      "metadataTypeId": 19
     },
     {
       "type": "u64",
@@ -154,7 +151,7 @@ const abi = {
         },
         {
           "name": "__tuple_element",
-          "typeId": 18
+          "typeId": 19
         }
       ]
     },
@@ -186,7 +183,7 @@ const abi = {
         },
         {
           "name": "ContractId",
-          "typeId": 11
+          "typeId": 12
         }
       ]
     },
@@ -195,29 +192,29 @@ const abi = {
       "metadataTypeId": 3,
       "components": [
         {
+          "name": "IncorrectFeeAsset",
+          "typeId": 9,
+          "errorMessage": "Incorrect fee asset."
+        },
+        {
           "name": "InsufficientFee",
-          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-          "errorMessage": "Insufficient fee"
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "errorMessage": "Insufficient fee for updates."
         },
         {
           "name": "NoFreshUpdate",
           "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-          "errorMessage": "No fresh update"
+          "errorMessage": "No fresh update."
         },
         {
           "name": "FeedNotFound",
-          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-          "errorMessage": "Feed not found"
-        },
-        {
-          "name": "StaleValue",
-          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-          "errorMessage": "Stale value"
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+          "errorMessage": "Feed not found."
         },
         {
           "name": "InvalidSignature",
-          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-          "errorMessage": "Invalid signature"
+          "typeId": 18,
+          "errorMessage": "Invalid signature."
         }
       ]
     },
@@ -245,7 +242,7 @@ const abi = {
       "components": [
         {
           "name": "underlying",
-          "typeId": 13
+          "typeId": 14
         }
       ]
     },
@@ -260,12 +257,22 @@ const abi = {
       ]
     },
     {
-      "type": "struct std::bytes::Bytes",
+      "type": "struct std::asset_id::AssetId",
       "metadataTypeId": 9,
       "components": [
         {
+          "name": "bits",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
+      ]
+    },
+    {
+      "type": "struct std::bytes::Bytes",
+      "metadataTypeId": 10,
+      "components": [
+        {
           "name": "buf",
-          "typeId": 10
+          "typeId": 11
         },
         {
           "name": "len",
@@ -275,7 +282,7 @@ const abi = {
     },
     {
       "type": "struct std::bytes::RawBytes",
-      "metadataTypeId": 10,
+      "metadataTypeId": 11,
       "components": [
         {
           "name": "ptr",
@@ -289,7 +296,7 @@ const abi = {
     },
     {
       "type": "struct std::contract_id::ContractId",
-      "metadataTypeId": 11,
+      "metadataTypeId": 12,
       "components": [
         {
           "name": "bits",
@@ -299,17 +306,17 @@ const abi = {
     },
     {
       "type": "struct std::string::String",
-      "metadataTypeId": 12,
+      "metadataTypeId": 13,
       "components": [
         {
           "name": "bytes",
-          "typeId": 9
+          "typeId": 10
         }
       ]
     },
     {
       "type": "struct std::u128::U128",
-      "metadataTypeId": 13,
+      "metadataTypeId": 14,
       "components": [
         {
           "name": "upper",
@@ -323,7 +330,7 @@ const abi = {
     },
     {
       "type": "struct std::vec::RawVec",
-      "metadataTypeId": 14,
+      "metadataTypeId": 15,
       "components": [
         {
           "name": "ptr",
@@ -340,11 +347,11 @@ const abi = {
     },
     {
       "type": "struct std::vec::Vec",
-      "metadataTypeId": 15,
+      "metadataTypeId": 16,
       "components": [
         {
           "name": "buf",
-          "typeId": 14,
+          "typeId": 15,
           "typeArguments": [
             {
               "name": "",
@@ -363,7 +370,7 @@ const abi = {
     },
     {
       "type": "struct std::vm::evm::evm_address::EvmAddress",
-      "metadataTypeId": 16,
+      "metadataTypeId": 17,
       "components": [
         {
           "name": "bits",
@@ -373,11 +380,11 @@ const abi = {
     },
     {
       "type": "struct stork_sway_sdk::interface::TemporalNumericValueInput",
-      "metadataTypeId": 17,
+      "metadataTypeId": 18,
       "components": [
         {
           "name": "temporal_numeric_value",
-          "typeId": 18
+          "typeId": 19
         },
         {
           "name": "id",
@@ -407,7 +414,7 @@ const abi = {
     },
     {
       "type": "struct stork_sway_sdk::temporal_numeric_value::TemporalNumericValue",
-      "metadataTypeId": 18,
+      "metadataTypeId": 19,
       "components": [
         {
           "name": "timestamp_ns",
@@ -679,15 +686,62 @@ const abi = {
     {
       "logId": "6508751692018611352",
       "concreteTypeId": "5a53bb2dd5fdf498df0233d9317f6c4235a9448fb63f5201eda779999df4ec0c"
-    },
-    {
-      "logId": "14832741149864513620",
-      "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb"
     }
   ],
   "messagesTypes": [],
   "configurables": [],
-  "errorCodes": {}
+  "errorCodes": {
+    "18446744069414584320": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
+        "line": 238,
+        "column": 17
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    },
+    "18446744069414584321": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
+        "line": 206,
+        "column": 17
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    },
+    "18446744069414584322": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
+        "line": 216,
+        "column": 13
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    },
+    "18446744069414584323": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
+        "line": 221,
+        "column": 13
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    },
+    "18446744069414584324": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
+        "line": 224,
+        "column": 13
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    }
+  }
 };
 
 const storageSlots: StorageSlot[] = [
