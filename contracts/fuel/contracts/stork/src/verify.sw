@@ -92,11 +92,9 @@ fn get_eth_signed_message_hash(msg_hash: b256) -> Message {
 fn try_get_rsv_signature_from_parts(r: b256, s: b256, v: u8) -> Option<Secp256k1> {
 
     // EIP-2 signature malleability compliance (https://eips.ethereum.org/EIPS/eip-2)
-    require( 
-        s <= 
-b256::from(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0), 
-        None 
-    );
+    if (s > b256::from(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)) {
+        return None;
+    }
     // make most significant bit of s 0 or 1 depending on v
     match v {
         27 => {
