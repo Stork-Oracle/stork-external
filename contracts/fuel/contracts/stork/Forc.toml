@@ -1,17 +1,18 @@
 [project]
 authors = [
   "Georgios Delkos <georgios.delkos@ourovoros.io>",
-  "Henry Baldwin <henry@stork.xyz>",
+  "Henry Baldwin <henry@stork.network>",
 ]
 entry = "main.sw"
 license = "Apache-2.0"
 name = "stork"
 
 [dependencies]
-std = { git = "https://github.com/fuellabs/sway", tag = "v0.68.4" }
-standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.7.0" }
-sway_libs = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.25.2" }
 stork_sway_sdk = { path = "../../../../sdks/fuel/stork-sway-sdk" }
+signed_int = "0.26.1"
+src5 = "0.8.1"
+std = "0.69.1"
 
 [proxy]
 enabled = true
+address = "0xdd9f1266cf1a48b3c0398bfb0ffc2a10fe7e87bdcd7f70ec85b5348e04e88fde"

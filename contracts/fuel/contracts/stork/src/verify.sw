@@ -8,7 +8,7 @@ use std::crypto::message::Message;
 use std::u128::U128;
 use std::vm::evm::evm_address::EvmAddress;
 
-use sway_libs::signed_integers::i128::I128;
+use signed_int::i128::I128;
 
 pub fn verify_stork_signature(
     stork_pubkey: EvmAddress,
