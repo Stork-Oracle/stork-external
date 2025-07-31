@@ -1,13 +1,16 @@
 import { createConfig, FuelsConfig, DeployedData, Provider, Address, Wallet, Src14OwnedProxy } from 'fuels';
 import fs from 'fs';
 
+console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
+
 export default createConfig({
   contracts: ['../contracts/stork'],
   output: './types',
-  privateKey: process.env.PRIVATE_KEY,
+  privateKey: "0x10a98e108053e466f98d66b246e34c18217f3749b42941fe1c4d20e744142165",
   providerUrl: process.env.PROVIDER_URL,
   forcBuildFlags: ['--release'],
   onDeploy: onDeploy,
+  onFailure: onFailure,
 });
 
 /**
@@ -49,4 +52,16 @@ async function onDeploy(config: FuelsConfig, data: DeployedData) {
   const contractIds = JSON.parse(fs.readFileSync("types/contract-ids.json", "utf8"));
   contractIds.impl = implAddress;
   fs.writeFileSync("types/contract-ids.json", JSON.stringify(contractIds, null, 2));
+}
+
+
+async function onFailure(config: FuelsConfig, error: Error) {
+
+  const provider = new Provider(config.providerUrl);
+  const wallet = Wallet.fromPrivateKey(config.privateKey!, provider);
+
+  console.log("Provider URL:", config.providerUrl);
+  console.log("Private Key:", config.privateKey);
+  console.log("Public Key:", wallet.publicKey);
+  console.log("Balance:", (await wallet.getBalance()).valueOf());
 }
