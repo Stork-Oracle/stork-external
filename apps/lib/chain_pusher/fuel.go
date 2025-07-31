@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/Stork-Oracle/stork-external/apps/lib/chain_pusher/contract_bindings/fuel"
 	"github.com/rs/zerolog"
@@ -73,7 +74,11 @@ func (fci *FuelContractInteractor) PullValues(
 		// Call FFI function
 		valueJson, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
 		if err != nil {
-			fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+			if strings.Contains(err.Error(), "feed not found") {
+				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
+			} else {
+				fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+			}
 			continue
 		}
 
@@ -187,7 +192,7 @@ func (fci *FuelContractInteractor) GetWalletBalance() (float64, error) {
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
 
-	return balance, nil
+	return float64(balance), nil
 }
 
 func (fci *FuelContractInteractor) Close() {

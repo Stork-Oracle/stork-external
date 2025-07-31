@@ -21,6 +21,7 @@ type StorkContract struct {
 	Client *C.FuelClient
 	Config FuelConfig
 }
+
 type FuelConfig struct {
 	RpcUrl          string `json:"rpc_url"`
 	ContractAddress string `json:"contract_address"`
@@ -57,44 +58,56 @@ func NewStorkContract(rpcUrl string, contractAddress string, privateKey string) 
 	configCStr := C.CString(string(configJson))
 	defer C.free(unsafe.Pointer(configCStr))
 
-	client := C.fuel_client_new(configCStr)
-	if client == nil {
-		return nil, fmt.Errorf("failed to create fuel client")
+	var outClient *C.FuelClient
+	status := C.fuel_client_new(configCStr, &outClient)
+
+	if err := handleFuelClientStatus(status); err != nil {
+		return nil, fmt.Errorf("failed to create fuel client: %w", err)
+	}
+
+	if outClient == nil {
+		return nil, fmt.Errorf("fuel client creation returned null client")
 	}
 
 	return &StorkContract{
-		Client: client,
+		Client: outClient,
 		Config: config,
 	}, nil
 }
 
-// Helper function to convert C error codes to Go errors
-func (s *StorkContract) handleErrorCode(code C.enum_FuelClientErrorCode) error {
-	switch code {
+// Helper function to convert C status codes to Go errors
+func handleFuelClientStatus(status C.enum_FuelClientStatus) error {
+	switch status {
 	case C.Success:
 		return nil
 	case C.InvalidConfig:
 		return fmt.Errorf("invalid config")
 	case C.ContractCallFailed:
 		return fmt.Errorf("contract call failed")
-	case C.InsufficientBalance:
-		return fmt.Errorf("insufficient balance")
 	case C.NetworkError:
 		return fmt.Errorf("network error")
-	case C.UtxoSpent:
-		return fmt.Errorf("UTXO spent")
-	case C.InvalidTransaction:
-		return fmt.Errorf("invalid transaction")
+	case C.InvalidTransactionParameters:
+		return fmt.Errorf("invalid transaction parameters")
 	case C.JsonError:
 		return fmt.Errorf("JSON error")
 	case C.SystemError:
 		return fmt.Errorf("system error")
-	case C.FuelSdkError:
-		return fmt.Errorf("Fuel SDK error")
-	case C.NullClient:
-		return fmt.Errorf("Client is null")
+	case C.WalletBalanceError:
+		return fmt.Errorf("wallet balance error")
+	case C.NullPointer:
+		return fmt.Errorf("null pointer")
+	case C.IncorrectFeeAsset:
+		return fmt.Errorf("incorrect fee asset")
+	case C.InsufficientFee:
+		return fmt.Errorf("insufficient fee")
+	case C.NoFreshUpdate:
+		return fmt.Errorf("no fresh update")
+	case C.FeedNotFound:
+		return fmt.Errorf("feed not found")
+	case C.InvalidSignature:
+		return fmt.Errorf("invalid signature")
 	default:
-		return fmt.Errorf("unknown error code: %d", int(code))
+		return fmt.Errorf("unknown error code: %d", int(status))
 	}
 }
 
@@ -108,10 +121,10 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 	defer C.free(unsafe.Pointer(inputsCStr))
 
 	var outTxHashPtr *C.char
-	errorCode := C.fuel_update_values(s.Client, inputsCStr, &outTxHashPtr)
+	status := C.fuel_update_values(s.Client, inputsCStr, &outTxHashPtr)
 
-	if err := s.handleErrorCode(errorCode); err != nil {
-		return "", fmt.Errorf("fuel_update_values failed: %w", err)
+	if err := handleFuelClientStatus(status); err != nil {
+		return "", fmt.Errorf("failed to update values: %w", err)
 	}
 
 	if outTxHashPtr == nil {
@@ -124,42 +137,38 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 	return txHash, nil
 }
 
-func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (FuelTemporalNumericValue, error) {
-	var result FuelTemporalNumericValue
-
+func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTemporalNumericValue, error) {
 	// Convert [32]byte to *C.uint8_t
 	idPtr := (*C.uint8_t)(unsafe.Pointer(&id[0]))
 
 	var outValueJsonPtr *C.char
-	errorCode := C.fuel_get_latest_value(s.Client, idPtr, &outValueJsonPtr)
+	status := C.fuel_get_latest_value(s.Client, idPtr, &outValueJsonPtr)
 
-	if err := s.handleErrorCode(errorCode); err != nil {
-		return result, fmt.Errorf("fuel_get_latest_value failed: %w", err)
-	}
-
-	if outValueJsonPtr == nil {
-		return result, fmt.Errorf("received null value JSON")
+	if err := handleFuelClientStatus(status); err != nil {
+		return nil, fmt.Errorf("failed to get latest value: %w", err)
 	}
 
 	valueJson := C.GoString(outValueJsonPtr)
 	C.fuel_free_string(outValueJsonPtr)
 
+	var result FuelTemporalNumericValue
 	err := json.Unmarshal([]byte(valueJson), &result)
 	if err != nil {
-		return result, fmt.Errorf("failed to unmarshal value JSON: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal value JSON: %w", err)
 	}
 
-	return result, nil
+	return &result, nil
 }
 
-func (s *StorkContract) GetWalletBalance() (float64, error) {
+func (s *StorkContract) GetWalletBalance() (uint64, error) {
 	var balance C.uint64_t
-	errorCode := C.fuel_get_wallet_balance(s.Client, &balance)
-	if err := s.handleErrorCode(errorCode); err != nil {
-		return 0, fmt.Errorf("fuel_get_wallet_balance failed: %w", err)
+	status := C.fuel_get_wallet_balance(s.Client, &balance)
+
+	if err := handleFuelClientStatus(status); err != nil {
+		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
 
-	return float64(balance), nil
+	return uint64(balance), nil
 }
 
 func (s *StorkContract) Close() {
