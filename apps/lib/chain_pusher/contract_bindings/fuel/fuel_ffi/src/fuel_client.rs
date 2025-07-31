@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use crate::error::FuelClientError;
+use crate::error::{FuelClientError, process_contract_error};
 use fuels::{
     accounts::signers::private_key::PrivateKeySigner,
     crypto::SecretKey,
@@ -16,6 +16,8 @@ use serde::{Deserialize, Serialize};
 // Generate the contract bindings from ABI
 abigen!(Contract(name = "StorkContract", abi = "stork-abi.json"),);
 
+// re-export generated StorkError
+pub use StorkError as StorkContractError;
 // FFI-compatible structures for JSON serialization
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuelTemporalNumericValue {
@@ -113,7 +115,7 @@ impl FuelClient {
             })?
             .simulate(Execution::state_read_only())
             .await
-            .map_err(|e| FuelClientError::ContractCallFailed(e.to_string()))?;
+            .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
 
         let contract_tnv = response.value;
         let tnv = FuelTemporalNumericValue {

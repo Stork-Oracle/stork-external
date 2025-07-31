@@ -1,5 +1,9 @@
 // error.rs
 use thiserror::Error;
+use fuels::types::errors::Error as FuelError;
+use fuels::types::errors::transaction::Reason;
+use fuels::core::codec::LogDecoder;
+use crate::fuel_client::StorkContractError;
 
 #[derive(Error, Debug)]
 pub enum FuelClientError {
@@ -63,28 +67,49 @@ impl From<FuelClientError> for FuelClientErrorCode {
     }
 }
 
+// helper function to process errors coming from .call or .simulate, determining if the error is a Str
+pub fn process_contract_error(e: FuelError, log_decoder: &LogDecoder) -> FuelClientError {
+    match e {
+        FuelError::Transaction(reason) => {
+            match reason {
+                Reason::Failure {
+                    reason: reason_str,
+                    revert_id,
+                    receipts,
+                } => {
+                    println!("reason: {:?}", reason_str);
+                    println!("receipts: {:?}", receipts);
+                    let logs = log_decoder.decode_logs(&receipts);
+                    println!("logs: {:?}", logs);
+                    FuelClientError::ContractCallFailed(reason_str)
+                }
+                _ => FuelClientError::ContractCallFailed(reason.to_string()),
+            }
 
-// StorkError enum matching the StorkError enum in the Stork Fuel SDK
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StorkError {
-    InsufficientFee = 0,
-    NoFreshUpdate = 1,
-    FeedNotFound = 2,
-    StaleValue = 3,
-    InvalidSignature = 4,
-}
-
-impl TryFrom<u64> for StorkError {
-    type Error = FuelClientError;
-    fn try_from(value: u64) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(StorkError::InsufficientFee),
-            1 => Ok(StorkError::NoFreshUpdate),
-            2 => Ok(StorkError::FeedNotFound),
-            3 => Ok(StorkError::StaleValue),
-            4 => Ok(StorkError::InvalidSignature),
-            _ => Err(FuelClientError::UnknownContractError(value.to_string())),
         }
+        _ => FuelClientError::ContractCallFailed(e.to_string()),
     }
 }
+
+// impl TryFrom<FuelError> for StorkContractError {
+//     type Error = FuelClientError;
+//     fn try_from(value: FuelError) -> Result<Self, Self::Error> {
+//         match value {
+//             FuelError::Transaction(reason) => {
+//                 match reason {
+//                     Reason::Failure {
+//                         reason: reason_str,
+//                         revert_id,
+//                         receipts,
+//                     } => {
+//                         // hardcoded from abi, hopefully there's a cleaner way to do this in the future (github issue: https://github.com/FuelLabs/fuels-rs/issues/1680)
+//                         match revert_id {
+//                             Some()
+
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
