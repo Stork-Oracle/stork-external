@@ -1,8 +1,6 @@
 import { createConfig, FuelsConfig, DeployedData, Provider, Address, Wallet, Src14OwnedProxy } from 'fuels';
 import fs from 'fs';
 
-console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
-
 export default createConfig({
   contracts: ['../contracts/stork'],
   output: './types',
