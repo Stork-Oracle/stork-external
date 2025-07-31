@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use crate::error::{FuelClientError, process_contract_error};
+use crate::error::{process_contract_error, FuelClientError};
 use fuels::{
     accounts::signers::private_key::PrivateKeySigner,
     crypto::SecretKey,
@@ -134,26 +134,29 @@ impl FuelClient {
 
         for input in inputs {
             // Parse hex strings to Bits256
-            let id = Bits256::from_hex_str(&input.id)
-                .map_err(|e| FuelClientError::InvalidTransaction(format!("Invalid id: {}", e)))?;
+            let id = Bits256::from_hex_str(&input.id).map_err(|e| {
+                FuelClientError::InvalidTransactionParameters(format!("Invalid id: {}", e))
+            })?;
             let publisher_merkle_root = Bits256::from_hex_str(&input.publisher_merkle_root)
                 .map_err(|e| {
-                    FuelClientError::InvalidTransaction(format!(
+                    FuelClientError::InvalidTransactionParameters(format!(
                         "Invalid publisher merkle root: {}",
                         e
                     ))
                 })?;
             let value_compute_alg_hash = Bits256::from_hex_str(&input.value_compute_alg_hash)
                 .map_err(|e| {
-                    FuelClientError::InvalidTransaction(format!(
+                    FuelClientError::InvalidTransactionParameters(format!(
                         "Invalid value compute alg hash: {}",
                         e
                     ))
                 })?;
-            let r = Bits256::from_hex_str(&input.r)
-                .map_err(|e| FuelClientError::InvalidTransaction(format!("Invalid r: {}", e)))?;
-            let s = Bits256::from_hex_str(&input.s)
-                .map_err(|e| FuelClientError::InvalidTransaction(format!("Invalid s: {}", e)))?;
+            let r = Bits256::from_hex_str(&input.r).map_err(|e| {
+                FuelClientError::InvalidTransactionParameters(format!("Invalid r: {}", e))
+            })?;
+            let s = Bits256::from_hex_str(&input.s).map_err(|e| {
+                FuelClientError::InvalidTransactionParameters(format!("Invalid s: {}", e))
+            })?;
 
             // Create the contract input using generated types
             let contract_input = TemporalNumericValueInput {
@@ -187,9 +190,7 @@ impl FuelClient {
             })?
             .simulate(Execution::state_read_only())
             .await
-            .map_err(|e| {
-                FuelClientError::ContractCallFailed(format!("Failed to get update fee: {}", e))
-            })?;
+            .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
 
         let fee = fee_response.value;
 
@@ -215,12 +216,7 @@ impl FuelClient {
             })?
             .call()
             .await
-            .map_err(|e| {
-                FuelClientError::ContractCallFailed(format!(
-                    "Failed to call update_temporal_numeric_values_v1: {}",
-                    e
-                ))
-            })?;
+            .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
 
         match tx_response.tx_id {
             Some(tx_id) => Ok(format!("0x{}", tx_id)),
@@ -236,7 +232,7 @@ impl FuelClient {
             .get_asset_balance(&self.gas_asset_id)
             .await
             .map_err(|e| {
-                FuelClientError::FuelSdkError(format!("Failed to get wallet balance: {}", e))
+                FuelClientError::WalletBalanceError(format!("Failed to get wallet balance: {}", e))
             })?;
         Ok(balance as u64)
     }
@@ -248,7 +244,7 @@ impl FuelClient {
 impl From<i128> for I128 {
     fn from(value: i128) -> Self {
         let offset = 1u128 << 127; // 2^127
-        let quantized_with_offset = (value as u128).wrapping_add(offset); // TODO: wrapping add feels scary here
+        let quantized_with_offset = (value as u128).wrapping_add(offset);
         I128 {
             underlying: quantized_with_offset,
         }

@@ -4,48 +4,26 @@ pub mod fuel_client;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-use error::{FuelClientError, FuelClientErrorCode};
+use error::{FuelClientError, FuelClientStatus};
 use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
 
-// Helper function to handle common FFI patterns
-fn handle_ffi_result<T>(
-    result: Result<T, FuelClientError>,
-    success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
-) -> FuelClientErrorCode {
-    match result {
-        Ok(value) => match success_handler(value) {
-            Ok(()) => FuelClientErrorCode::Success,
-            Err(e) => e.into(),
-        },
-        Err(e) => e.into(),
-    }
-}
-
-// Helper to safely convert C string to Rust string
-fn c_str_to_string(c_str: *const c_char) -> Result<String, FuelClientError> {
-    if c_str.is_null() {
-        return Err(FuelClientError::InvalidConfig(
-            "Null pointer provided".to_string(),
-        ));
-    }
-
-    unsafe {
-        CStr::from_ptr(c_str)
-            .to_str()
-            .map(|s| s.to_string())
-            .map_err(|_| FuelClientError::InvalidConfig("Invalid UTF-8 in input".to_string()))
-    }
-}
-
-// Helper to create C string from Rust string
-fn string_to_c_char(s: String) -> Result<*mut c_char, FuelClientError> {
-    CString::new(s)
-        .map(|c_str| c_str.into_raw())
-        .map_err(|_| FuelClientError::SystemError("Failed to create C string".to_string()))
-}
-
 #[no_mangle]
-pub extern "C" fn fuel_client_new(config_json: *const c_char) -> *mut FuelClient {
+pub extern "C" fn fuel_client_new(
+    config_json: *const c_char,
+    out_client: *mut *mut FuelClient,
+) -> FuelClientStatus {
+    if out_client.is_null() {
+        return FuelClientError::NullPointer("out_client is null".to_string()).into();
+    }
+    if config_json.is_null() {
+        return FuelClientError::NullPointer("config_json is null".to_string()).into();
+    }
+
+    // Initialize output to null
+    unsafe {
+        *out_client = std::ptr::null_mut();
+    }
+
     let result = (|| -> Result<FuelClient, FuelClientError> {
         let config_str = c_str_to_string(config_json)?;
         let config: FuelConfig = serde_json::from_str(&config_str)?;
@@ -61,10 +39,12 @@ pub extern "C" fn fuel_client_new(config_json: *const c_char) -> *mut FuelClient
         rt.block_on(FuelClient::new(config))
     })();
 
-    match result {
-        Ok(client) => Box::into_raw(Box::new(client)),
-        Err(_) => std::ptr::null_mut(), // Error info lost here, but that's the nature of this pattern
-    }
+    handle_ffi_result(result, |client| {
+        unsafe {
+            *out_client = Box::into_raw(Box::new(client));
+        }
+        Ok(())
+    })
 }
 
 #[no_mangle]
@@ -81,9 +61,15 @@ pub extern "C" fn fuel_get_latest_value(
     client: *mut FuelClient,
     id_ptr: *const u8,
     out_value_json: *mut *mut c_char,
-) -> FuelClientErrorCode {
+) -> FuelClientStatus {
     if out_value_json.is_null() {
-        return FuelClientErrorCode::InvalidConfig;
+        return FuelClientError::NullPointer("out_value_json is null".to_string()).into();
+    }
+    if client.is_null() {
+        return FuelClientError::NullPointer("client is null".to_string()).into();
+    }
+    if id_ptr.is_null() {
+        return FuelClientError::NullPointer("id_ptr is null".to_string()).into();
     }
 
     // Initialize output to null
@@ -92,10 +78,6 @@ pub extern "C" fn fuel_get_latest_value(
     }
 
     let result = (|| -> Result<Option<String>, FuelClientError> {
-        if client.is_null() || id_ptr.is_null() {
-            return Err(FuelClientError::NullClient);
-        }
-
         let client = unsafe { &mut *client };
 
         let id: [u8; 32] = unsafe {
@@ -106,11 +88,7 @@ pub extern "C" fn fuel_get_latest_value(
 
         let value_opt = client
             .rt
-            .block_on(client.get_latest_temporal_numeric_value(id))
-            .map_err(|e| {
-                println!("Error: {:?}", e);
-                e
-            })?;
+            .block_on(client.get_latest_temporal_numeric_value(id))?;
 
         match value_opt {
             Some(value) => {
@@ -137,12 +115,17 @@ pub extern "C" fn fuel_update_values(
     client: *mut FuelClient,
     inputs_json: *const c_char,
     out_tx_hash: *mut *mut c_char,
-) -> FuelClientErrorCode {
+) -> FuelClientStatus {
     if out_tx_hash.is_null() {
-        return FuelClientErrorCode::InvalidConfig;
+        return FuelClientError::NullPointer("out_tx_hash is null".to_string()).into();
+    }
+    if client.is_null() {
+        return FuelClientError::NullPointer("client is null".to_string()).into();
+    }
+    if inputs_json.is_null() {
+        return FuelClientError::NullPointer("inputs_json is null".to_string()).into();
     }
 
-    // Initialize output to null
     unsafe {
         *out_tx_hash = std::ptr::null_mut();
     }
@@ -176,23 +159,19 @@ pub extern "C" fn fuel_update_values(
 pub extern "C" fn fuel_get_wallet_balance(
     client: *mut FuelClient,
     out_balance: *mut u64,
-) -> FuelClientErrorCode {
+) -> FuelClientStatus {
     if out_balance.is_null() {
-        return FuelClientErrorCode::InvalidConfig;
+        return FuelClientError::NullPointer("out_balance is null".to_string()).into();
+    }
+    if client.is_null() {
+        return FuelClientError::NullPointer("client is null".to_string()).into();
     }
 
-    // Initialize output to 0
     unsafe {
         *out_balance = 0;
     }
 
     let result = (|| -> Result<u64, FuelClientError> {
-        if client.is_null() {
-            return Err(FuelClientError::InvalidConfig(
-                "Null client pointer".to_string(),
-            ));
-        }
-
         let client = unsafe { &mut *client };
         client.rt.block_on(client.get_wallet_balance())
     })();
@@ -212,4 +191,37 @@ pub extern "C" fn fuel_free_string(s: *mut c_char) {
             let _ = CString::from_raw(s);
         }
     }
+}
+
+// Helper functions
+
+fn handle_ffi_result<T>(
+    result: Result<T, FuelClientError>,
+    success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
+) -> FuelClientStatus {
+    match result {
+        Ok(value) => match success_handler(value) {
+            Ok(()) => FuelClientStatus::Success,
+            Err(e) => e.into(),
+        },
+        Err(e) => e.into(),
+    }
+}
+
+fn c_str_to_string(c_str: *const c_char) -> Result<String, FuelClientError> {
+    if c_str.is_null() {
+        return Err(FuelClientError::NullPointer("c_str is null".to_string()));
+    }
+
+    let c_str = unsafe { CStr::from_ptr(c_str) };
+    c_str
+        .to_str()
+        .map(|s| s.to_owned())
+        .map_err(|e| FuelClientError::SystemError(format!("Invalid UTF-8 in input: {}", e)))
+}
+
+fn string_to_c_char(s: String) -> Result<*mut c_char, FuelClientError> {
+    CString::new(s)
+        .map(|c_str| c_str.into_raw())
+        .map_err(|e| FuelClientError::SystemError(format!("Failed to create C string: {}", e)))
 }
