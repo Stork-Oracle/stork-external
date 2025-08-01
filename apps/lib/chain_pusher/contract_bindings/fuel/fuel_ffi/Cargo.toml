@@ -1,0 +1,21 @@
+[package]
+name = "fuel_ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fuels = "0.74.0"
+tokio = { version = "1.35", features = ["rt", "macros", "rt-multi-thread"] }
+hex = "0.4.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+libc = "0.2"
+thiserror = "2.0.12"
+anyhow = "1.0.98"
+paste = "1.0.15"
+
+[build-dependencies]
+cbindgen = "0.29.0"

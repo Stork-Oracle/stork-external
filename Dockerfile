@@ -49,6 +49,7 @@ RUN apt-get update && \
 # Copy libraries from builder stage
 COPY --from=builder /app/.lib/libwasmvm.*.so /usr/local/lib/
 COPY --from=builder /app/.lib/libstork.so /usr/local/lib/
+COPY --from=builder /app/.lib/libfuel_ffi.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # Ensure SERVICE is defined
