@@ -1,6 +1,6 @@
 library;
 
-use sway_libs::signed_integers::i128::I128;
+use signed_int::i128::I128;
 
 // Struct representing a temporal numeric value
 pub struct TemporalNumericValue {

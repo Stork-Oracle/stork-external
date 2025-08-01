@@ -15,6 +15,6 @@
   },
   "dependencies": {
     "commander": "^13.0.0",
-    "fuels": "^0.100.6"
+    "fuels": "^0.101.3"
   }
 }

@@ -8,7 +8,7 @@ use std::crypto::message::Message;
 use std::u128::U128;
 use std::vm::evm::evm_address::EvmAddress;
 
-use sway_libs::signed_integers::i128::I128;
+use signed_int::i128::I128;
 
 pub fn verify_stork_signature(
     stork_pubkey: EvmAddress,
@@ -92,11 +92,9 @@ fn get_eth_signed_message_hash(msg_hash: b256) -> Message {
 fn try_get_rsv_signature_from_parts(r: b256, s: b256, v: u8) -> Option<Secp256k1> {
 
     // EIP-2 signature malleability compliance (https://eips.ethereum.org/EIPS/eip-2)
-    require( 
-        s <= 
-b256::from(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0), 
-        "InvalidSignature" 
-    );
+    if (s > b256::from(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)) {
+        return None;
+    }
     // make most significant bit of s 0 or 1 depending on v
     match v {
         27 => {
@@ -311,8 +309,6 @@ fn test_i128_to_be_bytes_negative() {
     expected_bytes.set(13, 0x16u8);
     expected_bytes.set(14, 0x37u8);
     expected_bytes.set(15, 0x40u8);
-
-    log(expected_bytes);
 
     assert(bytes == expected_bytes);
 }
