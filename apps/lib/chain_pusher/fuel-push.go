@@ -10,24 +10,7 @@ import (
 var FuelpushCmd = &cobra.Command{
 	Use:   "fuel",
 	Short: "Push WebSocket prices to Fuel contract",
-	Long: `Push WebSocket prices to Fuel contract.
-
-The Fuel pusher connects to a Stork WebSocket endpoint to receive real-time price updates
-and pushes them to a Fuel blockchain smart contract. It uses the Fuel Rust SDK under the hood
-via FFI (Foreign Function Interface) to interact with the Fuel network.
-
-Configuration requires:
-- WebSocket endpoint URL for receiving price data
-- Authentication credentials for the WebSocket connection
-- Fuel RPC endpoint URL
-- Contract address on the Fuel network
-- Asset configuration file defining which price feeds to track
-- Private key file for transaction signing
-- Batching and polling parameters for optimization
-
-The pusher will continuously listen for price updates and batch them for efficient
-on-chain submission.`,
-	Run: runFuelPush,
+	Run:   runFuelPush,
 }
 
 func init() {

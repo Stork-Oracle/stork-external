@@ -1,6 +1,6 @@
 # Define the Rust source directory
 RUST_SRC_DIR ?= apps/lib/signer/rust/stork
-FUEL_FFI_SRC_DIR ?= apps/lib/chain_pusher/fuel_ffi
+FUEL_FFI_SRC_DIR ?= apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi
 RUST_LIB_DIR:= $(CURDIR)/.lib
 
 # Detect the host operating system
@@ -40,7 +40,16 @@ LIBSTORK := $(RUST_LIB_DIR)/$(STORK_LIB_NAME)
 FUEL_FFI_LIB_DIR := $(FUEL_FFI_SRC_DIR)/target/$(RUST_TARGET)/release
 LIBFUEL_FFI := $(RUST_LIB_DIR)/$(FUEL_FFI_LIB_NAME)
 
-$(LIBSTORK): $(RUST_SRC_DIR)
+# Add header file definitions
+FUEL_FFI_HEADER := $(RUST_LIB_DIR)/fuel_ffi.h
+
+# Find all Rust source files for proper dependencies
+RUST_SOURCES := $(shell find $(RUST_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
+FUEL_FFI_SOURCES := $(shell find $(FUEL_FFI_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
+FUEL_FFI_CARGO := $(FUEL_FFI_SRC_DIR)/Cargo.toml
+FUEL_FFI_ABI := $(FUEL_FFI_SRC_DIR)/stork-abi.json
+
+$(LIBSTORK): $(RUST_SOURCES)
 	@echo "Building $(STORK_LIB_NAME) for $(RUST_TARGET)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cd $(RUST_SRC_DIR) && \
@@ -48,13 +57,14 @@ $(LIBSTORK): $(RUST_SRC_DIR)
 	CARGO_NET_GIT_FETCH_WITH_CLI=false cargo build --release --target $(RUST_TARGET) && \
 	cp target/$(RUST_TARGET)/release/$(STORK_LIB_NAME) $(LIBSTORK)
 
-$(LIBFUEL_FFI): $(FUEL_FFI_SRC_DIR)
+$(LIBFUEL_FFI): $(FUEL_FFI_SOURCES) $(FUEL_FFI_CARGO) $(FUEL_FFI_ABI)
 	@echo "Building $(FUEL_FFI_LIB_NAME) for $(RUST_TARGET)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cd $(FUEL_FFI_SRC_DIR) && \
 	rustup target add $(RUST_TARGET) && \
 	CARGO_NET_GIT_FETCH_WITH_CLI=false cargo build --release --target $(RUST_TARGET) && \
-	cp target/$(RUST_TARGET)/release/$(FUEL_FFI_LIB_NAME) $(LIBFUEL_FFI)
+	cp target/$(RUST_TARGET)/release/$(FUEL_FFI_LIB_NAME) $(LIBFUEL_FFI) && \
+	cp target/include/fuel_ffi.h $(FUEL_FFI_HEADER)
 
 .PHONY: rust
 rust: $(LIBSTORK) $(LIBFUEL_FFI)
