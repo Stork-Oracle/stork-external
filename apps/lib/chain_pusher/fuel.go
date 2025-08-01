@@ -33,7 +33,7 @@ func NewFuelContractInteractor(
 
 	contract, err := fuel.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create fuel client")
+		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
 	}
 
 	return &FuelContractInteractor{
@@ -75,9 +75,9 @@ func (fci *FuelContractInteractor) PullValues(
 		valueJson, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
 		if err != nil {
 			if strings.Contains(err.Error(), "feed not found") {
-				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
+				fci.logger.Debug().Err(err).Str("asset_id", idHex).Msg("No value found")
 			} else {
-				fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+				fci.logger.Debug().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
 			}
 			continue
 		}
