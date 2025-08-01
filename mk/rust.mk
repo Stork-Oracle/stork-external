@@ -46,11 +46,6 @@ FUEL_FFI_HEADER := $(RUST_LIB_DIR)/fuel_ffi.h
 # Find all Rust source files for proper dependencies
 RUST_SOURCES := $(shell find $(RUST_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
 FUEL_FFI_SOURCES := $(shell find $(FUEL_FFI_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
-
-# Debug what find actually returns
-$(info DEBUG: FUEL_FFI_SRC_DIR = $(FUEL_FFI_SRC_DIR))
-$(info DEBUG: FUEL_FFI_SOURCES = $(FUEL_FFI_SOURCES))
-
 FUEL_FFI_CARGO := $(FUEL_FFI_SRC_DIR)/Cargo.toml
 FUEL_FFI_ABI := $(FUEL_FFI_SRC_DIR)/stork-abi.json
 
