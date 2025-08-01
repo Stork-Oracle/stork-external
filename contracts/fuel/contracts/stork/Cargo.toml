@@ -1,9 +1,9 @@
 [package]
-name = "stork"
-description = "A cargo-generate template for Rust + Sway integration testing."
+name = "stork-fuel-contract-tests"
+description = "A package containing rust integration tests for the Stork fuel contract."
 version = "0.1.0"
 edition = "2021"
-authors = ["Georgios Delkos <georgios.delkos@ourovoros.io>", "Henry Baldwin <henry@stork.xyz>"]
+authors = ["Georgios Delkos <georgios.delkos@ourovoros.io>", "Henry Baldwin <henry@stork.network>"]
 license = "Apache-2.0"
 
 [dev-dependencies]

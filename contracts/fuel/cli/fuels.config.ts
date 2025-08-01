@@ -1,22 +1,11 @@
 import { createConfig, FuelsConfig, DeployedData, Provider, Address, Wallet, Src14OwnedProxy } from 'fuels';
 import fs from 'fs';
 
-const PRIVATE_KEY: string | undefined = process.env.PRIVATE_KEY;
-const PROVIDER_URL: string | undefined = process.env.PROVIDER_URL;
-
-if (!PRIVATE_KEY) {
-  throw new Error("PRIVATE_KEY is not set");
-}
-
-if (!PROVIDER_URL) {
-  throw new Error("PROVIDER_URL is not set");
-}
-
 export default createConfig({
   contracts: ['../contracts/stork'],
   output: './types',
-  privateKey: PRIVATE_KEY,
-  providerUrl: PROVIDER_URL,
+  privateKey: process.env.PRIVATE_KEY,
+  providerUrl: process.env.PROVIDER_URL,
   forcBuildFlags: ['--release'],
   onDeploy: onDeploy,
 });
@@ -34,8 +23,8 @@ async function onDeploy(config: FuelsConfig, data: DeployedData) {
     throw new Error("Proxy contract not found");
   }
 
-  const provider = new Provider(PROVIDER_URL!);
-  const wallet = Wallet.fromPrivateKey(PRIVATE_KEY!, provider);
+  const provider = new Provider(config.providerUrl);
+  const wallet = Wallet.fromPrivateKey(config.privateKey!, provider);
 
   const proxyContract = new Src14OwnedProxy(proxyContractId, wallet);
 

@@ -9,24 +9,18 @@ use std::logging::log;
 use std::storage::storage_bytes::*;
 use std::vm::evm::evm_address::EvmAddress;
 
-use standards::src5::*;
-use sway_libs::signed_integers::i128::I128;
+use src5::*;
+use signed_int::i128::I128;
 
 use verify::verify_stork_signature;
 
 use stork_sway_sdk::errors::StorkError;
 use stork_sway_sdk::temporal_numeric_value::TemporalNumericValue;
 use stork_sway_sdk::events::StorkEvent;
+use stork_sway_sdk::interface::TemporalNumericValueInput;
+use stork_sway_sdk::interface::Stork;
 
-struct TemporalNumericValueInput {
-    temporal_numeric_value: TemporalNumericValue,
-    id: b256,
-    publisher_merkle_root: b256,
-    value_compute_alg_hash: b256,
-    r: b256,
-    s: b256,
-    v: u8,
-}
+
 
 struct State {
     // For verifying the authenticity of the passed data
@@ -38,7 +32,7 @@ struct State {
 
 storage {
     /// The owner in storage.
-    owner: standards::src5::State = standards::src5::State::Uninitialized,
+    owner: src5::State = src5::State::Uninitialized,
     proposed_owner: Identity = Identity::Address(Address::zero()),
     initialized: bool = false,
     initializing: bool = false,
@@ -54,7 +48,7 @@ fn latest_canonical_temporal_numeric_value(id: b256) -> Result<TemporalNumericVa
     let map: StorageKey<StorageMap<b256, TemporalNumericValue>> = storage.state.latest_canonical_temporal_numeric_values;
     match map.get(id).try_read() {
         Some(tnv) => Ok(tnv),
-        None => Err(StorkError::FeedNotFound),
+        None => Err(StorkError::FeedNotFound(id)),
     }
 }
 
@@ -124,64 +118,14 @@ fn _update_stork_public_key(stork_public_key: EvmAddress) {
 #[storage(read)]
 fn only_owner() {
     match storage.owner.read() {
-        standards::src5::State::Uninitialized => {},
-        standards::src5::State::Initialized(owner) => {
+        src5::State::Uninitialized => {},
+        src5::State::Initialized(owner) => {
             require(msg_sender().unwrap() == owner, "Only Owner");
         },
-        standards::src5::State::Revoked => {
+        src5::State::Revoked => {
             revert(0);
         }
     }
-}
-
-abi Stork {
-    #[storage(read, write)]
-    fn initialize(
-        initial_owner: Identity,
-        stork_public_key: EvmAddress,
-        single_update_fee_in_wei: u64,
-    );
-
-    #[storage(read)]
-    fn single_update_fee_in_wei() -> u64;
-
-    #[storage(read)]
-    fn stork_public_key() -> EvmAddress;
-
-    fn verify_stork_signature_v1(
-        stork_pubkey: EvmAddress,
-        id: b256,
-        recv_time: u64,
-        quantized_value: I128,
-        publisher_merkle_root: b256,
-        value_compute_alg_hash: b256,
-        r: b256,
-        s: b256,
-        v: u8,
-    ) -> bool;
-
-    #[storage(read, write), payable]
-    fn update_temporal_numeric_values_v1(update_data: Vec<TemporalNumericValueInput>);
-
-    #[storage(read)]
-    fn get_update_fee_v1(update_data: Vec<TemporalNumericValueInput>) -> u64;
-
-    #[storage(read)]
-    fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue;
-
-    fn version() -> String;
-
-    #[storage(read, write)]
-    fn update_single_update_fee_in_wei(single_update_fee_in_wei: u64);
-
-    #[storage(read, write)]
-    fn update_stork_public_key(stork_public_key: EvmAddress);
-
-    #[storage(read, write)]
-    fn propose_owner(new_owner: Address);
-
-    #[storage(read, write)]
-    fn accept_ownership();
 }
 
 impl Stork for Contract {
@@ -197,7 +141,7 @@ impl Stork for Contract {
 
         storage
             .owner
-            .write(standards::src5::State::Initialized(initial_owner));
+            .write(src5::State::Initialized(initial_owner));
 
         set_single_update_fee_in_wei(single_update_fee_in_wei);
         set_stork_public_key(stork_public_key);
@@ -259,8 +203,7 @@ impl Stork for Contract {
             );
 
             if (!verified) {
-                log(StorkError::InvalidSignature);
-                revert(0);
+                panic StorkError::InvalidSignature(x);
             }
             let updated = update_latest_value_if_necessary(update_data.get(i).unwrap());
             if (updated) {
@@ -270,18 +213,15 @@ impl Stork for Contract {
             i += 1;
         }
         if (num_updates == 0) {
-            log(StorkError::NoFreshUpdate);
-            revert(0);
+            panic StorkError::NoFreshUpdate;
         }
 
         let required_fee = get_total_fee(num_updates);
         if (std::call_frames::msg_asset_id() != AssetId::base()) {
-            log(StorkError::InsufficientFee);
-            revert(0)
+            panic StorkError::IncorrectFeeAsset(std::call_frames::msg_asset_id());
         }
         if (std::context::msg_amount() < required_fee) {
-            log(StorkError::InsufficientFee);
-            revert(0);
+            panic StorkError::InsufficientFee(std::context::msg_amount());
         }
     }
 
@@ -295,8 +235,7 @@ impl Stork for Contract {
         let latest_value = match latest_canonical_temporal_numeric_value(id) {
             Ok(value) => value,
             Err(error) => {
-                log(error);
-                revert(0);
+                panic error;
             }
         };
         latest_value
@@ -325,14 +264,14 @@ impl Stork for Contract {
     #[storage(read, write)]
     fn accept_ownership() {
         require(storage.proposed_owner.read() == msg_sender().unwrap(), "Only proposed owner can accept ownership");
-        storage.owner.write(standards::src5::State::Initialized(storage.proposed_owner.read()));
+        storage.owner.write(src5::State::Initialized(storage.proposed_owner.read()));
         storage.proposed_owner.write(Identity::Address(Address::zero()));
     }
 }
 
-impl standards::src5::SRC5 for Contract {
+impl src5::SRC5 for Contract {
     #[storage(read)]
-    fn owner() -> standards::src5::State {
+    fn owner() -> src5::State {
         storage.owner.read()
     }
 }
