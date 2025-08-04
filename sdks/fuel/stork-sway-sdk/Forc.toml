@@ -3,6 +3,9 @@ authors = ["Henry Baldwin <henry@stork.network>"]
 entry = "lib.sw"
 license = "Apache-2.0"
 name = "stork_sway_sdk"
+version = "0.0.3"
+description = "A Sway SDK for Stork Oracle"
+repository = "https://github.com/Stork-Oracle/stork-external"
 
 [dependencies]
 signed_int = "0.26.1"

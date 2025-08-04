@@ -1,0 +1,28 @@
+[[package]]
+name = "example"
+source = "member"
+dependencies = [
+    "signed_int",
+    "std",
+    "stork_sway_sdk",
+]
+
+[[package]]
+name = "signed_int"
+version = "0.26.1"
+source = "registry+signed_int?0.26.1#QmWB8r7jN9bE1sVUJzQoTCbsTXyL6qB55mSfeicd6EtoAo!"
+dependencies = ["std"]
+
+[[package]]
+name = "std"
+version = "0.69.1"
+source = "registry+std?0.69.1#QmbPunScay4xpfHKpxQ71dFKXSiyJuPP8P8YhgX5Dkmzm9!"
+
+[[package]]
+name = "stork_sway_sdk"
+version = "0.0.3"
+source = "registry+stork_sway_sdk?0.0.3#QmeEq6VVXTPpLpDEfTKU6KowBL1hcyoPLc29qbGeBg8PLS!"
+dependencies = [
+    "signed_int",
+    "std",
+]
