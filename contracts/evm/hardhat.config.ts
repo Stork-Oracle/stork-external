@@ -366,6 +366,11 @@ const config: HardhatUserConfig = {
       chainId: 841,
       hardfork: 'berlin',
     },
+    umiDevnet: {
+      url: "https://devnet.uminetwork.com/evm",
+      accounts: [PRIVATE_KEY],
+      chainId: 42069,
+    },
     unichainSepolia: {
       url: "https://rough-misty-frog.unichain-sepolia.quiknode.pro/ddb18152added7093553cbefdb422162f325ac7a",
       accounts: [PRIVATE_KEY],
