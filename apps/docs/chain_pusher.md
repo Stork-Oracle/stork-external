@@ -22,7 +22,7 @@ See [sample.asset-config.yaml](../sample.asset-config.yaml) for an example.
 
 ### Rust
 
-Please ensure you've run `make rust` in the root of this repo before running the pusher, as portions of the pusher rely on calls to libraries built with rust and linked to the pusher via cgo.
+Please ensure you've run `make rust` in the root of this repo before running the pusher, as portions of the pusher rely on calls to libraries built with rust and linked to the pusher via cgo. This is not necessary if you are running via docker.
 
 ## EVM Chain Setup
 
