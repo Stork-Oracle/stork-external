@@ -9,6 +9,7 @@
         "./examples/cosmwasm/cosmwasm_core/Cargo.toml",
         "./contracts/fuel/contracts/stork/Cargo.toml",
         "./apps/lib/signer/rust/stork/Cargo.toml",
+        "./apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi/Cargo.toml",
     ],
     "files.insertFinalNewline": true,
 
