@@ -51,3 +51,11 @@ From `cli/`
 ```bash
 npx fuels deploy
 ```
+
+#### Upgrade
+
+Upgrading the contract is the same as deploying, but uses the `[proxy]` `address` field in [Forc.toml](contracts/stork/Forc.toml) as the proxy to upgrade. If you intend to upgrade a contract, ensure this is set to the proxy address you intend to upgrade.
+
+```bash
+npx fuels deploy
+```
