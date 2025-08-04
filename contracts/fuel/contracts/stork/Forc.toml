@@ -15,4 +15,4 @@ std = "0.69.1"
 
 [proxy]
 enabled = true
-address = "0xdd9f1266cf1a48b3c0398bfb0ffc2a10fe7e87bdcd7f70ec85b5348e04e88fde"
+address = "0x9c118ae13927dd51ba59c0370dc8c272a3b64ccd675950750c8840a649c81149"
