@@ -11,6 +11,7 @@ use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
 pub extern "C" fn fuel_client_new(
     config_json: *const c_char,
     out_client: *mut *mut FuelClient,
+    out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
     if out_client.is_null() {
         return FuelClientError::NullPointer("out_client is null".to_string()).into();
@@ -44,7 +45,7 @@ pub extern "C" fn fuel_client_new(
             *out_client = Box::into_raw(Box::new(client));
         }
         Ok(())
-    })
+    }, out_error)
 }
 
 #[no_mangle]
@@ -61,6 +62,7 @@ pub extern "C" fn fuel_get_latest_value(
     client: *mut FuelClient,
     id_ptr: *const u8,
     out_value_json: *mut *mut c_char,
+    out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
     if out_value_json.is_null() {
         return FuelClientError::NullPointer("out_value_json is null".to_string()).into();
@@ -107,7 +109,7 @@ pub extern "C" fn fuel_get_latest_value(
             }
         }
         Ok(())
-    })
+    }, out_error)
 }
 
 #[no_mangle]
@@ -115,6 +117,7 @@ pub extern "C" fn fuel_update_values(
     client: *mut FuelClient,
     inputs_json: *const c_char,
     out_tx_hash: *mut *mut c_char,
+    out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
     if out_tx_hash.is_null() {
         return FuelClientError::NullPointer("out_tx_hash is null".to_string()).into();
@@ -152,13 +155,14 @@ pub extern "C" fn fuel_update_values(
             *out_tx_hash = c_str;
         }
         Ok(())
-    })
+    }, out_error)
 }
 
 #[no_mangle]
 pub extern "C" fn fuel_get_wallet_balance(
     client: *mut FuelClient,
     out_balance: *mut u64,
+    out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
     if out_balance.is_null() {
         return FuelClientError::NullPointer("out_balance is null".to_string()).into();
@@ -181,7 +185,7 @@ pub extern "C" fn fuel_get_wallet_balance(
             *out_balance = balance;
         }
         Ok(())
-    })
+    }, out_error)
 }
 
 #[no_mangle]
@@ -198,13 +202,32 @@ pub extern "C" fn fuel_free_string(s: *mut c_char) {
 fn handle_ffi_result<T>(
     result: Result<T, FuelClientError>,
     success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
+    out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
-    match result {
-        Ok(value) => match success_handler(value) {
-            Ok(()) => FuelClientStatus::Success,
-            Err(e) => e.into(),
-        },
-        Err(e) => e.into(),
+    let final_result =match result {
+        Ok(value) => success_handler(value),
+        Err(e) => Err(e),
+    };
+
+    match final_result {
+        Ok(()) => {
+            if !out_error.is_null() {
+                unsafe {
+                    *out_error = std::ptr::null_mut();
+                }
+            }
+            FuelClientStatus::Success
+        }
+        Err(e) => {
+            if !out_error.is_null() {
+                if let Ok(error_str) = string_to_c_char(e.to_string()) {
+                    unsafe {
+                        *out_error = error_str;
+                    }
+                }
+            }
+            e.into()
+        }
     }
 }
 

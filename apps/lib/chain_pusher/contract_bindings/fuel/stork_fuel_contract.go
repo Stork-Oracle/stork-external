@@ -59,9 +59,15 @@ func NewStorkContract(rpcUrl string, contractAddress string, privateKey string) 
 	defer C.free(unsafe.Pointer(configCStr))
 
 	var outClient *C.FuelClient
-	status := C.fuel_client_new(configCStr, &outClient)
+	var outErrorPtr *C.char
+	status := C.fuel_client_new(configCStr, &outClient, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
+		if outErrorPtr != nil {
+			errorStr := C.GoString(outErrorPtr)
+			C.fuel_free_string(outErrorPtr)
+			return nil, fmt.Errorf("failed to create fuel client: %w: %s", err, errorStr)
+		}
 		return nil, fmt.Errorf("failed to create fuel client: %w", err)
 	}
 
@@ -121,9 +127,15 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 	defer C.free(unsafe.Pointer(inputsCStr))
 
 	var outTxHashPtr *C.char
-	status := C.fuel_update_values(s.Client, inputsCStr, &outTxHashPtr)
+	var outErrorPtr *C.char
+	status := C.fuel_update_values(s.Client, inputsCStr, &outTxHashPtr, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
+		if outErrorPtr != nil {
+			errorStr := C.GoString(outErrorPtr)
+			C.fuel_free_string(outErrorPtr)
+			return "", fmt.Errorf("failed to update values: %w: %s", err, errorStr)
+		}
 		return "", fmt.Errorf("failed to update values: %w", err)
 	}
 
@@ -142,9 +154,15 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTe
 	idPtr := (*C.uint8_t)(unsafe.Pointer(&id[0]))
 
 	var outValueJsonPtr *C.char
-	status := C.fuel_get_latest_value(s.Client, idPtr, &outValueJsonPtr)
+	var outErrorPtr *C.char
+	status := C.fuel_get_latest_value(s.Client, idPtr, &outValueJsonPtr, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
+		if outErrorPtr != nil {
+			errorStr := C.GoString(outErrorPtr)
+			C.fuel_free_string(outErrorPtr)
+			return nil, fmt.Errorf("failed to get latest value: %w: %s", err, errorStr)
+		}
 		return nil, fmt.Errorf("failed to get latest value: %w", err)
 	}
 
@@ -162,9 +180,15 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTe
 
 func (s *StorkContract) GetWalletBalance() (uint64, error) {
 	var balance C.uint64_t
-	status := C.fuel_get_wallet_balance(s.Client, &balance)
+	var outErrorPtr *C.char
+	status := C.fuel_get_wallet_balance(s.Client, &balance, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
+		if outErrorPtr != nil {
+			errorStr := C.GoString(outErrorPtr)
+			C.fuel_free_string(outErrorPtr)
+			return 0, fmt.Errorf("failed to get wallet balance: %w: %s", err, errorStr)
+		}
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
 
