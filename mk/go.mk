@@ -35,8 +35,9 @@ install-cosmwasm-libs:
 	fi
 
 .PHONY: install
+
 ## Aggregate target to install all Go binaries
-install: $(LIBSTORK) install-cosmwasm-libs
+install: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
 	@$(GO) install -v ./apps/cmd/...
 	@echo "All Go binaries have been installed successfully."
 
@@ -47,5 +48,5 @@ clean: clean-rust
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: $(LIBSTORK)
+run-local: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
 	@$(GO) run ./apps/cmd/$(target) $(args)
