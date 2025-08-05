@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     build-essential
 
 # Rust installation layer
-ENV RUST_VERSION=1.82.0
+ENV RUST_VERSION=1.88.0
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal
 ENV PATH="/root/.cargo/bin:${PATH}"
