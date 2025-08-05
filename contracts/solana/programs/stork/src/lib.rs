@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_instruction;
+use solana_system_interface::instruction as system_instruction;
 
 mod verify;
 use verify::{verify_stork_evm_signature, EvmPubkey};
