@@ -32,7 +32,7 @@ module stork::stork {
         stork_evm_public_key: vector<u8>,
         // the fee to update a value
         single_update_fee: u64,
-        // version of the Stork state 
+        // version of the Stork state
         stork_state_version: u64,
         // context
         ctx: &mut TxContext,
@@ -51,7 +51,7 @@ module stork::stork {
 
     // === Public Functions ===
 
-    // updates the price feed for an asset 
+    // updates the price feed for an asset
     // input data is an assets update data signed with Storks EVM public key
     public fun update_single_temporal_numeric_value_evm(
         stork_state: &mut StorkState,
@@ -103,7 +103,7 @@ module stork::stork {
         // context
         ctx: &mut TxContext,
     ) {
-        
+
         let evm_pubkey = stork_state.get_stork_evm_public_key();
         let feed_registry = stork_state.borrow_tnv_feeds_registry_mut();
         let mut num_updates = 0;
@@ -168,5 +168,32 @@ module stork::stork {
             feed.set_latest_value(update_data.get_temporal_numeric_value());
         };
         event::emit_temporal_numeric_value_feed_update_event(feed_id, update_data.get_temporal_numeric_value());
+    }
+
+    // === Test Helpers ===
+
+    #[test_only]
+    public fun init_stork_for_testing(
+        // admin capability
+        admin_cap: &AdminCap,
+        // the address of the Stork program
+        stork_sui_address: address,
+        // Storks EVM public key
+        stork_evm_public_key: vector<u8>,
+        // the fee to update a value
+        single_update_fee: u64,
+        // version of the Stork state
+        stork_state_version: u64,
+        // context
+        ctx: &mut TxContext,
+    ) {
+        init_stork(
+            admin_cap,
+            stork_sui_address,
+            stork_evm_public_key,
+            single_update_fee,
+            stork_state_version,
+            ctx
+        );
     }
 }
