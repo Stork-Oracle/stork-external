@@ -7,6 +7,7 @@
         "./contracts/cosmwasm/contracts/Cargo.toml",
         "./examples/cosmwasm/sylvia/Cargo.toml",
         "./examples/cosmwasm/cosmwasm_core/Cargo.toml",
+        "./examples/cosmwasm/cosmwasm_core_no_dep/Cargo.toml",
         "./contracts/fuel/contracts/stork/Cargo.toml",
         "./apps/lib/signer/rust/stork/Cargo.toml",
         "./apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi/Cargo.toml",
