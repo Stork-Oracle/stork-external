@@ -12,7 +12,7 @@ stork = "0x101"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-framework.git"
-rev = "mainnet"
+rev = "aptos-release-v1.30"
 subdir = "aptos-framework"
 
 [dev-dependencies]
