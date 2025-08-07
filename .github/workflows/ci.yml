@@ -184,6 +184,11 @@ jobs:
             ~/.cargo/bin/anchor
           key: ${{ runner.os }}-anchor-0.31.1
 
+      - name: Install system dependencies for Anchor CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
       - name: Install Anchor CLI
         run: |
           if ! command -v anchor &> /dev/null; then
