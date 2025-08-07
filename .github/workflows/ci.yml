@@ -196,12 +196,6 @@ jobs:
             cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
           fi
 
-      - name: Show versions
-        run: |
-          which cargo
-          cargo --version
-          rustc --version
-          anchor --version || true
       - name: Run rust tests
         run: |
           cargo test
