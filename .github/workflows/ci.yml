@@ -146,7 +146,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-          toolchain: 1.85.1
+          toolchain: 1.88.0
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
