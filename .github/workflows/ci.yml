@@ -165,7 +165,7 @@ jobs:
           path: |
             ~/.local/share/solana/install
             ~/.config/solana/id.json
-          key: ${{ runner.os }}-solana
+          key: ${{ runner.os }}-solana-2.2.21
 
       - name: Install Solana CLI
         run: |
