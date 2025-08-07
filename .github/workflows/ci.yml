@@ -146,6 +146,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+          toolchain: 1.88.0
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -188,12 +189,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libudev-dev
 
+
       - name: Install Anchor CLI
         run: |
           if ! command -v anchor &> /dev/null; then
             cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
           fi
 
+      - name: Show versions
+        run: |
+          which cargo
+          cargo --version
+          rustc --version
+          anchor --version || true
       - name: Run rust tests
         run: |
           cargo test
