@@ -1,6 +1,6 @@
 [package]
 name = "stork-solana-sdk"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
 description = "A Solana SDK for Stork Protocol"
 license = "Apache-2.0"
@@ -12,4 +12,4 @@ crate-type = ["lib"]
 name = "stork_solana_sdk"
 
 [dependencies]
-anchor-lang = "0.30.1"
+anchor-lang = "0.31.1"
