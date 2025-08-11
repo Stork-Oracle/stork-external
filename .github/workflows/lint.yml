@@ -17,6 +17,6 @@ jobs:
                 config_file: .linkspector.yml
                 fail_on_error: true
                 filter_mode: nofilter
-                reviewdog_flags: -tee -name=check-links
+                reviewdog_flags: "-tee -name=check-links"
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
