@@ -18,6 +18,7 @@ jobs:
                 fail_on_error: true
                 filter_mode: nofilter
                 tool_name: check-links
+                reporter: github-pr-review
                 reviewdog_flags: -tee
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
