@@ -2,7 +2,7 @@
 
 This directory contains the Stork compatible Fuel contract written in [Sway](https://docs.fuel.network/docs/sway/), as well as a CLI tool used to manage the Stork Fuel compatible contract.
 
-This contract is used to read and write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-fuel-sdk](../../sdks/fuel/stork-fuel-sdk).
+This contract is used to read and write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-fuel-sdk](../../sdks/fuel/stork-sway-sdk).
 
 ### Getting started
 
@@ -44,7 +44,7 @@ npx fuels build
 
 #### Deploy
 
-This command writes the proxy address to [Forc.toml](contracts/stork/Forc.toml), as well as the proxy and impl addresses to [contract-ids.json](cli/contract-ids.json).
+This command writes the proxy address to [Forc.toml](contracts/stork/Forc.toml), as well as the proxy and impl addresses to [contract-ids.json](cli/types/contract-ids.json).
 
 From `cli/`
 
