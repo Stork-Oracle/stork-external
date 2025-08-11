@@ -6,4 +6,4 @@ name = "example"
 
 [dependencies]
 signed_int = "0.26.1"
-stork_sway_sdk = "0.0.3"
+stork_sway_sdk = "0.0.4"

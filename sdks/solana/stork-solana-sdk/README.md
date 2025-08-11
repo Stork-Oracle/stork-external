@@ -6,7 +6,7 @@ It is available on [crates.io](https://crates.io/crates/stork-solana-sdk).
 
 ## Pull Model
 
-The Stork Solana SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/apps/docs/chain_pusher) in order to do this.
+The Stork Solana SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/blob/main/apps/docs/chain_pusher.md) in order to do this.
 
 ## Stork Price Feed Accounts
 

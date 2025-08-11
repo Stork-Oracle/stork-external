@@ -1,4 +1,5 @@
 include mk/go.mk
+include mk/lint.mk
 # NOTE: rust.mk is included upstream
 
 .PHONY: help
