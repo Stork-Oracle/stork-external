@@ -20,8 +20,8 @@ source = "registry+std?0.69.1#QmbPunScay4xpfHKpxQ71dFKXSiyJuPP8P8YhgX5Dkmzm9!"
 
 [[package]]
 name = "stork_sway_sdk"
-version = "0.0.3"
-source = "registry+stork_sway_sdk?0.0.3#QmeEq6VVXTPpLpDEfTKU6KowBL1hcyoPLc29qbGeBg8PLS!"
+version = "0.0.4"
+source = "registry+stork_sway_sdk?0.0.4#QmY8PmuK1DxJidEFv5tB4roBC3kBH6LitSpY5NqGgeFtz1!"
 dependencies = [
     "signed_int",
     "std",
