@@ -12,9 +12,9 @@ The Stork Sway SDK allows users to consume Stork price updates on a pull basis. 
 
 The Stork Sway SDK provides a set of useful features for building Fuel contracts that consume Stork price feeds. Primarily, a consuming contract will be using:
 
-- The `Stork` abi interface, in `stork-sway-sdk::interface`
+- The `Stork` abi interface, in `stork_sway_sdk::interface`
 - The `get_temporal_numeric_value_unchecked_v1` function on the `Stork` interface to get the latest price update
-- The `TemporalNumericValue` struct, in `stork-sway-sdk::temporal_numeric_value`, which is the struct that represents a price update and is returned by the `get_temporal_numeric_value_unchecked_v1` function
+- The `TemporalNumericValue` struct, in `stork_sway_sdk::temporal_numeric_value`, which is the struct that represents a price update and is returned by the `get_temporal_numeric_value_unchecked_v1` function
 
 ## Example 
 
