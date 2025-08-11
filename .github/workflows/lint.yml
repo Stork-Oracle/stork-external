@@ -1,0 +1,17 @@
+name: Lint
+
+on:
+    pull_request:
+
+jobs:
+    check-links:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Check Links
+            uses: umbrelladocs/action-linkspector@v1
+            with:
+                config_file: .linkspector.yml
