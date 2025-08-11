@@ -1,0 +1,6 @@
+dirs:
+  - .
+useGitIgnore: true
+replacementPatterns:
+  - pattern: "(https?://github\\.com/[^/]+/stork-external/)(tree|blob)/main(?=/|\\b)"
+    replacement: "$1$2/${CURRENT_BRANCH}"
