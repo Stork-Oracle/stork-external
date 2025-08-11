@@ -16,5 +16,7 @@ jobs:
             with:
                 config_file: .linkspector.yml
                 fail_on_error: true
+                filter_mode: nofilter
+                reviewdog_flags: -tee
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
