@@ -15,3 +15,5 @@ jobs:
             uses: umbrelladocs/action-linkspector@v1
             with:
                 config_file: .linkspector.yml
+            env:
+                CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
