@@ -1,0 +1,23 @@
+name: Lint
+
+on:
+    pull_request:
+
+jobs:
+    check-links:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Check Links
+            uses: umbrelladocs/action-linkspector@v1
+            with:
+                config_file: .linkspector.yml
+                fail_on_error: true
+                filter_mode: nofilter
+                tool_name: check-links
+                reviewdog_flags: -tee
+            env:
+                CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}

@@ -1,6 +1,6 @@
 # Stork Aptos Contract
 
-This directory contains the Stork Aptos compatible contract written in [Aptos Move](https://aptos.dev/move).
+This directory contains the Stork Aptos compatible contract written in [Aptos Move](https://aptos.dev/network/blockchain/move).
 
 This contract is used to read and write the latest values from the Stork network on-chain.
 
