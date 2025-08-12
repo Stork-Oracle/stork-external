@@ -1,6 +1,6 @@
 # Define the Rust source directory
-RUST_SRC_DIR ?= apps/lib/signer/rust/stork
-FUEL_FFI_SRC_DIR ?= apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi
+RUST_SRC_DIR ?= shared/signer/rust/stork
+FUEL_FFI_SRC_DIR ?= apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi
 RUST_LIB_DIR:= $(CURDIR)/.lib
 
 # Detect the host operating system

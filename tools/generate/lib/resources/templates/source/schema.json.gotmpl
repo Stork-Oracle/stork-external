@@ -1,0 +1,13 @@
+// @path: /apps/data_provider/lib/configs/resources/source_config_schemas/{{ .LowerStr }}.json
+{
+  "$id": "/resources/source_config_schemas/{{ .LowerStr }}",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "{{ .LowerStr }}"
+    }
+  },
+  "required": ["dataSource"],
+  "additionalProperties": false
+} 
