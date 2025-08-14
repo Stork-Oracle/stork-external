@@ -1,9 +1,10 @@
-// contracts/Getters.sol
+// contracts/stork/StorkGetters.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
+
 import "./StorkState.sol";
 
 contract StorkGetters is StorkState {
