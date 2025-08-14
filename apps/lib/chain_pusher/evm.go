@@ -103,45 +103,44 @@ func NewEvmContractInteractor(
 	}, nil
 }
 
-func (sci *EvmContractInteractor) ListenContractEvents(
+func (eci *EvmContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[InternalEncodedAssetId]InternalTemporalNumericValue,
 ) {
-	if sci.wsContract == nil {
-		sci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
+	if eci.wsContract == nil {
+		eci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
 		return
 	}
 
 	watchOpts := &bind.WatchOpts{Context: context.Background()}
 
-	sub, eventCh, err := setupSubscription(sci, watchOpts)
+	sub, eventCh, err := setupSubscription(eci, watchOpts)
 	if err != nil {
-		sci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
+		eci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
 		return
 	}
 
 	defer func() {
-		sci.logger.Debug().Msg("Exiting ListenContractEvents")
+		eci.logger.Debug().Msg("Exiting ListenContractEvents")
 		if sub != nil {
 			sub.Unsubscribe()
 			close(eventCh)
 		}
 	}()
 
-	sci.logger.Info().Msg("Listening for contract events via WebSocket")
+	eci.logger.Info().Msg("Listening for contract events via WebSocket")
 	for {
-		err := sci.listenLoop(ctx, sub, eventCh, ch)
+		err := eci.listenLoop(ctx, sub, eventCh, ch)
 		if ctx.Err() != nil {
 			return
 		}
 
-		sci.logger.Warn().Err(err).Msg("Error while watching contract events")
+		eci.logger.Warn().Err(err).Msg("Error while watching contract events")
 		if sub != nil {
 			sub.Unsubscribe()
-			close(eventCh)
 			sub = nil
 		}
 
-		sub, eventCh, err = sci.reconnect(ctx, watchOpts)
+		sub, eventCh, err = eci.reconnect(ctx, watchOpts)
 		if err != nil {
 			return
 		}
@@ -149,18 +148,18 @@ func (sci *EvmContractInteractor) ListenContractEvents(
 }
 
 func setupSubscription(
-	sci *EvmContractInteractor,
+	eci *EvmContractInteractor,
 	watchOpts *bind.WatchOpts,
 ) (ethereum.Subscription, chan *contract_bindings.StorkContractValueUpdate, error) {
 	eventCh := make(chan *contract_bindings.StorkContractValueUpdate)
-	sub, err := sci.wsContract.WatchValueUpdate(watchOpts, eventCh, nil)
+	sub, err := eci.wsContract.WatchValueUpdate(watchOpts, eventCh, nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to watch contract events: %w", err)
 	}
 	return sub, eventCh, nil
 }
 
-func (sci *EvmContractInteractor) listenLoop(
+func (eci *EvmContractInteractor) listenLoop(
 	ctx context.Context,
 	sub ethereum.Subscription,
 	eventCh chan *contract_bindings.StorkContractValueUpdate,
@@ -176,7 +175,7 @@ func (sci *EvmContractInteractor) listenLoop(
 
 		case vLog, ok := <-eventCh:
 			if !ok {
-				sci.logger.Warn().Msg("Event channel closed, exiting event listener")
+				eci.logger.Warn().Msg("Event channel closed, exiting event listener")
 				return errors.New("event channel closed is closed")
 			}
 
@@ -193,14 +192,14 @@ func (sci *EvmContractInteractor) listenLoop(
 	}
 }
 
-func (sci *EvmContractInteractor) reconnect(
+func (eci *EvmContractInteractor) reconnect(
 	ctx context.Context,
 	watchOpts *bind.WatchOpts,
 ) (ethereum.Subscription, chan *contract_bindings.StorkContractValueUpdate, error) {
 	backoff := initialBackoff
 	for retryCount := range maxRetryAttempts {
 		backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
-		sci.logger.Info().Dur("backoff", backoff).
+		eci.logger.Info().Dur("backoff", backoff).
 			Int("attempt", retryCount+1).
 			Int("maxAttempts", maxRetryAttempts).
 			Msg("Attempting to reconnect to contract events")
@@ -209,32 +208,32 @@ func (sci *EvmContractInteractor) reconnect(
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
 		case <-time.After(backoff):
-			newSub, newEventCh, err := setupSubscription(sci, watchOpts)
+			newSub, newEventCh, err := setupSubscription(eci, watchOpts)
 			if err != nil {
-				sci.logger.Warn().Err(err).Msg("Failed to reconnect to contract events")
+				eci.logger.Warn().Err(err).Msg("Failed to reconnect to contract events")
 
 				continue
 			}
 
-			sci.logger.Info().Msg("Successfully reconnected to contract events")
+			eci.logger.Info().Msg("Successfully reconnected to contract events")
 			return newSub, newEventCh, nil
 		}
 	}
 
-	sci.logger.Error().Int("maxRetryAttempts", maxRetryAttempts).
+	eci.logger.Error().Int("maxRetryAttempts", maxRetryAttempts).
 		Msg("Max retry attempts reached, giving up on reconnection")
 	return nil, nil, errors.New("max retry attempts reached")
 }
 
-func (sci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
+func (eci *EvmContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetId) (map[InternalEncodedAssetId]InternalTemporalNumericValue, error) {
 	polledVals := make(map[InternalEncodedAssetId]InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
-		storkStructsTemporalNumericValue, err := sci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetId)
+		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetId)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") {
-				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
+				eci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
 			} else {
-				sci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
+				eci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
 			}
 
 			continue
@@ -360,20 +359,20 @@ func getVerifyPublishersPayloads(priceUpdates map[InternalEncodedAssetId]Aggrega
 	return payloads, nil
 }
 
-func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
-	if sci.verifyPublishers {
+func (eci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetId]AggregatedSignedPrice) error {
+	if eci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {
 			return err
 		}
 		for i := range publisherVerifyPayloads {
-			verified, err := sci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
+			verified, err := eci.contract.VerifyPublisherSignaturesV1(nil, publisherVerifyPayloads[i].pubSigs, publisherVerifyPayloads[i].merkleRoot)
 			if err != nil {
-				sci.logger.Error().Err(err).Msg("Failed to verify publisher signatures")
+				eci.logger.Error().Err(err).Msg("Failed to verify publisher signatures")
 				return err
 			}
 			if !verified {
-				sci.logger.Error().Msg("Publisher signatures not verified, skipping update")
+				eci.logger.Error().Msg("Publisher signatures not verified, skipping update")
 				return nil
 			}
 		}
@@ -384,26 +383,26 @@ func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 		return err
 	}
 
-	fee, err := sci.contract.GetUpdateFeeV1(nil, updatePayload)
+	fee, err := eci.contract.GetUpdateFeeV1(nil, updatePayload)
 	if err != nil {
 		return err
 	}
 
-	auth, err := bind.NewKeyedTransactorWithChainID(sci.privateKey, sci.chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
 	if err != nil {
 		return err
 	}
 
 	// let the library auto-estimate the gas price
-	auth.GasLimit = sci.gasLimit
+	auth.GasLimit = eci.gasLimit
 	auth.Value = fee
 
-	tx, err := sci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
+	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
 	if err != nil {
 		return err
 	}
 
-	sci.logger.Info().
+	eci.logger.Info().
 		Str("txHash", tx.Hash().Hex()).
 		Int("numUpdates", len(updatePayload)).
 		Uint64("gasPrice", tx.GasPrice().Uint64()).
@@ -411,8 +410,8 @@ func (sci *EvmContractInteractor) BatchPushToContract(priceUpdates map[InternalE
 	return nil
 }
 
-func (sci *EvmContractInteractor) GetWalletBalance() (float64, error) {
-	publicKey := sci.privateKey.Public()
+func (eci *EvmContractInteractor) GetWalletBalance() (float64, error) {
+	publicKey := eci.privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		return -1, fmt.Errorf("error casting public key to ECDSA")
@@ -420,7 +419,7 @@ func (sci *EvmContractInteractor) GetWalletBalance() (float64, error) {
 
 	address := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	balance, err := sci.client.BalanceAt(context.Background(), address, nil)
+	balance, err := eci.client.BalanceAt(context.Background(), address, nil)
 	if err != nil {
 		return -1, err
 	}
