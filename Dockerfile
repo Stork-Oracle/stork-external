@@ -21,7 +21,11 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY Makefile ./
 COPY mk ./mk/
 COPY . .
-RUN make rust
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/app/external/apps/lib/signer/rust/stork/target \
+    --mount=type=cache,target=/app/external/apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi/target \
+    make rust
 
 # Go dependencies layer
 COPY go.mod go.sum ./
