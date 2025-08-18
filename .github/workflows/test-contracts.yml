@@ -55,11 +55,11 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './contracts/solana/package-lock.json'
+          cache-dependency-path: './chains/solana/contracts/package-lock.json'
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./contracts/solana
+        working-directory: ./chains/solana/contracts
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -73,8 +73,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target/
-          key: ${{ runner.os }}-cargo-solana-${{ hashFiles('**/Cargo.lock') }}
+            chains/solana/contracts/stork/target/
+          key: ${{ runner.os }}-cargo-solana-${{ hashFiles('chains/solana/contracts/stork/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-solana-
 
@@ -141,7 +141,6 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target/
           key: ${{ runner.os }}-cargo-sui-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-sui-
@@ -182,8 +181,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target/
-          key: ${{ runner.os }}-cargo-cosmwasm-${{ hashFiles('**/Cargo.lock') }}
+            chains/cosmwasm/contracts/target/
+          key: ${{ runner.os }}-cargo-cosmwasm-${{ hashFiles('chains/cosmwasm/contracts/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-cosmwasm-
 
