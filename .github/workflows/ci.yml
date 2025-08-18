@@ -97,13 +97,13 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './contracts/evm/package-lock.json'
+          cache-dependency-path: './chains/evm/contracts/stork/package-lock.json'
 
       - name: Install dependencies
         run: npm install
         working-directory: ./contracts/evm
 
-      - name: Run hardhat tests
+      - name: Run hardhat tests for Stork
         run: |
           # Generate a random 32-byte (64 character) hex string prefixed with 0x
           RANDOM_KEY=$(openssl rand -hex 32)
@@ -122,8 +122,18 @@ jobs:
           npx hardhat vars set CRONOS_L2_API_KEY fake
 
           npx hardhat --network hardhat test
-        working-directory: ./contracts/evm
-        
+        working-directory: ./chains/evm/contracts/stork
+
+      - name: Run hardhat tests for StorkPythAdapter
+        run: |
+          npx hardhat --network hardhat test
+        working-directory: ./chains/evm/contracts/stork_pyth_adapter
+
+      - name: Run hardhat tests for StorkChainlinkAdapter
+        run: |
+          npx hardhat --network hardhat test
+        working-directory: ./chains/evm/contracts/stork_chainlink_adapter
+
   test-solana:
     runs-on: ubuntu-latest
 
