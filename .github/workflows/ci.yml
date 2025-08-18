@@ -92,14 +92,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js for Stork
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: './chains/evm/contracts/stork/package-lock.json'
 
-      - name: Install dependencies
+      - name: Install dependencies for Stork
         run: npm install
         working-directory: ./chains/evm/contracts/stork
 
@@ -124,10 +124,32 @@ jobs:
           npx hardhat --network hardhat test
         working-directory: ./chains/evm/contracts/stork
 
+      - name: Set up Node.js for StorkPythAdapter
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/stork_pyth_adapter/package-lock.json'
+
+      - name: Install dependencies for StorkPythAdapter
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork_pyth_adapter
+
       - name: Run hardhat tests for StorkPythAdapter
         run: |
           npx hardhat --network hardhat test
         working-directory: ./chains/evm/contracts/stork_pyth_adapter
+
+      - name: Set up Node.js for StorkChainlinkAdapter
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/stork_chainlink_adapter/package-lock.json'
+
+      - name: Install dependencies for StorkChainlinkAdapter
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork_chainlink_adapter
 
       - name: Run hardhat tests for StorkChainlinkAdapter
         run: |
