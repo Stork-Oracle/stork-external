@@ -101,7 +101,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./contracts/evm
+        working-directory: ./chains/evm/contracts/stork
 
       - name: Run hardhat tests for Stork
         run: |
