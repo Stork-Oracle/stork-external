@@ -1,8 +1,0 @@
-[toolchain]
-channel = "latest-aarch64-apple-darwin"
-
-[components]
-forc = "0.69.1"
-fuel-core = "0.44.0"
-forc-wallet = "0.15.1"
-
