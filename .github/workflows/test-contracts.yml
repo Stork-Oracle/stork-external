@@ -1,90 +1,9 @@
-name: CI
+name: Test Contracts 
 
 on:
   push:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    services:
-      docker:
-        image: docker:19.03.12
-        options: --privileged
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24.3'
-
-      - name: Cache Go modules
-        id: go-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-            ${{ runner.os }}-go-
-
-      - name: Clean Go module cache if needed
-        run: |
-          if ! go mod download 2>/dev/null; then
-            echo "Module download failed, cleaning cache..."
-            go clean -modcache
-            go mod download
-          fi
-
-      - name: Cache Rust dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Run tests
-        run: make test
-        env:
-          TARGETPLATFORM: linux/amd64
-
-  data-provider-codegen-check:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24.3'
-
-      - name: Install CLI directly
-        run: |
-          go build -o $(go env GOPATH)/bin/stork-generate ./apps/cmd/generate
-  
-      - name: Run update command
-        run: stork-generate update
-
-      - name: Check for changes
-        run: |
-          echo "Checking for changes in generated code..."
-          if [[ $(git status --porcelain) ]]; then
-            echo "Generated code is out of sync. Please run 'stork-generate update' and commit the changes."
-            git diff
-            exit 1
-          fi
-
   test-evm:
     runs-on: ubuntu-latest
 
@@ -199,12 +118,12 @@ jobs:
       - name: Run rust tests
         run: |
           cargo test
-        working-directory: ./contracts/solana/programs/stork
+        working-directory: ./chains/solana/contracts/stork
 
       - name: Run anchor tests
         run: |
           anchor test
-        working-directory: ./contracts/solana/programs/stork
+        working-directory: ./chains/solana/contracts/stork
 
   test-sui:
     runs-on: ubuntu-latest
@@ -244,7 +163,7 @@ jobs:
       - name: Run Sui tests
         run: |
           sui move test
-        working-directory: ./contracts/sui/contracts
+        working-directory: ./chains/sui/contracts
 
   test-cosmwasm:
     runs-on: ubuntu-latest
@@ -271,7 +190,7 @@ jobs:
       - name: Run tests
         run: |
           cargo test
-        working-directory: ./contracts/cosmwasm/contracts
+        working-directory: ./chains/cosmwasm/contracts
 
   test-aptos:
     runs-on: ubuntu-latest
@@ -314,7 +233,7 @@ jobs:
       - name: Run Aptos tests
         run: |
           aptos move test --move-2 --dev
-        working-directory: ./contracts/aptos/contracts
+        working-directory: ./chains/aptos/contracts
   
   test-fuel:
     runs-on: ubuntu-latest
@@ -342,19 +261,19 @@ jobs:
           yes | curl https://install.fuel.network | sh
           echo "${HOME}/.fuelup/bin" >> $GITHUB_PATH
 
-      - name: Pin Forc Version
-        run: |
-          fuelup toolchain new pinned-forc
-          fuelup component add forc@0.68.4
-          fuelup component add fuel-core@0.43.2
+      # - name: Pin Forc Version
+      #   run: |
+      #     fuelup toolchain new pinned-forc
+      #     fuelup component add forc@0.68.4
+      #     fuelup component add fuel-core@0.43.2
 
       - name: Run Unit Tests
         run: |
           forc test
-        working-directory: ./contracts/fuel/contracts/stork/
+        working-directory: ./chains/fuel/contracts/stork/
 
       - name: Run integration tests
         run: |
           cargo test
-        working-directory: ./contracts/fuel/contracts/stork/
+        working-directory: ./chains/fuel/contracts/stork/
         
