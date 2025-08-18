@@ -118,7 +118,7 @@ jobs:
       - name: Run rust tests
         run: |
           cargo test
-        working-directory: ./chains/solana/
+        working-directory: ./chains/solana/contracts/
 
       - name: Run anchor tests
         run: |
@@ -188,7 +188,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cargo test
+          cargo test --locked
         working-directory: ./chains/cosmwasm/contracts
 
   test-aptos:
