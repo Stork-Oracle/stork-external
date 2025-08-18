@@ -19,7 +19,7 @@ The Stork EVM SDK provides a set of useful interfaces and structures for buildin
 
 ## Example
 
-The following snippet is an example of how to use this SDK to consume Stork price feeds on chain. A full example is available [here](https://github.com/stork-oracle/stork-external/tree/main/chains/evm/examples).
+The following snippet is an example of how to use this SDK to consume Stork price feeds on chain. A full example is available [here](https://github.com/stork-oracle/stork-external/tree/main/chains/evm/examples/stork).
 
 ```solidity
 // SPDX-License-Identifier: Apache-2.0
