@@ -1,8 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "contracts/programs/*",
-    "sdks/stork-solana-sdk",
+    "programs/*"
 ]
 
 exclude = [

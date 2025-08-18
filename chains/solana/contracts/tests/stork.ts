@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Stork } from "../target/types/stork";
+import { Stork } from "../../target/types/stork";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import * as assert from "assert";
 
