@@ -8,9 +8,9 @@ This package can be used as an SDK to build contracts that interact with Stork p
 
 ## Pyth Compatibility
 
-The adapter implements Pyth's [IPyth interface](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol), allowing existing Pyth-integrated applications to seamlessly integrate with Stork price feeds with minimal code changes.
+The adapter implements Pyth's [IPyth interface](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol), allowing existing Pyth-integrated applications to seamlessly integrate with Stork price feeds with minimal code changes. Price precision (exponent) is dynamically reduced from Stork's int192 values to fit within the less precise int64 used in the IPyth interface.
 
-Note that all timestamps are returned in seconds (converted from Stork's nanosecond precision) and confidence intervals are not supported in this adapter.
+**Note that all timestamps are returned in seconds (converted from Stork's nanosecond precision) and confidence intervals are not supported in this adapter.**
 
 ## Usage as SDK
 
@@ -55,7 +55,7 @@ This adapter supports the following IPyth interface methods:
 The following IPyth methods are not supported and will revert:
 - EMA price methods (`getEmaPrice`, `getEmaPriceUnsafe`, `getEmaPriceNoOlderThan`)
 - Update methods (`updatePriceFeeds`, `updatePriceFeedsIfNecessary`, `parsePriceFeedUpdates`, etc.)
-- Fee calculation methods (`getUpdateFee`)
+- Fee calculation methods (`getUpdateFee`, `getTwapUpdateFee`)
 A complete working example can be found in the [stork-external repository](https://github.com/stork-oracle/stork-external/tree/main/chains/evm/examples/stork_pyth_adapter).
 
 ## Deploying

@@ -19,9 +19,9 @@ npx hardhat compile
 ```
 6. Deploy the contract locally:
 ```bash
-npm run deploy
+npx hardhat --network inMemoryNode ignition deploy ignition/modules/ExampleStorkChainlinkAdapter.ts --parameters ignition/parameters.json
 ```
 7. Get the latest round data from your contract:
 ```bash
-npx hardhat --network localhost get_latest_round_data --example-contract-address YOUR_DEPLOYED_CONTRACT_ADDRESS
+npx hardhat --network inMemoryNode get_latest_round_data --example-contract-address YOUR_DEPLOYED_CONTRACT_ADDRESS
 ```

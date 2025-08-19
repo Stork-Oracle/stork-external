@@ -17,9 +17,9 @@ npx hardhat compile
 ```
 6. Deploy the contract locally and record the address:
 ```bash
-npx hardhat --network localhost ignition deploy ignition/modules/ExampleStorkSDK.ts --parameters '{"ExampleStorkSDKModule":{"storkContractAddress":"YOUR_STORK_CONTRACT_ADDRESS"}}'
+npx hardhat --network inMemoryNode ignition deploy ignition/modules/Example.ts --parameters ignition/parameters.json
 ```
 7. Read the price from the Stork feed:
 ```bash
-npx hardhat --network localhost read-price --example-contract-address YOUR_EXAMPLE_CONTRACT_ADDRESS --asset BTCUSD
+npx hardhat --network inMemoryNode read-price --example-contract-address YOUR_EXAMPLE_CONTRACT_ADDRESS --asset BTCUSD
 ```

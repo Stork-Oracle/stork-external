@@ -4,7 +4,7 @@ pragma solidity >=0.8.24 <0.9.0;
 import "@storknetwork/stork-evm-sdk/IStork.sol";
 import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 
-contract ExampleStorkSDK {
+contract Example {
     IStork public stork;
     
     event StorkPriceUsed(
