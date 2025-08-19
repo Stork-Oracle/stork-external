@@ -22,7 +22,7 @@ contract StorkPythAdapter is IPyth {
         storkGetters = IStorkGetters(_stork);  // Same address, different interface
     }
 
-    function convertInt192ToInt64Prescise(int192 value) public view returns (int64 val  , int32 exp) {
+    function convertInt192ToInt64Precise(int192 value) public view returns (int64 val  , int32 exp) {
         // Use maximum precision
         int32 exp_shift = 0;
         while (value > type(int64).max || value < type(int64).min) {

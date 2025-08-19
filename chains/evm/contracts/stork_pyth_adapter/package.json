@@ -34,7 +34,7 @@
     "hardhat": "^2.24.0"
   },
   "dependencies": {
-    "@pythnetwork/pyth-sdk-solidity": "^4.0.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
     "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk"
   }
 }

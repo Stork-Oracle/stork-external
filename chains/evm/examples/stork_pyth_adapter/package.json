@@ -18,6 +18,6 @@
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk",
     "@storknetwork/stork_pyth_adapter": "file:../../contracts/stork_pyth_adapter",
-    "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0"
   }
 }
