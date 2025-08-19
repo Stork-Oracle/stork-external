@@ -2,8 +2,6 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ignition-ethers";
 
-require("@openzeppelin/hardhat-upgrades");
-
 import './tasks/get_latest_price';
 
 const config: HardhatUserConfig = {
