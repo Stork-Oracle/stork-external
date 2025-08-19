@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24 <0.9.0;
 
 import "./StorkStructs.sol";
-import "./StorkErrors.sol";
 import "./IStorkEvents.sol";
 
 /// @title IStork
