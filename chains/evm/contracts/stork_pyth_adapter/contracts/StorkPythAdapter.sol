@@ -45,7 +45,7 @@ contract StorkPythAdapter is IPyth {
         bytes32 id
     ) external view returns (PythStructs.Price memory price) {
         StorkStructs.TemporalNumericValue memory temporalNumericValue = stork.getTemporalNumericValueV1(id);
-        (int64 val, int32 exp) = convertInt192ToInt64Prescise(temporalNumericValue.quantizedValue);
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
             val,
             confidenceInterval,
@@ -61,7 +61,7 @@ contract StorkPythAdapter is IPyth {
         bytes32 id
     ) external view returns (PythStructs.Price memory price) {
         StorkStructs.TemporalNumericValue memory temporalNumericValue = stork.getTemporalNumericValueUnsafeV1(id);
-        (int64 val, int32 exp) = convertInt192ToInt64Prescise(temporalNumericValue.quantizedValue);
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
             val,
             confidenceInterval,
@@ -83,7 +83,7 @@ contract StorkPythAdapter is IPyth {
             revert("Value is stale");
         }
 
-        (int64 val, int32 exp) = convertInt192ToInt64Prescise(temporalNumericValue.quantizedValue);
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
             val,
             confidenceInterval,
