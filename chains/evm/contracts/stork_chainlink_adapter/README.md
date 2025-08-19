@@ -10,7 +10,7 @@ This package can be used as an SDK to build contracts that interact with Stork p
 
 The adapter implements Chainlink's [AggregatorV3Interface](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol), allowing existing Chainlink-integrated applications to seamlessly integrate withStork price feeds with minimal code changes.
 
-Note that all timestamps are returned in nanoseconds (not seconds) to maintain Stork's high precision.
+**Note: All timestamps are returned in nanoseconds (not seconds) to maintain Stork's high precision.**
 
 ## Usage as SDK
 
