@@ -14,7 +14,7 @@ use fuels::{
 use serde::{Deserialize, Serialize};
 
 // Generate the contract bindings from ABI
-abigen!(Contract(name = "StorkContract", abi = "stork-abi.json"),);
+abigen!(Contract(name = "StorkContract", abi = "apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi/stork-abi.json"),);
 
 // re-export generated StorkError
 pub use StorkError as StorkContractError;
