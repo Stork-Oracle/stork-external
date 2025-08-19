@@ -20,7 +20,7 @@ mocks: $(GOBIN)/mockery
 # TODO: Add race checker
 .PHONY: test
 ## Run all Go tests
-test: $(LIBSTORK) $(LIBFUEL_FFI)
+test: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST)
 	@$(GO) test -v ./...
 
 .PHONY: install-cosmwasm-libs
@@ -37,7 +37,7 @@ install-cosmwasm-libs:
 .PHONY: install
 
 ## Aggregate target to install all Go binaries
-install: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
+install: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
 	@$(GO) install -v ./apps/cmd/...
 	@echo "All Go binaries have been installed successfully."
 
@@ -48,5 +48,5 @@ clean: clean-rust
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
+run-local: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
 	@$(GO) run ./apps/cmd/$(target) $(args)
