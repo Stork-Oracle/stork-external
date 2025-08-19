@@ -20,8 +20,5 @@
         "type": "git",
         "url": "https://github.com/stork-oracle/stork-external.git",
         "directory": "chains/evm/sdks/stork-evm-sdk"
-    },
-    "dependencies": {
-        "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
     }
 }
