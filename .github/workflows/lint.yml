@@ -44,10 +44,30 @@ jobs:
             with:
                 components: clippy, rustfmt
 
+          - name: Cache Rust dependencies and build artifacts
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+              key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
+
           - name: Setup reviewdog
             uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
 
+          - name: Cache clippy-reviewdog-filter
+            id: cache-filter
+            uses: actions/cache@v4
+            with:
+              path: ~/.cargo/bin/clippy-reviewdog-filter
+              key: ${{ runner.os }}-clippy-reviewdog-filter
+
           - name: Install clippy-reviewdog-filter
+            if: steps.cache-filter.outputs.cache-hit != 'true'
             run: cargo install clippy-reviewdog-filter
 
           - name: Run Clippy with reviewdog
