@@ -1,4 +1,3 @@
-use cbindgen;
 use cargo_metadata::MetadataCommand;
 use std::env;
 
@@ -13,10 +12,10 @@ fn main() {
         .map_or_else(
             |error| match error {
                 cbindgen::Error::ParseSyntaxError { .. } => {}
-                e => panic!("{:?}", e),
+                e => panic!("{e:?}"),
             },
             |bindings| {
-                bindings.write_to_file(format!("{}/include/fuel_ffi.h", target_dir));
+                bindings.write_to_file(format!("{target_dir}/include/fuel_ffi.h"));
             },
         );
 }

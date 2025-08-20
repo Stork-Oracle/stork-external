@@ -53,14 +53,14 @@ pub struct FuelClient {
 impl FuelClient {
     pub async fn new(config: FuelConfig) -> Result<Self, FuelClientError> {
         let provider = Provider::connect(&config.rpc_url).await.map_err(|e| {
-            FuelClientError::NetworkError(format!("Failed to connect to RPC: {}", e))
+            FuelClientError::NetworkError(format!("Failed to connect to RPC: {e}"))
         })?;
 
         let secret_key = SecretKey::from_str(&config.private_key)
-            .map_err(|e| FuelClientError::InvalidConfig(format!("Invalid private key: {}", e)))?;
+            .map_err(|e| FuelClientError::InvalidConfig(format!("Invalid private key: {e}")))?;
 
         let proxy_contract_id = ContractId::from_str(&config.contract_address).map_err(|e| {
-            FuelClientError::InvalidConfig(format!("Invalid contract address: {}", e))
+            FuelClientError::InvalidConfig(format!("Invalid contract address: {e}"))
         })?;
 
         let rt = Arc::new(
@@ -68,7 +68,7 @@ impl FuelClient {
                 .enable_all()
                 .build()
                 .map_err(|e| {
-                    FuelClientError::SystemError(format!("Failed to create async runtime: {}", e))
+                    FuelClientError::SystemError(format!("Failed to create async runtime: {e}"))
                 })?,
         );
 
@@ -76,7 +76,7 @@ impl FuelClient {
             .consensus_parameters()
             .await
             .map_err(|e| {
-                FuelClientError::NetworkError(format!("Failed to get consensus parameters: {}", e))
+                FuelClientError::NetworkError(format!("Failed to get consensus parameters: {e}"))
             })?
             .base_asset_id()
             .to_owned();
@@ -109,8 +109,7 @@ impl FuelClient {
             .await
             .map_err(|e| {
                 FuelClientError::ContractCallFailed(format!(
-                    "Failed to determine missing contracts: {}",
-                    e
+                    "Failed to determine missing contracts: {e}"
                 ))
             })?
             .simulate(Execution::state_read_only())
@@ -135,27 +134,25 @@ impl FuelClient {
         for input in inputs {
             // Parse hex strings to Bits256
             let id = Bits256::from_hex_str(&input.id).map_err(|e| {
-                FuelClientError::InvalidTransactionParameters(format!("Invalid id: {}", e))
+                FuelClientError::InvalidTransactionParameters(format!("Invalid id: {e}"))
             })?;
             let publisher_merkle_root = Bits256::from_hex_str(&input.publisher_merkle_root)
                 .map_err(|e| {
                     FuelClientError::InvalidTransactionParameters(format!(
-                        "Invalid publisher merkle root: {}",
-                        e
+                        "Invalid publisher merkle root: {e}"
                     ))
                 })?;
             let value_compute_alg_hash = Bits256::from_hex_str(&input.value_compute_alg_hash)
                 .map_err(|e| {
                     FuelClientError::InvalidTransactionParameters(format!(
-                        "Invalid value compute alg hash: {}",
-                        e
+                        "Invalid value compute alg hash: {e}"
                     ))
                 })?;
             let r = Bits256::from_hex_str(&input.r).map_err(|e| {
-                FuelClientError::InvalidTransactionParameters(format!("Invalid r: {}", e))
+                FuelClientError::InvalidTransactionParameters(format!("Invalid r: {e}"))
             })?;
             let s = Bits256::from_hex_str(&input.s).map_err(|e| {
-                FuelClientError::InvalidTransactionParameters(format!("Invalid s: {}", e))
+                FuelClientError::InvalidTransactionParameters(format!("Invalid s: {e}"))
             })?;
 
             // Create the contract input using generated types
@@ -184,8 +181,7 @@ impl FuelClient {
             .await
             .map_err(|e| {
                 FuelClientError::ContractCallFailed(format!(
-                    "Failed to determine missing contracts: {}",
-                    e
+                    "Failed to determine missing contracts: {e}"
                 ))
             })?
             .simulate(Execution::state_read_only())
@@ -206,20 +202,19 @@ impl FuelClient {
             .await
             .map_err(|e| {
                 FuelClientError::ContractCallFailed(format!(
-                    "Failed to determine missing contracts: {}",
-                    e
+                    "Failed to determine missing contracts: {e}"
                 ))
             })?
             .call_params(call_params)
             .map_err(|e| {
-                FuelClientError::ContractCallFailed(format!("Failed to set call parameters: {}", e))
+                FuelClientError::ContractCallFailed(format!("Failed to set call parameters: {e}"))
             })?
             .call()
             .await
             .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
 
         match tx_response.tx_id {
-            Some(tx_id) => Ok(format!("0x{}", tx_id)),
+            Some(tx_id) => Ok(format!("0x{tx_id}")),
             None => Err(FuelClientError::ContractCallFailed(
                 "No transaction ID".to_string(),
             )),
@@ -232,7 +227,7 @@ impl FuelClient {
             .get_asset_balance(&self.gas_asset_id)
             .await
             .map_err(|e| {
-                FuelClientError::WalletBalanceError(format!("Failed to get wallet balance: {}", e))
+                FuelClientError::WalletBalanceError(format!("Failed to get wallet balance: {e}"))
             })?;
         Ok(balance as u64)
     }
@@ -255,7 +250,7 @@ impl From<i128> for I128 {
 impl From<I128> for i128 {
     fn from(value: I128) -> Self {
         let offset = 1u128 << 127; // 2^127
-        let quantized_with_offset = (value.underlying as u128).wrapping_sub(offset); // TODO: wrapping sub feels scary here
+        let quantized_with_offset = value.underlying.wrapping_sub(offset);
         quantized_with_offset as i128
     }
 }

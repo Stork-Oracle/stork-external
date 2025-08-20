@@ -4,8 +4,7 @@ use starknet_core::types::{FieldElement, FromByteArrayError};
 fn bytes_to_field_element(bytes_ptr: *const u8) -> Result<FieldElement, FromByteArrayError> {
         let slice = unsafe { std::slice::from_raw_parts(bytes_ptr, 32) };
         let size32 = <&[u8; 32]>::try_from(slice).unwrap();
-        let fe = FieldElement::from_bytes_be(size32);
-        return fe;
+        FieldElement::from_bytes_be(size32)
 }
 
 fn write_field_element_to_buffer(field_element: FieldElement, buf_ptr: *mut u8) {
@@ -26,7 +25,7 @@ pub extern "C" fn hash_and_sign(x_ptr: *const u8, y_ptr: *const u8, pk_ptr: *con
         write_field_element_to_buffer(signature.r, sig_r_ptr);
         write_field_element_to_buffer(signature.s, sig_s_ptr);
 
-        return 0
+        0
 }
 
 #[no_mangle]
