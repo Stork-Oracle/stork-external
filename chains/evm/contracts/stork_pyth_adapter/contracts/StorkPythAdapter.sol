@@ -14,6 +14,7 @@ import "@storknetwork/stork-evm-sdk/IStorkGetters.sol";
 contract StorkPythAdapter is IPyth {
     IStork public stork;
     IStorkGetters public storkGetters;
+    // default exponent, adjusted from here to fit within int64
     int32 private exponent = -18;
     uint64 private confidenceInterval = 0;
 
