@@ -1,10 +1,11 @@
-// contracts/Setters.sol
+// contracts/stork/StorkSetters.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity >=0.8.24 <0.9.0;
 
+import "@storknetwork/stork-evm-sdk/IStorkEvents.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 import "./StorkState.sol";
-import "./IStorkEvents.sol";
 
 contract StorkSetters is StorkState, IStorkEvents {
     function updateLatestValueIfNecessary(

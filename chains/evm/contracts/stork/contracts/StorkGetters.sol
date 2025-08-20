@@ -1,12 +1,14 @@
-// contracts/Getters.sol
+// contracts/stork/StorkGetters.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/IStorkGetters.sol";
+
 import "./StorkState.sol";
 
-contract StorkGetters is StorkState {
+contract StorkGetters is StorkState, IStorkGetters {
     function latestCanonicalTemporalNumericValue(
         bytes32 id
     ) internal view returns (StorkStructs.TemporalNumericValue memory value) {

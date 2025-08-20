@@ -2,13 +2,16 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
+import "@storknetwork/stork-evm-sdk/IStorkEvents.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/StorkErrors.sol";
+import "@storknetwork/stork-evm-sdk/IStork.sol";
+
 import "./StorkGetters.sol";
 import "./StorkSetters.sol";
-import "./StorkStructs.sol";
-import "./StorkErrors.sol";
 import "./StorkVerify.sol";
 
-abstract contract Stork is StorkGetters, StorkSetters, StorkVerify {
+abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     function _initialize(
         address storkPublicKey,
         uint validTimePeriodSeconds,

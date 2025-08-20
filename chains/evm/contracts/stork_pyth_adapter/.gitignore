@@ -1,0 +1,28 @@
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+# OpenZeppelin
+.openzeppelin/dev-*.json
+.openzeppelin/.session
+
+# zksync artifacts
+artifacts-zk
+cache-zk
+
+upgrade_success.log
+upgrade_error.log
