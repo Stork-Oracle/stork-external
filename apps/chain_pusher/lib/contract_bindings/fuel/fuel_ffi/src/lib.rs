@@ -223,7 +223,7 @@ pub unsafe extern "C" fn fuel_get_wallet_balance(
     )
 }
 
-/// # Safety
+/// # Safet
 ///
 /// - `s` must be a valid pointer to a C string allocated by this library
 /// - The pointer must not be used after this function returns
@@ -239,7 +239,6 @@ pub unsafe extern "C" fn fuel_free_string(s: *mut c_char) {
 }
 
 // Helper functions
-
 fn handle_ffi_result<T>(
     result: Result<T, FuelClientError>,
     success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
