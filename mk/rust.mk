@@ -1,7 +1,6 @@
 # Rust workspace build configuration
 WORKSPACE_ROOT := $(CURDIR)
 RUST_TARGET_DIR := $(WORKSPACE_ROOT)/target
-RUST_INCLUDE_DIR := $(RUST_TARGET_DIR)/include
 RUST_LIB_DIR := $(CURDIR)/.lib
 
 # Detect platform and set library extensions
@@ -25,41 +24,37 @@ SIGNER_LIB_DEST := $(RUST_LIB_DIR)/$(SIGNER_LIB_NAME)
 FUEL_LIB_DEST := $(RUST_LIB_DIR)/$(FUEL_LIB_NAME)
 
 # Header files
-SIGNER_HEADER_SRC := $(RUST_INCLUDE_DIR)/signer_ffi.h
-FUEL_HEADER_SRC := $(RUST_INCLUDE_DIR)/fuel_ffi.h
+SIGNER_HEADER_SRC := $(RUST_TARGET_DIR)/include/signer_ffi.h
+FUEL_HEADER_SRC := $(RUST_TARGET_DIR)/include/fuel_ffi.h
 SIGNER_HEADER_DEST := $(RUST_LIB_DIR)/signer_ffi.h
 FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 
-# Find workspace members for dependency tracking
-WORKSPACE_SOURCES := $(shell find shared/signer/signer_ffi apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi -name "*.rs" -o -name "Cargo.toml" -o -name "*.json" 2>/dev/null)
+.PHONY: build-signer-ffi
+build-signer-ffi:
+	@echo "Building signer_ffi..."
+	@cargo build --release -p signer_ffi
 
-# Build all Rust libraries using workspace
-.PHONY: build-rust-workspace
-build-rust-workspace: $(WORKSPACE_SOURCES) Cargo.toml
-	@echo "Building Rust workspace..."
-	@cargo build --release
+.PHONY: build-fuel-ffi
+build-fuel-ffi:
+	@echo "Building fuel_ffi..."
+	@cargo build --release -p fuel_ffi
 
-$(SIGNER_LIB_SRC): build-rust-workspace
-
-$(FUEL_LIB_SRC): build-rust-workspace
-
-$(SIGNER_LIB_DEST): $(SIGNER_LIB_SRC)
-	@echo "Copying $(SIGNER_LIB_NAME)..."
+# Copy artifacts to lib directory
+$(SIGNER_LIB_DEST): build-signer-ffi
+	@echo "Copying signer_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(SIGNER_LIB_SRC) $(SIGNER_LIB_DEST)
 
-$(FUEL_LIB_DEST): $(FUEL_LIB_SRC)
-	@echo "Copying $(FUEL_LIB_NAME)..."
+$(FUEL_LIB_DEST): build-fuel-ffi
+	@echo "Copying fuel_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(FUEL_LIB_SRC) $(FUEL_LIB_DEST)
 
-$(SIGNER_HEADER_DEST): $(SIGNER_HEADER_SRC)
-	@echo "Copying signer_ffi.h..."
+$(SIGNER_HEADER_DEST): build-signer-ffi
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(SIGNER_HEADER_SRC) $(SIGNER_HEADER_DEST)
 
-$(FUEL_HEADER_DEST): $(FUEL_HEADER_SRC)
-	@echo "Copying fuel_ffi.h..."
+$(FUEL_HEADER_DEST): build-fuel-ffi
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(FUEL_HEADER_SRC) $(FUEL_HEADER_DEST)
 
@@ -73,8 +68,18 @@ clean-rust:
 	@echo "Cleaning Rust workspace..."
 	@rm -rf $(RUST_LIB_DIR)
 	@cargo clean
-
-.PHONY: clean-rust-libs
-clean-rust-libs:
 	@echo "Cleaning copied libraries..."
 	@rm -rf $(RUST_LIB_DIR)
+
+
+# Lint rust code
+.PHONY: lint-rust
+lint-rust:
+	@echo "Linting Rust workspace..."
+	@cargo clippy --all-targets --all-features -- -D warnings
+
+# Format rust code
+.PHONY: format-rust
+format-rust:
+	@echo "Formatting Rust workspace..."
+	@cargo fmt --all
