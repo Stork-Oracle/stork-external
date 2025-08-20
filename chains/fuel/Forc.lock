@@ -16,10 +16,19 @@ version = "0.69.1"
 source = "registry+std?0.69.1#QmbPunScay4xpfHKpxQ71dFKXSiyJuPP8P8YhgX5Dkmzm9!"
 
 [[package]]
-name = "stork_sway_sdk"
+name = "stork"
 source = "member"
 dependencies = [
     "signed_int",
     "src5",
+    "std",
+    "stork_sway_sdk",
+]
+
+[[package]]
+name = "stork_sway_sdk"
+source = "member"
+dependencies = [
+    "signed_int",
     "std",
 ]

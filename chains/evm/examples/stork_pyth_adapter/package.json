@@ -1,14 +1,10 @@
 {
   "name": "stork-pyth-adapter-example",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "A simple example showing how to use the Stork Pyth Adapter",
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Stork Labs",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.7",
@@ -20,6 +16,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "@storknetwork/stork_pyth_adapter": "^1.0.0"
+    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk",
+    "@storknetwork/stork_pyth_adapter": "file:../../contracts/stork_pyth_adapter",
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0"
   }
 }
