@@ -21,3 +21,35 @@ jobs:
                 reviewdog_flags: -tee
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+    lint-rust:
+        runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          pull-requests: write
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Setup Rust
+            uses: dtolnay/rust-toolchain@stable
+            with:
+                components: clippy, rustfmt
+
+          - name: Check Rust formatting
+            run: cargo fmt --all -- --check
+
+          - name: Setup reviewdog
+            uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+
+          - name: Install clippy-reviewdog-filter
+            run: cargo install clippy-reviewdog-filter
+
+          - name: Run Clippy with reviewdog
+            env:
+              REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+              cargo clippy --all-targets --all-features --message-format json -- -D warnings 2>&1 | \
+                clippy-reviewdog-filter | \
+                reviewdog -f=checkstyle -name="clippy" -reporter=github-pr-review
