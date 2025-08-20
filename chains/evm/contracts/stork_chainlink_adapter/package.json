@@ -1,30 +1,39 @@
 {
   "name": "@storknetwork/stork_chainlink_adapter",
   "private": false,
-  "version": "1.0.4",
-  "description": "Solidity Contracts to get Stork data on chain in the same format as Chainlink",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Stork-Oracle/stork-external.git"
-  },
-  "author": "Stork",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/Stork-Oracle/stork-external/issues"
-  },
-  "homepage": "https://github.com/Stork-Oracle/stork-external#readme",
-  "main": "index.js",
+  "version": "1.0.5",
+  "description": "EVM Solidity contracts to adapt Stork price feeds to Chainlink's AggregatorV3 Interface",
+  "files": [
+    "contracts/**/*.sol",
+    "README.md"
+  ],
   "keywords": [
     "stork",
     "oracle",
-    "chainlink"
+    "chainlink",
+    "solidity",
+    "evm",
+    "smart-contracts",
+    "price-feeds"
   ],
+  "author": "Stork Labs",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stork-oracle/stork-external.git",
+    "directory": "chains/evm/contracts/stork_chainlink_adapter"
+  },
+  "bugs": {
+    "url": "https://github.com/stork-oracle/stork-external/issues"
+  },
+  "homepage": "https://github.com/stork-oracle/stork-external#readme",
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.11",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.24.0"
   },
   "dependencies": {
+    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk",
     "ethers": "^6.14.0"
   }
 }

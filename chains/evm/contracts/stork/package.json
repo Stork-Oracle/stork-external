@@ -1,14 +1,9 @@
 {
-  "name": "evm-contracts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "name": "stork-evm-contracts",
+  "version": "1.0.4",
+  "description": "Stork EVM compatible contracts",
+  "author": "Stork Labs",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@matterlabs/hardhat-zksync": "^1.6.1",
     "@matterlabs/hardhat-zksync-upgradable": "^1.9.0",
@@ -21,6 +16,7 @@
     "zksync-ethers": "^6.15.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk"
   }
 }

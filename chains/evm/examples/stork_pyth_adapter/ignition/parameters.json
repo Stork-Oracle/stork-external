@@ -1,0 +1,5 @@
+{
+    "ExampleStorkPythAdapterModule": {
+        "storkContractAddress": "0xStorkContractAddressGoesHere"
+    }
+}

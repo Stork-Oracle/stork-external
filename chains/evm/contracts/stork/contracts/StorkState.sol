@@ -1,9 +1,9 @@
-// contracts/State.sol
+// contracts/stork/StorkState.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 
 contract StorkStorage {
     struct State {

@@ -1,0 +1,6 @@
+{
+    "ExampleStorkChainlinkAdapterModule": {
+    "storkContractAddress": "0xStorkContractAddressGoesHere",
+    "priceId": "0xPriceIdGoesHere"
+    }
+}

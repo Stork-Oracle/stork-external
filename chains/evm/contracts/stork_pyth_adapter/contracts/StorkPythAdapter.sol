@@ -1,30 +1,42 @@
-// SPDX-License-Identifier: Apache 2
+// SPDX-License-Identifier: Apache-2.0
 
 pragma solidity >=0.8.24 <0.9.0;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "@storknetwork/stork-evm-sdk/IStork.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/IStorkGetters.sol";
 
 /**
  * @title A port of the IPyth interface that supports Stork price feeds
  */
 contract StorkPythAdapter is IPyth {
     IStork public stork;
+    IStorkGetters public storkGetters;
+    // default exponent, adjusted from here to fit within int64
     int32 private exponent = -18;
     uint64 private confidenceInterval = 0;
 
     constructor(address _stork) {
         stork = IStork(_stork);
+        storkGetters = IStorkGetters(_stork);  // Same address, different interface
     }
 
-    function convertInt192ToInt64(int192 value) public pure returns (int64) {
+    function convertInt192ToInt64Precise(int192 value) public view returns (int64 val  , int32 exp) {
+        // Use maximum precision
+        int32 exp_shift = 0;
+        while (value > type(int64).max || value < type(int64).min) {
+            value = value / 10;
+            exp_shift++;
+        }
         require(value >= type(int64).min && value <= type(int64).max, "Overflow");
-        return int64(value);
+        return (int64(value), exponent + exp_shift);
     }
 
     /// @notice Returns the period (in seconds) that a price feed is considered valid since its publish time
     function getValidTimePeriod() external view returns (uint validTimePeriod) {
-        return stork.validTimePeriodSeconds();
+        return storkGetters.validTimePeriodSeconds();
     }
 
     /// @notice Returns the price.
@@ -34,10 +46,11 @@ contract StorkPythAdapter is IPyth {
         bytes32 id
     ) external view returns (PythStructs.Price memory price) {
         StorkStructs.TemporalNumericValue memory temporalNumericValue = stork.getTemporalNumericValueV1(id);
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
-            convertInt192ToInt64(temporalNumericValue.quantizedValue),
+            val,
             confidenceInterval,
-            exponent,
+            exp,
             temporalNumericValue.timestampNs / 1000000000
         );
     }
@@ -49,10 +62,11 @@ contract StorkPythAdapter is IPyth {
         bytes32 id
     ) external view returns (PythStructs.Price memory price) {
         StorkStructs.TemporalNumericValue memory temporalNumericValue = stork.getTemporalNumericValueUnsafeV1(id);
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
-            convertInt192ToInt64(temporalNumericValue.quantizedValue),
+            val,
             confidenceInterval,
-            exponent,
+            exp,
             temporalNumericValue.timestampNs / 1000000000
         );
     }
@@ -70,10 +84,11 @@ contract StorkPythAdapter is IPyth {
             revert("Value is stale");
         }
 
+        (int64 val, int32 exp) = convertInt192ToInt64Precise(temporalNumericValue.quantizedValue);
         return PythStructs.Price(
-            convertInt192ToInt64(temporalNumericValue.quantizedValue),
+            val,
             confidenceInterval,
-            exponent,
+            exp,
             temporalNumericValue.timestampNs / 1000000000
         );
     }
@@ -123,6 +138,13 @@ contract StorkPythAdapter is IPyth {
     }
 
     /// @dev Updates not supported - this contract is read-only
+    function getTwapUpdateFee(
+        bytes[] calldata updateData
+    ) external view returns (uint feeAmount) {
+        revert("Not supported");
+    }
+
+    /// @dev Updates not supported - this contract is read-only
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -131,6 +153,7 @@ contract StorkPythAdapter is IPyth {
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds) {
         revert("Not supported");
     }
+
 
     /// @dev Updates not supported - this contract is read-only
     function parsePriceFeedUpdatesUnique(
@@ -141,27 +164,26 @@ contract StorkPythAdapter is IPyth {
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds) {
         revert("Not supported");
     }
-}
 
-
-interface IStork {
-    function getTemporalNumericValueV1(
-        bytes32 id
-    ) external view returns (StorkStructs.TemporalNumericValue memory value);
-
-    function getTemporalNumericValueUnsafeV1(
-        bytes32 id
-    ) external view returns (StorkStructs.TemporalNumericValue memory value);
-
-    function validTimePeriodSeconds() external view returns (uint);
-}
-
-contract StorkStructs {
-    struct TemporalNumericValue {
-        // slot 1
-        // nanosecond level precision timestamp of latest publisher update in batch
-        uint64 timestampNs; // 8 bytes
-        // should be able to hold all necessary numbers (up to 6277101735386680763835789423207666416102355444464034512895)
-        int192 quantizedValue; // 8 bytes
+    /// @dev Updates not supported - this contract is read-only
+    function parsePriceFeedUpdatesWithConfig(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime,
+        bool checkUniqueness,
+        bool checkUpdateDataIsMinimal,
+        bool storeUpdatesIfFresh
+    ) external payable returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots) {
+        revert("Not supported");
     }
+
+    /// @dev Updates not supported - this contract is read-only
+    function parseTwapPriceFeedUpdates(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds
+    ) external payable returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds) {
+        revert("Not supported");
+    }
+    
 }
