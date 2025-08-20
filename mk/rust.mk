@@ -34,9 +34,14 @@ FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 WORKSPACE_SOURCES := $(shell find shared/signer/signer_ffi apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi -name "*.rs" -o -name "Cargo.toml" -o -name "*.json" 2>/dev/null)
 
 # Build all Rust libraries using workspace
-$(SIGNER_LIB_SRC) $(FUEL_LIB_SRC): $(WORKSPACE_SOURCES) Cargo.toml
+.PHONY: build-rust-workspace
+build-rust-workspace: $(WORKSPACE_SOURCES) Cargo.toml
 	@echo "Building Rust workspace..."
 	@cargo build --release
+
+$(SIGNER_LIB_SRC): build-rust-workspace
+
+$(FUEL_LIB_SRC): build-rust-workspace
 
 $(SIGNER_LIB_DEST): $(SIGNER_LIB_SRC)
 	@echo "Copying $(SIGNER_LIB_NAME)..."
