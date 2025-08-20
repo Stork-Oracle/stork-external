@@ -14,7 +14,10 @@ use fuels::{
 use serde::{Deserialize, Serialize};
 
 // Generate the contract bindings from ABI
-abigen!(Contract(name = "StorkContract", abi = "apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi/stork-abi.json"),);
+abigen!(Contract(
+    name = "StorkContract",
+    abi = "apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi/stork-abi.json"
+),);
 
 // re-export generated StorkError
 pub use StorkError as StorkContractError;
@@ -52,9 +55,9 @@ pub struct FuelClient {
 
 impl FuelClient {
     pub async fn new(config: FuelConfig) -> Result<Self, FuelClientError> {
-        let provider = Provider::connect(&config.rpc_url).await.map_err(|e| {
-            FuelClientError::NetworkError(format!("Failed to connect to RPC: {e}"))
-        })?;
+        let provider = Provider::connect(&config.rpc_url)
+            .await
+            .map_err(|e| FuelClientError::NetworkError(format!("Failed to connect to RPC: {e}")))?;
 
         let secret_key = SecretKey::from_str(&config.private_key)
             .map_err(|e| FuelClientError::InvalidConfig(format!("Invalid private key: {e}")))?;

@@ -8,7 +8,7 @@ use error::{FuelClientError, FuelClientStatus};
 use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
 
 /// # Safety
-/// 
+///
 /// - `config_json` must be a valid pointer to a null-terminated C string
 /// - `out_client` must be a valid, writable pointer
 /// - `out_error` must be a valid, writable pointer
@@ -39,23 +39,25 @@ pub unsafe extern "C" fn fuel_client_new(
         let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
-            .map_err(|e| {
-                FuelClientError::SystemError(format!("Failed to create runtime: {e}"))
-            })?;
+            .map_err(|e| FuelClientError::SystemError(format!("Failed to create runtime: {e}")))?;
 
         rt.block_on(FuelClient::new(config))
     })();
 
-    handle_ffi_result(result, |client| {
-        unsafe {
-            *out_client = Box::into_raw(Box::new(client));
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |client| {
+            unsafe {
+                *out_client = Box::into_raw(Box::new(client));
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
 /// # Safety
-/// 
+///
 /// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
 /// - The pointer must not be used after this function returns
 /// - It is safe to pass a null pointer (function will do nothing)
@@ -69,7 +71,7 @@ pub unsafe extern "C" fn fuel_client_free(client: *mut FuelClient) {
 }
 
 /// # Safety
-/// 
+///
 /// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
 /// - `id_ptr` must be a valid pointer to a 32-byte array
 /// - `out_value_json` must be a valid, writable pointer
@@ -97,7 +99,6 @@ pub unsafe extern "C" fn fuel_get_latest_value(
         *out_value_json = std::ptr::null_mut();
     }
 
-
     let result = (|| -> Result<Option<String>, FuelClientError> {
         let client = unsafe { &mut *client };
 
@@ -116,19 +117,23 @@ pub unsafe extern "C" fn fuel_get_latest_value(
         }
     })();
 
-    handle_ffi_result(result, |value_opt| {
-        if let Some(json_str) = value_opt {
-            let c_str = string_to_c_char(json_str)?;
-            unsafe {
-                *out_value_json = c_str;
+    handle_ffi_result(
+        result,
+        |value_opt| {
+            if let Some(json_str) = value_opt {
+                let c_str = string_to_c_char(json_str)?;
+                unsafe {
+                    *out_value_json = c_str;
+                }
             }
-        }
-        Ok(())
-    }, out_error)
+            Ok(())
+        },
+        out_error,
+    )
 }
 
 /// # Safety
-/// 
+///
 /// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
 /// - `inputs_json` must be a valid pointer to a null-terminated C string containing valid JSON
 /// - `out_tx_hash` must be a valid, writable pointer
@@ -165,17 +170,21 @@ pub unsafe extern "C" fn fuel_update_values(
             .block_on(client.update_temporal_numeric_values(inputs))
     })();
 
-    handle_ffi_result(result, |tx_hash| {
-        let c_str = string_to_c_char(tx_hash)?;
-        unsafe {
-            *out_tx_hash = c_str;
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |tx_hash| {
+            let c_str = string_to_c_char(tx_hash)?;
+            unsafe {
+                *out_tx_hash = c_str;
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
 /// # Safety
-/// 
+///
 /// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
 /// - `out_balance` must be a valid, writable pointer
 /// - `out_error` must be a valid, writable pointer
@@ -202,16 +211,20 @@ pub unsafe extern "C" fn fuel_get_wallet_balance(
         client.rt.block_on(client.get_wallet_balance())
     };
 
-    handle_ffi_result(result, |balance| {
-        unsafe {
-            *out_balance = balance;
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |balance| {
+            unsafe {
+                *out_balance = balance;
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
 /// # Safety
-/// 
+///
 /// - `s` must be a valid pointer to a C string allocated by this library
 /// - The pointer must not be used after this function returns
 /// - It is safe to pass a null pointer (function will do nothing)
@@ -232,7 +245,7 @@ fn handle_ffi_result<T>(
     success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
-    let final_result =match result {
+    let final_result = match result {
         Ok(value) => success_handler(value),
         Err(e) => Err(e),
     };
