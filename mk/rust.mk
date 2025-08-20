@@ -29,32 +29,29 @@ FUEL_HEADER_SRC := $(RUST_TARGET_DIR)/include/fuel_ffi.h
 SIGNER_HEADER_DEST := $(RUST_LIB_DIR)/signer_ffi.h
 FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 
-.PHONY: build-signer-ffi
-build-signer-ffi:
-	@echo "Building signer_ffi..."
-	@cargo build --release -p signer_ffi
-
-.PHONY: build-fuel-ffi
-build-fuel-ffi:
-	@echo "Building fuel_ffi..."
-	@cargo build --release -p fuel_ffi
+.PHONY: build-rust-workspace
+build-rust-workspace:
+	@echo "Building Rust workspace..."
+	@cargo build --release
 
 # Copy artifacts to lib directory
-$(SIGNER_LIB_DEST): build-signer-ffi
+$(SIGNER_LIB_DEST): build-rust-workspace
 	@echo "Copying signer_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(SIGNER_LIB_SRC) $(SIGNER_LIB_DEST)
 
-$(FUEL_LIB_DEST): build-fuel-ffi
+$(FUEL_LIB_DEST): build-rust-workspace
 	@echo "Copying fuel_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(FUEL_LIB_SRC) $(FUEL_LIB_DEST)
 
-$(SIGNER_HEADER_DEST): build-signer-ffi
+$(SIGNER_HEADER_DEST): build-rust-workspace
+	@echo "Copying signer_ffi.h to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(SIGNER_HEADER_SRC) $(SIGNER_HEADER_DEST)
 
-$(FUEL_HEADER_DEST): build-fuel-ffi
+$(FUEL_HEADER_DEST): build-rust-workspace
+	@echo "Copying fuel_ffi.h to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
 	@cp $(FUEL_HEADER_SRC) $(FUEL_HEADER_DEST)
 
