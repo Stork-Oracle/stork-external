@@ -223,7 +223,7 @@ pub unsafe extern "C" fn fuel_get_wallet_balance(
     )
 }
 
-/// # Safet
+/// # Safety
 ///
 /// - `s` must be a valid pointer to a C string allocated by this library
 /// - The pointer must not be used after this function returns
