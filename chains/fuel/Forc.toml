@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "contracts/stork",
+    "sdks/stork_sway_sdk",
+]
+
