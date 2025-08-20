@@ -22,11 +22,18 @@ jobs:
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
+    check-rust-formatting:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Check Rust formatting
+            run: cargo fmt --all -- --check
+
     lint-rust:
         runs-on: ubuntu-latest
-        permissions:
-          contents: read
-          pull-requests: write
 
         steps:
           - name: Checkout code
@@ -36,9 +43,6 @@ jobs:
             uses: dtolnay/rust-toolchain@stable
             with:
                 components: clippy, rustfmt
-
-          - name: Check Rust formatting
-            run: cargo fmt --all -- --check
 
           - name: Setup reviewdog
             uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
@@ -52,4 +56,4 @@ jobs:
             run: |
               cargo clippy --all-targets --all-features --message-format json -- -D warnings 2>&1 | \
                 clippy-reviewdog-filter | \
-                reviewdog -f=checkstyle -name="clippy" -reporter=github-pr-review
+                reviewdog -f=checkstyle -name="lint-rust" -reporter=github-pr-check
