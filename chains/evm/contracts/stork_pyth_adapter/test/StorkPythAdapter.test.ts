@@ -118,26 +118,25 @@ describe("StorkPythAdapter", function () {
 
     it("Should handle very large positive values", async function () {
       // Test with a very large int192 value
-      const testValue = BigInt("100000000000000000000000000000000000000000000000000"); // ~1e50
-      
+      const testValue = BigInt("100000000000000000000000000000000000000000000000000"); // 1e50
+
       const result = await storkPythAdapter.convertInt192ToInt64Precise(testValue);
       
       // Should be scaled down significantly
-      expect(result.val).to.be.lessThanOrEqual(INT64_MAX);
-      expect(result.val).to.be.greaterThan(0);
-      expect(result.exp).to.be.greaterThan(DEFAULT_EXPONENT);
+      const expectedValue = BigInt("1000000000000000000");
+      expect(result.val).to.be.equal(expectedValue);
+      expect(result.exp).to.be.equal(14);
     });
 
     it("Should handle very large negative values", async function () {
       // Test with a very large negative int192 value
-      const testValue = BigInt("-100000000000000000000000000000000000000000000000000"); // ~-1e50
+      const testValue = BigInt("-100000000000000000000000000000000000000000000000000"); // -1e50
       
       const result = await storkPythAdapter.convertInt192ToInt64Precise(testValue);
       
-      // Should be scaled down significantly
-      expect(result.val).to.be.greaterThanOrEqual(INT64_MIN);
-      expect(result.val).to.be.lessThan(0);
-      expect(result.exp).to.be.greaterThan(DEFAULT_EXPONENT);
+      const expectedValue = BigInt("-1000000000000000000");
+      expect(result.val).to.be.equal(expectedValue);
+      expect(result.exp).to.be.equal(14);
     });
 
     it("Should handle edge case at int64 max boundary", async function () {
