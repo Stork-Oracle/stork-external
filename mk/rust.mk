@@ -1,76 +1,82 @@
-# Define the Rust source directory
-RUST_SRC_DIR ?= shared/signer/rust/stork
-FUEL_FFI_SRC_DIR ?= apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi
-RUST_LIB_DIR:= $(CURDIR)/.lib
+# Rust workspace build configuration
+WORKSPACE_ROOT := $(CURDIR)
+RUST_TARGET_DIR := $(WORKSPACE_ROOT)/target
+RUST_LIB_DIR := $(CURDIR)/.lib
 
-# Detect the host operating system
+# Detect platform and set library extensions
 UNAME_S := $(shell uname -s)
-UNAME_M := $(shell uname -m)
-
-# Define targets based on the host operating system. We compile for Linux within
-# docker, where we can respect the TARGETPLATFORM variable (set by docker itself
-# during the build). On macOS, we just want to compile something that will run
-# on the current system, so we infer the target from the host architecture.
-# https://doc.rust-lang.org/rustc/platform-support.html
 ifeq ($(UNAME_S),Darwin)
-    STORK_LIB_NAME := libstork.dylib
-    FUEL_FFI_LIB_NAME := libfuel_ffi.dylib
-    ifeq ($(UNAME_M),x86_64)
-        RUST_TARGET := x86_64-apple-darwin
-    else
-        RUST_TARGET := aarch64-apple-darwin
-    endif
+    LIB_EXT := dylib
 else ifeq ($(UNAME_S),Linux)
-    STORK_LIB_NAME := libstork.so
-    FUEL_FFI_LIB_NAME := libfuel_ffi.so
-    ifeq ($(TARGETPLATFORM),linux/amd64)
-        RUST_TARGET := x86_64-unknown-linux-gnu
-    else ifeq ($(TARGETPLATFORM),linux/arm64)
-        RUST_TARGET := aarch64-unknown-linux-gnu
-    else
-        $(error Unsupported TARGETPLATFORM: $(TARGETPLATFORM))
-    endif
+    LIB_EXT := so
 else
     $(error Unsupported operating system: $(UNAME_S))
 endif
 
-LIBSTORK_DIR := $(RUST_SRC_DIR)/target/$(RUST_TARGET)/release
-LIBSTORK := $(RUST_LIB_DIR)/$(STORK_LIB_NAME)
+# Define library names and paths
+SIGNER_LIB_NAME := libsigner_ffi.$(LIB_EXT)
+FUEL_LIB_NAME := libfuel_ffi.$(LIB_EXT)
 
-FUEL_FFI_LIB_DIR := $(FUEL_FFI_SRC_DIR)/target/$(RUST_TARGET)/release
-LIBFUEL_FFI := $(RUST_LIB_DIR)/$(FUEL_FFI_LIB_NAME)
+SIGNER_LIB_SRC := $(RUST_TARGET_DIR)/release/$(SIGNER_LIB_NAME)
+FUEL_LIB_SRC := $(RUST_TARGET_DIR)/release/$(FUEL_LIB_NAME)
 
-# Add header file definitions
-FUEL_FFI_HEADER := $(RUST_LIB_DIR)/fuel_ffi.h
+SIGNER_LIB_DEST := $(RUST_LIB_DIR)/$(SIGNER_LIB_NAME)
+FUEL_LIB_DEST := $(RUST_LIB_DIR)/$(FUEL_LIB_NAME)
 
-# Find all Rust source files for proper dependencies
-RUST_SOURCES := $(shell find $(RUST_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
-FUEL_FFI_SOURCES := $(shell find $(FUEL_FFI_SRC_DIR) -name "*.rs" 2>/dev/null || echo "")
-FUEL_FFI_CARGO := $(FUEL_FFI_SRC_DIR)/Cargo.toml
-FUEL_FFI_ABI := $(FUEL_FFI_SRC_DIR)/stork-abi.json
+# Header files
+SIGNER_HEADER_SRC := $(RUST_TARGET_DIR)/include/signer_ffi.h
+FUEL_HEADER_SRC := $(RUST_TARGET_DIR)/include/fuel_ffi.h
+SIGNER_HEADER_DEST := $(RUST_LIB_DIR)/signer_ffi.h
+FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 
-$(LIBSTORK): $(RUST_SOURCES)
-	@echo "Building $(STORK_LIB_NAME) for $(RUST_TARGET)..."
+.PHONY: build-rust-workspace
+build-rust-workspace:
+	@echo "Building Rust workspace..."
+	@cargo build --release
+
+# Copy artifacts to lib directory
+$(SIGNER_LIB_DEST): build-rust-workspace
+	@echo "Copying signer_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
-	@cd $(RUST_SRC_DIR) && \
-	rustup target add $(RUST_TARGET) && \
-	CARGO_NET_GIT_FETCH_WITH_CLI=false cargo build --release --target $(RUST_TARGET) && \
-	cp target/$(RUST_TARGET)/release/$(STORK_LIB_NAME) $(LIBSTORK)
+	@cp $(SIGNER_LIB_SRC) $(SIGNER_LIB_DEST)
 
-$(LIBFUEL_FFI): $(FUEL_FFI_SOURCES) $(FUEL_FFI_CARGO) $(FUEL_FFI_ABI)
-	@echo "Building $(FUEL_FFI_LIB_NAME) for $(RUST_TARGET)..."
+$(FUEL_LIB_DEST): build-rust-workspace
+	@echo "Copying fuel_ffi to $(RUST_LIB_DIR)..."
 	@mkdir -p $(RUST_LIB_DIR)
-	@cd $(FUEL_FFI_SRC_DIR) && \
-	rustup target add $(RUST_TARGET) && \
-	CARGO_NET_GIT_FETCH_WITH_CLI=false cargo build --release --target $(RUST_TARGET) && \
-	cp target/$(RUST_TARGET)/release/$(FUEL_FFI_LIB_NAME) $(LIBFUEL_FFI) && \
-	cp target/include/fuel_ffi.h $(FUEL_FFI_HEADER)
+	@cp $(FUEL_LIB_SRC) $(FUEL_LIB_DEST)
 
+$(SIGNER_HEADER_DEST): build-rust-workspace
+	@echo "Copying signer_ffi.h to $(RUST_LIB_DIR)..."
+	@mkdir -p $(RUST_LIB_DIR)
+	@cp $(SIGNER_HEADER_SRC) $(SIGNER_HEADER_DEST)
+
+$(FUEL_HEADER_DEST): build-rust-workspace
+	@echo "Copying fuel_ffi.h to $(RUST_LIB_DIR)..."
+	@mkdir -p $(RUST_LIB_DIR)
+	@cp $(FUEL_HEADER_SRC) $(FUEL_HEADER_DEST)
+
+# Main target
 .PHONY: rust
-rust: $(LIBSTORK) $(LIBFUEL_FFI)
+rust: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) $(SIGNER_HEADER_DEST) $(FUEL_HEADER_DEST)
 
+# Clean targets
 .PHONY: clean-rust
 clean-rust:
+	@echo "Cleaning Rust workspace..."
 	@rm -rf $(RUST_LIB_DIR)
-	@cd $(RUST_SRC_DIR) && cargo clean
-	@cd $(FUEL_FFI_SRC_DIR) && cargo clean
+	@cargo clean
+	@echo "Cleaning copied libraries..."
+	@rm -rf $(RUST_LIB_DIR)
+
+
+# Lint rust code
+.PHONY: lint-rust
+lint-rust:
+	@echo "Linting Rust workspace..."
+	@cargo clippy --all-targets --all-features -- -D warnings
+
+# Format rust code
+.PHONY: format-rust
+format-rust:
+	@echo "Formatting Rust workspace..."
+	@cargo fmt --all

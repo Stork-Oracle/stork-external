@@ -108,7 +108,7 @@ pub fn process_contract_error(e: FuelError, log_decoder: &LogDecoder) -> FuelCli
                         return FuelClientError::ContractCallFailed(reason);
                     }
                     // return the first error found in the case of multiple
-                    return errors[0].clone().into();
+                    errors[0].clone().into()
                 }
                 _ => FuelClientError::ContractCallFailed(reason.to_string()),
             }

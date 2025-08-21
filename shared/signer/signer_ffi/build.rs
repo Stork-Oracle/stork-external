@@ -15,7 +15,7 @@ fn main() {
                 e => panic!("{e:?}"),
             },
             |bindings| {
-                bindings.write_to_file(format!("{target_dir}/include/fuel_ffi.h"));
+                bindings.write_to_file(format!("{target_dir}/include/signer_ffi.h"));
             },
         );
 }

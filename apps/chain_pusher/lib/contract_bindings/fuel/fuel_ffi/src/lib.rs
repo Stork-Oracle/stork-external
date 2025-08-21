@@ -7,8 +7,14 @@ use std::os::raw::c_char;
 use error::{FuelClientError, FuelClientStatus};
 use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
 
+/// # Safety
+///
+/// - `config_json` must be a valid pointer to a null-terminated C string
+/// - `out_client` must be a valid, writable pointer
+/// - `out_error` must be a valid, writable pointer
+/// - The caller is responsible for ensuring the pointers remain valid for the duration of the call
 #[no_mangle]
-pub extern "C" fn fuel_client_new(
+pub unsafe extern "C" fn fuel_client_new(
     config_json: *const c_char,
     out_client: *mut *mut FuelClient,
     out_error: *mut *mut c_char,
@@ -33,23 +39,30 @@ pub extern "C" fn fuel_client_new(
         let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
-            .map_err(|e| {
-                FuelClientError::SystemError(format!("Failed to create runtime: {}", e))
-            })?;
+            .map_err(|e| FuelClientError::SystemError(format!("Failed to create runtime: {e}")))?;
 
         rt.block_on(FuelClient::new(config))
     })();
 
-    handle_ffi_result(result, |client| {
-        unsafe {
-            *out_client = Box::into_raw(Box::new(client));
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |client| {
+            unsafe {
+                *out_client = Box::into_raw(Box::new(client));
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
+/// # Safety
+///
+/// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
+/// - The pointer must not be used after this function returns
+/// - It is safe to pass a null pointer (function will do nothing)
 #[no_mangle]
-pub extern "C" fn fuel_client_free(client: *mut FuelClient) {
+pub unsafe extern "C" fn fuel_client_free(client: *mut FuelClient) {
     if !client.is_null() {
         unsafe {
             let _ = Box::from_raw(client);
@@ -57,10 +70,17 @@ pub extern "C" fn fuel_client_free(client: *mut FuelClient) {
     }
 }
 
+/// # Safety
+///
+/// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
+/// - `id_ptr` must be a valid pointer to a 32-byte array
+/// - `out_value_json` must be a valid, writable pointer
+/// - `out_error` must be a valid, writable pointer
+/// - The caller is responsible for ensuring the pointers remain valid for the duration of the call
 #[no_mangle]
-pub extern "C" fn fuel_get_latest_value(
+pub unsafe extern "C" fn fuel_get_latest_value(
     client: *mut FuelClient,
-    id_ptr: *const u8,
+    id_ptr: *const [u8; 32],
     out_value_json: *mut *mut c_char,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
@@ -82,11 +102,7 @@ pub extern "C" fn fuel_get_latest_value(
     let result = (|| -> Result<Option<String>, FuelClientError> {
         let client = unsafe { &mut *client };
 
-        let id: [u8; 32] = unsafe {
-            let mut arr = [0u8; 32];
-            std::ptr::copy_nonoverlapping(id_ptr, arr.as_mut_ptr(), 32);
-            arr
-        };
+        let id: [u8; 32] = unsafe { *id_ptr };
 
         let value_opt = client
             .rt
@@ -101,19 +117,30 @@ pub extern "C" fn fuel_get_latest_value(
         }
     })();
 
-    handle_ffi_result(result, |value_opt| {
-        if let Some(json_str) = value_opt {
-            let c_str = string_to_c_char(json_str)?;
-            unsafe {
-                *out_value_json = c_str;
+    handle_ffi_result(
+        result,
+        |value_opt| {
+            if let Some(json_str) = value_opt {
+                let c_str = string_to_c_char(json_str)?;
+                unsafe {
+                    *out_value_json = c_str;
+                }
             }
-        }
-        Ok(())
-    }, out_error)
+            Ok(())
+        },
+        out_error,
+    )
 }
 
+/// # Safety
+///
+/// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
+/// - `inputs_json` must be a valid pointer to a null-terminated C string containing valid JSON
+/// - `out_tx_hash` must be a valid, writable pointer
+/// - `out_error` must be a valid, writable pointer
+/// - The caller is responsible for ensuring the pointers remain valid for the duration of the call
 #[no_mangle]
-pub extern "C" fn fuel_update_values(
+pub unsafe extern "C" fn fuel_update_values(
     client: *mut FuelClient,
     inputs_json: *const c_char,
     out_tx_hash: *mut *mut c_char,
@@ -134,12 +161,6 @@ pub extern "C" fn fuel_update_values(
     }
 
     let result = (|| -> Result<String, FuelClientError> {
-        if client.is_null() {
-            return Err(FuelClientError::InvalidConfig(
-                "Null client pointer".to_string(),
-            ));
-        }
-
         let client = unsafe { &mut *client };
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
@@ -149,17 +170,27 @@ pub extern "C" fn fuel_update_values(
             .block_on(client.update_temporal_numeric_values(inputs))
     })();
 
-    handle_ffi_result(result, |tx_hash| {
-        let c_str = string_to_c_char(tx_hash)?;
-        unsafe {
-            *out_tx_hash = c_str;
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |tx_hash| {
+            let c_str = string_to_c_char(tx_hash)?;
+            unsafe {
+                *out_tx_hash = c_str;
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
+/// # Safety
+///
+/// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
+/// - `out_balance` must be a valid, writable pointer
+/// - `out_error` must be a valid, writable pointer
+/// - The caller is responsible for ensuring the pointers remain valid for the duration of the call
 #[no_mangle]
-pub extern "C" fn fuel_get_wallet_balance(
+pub unsafe extern "C" fn fuel_get_wallet_balance(
     client: *mut FuelClient,
     out_balance: *mut u64,
     out_error: *mut *mut c_char,
@@ -175,21 +206,31 @@ pub extern "C" fn fuel_get_wallet_balance(
         *out_balance = 0;
     }
 
-    let result = (|| -> Result<u64, FuelClientError> {
+    let result = {
         let client = unsafe { &mut *client };
         client.rt.block_on(client.get_wallet_balance())
-    })();
+    };
 
-    handle_ffi_result(result, |balance| {
-        unsafe {
-            *out_balance = balance;
-        }
-        Ok(())
-    }, out_error)
+    handle_ffi_result(
+        result,
+        |balance| {
+            unsafe {
+                *out_balance = balance;
+            }
+            Ok(())
+        },
+        out_error,
+    )
 }
 
+/// # Safety
+///
+/// - `s` must be a valid pointer to a C string allocated by this library
+/// - The pointer must not be used after this function returns
+/// - It is safe to pass a null pointer (function will do nothing)
+/// - The string will be deallocated by this function
 #[no_mangle]
-pub extern "C" fn fuel_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn fuel_free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
             let _ = CString::from_raw(s);
@@ -198,13 +239,12 @@ pub extern "C" fn fuel_free_string(s: *mut c_char) {
 }
 
 // Helper functions
-
 fn handle_ffi_result<T>(
     result: Result<T, FuelClientError>,
     success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
-    let final_result =match result {
+    let final_result = match result {
         Ok(value) => success_handler(value),
         Err(e) => Err(e),
     };
@@ -240,11 +280,11 @@ fn c_str_to_string(c_str: *const c_char) -> Result<String, FuelClientError> {
     c_str
         .to_str()
         .map(|s| s.to_owned())
-        .map_err(|e| FuelClientError::SystemError(format!("Invalid UTF-8 in input: {}", e)))
+        .map_err(|e| FuelClientError::SystemError(format!("Invalid UTF-8 in input: {e}")))
 }
 
 fn string_to_c_char(s: String) -> Result<*mut c_char, FuelClientError> {
     CString::new(s)
         .map(|c_str| c_str.into_raw())
-        .map_err(|e| FuelClientError::SystemError(format!("Failed to create C string: {}", e)))
+        .map_err(|e| FuelClientError::SystemError(format!("Failed to create C string: {e}")))
 }
