@@ -1,8 +1,5 @@
-include mk/rust.mk
-include mk/go.mk
 
 .PHONY: lint-links
-
 ### Checks for broken links in all markdown files
 lint-links:
 	@if [ -z "$(shell git diff-index --quiet HEAD --)" ]; then \
@@ -10,7 +7,3 @@ lint-links:
 	fi
 	@CURRENT_BRANCH=$(shell git rev-parse HEAD) linkspector check -c .linkspector.yml 
 
-### Run all linters
-lint: lint-links lint-rust lint-go
-
-format: format-rust format-go
