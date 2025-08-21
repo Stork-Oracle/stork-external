@@ -78,7 +78,7 @@ jobs:
                 clippy-reviewdog-filter | \
                 reviewdog -f=checkstyle -name="lint-rust" -reporter=github-pr-check
 
-    # Runs golangci-lint with formatters enabled. No separate check-go-formatting job needed.
+    # Runs golangci-lint with formatter checks enabled. No separate check-go-formatting job needed.
     lint-go:
         runs-on: ubuntu-latest
 
