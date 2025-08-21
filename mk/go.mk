@@ -50,3 +50,15 @@ clean: clean-rust
 # pass in a target to run-local to run a specific binary
 run-local: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
 	@$(GO) run ./apps/cmd/$(target) $(args)
+
+# Lint Go code using golangci-lint
+.PHONY: lint-go
+lint-go:
+	@echo "Linting Go code..."
+	@golangci-lint run
+
+# Format Go code using golangci-lint formatters
+.PHONY: format-go
+format-go:
+	@echo "Formatting Go code..."
+	@golangci-lint fmt
