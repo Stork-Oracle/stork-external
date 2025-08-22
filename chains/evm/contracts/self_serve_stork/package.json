@@ -1,0 +1,14 @@
+{
+  "name": "self_serve_stork",
+  "version": "1.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@types/node": "^22.17.2",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.1",
+    "typescript": "~5.8.0",
+    "viem": "^2.34.0"
+  }
+}
