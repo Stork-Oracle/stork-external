@@ -88,9 +88,11 @@ pub extern "C" fn fuel_get_latest_value(
             arr
         };
 
-        let value_opt = client
-            .rt
-            .block_on(client.get_latest_temporal_numeric_value(id))?;
+        let result= std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            client.rt.block_on(client.get_latest_temporal_numeric_value(id))
+        })).map_err(|e| FuelClientError::SystemError(format!("Panic in get_latest_temporal_numeric_value: {:?}", e)))?;
+
+        let value_opt = result?;
 
         match value_opt {
             Some(value) => {
@@ -144,9 +146,11 @@ pub extern "C" fn fuel_update_values(
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
 
-        client
-            .rt
-            .block_on(client.update_temporal_numeric_values(inputs))
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            client
+                .rt
+                .block_on(client.update_temporal_numeric_values(inputs))
+        })).map_err(|e| FuelClientError::SystemError(format!("Panic in update_temporal_numeric_values: {:?}", e)))?
     })();
 
     handle_ffi_result(result, |tx_hash| {
@@ -177,7 +181,10 @@ pub extern "C" fn fuel_get_wallet_balance(
 
     let result = (|| -> Result<u64, FuelClientError> {
         let client = unsafe { &mut *client };
-        client.rt.block_on(client.get_wallet_balance())
+        
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            client.rt.block_on(client.get_wallet_balance())
+        })).map_err(|e| FuelClientError::SystemError(format!("Panic in get_wallet_balance: {:?}", e)))?
     })();
 
     handle_ffi_result(result, |balance| {
