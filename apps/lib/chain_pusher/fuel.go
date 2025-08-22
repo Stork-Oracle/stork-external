@@ -31,7 +31,7 @@ func NewFuelContractInteractor(
 		PrivateKey:      privateKey,
 	}
 
-	contract, err := fuel.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey)
+	contract, err := fuel.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
 	}

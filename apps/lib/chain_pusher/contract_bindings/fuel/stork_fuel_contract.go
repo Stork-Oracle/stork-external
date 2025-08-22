@@ -15,11 +15,14 @@ import (
 	"fmt"
 	"math/big"
 	"unsafe"
+
+	"github.com/rs/zerolog"
 )
 
 type StorkContract struct {
 	Client *C.FuelClient
 	Config FuelConfig
+	logger zerolog.Logger
 }
 
 type FuelConfig struct {
@@ -43,7 +46,10 @@ type FuelTemporalNumericValueInput struct {
 	V                    uint8                    `json:"v"`
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, privateKey string) (*StorkContract, error) {
+func NewStorkContract(rpcUrl string, contractAddress string, privateKey string, logger zerolog.Logger) (*StorkContract, error) {
+	logger = logger.With().Str("component", "fuel-contract-bindings").Logger()
+
+	logger.Info().Msg("Creating fuel client")
 	config := FuelConfig{
 		RpcUrl:          rpcUrl,
 		ContractAddress: contractAddress,
@@ -60,6 +66,9 @@ func NewStorkContract(rpcUrl string, contractAddress string, privateKey string) 
 
 	var outClient *C.FuelClient
 	var outErrorPtr *C.char
+	logger.Info().Fields(map[string]interface{}{
+		"config": config,
+	}).Msg("Calling C function fuel_client_new")
 	status := C.fuel_client_new(configCStr, &outClient, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
@@ -78,6 +87,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, privateKey string) 
 	return &StorkContract{
 		Client: outClient,
 		Config: config,
+		logger: logger,
 	}, nil
 }
 
@@ -118,6 +128,8 @@ func handleFuelClientStatus(status C.enum_FuelClientStatus) error {
 }
 
 func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumericValueInput) (string, error) {
+	s.logger.Info().Msg("Updating temporal numeric values")
+
 	inputsJson, err := json.Marshal(inputs)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal fuel inputs: %w", err)
@@ -128,6 +140,9 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 
 	var outTxHashPtr *C.char
 	var outErrorPtr *C.char
+	s.logger.Info().Fields(map[string]interface{}{
+		"inputs": inputs,
+	}).Msg("Calling C function fuel_update_values")
 	status := C.fuel_update_values(s.Client, inputsCStr, &outTxHashPtr, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
@@ -150,11 +165,16 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 }
 
 func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTemporalNumericValue, error) {
+	s.logger.Info().Msg("Getting temporal numeric value")
+
 	// Convert [32]byte to *C.uint8_t
 	idPtr := (*C.uint8_t)(unsafe.Pointer(&id[0]))
 
 	var outValueJsonPtr *C.char
 	var outErrorPtr *C.char
+	s.logger.Info().Fields(map[string]interface{}{
+		"id": id,
+	}).Msg("Calling C function fuel_get_latest_value")
 	status := C.fuel_get_latest_value(s.Client, idPtr, &outValueJsonPtr, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
@@ -179,8 +199,11 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTe
 }
 
 func (s *StorkContract) GetWalletBalance() (uint64, error) {
+	s.logger.Info().Msg("Getting wallet balance")
+
 	var balance C.uint64_t
 	var outErrorPtr *C.char
+	s.logger.Info().Msg("Calling C function fuel_get_wallet_balance")
 	status := C.fuel_get_wallet_balance(s.Client, &balance, &outErrorPtr)
 
 	if err := handleFuelClientStatus(status); err != nil {
@@ -196,7 +219,10 @@ func (s *StorkContract) GetWalletBalance() (uint64, error) {
 }
 
 func (s *StorkContract) Close() {
+	s.logger.Info().Msg("Closing fuel client")
+
 	if s.Client != nil {
+		s.logger.Info().Msg("Freeing fuel client")
 		C.fuel_client_free(s.Client)
 		s.Client = nil
 	}
