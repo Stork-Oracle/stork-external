@@ -161,6 +161,8 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []FuelTemporalNumer
 	txHash := C.GoString(outTxHashPtr)
 	C.fuel_free_string(outTxHashPtr)
 
+	s.logger.Info().Msg("Updated temporal numeric values")
+
 	return txHash, nil
 }
 
@@ -195,6 +197,8 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*FuelTe
 		return nil, fmt.Errorf("failed to unmarshal value JSON: %w", err)
 	}
 
+	s.logger.Info().Msg("Got temporal numeric value")
+
 	return &result, nil
 }
 
@@ -214,6 +218,8 @@ func (s *StorkContract) GetWalletBalance() (uint64, error) {
 		}
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
+
+	s.logger.Info().Msg("Wallet balance found")
 
 	return uint64(balance), nil
 }
