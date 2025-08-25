@@ -137,3 +137,11 @@ The application includes comprehensive logging to help with debugging and monito
 - Use appropriate gas limits to prevent excessive transaction costs
 - Monitor the application logs for any unusual behavior
 - Consider running the application behind a firewall or VPN for production use
+
+### Generate contract bindings for EVM
+
+From the root of the repo, run:
+
+```bash
+abigen --abi <(jq -r '.abi' ./chains/evm/contracts/self_serve_stork/artifacts/contracts/SelfServeStork.sol/SelfServeStork.json) --pkg contract_bindings_evm --type SelfServeStorkContract --out ./apps/self_serve_chain_pusher/lib/contract_bindings/evm/stork_evm_contract.go
+```
