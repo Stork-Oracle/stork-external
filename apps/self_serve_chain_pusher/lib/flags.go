@@ -1,0 +1,21 @@
+package self_serve_chain_pusher
+
+const WebsocketPortFlag = "websocket-port"
+const ChainRpcUrlFlag = "chain-rpc-url"
+const ChainWsUrlFlag = "chain-ws-url"
+const ContractAddressFlag = "contract-address"
+const AssetConfigFileFlag = "asset-config-file"
+const PrivateKeyFileFlag = "private-key-file"
+const GasLimitFlag = "gas-limit"
+const LimitPerSecondFlag = "limit-per-second"
+const BurstLimitFlag = "burst-limit"
+
+const WebsocketPortDesc = "WebSocket server port"
+const ChainRpcUrlDesc = "Chain RPC URL"
+const ChainWsUrlDesc = "Chain WebSocket URL"
+const ContractAddressDesc = "Self-serve Stork contract address"
+const AssetConfigFileDesc = "Asset configuration file with push settings"
+const PrivateKeyFileDesc = "Private key file for signing transactions"
+const GasLimitDesc = "Gas limit for transactions (0 to use estimate)"
+const LimitPerSecondDesc = "JSON RPC call limit per second"
+const BurstLimitDesc = "JSON RPC call burst limit"
