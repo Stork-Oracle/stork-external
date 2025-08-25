@@ -64,51 +64,58 @@ pub extern "C" fn fuel_get_latest_value(
     out_value_json: *mut *mut c_char,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
+    println!("fuel_get_latest_value 1");
     if out_value_json.is_null() {
         return FuelClientError::NullPointer("out_value_json is null".to_string()).into();
     }
+    println!("fuel_get_latest_value 2");
     if client.is_null() {
         return FuelClientError::NullPointer("client is null".to_string()).into();
     }
+    println!("fuel_get_latest_value 3");
     if id_ptr.is_null() {
         return FuelClientError::NullPointer("id_ptr is null".to_string()).into();
     }
-
+    println!("fuel_get_latest_value 4");
     // Initialize output to null
     unsafe {
         *out_value_json = std::ptr::null_mut();
     }
-
+    println!("fuel_get_latest_value 5");
     let result = (|| -> Result<Option<String>, FuelClientError> {
         let client = unsafe { &mut *client };
-
+        println!("fuel_get_latest_value 6");
         let id: [u8; 32] = unsafe {
             let mut arr = [0u8; 32];
             std::ptr::copy_nonoverlapping(id_ptr, arr.as_mut_ptr(), 32);
             arr
         };
-
+        println!("fuel_get_latest_value 7");
         let result= std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             client.rt.block_on(client.get_latest_temporal_numeric_value(id))
         })).map_err(|e| FuelClientError::SystemError(format!("Panic in get_latest_temporal_numeric_value: {:?}", e)))?;
-
+        println!("fuel_get_latest_value 8");
         let value_opt = result?;
-
+        println!("fuel_get_latest_value 9");
         match value_opt {
             Some(value) => {
                 let json_str = serde_json::to_string(&value)?;
+                println!("fuel_get_latest_value 10");
                 Ok(Some(json_str))
             }
             None => Ok(None), // No value found - this is success, not error
         }
     })();
-
+    println!("fuel_get_latest_value 11");
     handle_ffi_result(result, |value_opt| {
+        println!("fuel_get_latest_value 12");
         if let Some(json_str) = value_opt {
             let c_str = string_to_c_char(json_str)?;
+            println!("fuel_get_latest_value 13");
             unsafe {
                 *out_value_json = c_str;
             }
+            println!("fuel_get_latest_value 14");
         }
         Ok(())
     }, out_error)
@@ -168,26 +175,29 @@ pub extern "C" fn fuel_get_wallet_balance(
     out_balance: *mut u64,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
+    println!("fuel_get_wallet_balance 1");
     if out_balance.is_null() {
         return FuelClientError::NullPointer("out_balance is null".to_string()).into();
     }
+    println!("fuel_get_wallet_balance 2");
     if client.is_null() {
         return FuelClientError::NullPointer("client is null".to_string()).into();
     }
-
+    println!("fuel_get_wallet_balance 3");
     unsafe {
         *out_balance = 0;
     }
-
+    println!("fuel_get_wallet_balance 4");
     let result = (|| -> Result<u64, FuelClientError> {
         let client = unsafe { &mut *client };
-        
+        println!("fuel_get_wallet_balance 5");
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             client.rt.block_on(client.get_wallet_balance())
         })).map_err(|e| FuelClientError::SystemError(format!("Panic in get_wallet_balance: {:?}", e)))?
     })();
-
+    println!("fuel_get_wallet_balance 6");
     handle_ffi_result(result, |balance| {
+        println!("fuel_get_wallet_balance 7");
         unsafe {
             *out_balance = balance;
         }
@@ -211,13 +221,15 @@ fn handle_ffi_result<T>(
     success_handler: impl FnOnce(T) -> Result<(), FuelClientError>,
     out_error: *mut *mut c_char,
 ) -> FuelClientStatus {
+    println!("handle_ffi_result 1");
     let final_result =match result {
         Ok(value) => success_handler(value),
         Err(e) => Err(e),
     };
-
+    println!("handle_ffi_result 2");
     match final_result {
         Ok(()) => {
+            println!("handle_ffi_result 3");
             if !out_error.is_null() {
                 unsafe {
                     *out_error = std::ptr::null_mut();
@@ -226,24 +238,31 @@ fn handle_ffi_result<T>(
             FuelClientStatus::Success
         }
         Err(e) => {
+            println!("handle_ffi_result 4");
             if !out_error.is_null() {
+                println!("handle_ffi_result 5");
                 if let Ok(error_str) = string_to_c_char(e.to_string()) {
+                    println!("handle_ffi_result 6");
                     unsafe {
                         *out_error = error_str;
                     }
                 }
             }
+            println!("handle_ffi_result 7");
             e.into()
         }
     }
 }
 
 fn c_str_to_string(c_str: *const c_char) -> Result<String, FuelClientError> {
+    println!("c_str_to_string 1");
     if c_str.is_null() {
+        println!("c_str_to_string 2");
         return Err(FuelClientError::NullPointer("c_str is null".to_string()));
     }
-
+    println!("c_str_to_string 3");
     let c_str = unsafe { CStr::from_ptr(c_str) };
+    println!("c_str_to_string 4");
     c_str
         .to_str()
         .map(|s| s.to_owned())
@@ -251,7 +270,10 @@ fn c_str_to_string(c_str: *const c_char) -> Result<String, FuelClientError> {
 }
 
 fn string_to_c_char(s: String) -> Result<*mut c_char, FuelClientError> {
-    CString::new(s)
+    println!("string_to_c_char 1");
+    let result =CString::new(s)
         .map(|c_str| c_str.into_raw())
-        .map_err(|e| FuelClientError::SystemError(format!("Failed to create C string: {}", e)))
+        .map_err(|e| FuelClientError::SystemError(format!("Failed to create C string: {}", e)));
+    println!("string_to_c_char 2");
+    result
 }
