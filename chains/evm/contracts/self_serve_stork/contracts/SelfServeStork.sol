@@ -2,6 +2,8 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
+// TODO: add upgradeable contract
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./SelfServeStorkEvents.sol";
 import "./SelfServeStorkStructs.sol";
 import "./SelfServeStorkErrors.sol";
@@ -10,11 +12,15 @@ import "./SelfServeStorkGetters.sol";
 import "./SelfServeStorkSetters.sol";
 import "./SelfServeStorkVerify.sol";
 
+
 contract SelfServeStork is
     SelfServeStorkGetters,
     SelfServeStorkSetters,
-    SelfServeStorkVerify
+    SelfServeStorkVerify,
+    Ownable
 {
+    constructor(address initialOwner) Ownable(initialOwner) {}
+
     function updateTemporalNumericValues(
         SelfServeStorkStructs.PublisherTemporalNumericValueInput[]
             calldata updateData,
@@ -57,5 +63,16 @@ contract SelfServeStork is
 
         if (msg.value < requiredFee)
             revert SelfServeStorkErrors.InsufficientFee();
+    }
+
+    function createPublisherUser(
+        address pubKey,
+        uint256 singleUpdateFee
+    ) public onlyOwner {
+        addPublisherUser(pubKey, singleUpdateFee);
+    }
+
+    function deletePublisherUser(address pubKey) public onlyOwner {
+        removePublisherUser(pubKey);
     }
 }
