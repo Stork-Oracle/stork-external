@@ -19,3 +19,6 @@ paste = "1.0.15"
 
 [build-dependencies]
 cbindgen = "0.29.0"
+
+[profile.release]
+panic = 'unwind'
