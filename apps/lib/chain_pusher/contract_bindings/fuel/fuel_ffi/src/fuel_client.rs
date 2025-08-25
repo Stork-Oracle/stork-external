@@ -120,7 +120,7 @@ impl FuelClient {
         let contract_tnv = response.value;
         let tnv = FuelTemporalNumericValue {
             timestamp_ns: contract_tnv.timestamp_ns,
-            quantized_value: contract_tnv.quantized_value.underlying as i128,
+            quantized_value: contract_tnv.quantized_value.into(),
         };
         Ok(Some(tnv))
     }
