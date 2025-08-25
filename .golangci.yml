@@ -1,0 +1,149 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - testpackage
+    - wsl
+  settings:
+    errcheck:
+      check-type-assertions: true
+    exhaustruct:
+      exclude:
+        # std libs
+        - ^net/http.Client$
+        - ^net/http.Cookie$
+        - ^net/http.Request$
+        - ^net/http.Response$
+        - ^net/http.Server$
+        - ^net/http.Transport$
+        - ^net/url.URL$
+        - ^os/exec.Cmd$
+        - ^reflect.StructField$
+        # public libs
+        - ^github.com/Shopify/sarama.Config$
+        - ^github.com/Shopify/sarama.ProducerMessage$
+        - ^github.com/mitchellh/mapstructure.DecoderConfig$
+        - ^github.com/prometheus/client_golang/.+Opts$
+        - ^github.com/spf13/cobra.Command$
+        - ^github.com/spf13/cobra.CompletionOptions$
+        - ^github.com/stretchr/testify/mock.Mock$
+        - ^github.com/testcontainers/testcontainers-go.+Request$
+        - ^github.com/testcontainers/testcontainers-go.FromDockerfile$
+        - ^golang.org/x/tools/go/analysis.Analyzer$
+        - ^google.golang.org/protobuf/.+Options$
+        - ^gopkg.in/yaml.v3.Node$
+    embeddedstructfieldcheck:
+      forbid-mutex: true
+    exhaustive:
+      check:
+        - switch
+        - map
+    gocritic:
+      settings:
+        ifElseChain:
+          minThreshold: 3
+    gomoddirectives:
+      replace-local: true
+    gosec:
+      excludes:
+        - G108
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+      settings:
+        shadow:
+          strict: true
+    mnd:
+      # List of function patterns to exclude from analysis.
+      # Values always ignored: `time.Date`,
+      # `strconv.FormatInt`, `strconv.FormatUint`, `strconv.FormatFloat`,
+      # `strconv.ParseInt`, `strconv.ParseUint`, `strconv.ParseFloat`.
+      # Default: []
+      ignored-functions:
+        - args.Error
+        - flag.Arg
+        - flag.Duration.*
+        - flag.Float.*
+        - flag.Int.*
+        - flag.Uint.*
+        - os.Chmod
+        - os.Mkdir.*
+        - os.OpenFile
+        - os.WriteFile
+        - prometheus.ExponentialBuckets.*
+        - prometheus.LinearBuckets
+    reassign:
+      patterns:
+        - ".*"
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+        - -ST1016
+        - -QF1008
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+          yaml: snake
+          xml: snake
+          bson: snake
+          env: upperSnake
+          envconfig: upperSnake
+        use-field-name: true
+    varnamelen:
+      max-distance: 25
+      min-name-length: 2
+      ignore-names:
+        - err
+        - ctx
+        - db
+        - id
+        - ok
+        - tx
+        - wg
+        - mu
+        - rw
+      ignore-decls:
+        - c echo.Context
+        - t testing.T
+        - e error
+        - i int
+        - T any
+        - m map[string]int
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - linters:
+          - funlen
+        source: ^func Test
+      - linters:
+          - exhaustruct
+        path: _test.go
+      - linters:
+          - dupl
+          - gochecknoglobals
+          - paralleltest
+        path: lib/service
+    paths:
+      - mock_*.go
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - mock_*.go
+      - third_party$
+      - builtin$
+      - examples$
