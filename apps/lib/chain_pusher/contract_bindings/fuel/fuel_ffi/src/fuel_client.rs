@@ -101,6 +101,7 @@ impl FuelClient {
     ) -> Result<Option<FuelTemporalNumericValue>, FuelClientError> {
         let id_bits256 = Bits256(id);
 
+        panic!("get_latest_temporal_numeric_value");
         let response = self
             .proxy_contract
             .methods()
