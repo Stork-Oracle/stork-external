@@ -6,14 +6,13 @@ pragma solidity >=0.8.24 <0.9.0;
 import "./SelfServeStorkEvents.sol";
 import "./SelfServeStorkStructs.sol";
 import "./SelfServeStorkState.sol";
-import "./SelfServeStorkUtils.sol";
 
 contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
     function updateLatestValueIfNecessary(
         address pubKey,
         SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
-        bytes32 assetId = SelfServeStorkUtils.getAssetId(input.assetPairId);
+        bytes32 assetId = getAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
         .latestValues[pubKey][assetId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
@@ -34,7 +33,7 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
         address pubKey,
         SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
-        bytes32 assetId = SelfServeStorkUtils.getAssetId(input.assetPairId);
+        bytes32 assetId = getAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
         .latestValues[pubKey][assetId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
@@ -72,5 +71,9 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
     function removePublisherUser(address pubKey) internal {
         delete _state.publisherUsers[pubKey];
         emit PublisherUserRemoved(pubKey);
+    }
+
+    function getAssetId(string memory assetPairId) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(assetPairId));
     }
 }
