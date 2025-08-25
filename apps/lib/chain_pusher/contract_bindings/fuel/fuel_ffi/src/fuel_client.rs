@@ -101,8 +101,8 @@ impl FuelClient {
     ) -> Result<Option<FuelTemporalNumericValue>, FuelClientError> {
         let id_bits256 = Bits256(id);
 
-        panic!("get_latest_temporal_numeric_value");
-        let response = self
+        println!("get_latest_temporal_numeric_value_internal 1");
+        let mut response1 = self
             .proxy_contract
             .methods()
             .get_temporal_numeric_value_unchecked_v1(id_bits256)
@@ -113,12 +113,14 @@ impl FuelClient {
                     "Failed to determine missing contracts: {}",
                     e
                 ))
-            })?
-            .simulate(Execution::state_read_only())
+            })?;
+        println!("get_latest_temporal_numeric_value_internal 2");
+        let response2 = response1.simulate(Execution::state_read_only())
             .await
             .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
 
-        let contract_tnv = response.value;
+        println!("get_latest_temporal_numeric_value_internal 3");
+        let contract_tnv = response2.value;
         let tnv = FuelTemporalNumericValue {
             timestamp_ns: contract_tnv.timestamp_ns,
             quantized_value: contract_tnv.quantized_value.underlying as i128,
@@ -228,6 +230,7 @@ impl FuelClient {
     }
 
     pub async fn get_wallet_balance(&self) -> Result<u64, FuelClientError> {
+        println!("get_wallet_balance_internal 1");
         let balance = self
             .wallet
             .get_asset_balance(&self.gas_asset_id)
@@ -235,6 +238,7 @@ impl FuelClient {
             .map_err(|e| {
                 FuelClientError::WalletBalanceError(format!("Failed to get wallet balance: {}", e))
             })?;
+        println!("get_wallet_balance_internal 2");
         Ok(balance as u64)
     }
 }
