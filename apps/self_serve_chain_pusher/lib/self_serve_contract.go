@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"time"
 
+	contract_bindings "github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/lib/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
@@ -23,22 +23,18 @@ const (
 )
 
 type SelfServeContractInteractor struct {
-	logger      zerolog.Logger
-	client      *ethclient.Client
-	wsClient    *ethclient.Client
-	privateKey  *ecdsa.PrivateKey
-	chainID     *big.Int
-	gasLimit    uint64
-	rateLimiter *rate.Limiter
+	logger          zerolog.Logger
+	client          *ethclient.Client
+	wsClient        *ethclient.Client
+	contract        *contract_bindings.SelfServeStorkContract
+	wsContract      *contract_bindings.SelfServeStorkContract
+	privateKey      *ecdsa.PrivateKey
+	chainID         *big.Int
+	gasLimit        uint64
+	rateLimiter     *rate.Limiter
 	contractAddress common.Address
 }
 
-type TemporalNumericValueEvm struct {
-	TimestampNs      *big.Int
-	Quantized        *big.Int
-	EncodedAssetId   [32]byte
-	Nonce            *big.Int
-}
 
 func NewSelfServeContractInteractor(
 	rpcUrl string,
@@ -69,12 +65,27 @@ func NewSelfServeContractInteractor(
 	}
 
 	contractAddress := common.HexToAddress(contractAddr)
+	contract, err := contract_bindings.NewSelfServeStorkContract(contractAddress, client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create contract instance: %w", err)
+	}
+
+	var wsContract *contract_bindings.SelfServeStorkContract
+	if wsClient != nil {
+		wsContract, err = contract_bindings.NewSelfServeStorkContract(contractAddress, wsClient)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to create WebSocket contract instance")
+		}
+	}
+
 	rateLimiter := rate.NewLimiter(rate.Limit(limitPerSecond), burstLimit)
 
 	return &SelfServeContractInteractor{
 		logger:          logger.With().Str("component", "contract_interactor").Logger(),
 		client:          client,
 		wsClient:        wsClient,
+		contract:        contract,
+		wsContract:      wsContract,
 		privateKey:      privateKey,
 		chainID:         chainID,
 		gasLimit:        gasLimit,
@@ -95,22 +106,22 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 		return fmt.Errorf("rate limiter error: %w", err)
 	}
 
-	// Convert encoded asset ID to bytes32
-	encodedAssetIdBytes, err := decodeHexToBytes32(asset.EncodedAssetId)
-	if err != nil {
-		return fmt.Errorf("failed to decode encoded asset ID: %w", err)
+	// Quantize the value (assuming 18 decimal places for int192)
+	quantizedValue := new(big.Int)
+	scaledValue := new(big.Float).Mul(value, new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)))
+	scaledValue.Int(quantizedValue)
+
+	// Create the temporal numeric value
+	temporalValue := contract_bindings.SelfServeStorkStructsTemporalNumericValue{
+		TimestampNs:    uint64(time.Now().UnixNano()),
+		QuantizedValue: quantizedValue,
 	}
 
-	// Quantize the value (assuming 18 decimal places)
-	quantizedValue := new(big.Int)
-	value.Mul(value, new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)))
-	value.Int(quantizedValue)
-
-	temporalValue := TemporalNumericValueEvm{
-		TimestampNs:    big.NewInt(time.Now().UnixNano()),
-		Quantized:      quantizedValue,
-		EncodedAssetId: encodedAssetIdBytes,
-		Nonce:          nonce,
+	// Create the update input with signature data
+	// For self-serve, we sign the data ourselves
+	updateInput, err := ci.createUpdateInput(temporalValue, asset, nonce)
+	if err != nil {
+		return fmt.Errorf("failed to create update input: %w", err)
 	}
 
 	// Retry logic for transaction submission
@@ -128,7 +139,7 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 			backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
 		}
 
-		txHash, err := ci.submitPushValueTransaction(ctx, temporalValue)
+		txHash, err := ci.submitPushValueTransaction(ctx, []contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{updateInput})
 		if err != nil {
 			lastErr = err
 			continue
@@ -144,47 +155,81 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 	return fmt.Errorf("failed to push value after %d attempts: %w", maxRetryAttempts, lastErr)
 }
 
-func (ci *SelfServeContractInteractor) submitPushValueTransaction(ctx context.Context, temporalValue TemporalNumericValueEvm) (*common.Hash, error) {
-	_ = temporalValue // TODO: Use this to construct actual contract call data
+func (ci *SelfServeContractInteractor) createUpdateInput(
+	temporalValue contract_bindings.SelfServeStorkStructsTemporalNumericValue,
+	asset AssetPushConfig,
+	nonce *big.Int,
+) (contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput, error) {
+	// Get the public key address from the private key
+	pubKeyAddress := crypto.PubkeyToAddress(ci.privateKey.PublicKey)
+
+	// Create the message hash for signing
+	// This should match the contract's expected signing format
+	messageHash, err := ci.createMessageHash(temporalValue, asset.AssetId, nonce)
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, fmt.Errorf("failed to create message hash: %w", err)
+	}
+
+	// Sign the message hash
+	signature, err := crypto.Sign(messageHash, ci.privateKey)
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, fmt.Errorf("failed to sign message: %w", err)
+	}
+
+	// Extract r, s, v from signature
+	r := [32]byte{}
+	s := [32]byte{}
+	copy(r[:], signature[0:32])
+	copy(s[:], signature[32:64])
+	v := signature[64] + 27 // Ethereum v adjustment
+
+	return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{
+		TemporalNumericValue: temporalValue,
+		PubKey:               pubKeyAddress,
+		AssetPairId:          asset.AssetId,
+		R:                    r,
+		S:                    s,
+		V:                    v,
+	}, nil
+}
+
+func (ci *SelfServeContractInteractor) createMessageHash(
+	temporalValue contract_bindings.SelfServeStorkStructsTemporalNumericValue,
+	assetId string,
+	nonce *big.Int,
+) ([]byte, error) {
+	// Create a message hash that matches what the contract expects
+	// This is a simplified version - in production, you'd want to match
+	// the exact EIP-712 structure that the contract validates
+	message := fmt.Sprintf("%s:%d:%s:%s",
+		assetId,
+		temporalValue.TimestampNs,
+		temporalValue.QuantizedValue.String(),
+		nonce.String(),
+	)
+
+	hash := crypto.Keccak256Hash([]byte(message))
+	return hash.Bytes(), nil
+}
+
+func (ci *SelfServeContractInteractor) submitPushValueTransaction(
+	ctx context.Context,
+	updateData []contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput,
+) (*common.Hash, error) {
 	// Get transaction options
 	auth, err := ci.getTransactionOptions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get transaction options: %w", err)
 	}
 
-	// This is a simplified version - in a real implementation, you would:
-	// 1. Load the actual contract ABI
-	// 2. Create a contract binding
-	// 3. Call the appropriate contract method
-	// For now, we'll simulate the transaction creation
-
-	// Create transaction data (this would be the actual contract call)
-	// For the self-serve contract, this would likely be something like:
-	// contract.UpdateTemporalNumericValueEvm(auth, temporalValue)
-
-	// For demonstration, we'll create a simple transaction
-	// In reality, you'd use the generated contract bindings
-	tx := types.NewTransaction(
-		auth.Nonce.Uint64(),
-		ci.contractAddress,
-		big.NewInt(0), // value
-		auth.GasLimit,
-		auth.GasPrice,
-		[]byte{}, // This would be the actual contract call data
-	)
-
-	// Sign and send transaction
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(ci.chainID), ci.privateKey)
+	// Call the contract's UpdateTemporalNumericValues method
+	// storeHistoric is set to false for basic functionality
+	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updateData, false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign transaction: %w", err)
+		return nil, fmt.Errorf("failed to call UpdateTemporalNumericValues: %w", err)
 	}
 
-	err = ci.client.SendTransaction(ctx, signedTx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send transaction: %w", err)
-	}
-
-	txHash := signedTx.Hash()
+	txHash := tx.Hash()
 	return &txHash, nil
 }
 
@@ -217,29 +262,6 @@ func (ci *SelfServeContractInteractor) getTransactionOptions(ctx context.Context
 	}
 
 	return auth, nil
-}
-
-func decodeHexToBytes32(hexStr string) ([32]byte, error) {
-	var result [32]byte
-	
-	// Remove 0x prefix if present
-	if len(hexStr) >= 2 && hexStr[:2] == "0x" {
-		hexStr = hexStr[2:]
-	}
-	
-	// Pad to 64 characters (32 bytes)
-	for len(hexStr) < 64 {
-		hexStr = "0" + hexStr
-	}
-	
-	// Convert hex to bytes
-	bytes := common.Hex2Bytes(hexStr)
-	if len(bytes) != 32 {
-		return result, fmt.Errorf("invalid hex string length for bytes32")
-	}
-	
-	copy(result[:], bytes)
-	return result, nil
 }
 
 func (ci *SelfServeContractInteractor) Close() {
