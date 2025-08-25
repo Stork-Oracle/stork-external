@@ -83,7 +83,7 @@ pub extern "C" fn fuel_get_latest_value(
     }
     println!("fuel_get_latest_value 5");
     let result = (|| -> Result<Option<String>, FuelClientError> {
-        let client = unsafe { &mut *client };
+        let client = unsafe { &*client };
         println!("fuel_get_latest_value 6");
         let id: [u8; 32] = unsafe {
             let mut arr = [0u8; 32];
@@ -149,7 +149,7 @@ pub extern "C" fn fuel_update_values(
             ));
         }
 
-        let client = unsafe { &mut *client };
+        let client = unsafe { &*client };
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
 
@@ -189,7 +189,7 @@ pub extern "C" fn fuel_get_wallet_balance(
     }
     println!("fuel_get_wallet_balance 4");
     let result = (|| -> Result<u64, FuelClientError> {
-        let client = unsafe { &mut *client };
+        let client = unsafe { &*client };
         println!("fuel_get_wallet_balance 5");
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             client.rt.block_on(client.get_wallet_balance())
