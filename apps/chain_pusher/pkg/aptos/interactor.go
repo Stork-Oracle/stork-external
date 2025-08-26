@@ -6,15 +6,15 @@ import (
 	"math/big"
 	"strings"
 
-	contract "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos/bindings"
-	pusher "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
-	types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
 )
 
 type AptosContractInteractor struct {
 	logger   zerolog.Logger
-	contract *contract.StorkContract
+	contract *bindings.StorkContract
 
 	pollingPeriodSec int
 }
@@ -30,7 +30,7 @@ func NewAptosContractInteractor(
 
 	privateKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
 
-	contract, err := contract.NewStorkContract(rpcUrl, contractAddr, privateKey)
+	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (aci *AptosContractInteractor) ListenContractEvents(
 
 func (aci *AptosContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
-	bindingsEncodedAssetIds := []contract.EncodedAssetId{}
+	bindingsEncodedAssetIds := []bindings.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
-		bindingsEncodedAssetIds = append(bindingsEncodedAssetIds, contract.EncodedAssetId(encodedAssetId))
+		bindingsEncodedAssetIds = append(bindingsEncodedAssetIds, bindings.EncodedAssetId(encodedAssetId))
 	}
 	values, err := aci.contract.GetMultipleTemporalNumericValuesUnchecked(bindingsEncodedAssetIds)
 	aci.logger.Debug().Msgf("successfully pulled %d values from contract", len(values))
@@ -65,7 +65,7 @@ func (aci *AptosContractInteractor) PullValues(encodedAssetIds []types.InternalE
 	// convert to map[InternalEncodedAssetId]InternalStorkStructsTemporalNumericValue
 	result := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
-		if value, ok := values[contract.EncodedAssetId(encodedAssetId)]; ok {
+		if value, ok := values[bindings.EncodedAssetId(encodedAssetId)]; ok {
 
 			magnitude := value.QuantizedValue.Magnitude
 			negative := value.QuantizedValue.Negative
@@ -85,7 +85,7 @@ func (aci *AptosContractInteractor) PullValues(encodedAssetIds []types.InternalE
 }
 
 func (aci *AptosContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
-	var updateData []contract.UpdateData
+	var updateData []bindings.UpdateData
 	for _, price := range priceUpdates {
 		update, err := aci.aggregatedSignedPriceToAptosUpdateData(price)
 		if err != nil {
@@ -110,48 +110,48 @@ func (aci *AptosContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (aci *AptosContractInteractor) aggregatedSignedPriceToAptosUpdateData(price types.AggregatedSignedPrice) (contract.UpdateData, error) {
+func (aci *AptosContractInteractor) aggregatedSignedPriceToAptosUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := pusher.HexStringToByteArray(string(signedPrice.EncodedAssetId))
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
 	timestampNs := uint64(signedPrice.TimestampedSignature.TimestampNano)
 	magnitude_string := string(signedPrice.QuantizedPrice)
 	magnitude, ok := new(big.Int).SetString(magnitude_string, 10)
 	if !ok {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert quantized price to big int")
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert quantized price to big int")
 	}
 	negative := magnitude.Sign() == -1
 	magnitude.Abs(magnitude)
 
 	publisherMerkleRoot, err := pusher.HexStringToByteArray(signedPrice.PublisherMerkleRoot)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert publisher merkle root to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert publisher merkle root to byte array: %w", err)
 	}
 
 	valueComputeAlgHash, err := pusher.HexStringToByteArray(signedPrice.StorkCalculationAlg.Checksum)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert value compute alg hash to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert value compute alg hash to byte array: %w", err)
 	}
 
 	r, err := pusher.HexStringToByteArray(signedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert R to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert R to byte array: %w", err)
 	}
 
 	s, err := pusher.HexStringToByteArray(signedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert S to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert S to byte array: %w", err)
 	}
 
 	vBytes, err := pusher.HexStringToByteArray(signedPrice.TimestampedSignature.Signature.V)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert V to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert V to byte array: %w", err)
 	}
 	v := byte(vBytes[0])
 
-	return contract.UpdateData{
+	return bindings.UpdateData{
 		Id:                              assetId,
 		TemporalNumericValueTimestampNs: timestampNs,
 		TemporalNumericValueMagnitude:   magnitude,

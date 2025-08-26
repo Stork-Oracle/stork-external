@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"time"
 
-	types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

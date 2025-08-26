@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )

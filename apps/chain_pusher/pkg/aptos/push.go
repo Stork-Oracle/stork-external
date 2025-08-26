@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	pusher "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/spf13/cobra"
 )
 

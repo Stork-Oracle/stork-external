@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
-	contract "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
@@ -121,7 +121,7 @@ func NewSolanaContractInteractor(
 	confirmationInChan := make(chan solana.Signature)
 	confirmationOutChan := make(chan solana.Signature)
 
-	contract.SetProgramID(contractPubKey)
+	bindings.SetProgramID(contractPubKey)
 	sci := &SolanaContractInteractor{
 		logger:             logger,
 		client:             client,
@@ -216,7 +216,7 @@ func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Conte
 
 		decoder := bin.NewBorshDecoder(data)
 
-		account := &contract.TemporalNumericValueFeedAccount{}
+		account := &bindings.TemporalNumericValueFeedAccount{}
 
 		err = account.UnmarshalWithDecoder(decoder)
 		if err != nil {
@@ -252,7 +252,7 @@ func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []types.Internal
 		}
 
 		decoder := bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary())
-		account := &contract.TemporalNumericValueFeedAccount{}
+		account := &bindings.TemporalNumericValueFeedAccount{}
 		err = account.UnmarshalWithDecoder(decoder)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to decode account data")
@@ -366,7 +366,7 @@ func (sci *SolanaContractInteractor) pushLimitedBatchUpdateToContract(priceUpdat
 
 		feedAccount := sci.feedAccounts[encodedAssetId]
 
-		instruction, err := contract.NewUpdateTemporalNumericValueEvmInstruction(
+		instruction, err := bindings.NewUpdateTemporalNumericValueEvmInstruction(
 			updateData,
 			sci.configAccount,
 			treasuryAccount,
@@ -422,7 +422,7 @@ func (sci *SolanaContractInteractor) pushLimitedBatchUpdateToContract(priceUpdat
 	return sig, nil
 }
 
-func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetId types.InternalEncodedAssetId, treasuryId uint8) (contract.TemporalNumericValueEvmInput, error) {
+func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetId types.InternalEncodedAssetId, treasuryId uint8) (bindings.TemporalNumericValueEvmInput, error) {
 	var assetId [32]uint8
 	copy(assetId[:], encodedAssetId[:])
 
@@ -430,40 +430,40 @@ func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(p
 
 	publisherMerkleRootBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 	if err != nil {
-		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
 	}
 	var publisherMerkleRoot [32]uint8
 	copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
 
 	valueComputeAlgHashBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
 	if err != nil {
-		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
 	}
 	var valueComputeAlgHash [32]uint8
 	copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
 
 	rBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
-		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert R: %w", err)
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert R: %w", err)
 	}
 	var r [32]uint8
 	copy(r[:], rBytes)
 
 	sBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
-		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert S: %w", err)
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert S: %w", err)
 	}
 	var s [32]uint8
 	copy(s[:], sBytes)
 
 	vBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.V)
 	if err != nil {
-		return contract.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert V: %w", err)
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert V: %w", err)
 	}
 	v := uint8(vBytes[0])
 
-	return contract.TemporalNumericValueEvmInput{
-		TemporalNumericValue: contract.TemporalNumericValue{
+	return bindings.TemporalNumericValueEvmInput{
+		TemporalNumericValue: bindings.TemporalNumericValue{
 			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 			QuantizedValue: quantizedPrice,
 		},

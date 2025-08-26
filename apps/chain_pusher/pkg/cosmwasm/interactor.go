@@ -8,15 +8,15 @@ import (
 	"strconv"
 	"strings"
 
-	contract "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm/bindings"
-	pusher "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
-	types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
 )
 
 type CosmwasmContractInteractor struct {
 	logger   zerolog.Logger
-	contract *contract.StorkContract
+	contract *bindings.StorkContract
 
 	pollingPeriodSec int
 }
@@ -37,7 +37,7 @@ func NewCosmwasmContractInteractor(
 	logger = logger.With().Str("component", "cosmwasm-contract-interactor").Logger()
 
 	mnemonicString := strings.TrimSpace(string(mnemonic))
-	contract, err := contract.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	contract, err := bindings.NewStorkContract(chainGrpcUrl, contractAddress, mnemonicString, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []types.Intern
 }
 
 func (sci *CosmwasmContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
-	var updateData []contract.UpdateData
+	var updateData []bindings.UpdateData
 	for _, price := range priceUpdates {
 		update, err := sci.aggregatedSignedPriceToUpdateData(price)
 		if err != nil {
@@ -108,40 +108,40 @@ func (sci *CosmwasmContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (sci *CosmwasmContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (contract.UpdateData, error) {
+func (sci *CosmwasmContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToIntArray(string(signedPrice.EncodedAssetId))
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
 	timestampNs := strconv.FormatUint(uint64(signedPrice.TimestampedSignature.TimestampNano), 10)
 	quantizedValue := string(signedPrice.QuantizedPrice)
-	temporalNumericValue := contract.TemporalNumericValue{
-		QuantizedValue: contract.Int128(quantizedValue),
-		TimestampNs:    contract.Uint64(timestampNs),
+	temporalNumericValue := bindings.TemporalNumericValue{
+		QuantizedValue: bindings.Int128(quantizedValue),
+		TimestampNs:    bindings.Uint64(timestampNs),
 	}
 	valueComputeAlgHash, err := hexStringToIntArray(signedPrice.StorkCalculationAlg.Checksum)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert value compute alg hash to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert value compute alg hash to byte array: %w", err)
 	}
 	publisherMerkleRoot, err := hexStringToIntArray(signedPrice.PublisherMerkleRoot)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert publisher merkle root to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert publisher merkle root to byte array: %w", err)
 	}
 	r, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert R to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert R to byte array: %w", err)
 	}
 	s, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert S to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert S to byte array: %w", err)
 	}
 	vInts, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.V)
 	if err != nil {
-		return contract.UpdateData{}, fmt.Errorf("failed to convert V to byte array: %w", err)
+		return bindings.UpdateData{}, fmt.Errorf("failed to convert V to byte array: %w", err)
 	}
 	v := vInts[0]
-	return contract.UpdateData{
+	return bindings.UpdateData{
 		Id:                   assetId,
 		TemporalNumericValue: temporalNumericValue,
 		ValueComputeAlgHash:  valueComputeAlgHash,
