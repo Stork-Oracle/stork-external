@@ -242,12 +242,6 @@ func (ci *SelfServeContractInteractor) getTransactionOptions(ctx context.Context
 	auth.GasPrice = gasPrice
 	auth.Context = ctx
 
-	// If gasLimit is 0, we would estimate gas here
-	if ci.gasLimit == 0 {
-		// Gas estimation would be done here for the specific contract call
-		auth.GasLimit = 200000 // Default fallback
-	}
-
 	return auth, nil
 }
 
