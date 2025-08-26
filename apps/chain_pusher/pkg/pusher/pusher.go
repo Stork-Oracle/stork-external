@@ -158,9 +158,10 @@ func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestSto
 
 	// Calculate the ratio
 	ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
+	absRatio := new(big.Float).Abs(ratio)
 
 	// Multiply by 100 to get the percentage
-	percentChange := new(big.Float).Mul(ratio, big.NewFloat(100))
+	percentChange := new(big.Float).Mul(absRatio, big.NewFloat(100))
 
 	thresholdBig := big.NewFloat(changeThreshold)
 	return percentChange.Cmp(thresholdBig) > 0
