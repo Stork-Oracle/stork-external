@@ -151,7 +151,7 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []TemporalNumericVa
 
 func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*TemporalNumericValue, error) {
 	// Convert [32]byte to *C.uint8_t
-	idPtr := (*C.uint8_t)(unsafe.Pointer(&id[0]))
+	idPtr := (*[32]C.uint8_t)(unsafe.Pointer(&id))
 
 	var outValueJsonPtr *C.char
 	var outErrorPtr *C.char
