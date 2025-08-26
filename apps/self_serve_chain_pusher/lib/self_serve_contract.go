@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-	"golang.org/x/time/rate"
 )
 
 const (
@@ -31,10 +30,8 @@ type SelfServeContractInteractor struct {
 	privateKey      *ecdsa.PrivateKey
 	chainID         *big.Int
 	gasLimit        uint64
-	rateLimiter     *rate.Limiter
 	contractAddress common.Address
 }
-
 
 func NewSelfServeContractInteractor(
 	rpcUrl string,
@@ -42,8 +39,6 @@ func NewSelfServeContractInteractor(
 	contractAddr string,
 	privateKey *ecdsa.PrivateKey,
 	gasLimit uint64,
-	limitPerSecond float64,
-	burstLimit int,
 	logger zerolog.Logger,
 ) (*SelfServeContractInteractor, error) {
 	client, err := ethclient.Dial(rpcUrl)
@@ -78,8 +73,6 @@ func NewSelfServeContractInteractor(
 		}
 	}
 
-	rateLimiter := rate.NewLimiter(rate.Limit(limitPerSecond), burstLimit)
-
 	return &SelfServeContractInteractor{
 		logger:          logger.With().Str("component", "contract_interactor").Logger(),
 		client:          client,
@@ -89,7 +82,6 @@ func NewSelfServeContractInteractor(
 		privateKey:      privateKey,
 		chainID:         chainID,
 		gasLimit:        gasLimit,
-		rateLimiter:     rateLimiter,
 		contractAddress: contractAddress,
 	}, nil
 }
@@ -100,11 +92,6 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 		Str("value", value.Text('f', 6)).
 		Str("encoded_asset_id", asset.EncodedAssetId).
 		Msg("Pushing value to self-serve contract")
-
-	// Wait for rate limiter
-	if err := ci.rateLimiter.Wait(ctx); err != nil {
-		return fmt.Errorf("rate limiter error: %w", err)
-	}
 
 	// Quantize the value (assuming 18 decimal places for int192)
 	quantizedValue := new(big.Int)

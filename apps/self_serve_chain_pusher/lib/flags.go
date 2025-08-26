@@ -1,21 +1,21 @@
 package self_serve_chain_pusher
 
-const WebsocketPortFlag = "websocket-port"
-const ChainRpcUrlFlag = "chain-rpc-url"
-const ChainWsUrlFlag = "chain-ws-url"
-const ContractAddressFlag = "contract-address"
-const AssetConfigFileFlag = "asset-config-file"
-const PrivateKeyFileFlag = "private-key-file"
-const GasLimitFlag = "gas-limit"
-const LimitPerSecondFlag = "limit-per-second"
-const BurstLimitFlag = "burst-limit"
+const (
+	WebsocketPortFlag   = "websocket-port"
+	ChainRpcUrlFlag     = "chain-rpc-url"
+	ChainWsUrlFlag      = "chain-ws-url"
+	ContractAddressFlag = "contract-address"
+	AssetConfigFileFlag = "asset-config-file"
+	PrivateKeyFileFlag  = "private-key-file"
+	GasLimitFlag        = "gas-limit"
+)
 
-const WebsocketPortDesc = "WebSocket server port"
-const ChainRpcUrlDesc = "Chain RPC URL"
-const ChainWsUrlDesc = "Chain WebSocket URL"
-const ContractAddressDesc = "Self-serve Stork contract address"
-const AssetConfigFileDesc = "Asset configuration file with push settings"
-const PrivateKeyFileDesc = "Private key file for signing transactions"
-const GasLimitDesc = "Gas limit for transactions (0 to use estimate)"
-const LimitPerSecondDesc = "JSON RPC call limit per second"
-const BurstLimitDesc = "JSON RPC call burst limit"
+const (
+	WebsocketPortDesc   = "WebSocket server port"
+	ChainRpcUrlDesc     = "Chain RPC URL"
+	ChainWsUrlDesc      = "Chain WebSocket URL"
+	ContractAddressDesc = "Self-serve Stork contract address"
+	AssetConfigFileDesc = "Asset configuration file with push settings"
+	PrivateKeyFileDesc  = "Private key file for signing transactions"
+	GasLimitDesc        = "Gas limit for transactions (0 to use estimate)"
+)

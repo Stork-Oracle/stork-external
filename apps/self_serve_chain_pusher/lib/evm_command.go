@@ -30,9 +30,7 @@ func addEvmFlags(cmd *cobra.Command) {
 	cmd.Flags().String(AssetConfigFileFlag, "", AssetConfigFileDesc)
 	cmd.Flags().String(PrivateKeyFileFlag, "", PrivateKeyFileDesc)
 	cmd.Flags().Uint64(GasLimitFlag, 0, GasLimitDesc)
-	cmd.Flags().Float64(LimitPerSecondFlag, 10.0, LimitPerSecondDesc)
-	cmd.Flags().Int(BurstLimitFlag, 20, BurstLimitDesc)
-	
+
 	cmd.MarkFlagRequired(ChainRpcUrlFlag)
 	cmd.MarkFlagRequired(ContractAddressFlag)
 	cmd.MarkFlagRequired(AssetConfigFileFlag)
@@ -47,8 +45,6 @@ func buildEvmConfigFromFlags(cmd *cobra.Command) (*EvmSelfServeConfig, error) {
 	assetConfigFile, _ := cmd.Flags().GetString(AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(PrivateKeyFileFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(GasLimitFlag)
-	limitPerSecond, _ := cmd.Flags().GetFloat64(LimitPerSecondFlag)
-	burstLimit, _ := cmd.Flags().GetInt(BurstLimitFlag)
 
 	assetConfig, err := LoadAssetConfig(assetConfigFile)
 	if err != nil {
@@ -68,7 +64,5 @@ func buildEvmConfigFromFlags(cmd *cobra.Command) (*EvmSelfServeConfig, error) {
 		AssetConfig:     assetConfig,
 		PrivateKey:      privateKey,
 		GasLimit:        gasLimit,
-		LimitPerSecond:  limitPerSecond,
-		BurstLimit:      burstLimit,
 	}, nil
 }

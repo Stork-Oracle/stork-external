@@ -15,10 +15,10 @@ import (
 )
 
 type AssetPushConfig struct {
-	AssetId                 string  `yaml:"asset_id"`
-	EncodedAssetId          string  `yaml:"encoded_asset_id"`
-	PushIntervalSec         int     `yaml:"push_interval_sec"`
-	PercentChangeThreshold  float64 `yaml:"percent_change_threshold"`
+	AssetId                string  `yaml:"asset_id"`
+	EncodedAssetId         string  `yaml:"encoded_asset_id"`
+	PushIntervalSec        int     `yaml:"push_interval_sec"`
+	PercentChangeThreshold float64 `yaml:"percent_change_threshold"`
 }
 
 type AssetConfigFile struct {
@@ -33,17 +33,15 @@ type EvmSelfServeConfig struct {
 	AssetConfig     *AssetConfigFile
 	PrivateKey      *ecdsa.PrivateKey
 	GasLimit        uint64
-	LimitPerSecond  float64
-	BurstLimit      int
 }
 
 type AssetPushState struct {
-	AssetId              string
-	Config               AssetPushConfig
-	LastPrice            *big.Float
-	LastPushTime         time.Time
-	PendingValue         *ValueUpdate
-	NextPushTime         time.Time
+	AssetId      string
+	Config       AssetPushConfig
+	LastPrice    *big.Float
+	LastPushTime time.Time
+	PendingValue *ValueUpdate
+	NextPushTime time.Time
 }
 
 type ValueUpdate struct {

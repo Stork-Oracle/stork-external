@@ -11,20 +11,20 @@ import (
 )
 
 type EvmSelfServeRunner struct {
-	config              *EvmSelfServeConfig
-	logger              zerolog.Logger
-	websocketServer     *WebsocketServer
-	contractInteractor  *SelfServeContractInteractor
-	valueUpdateCh       chan ValueUpdate
-	assetStates         map[string]*AssetPushState
-	assetStatesMutex    sync.RWMutex
-	ctx                 context.Context
-	cancel              context.CancelFunc
+	config             *EvmSelfServeConfig
+	logger             zerolog.Logger
+	websocketServer    *WebsocketServer
+	contractInteractor *SelfServeContractInteractor
+	valueUpdateCh      chan ValueUpdate
+	assetStates        map[string]*AssetPushState
+	assetStatesMutex   sync.RWMutex
+	ctx                context.Context
+	cancel             context.CancelFunc
 }
 
 func NewEvmSelfServeRunner(config *EvmSelfServeConfig) *EvmSelfServeRunner {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &EvmSelfServeRunner{
 		config:           config,
 		logger:           log.With().Str("component", "evm_runner").Logger(),
@@ -50,8 +50,6 @@ func (r *EvmSelfServeRunner) Run() {
 		r.config.ContractAddress,
 		r.config.PrivateKey,
 		r.config.GasLimit,
-		r.config.LimitPerSecond,
-		r.config.BurstLimit,
 		r.logger,
 	)
 	if err != nil {
@@ -77,7 +75,7 @@ func (r *EvmSelfServeRunner) Run() {
 func (r *EvmSelfServeRunner) Stop() {
 	r.logger.Info().Msg("Stopping EVM Self-Serve Chain Pusher")
 	r.cancel()
-	
+
 	if r.websocketServer != nil {
 		r.websocketServer.Stop()
 	}
@@ -96,7 +94,7 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 			PendingValue: nil,
 			NextPushTime: time.Now().Add(time.Duration(assetConfig.PushIntervalSec) * time.Second),
 		}
-		
+
 		r.logger.Info().
 			Str("asset", assetId).
 			Int("push_interval_sec", assetConfig.PushIntervalSec).
@@ -107,13 +105,13 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 
 func (r *EvmSelfServeRunner) processValueUpdates() {
 	r.logger.Info().Msg("Starting value update processor")
-	
+
 	for {
 		select {
 		case <-r.ctx.Done():
 			r.logger.Info().Msg("Value update processor stopped")
 			return
-			
+
 		case valueUpdate := <-r.valueUpdateCh:
 			r.handleValueUpdate(valueUpdate)
 		}
@@ -145,7 +143,7 @@ func (r *EvmSelfServeRunner) handleValueUpdate(valueUpdate ValueUpdate) {
 			Str("old_price", assetState.LastPrice.Text('f', 6)).
 			Str("new_price", valueUpdate.Value.Text('f', 6)).
 			Msg("Triggering push due to price delta threshold")
-		
+
 		r.triggerPush(assetState)
 	}
 }
@@ -168,7 +166,7 @@ func (r *EvmSelfServeRunner) shouldPushBasedOnDelta(state *AssetPushState, newPr
 
 func (r *EvmSelfServeRunner) processPushTriggers() {
 	r.logger.Info().Msg("Starting push trigger processor")
-	
+
 	ticker := time.NewTicker(1 * time.Second) // Check every second
 	defer ticker.Stop()
 
@@ -177,7 +175,7 @@ func (r *EvmSelfServeRunner) processPushTriggers() {
 		case <-r.ctx.Done():
 			r.logger.Info().Msg("Push trigger processor stopped")
 			return
-			
+
 		case <-ticker.C:
 			r.checkTimerTriggers()
 		}
@@ -195,7 +193,7 @@ func (r *EvmSelfServeRunner) checkTimerTriggers() {
 				Str("asset", assetId).
 				Time("next_push_time", state.NextPushTime).
 				Msg("Triggering push due to time interval")
-			
+
 			r.triggerPush(state)
 		}
 	}
