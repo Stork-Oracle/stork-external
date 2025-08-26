@@ -5,7 +5,12 @@ import (
 	"os"
 	"time"
 
-	chain_pusher "github.com/Stork-Oracle/stork-external/apps/chain_pusher/lib"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/fuel"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
@@ -38,12 +43,12 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(chain_pusher.EvmpushCmd)
-	rootCmd.AddCommand(chain_pusher.SolanapushCmd)
-	rootCmd.AddCommand(chain_pusher.SuipushCmd)
-	rootCmd.AddCommand(chain_pusher.CosmwasmPushCmd)
-	rootCmd.AddCommand(chain_pusher.AptospushCmd)
-	rootCmd.AddCommand(chain_pusher.FuelpushCmd)
+	rootCmd.AddCommand(evm.EvmpushCmd)
+	rootCmd.AddCommand(solana.SolanapushCmd)
+	rootCmd.AddCommand(sui.SuipushCmd)
+	rootCmd.AddCommand(cosmwasm.CosmwasmPushCmd)
+	rootCmd.AddCommand(aptos.AptospushCmd)
+	rootCmd.AddCommand(fuel.FuelpushCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
