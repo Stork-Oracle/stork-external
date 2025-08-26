@@ -42,3 +42,8 @@ You can see a simple working example of a Solidity contract using this [here](..
 ```
 npx hardhat --network <network> ignition deploy ignition/modules/StorkChainlinkAdapter.ts --deployment-id chain-<chainId>-<assetId> --parameters ignition/parameters.json
 ```
+
+4. Verify the contract on Etherscan
+```
+npx hardhat ignition verify chain-<chainId>-<assetId>
+```
