@@ -2,7 +2,6 @@ package solana
 
 import (
 	"bytes"
-	"reflect"
 	"testing"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
@@ -10,53 +9,6 @@ import (
 	bin "github.com/gagliardetto/binary"
 	"github.com/rs/zerolog"
 )
-
-func TestHexStringToByteArray(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   string
-		want    []byte
-		wantErr bool
-	}{
-		{
-			name:    "valid hex string",
-			input:   "0x1234",
-			want:    []byte{0x12, 0x34},
-			wantErr: false,
-		},
-		{
-			name:    "valid hex string without prefix",
-			input:   "1234",
-			want:    []byte{0x12, 0x34},
-			wantErr: false,
-		},
-		{
-			name:    "invalid hex string",
-			input:   "0xZZ",
-			want:    []byte{},
-			wantErr: true,
-		},
-		{
-			name:    "empty string",
-			input:   "",
-			want:    []byte{},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := pusher.HexStringToByteArray(tt.input)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("hexStringToByteArray() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("hexStringToByteArray() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestBatchPriceUpdates(t *testing.T) {
 	tests := []struct {

@@ -48,7 +48,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	i := 0
 	for _, entry := range priceConfig.Assets {
 		assetIds[i] = entry.AssetId
-		encoded, err := StringToByte32(string(entry.EncodedAssetId))
+		encoded, err := HexStringToByte32(string(entry.EncodedAssetId))
 		if err != nil {
 			p.logger.Fatal().Err(err).Msg("Failed to convert asset ID")
 		}
@@ -122,7 +122,7 @@ func (p *Pusher) Run(ctx context.Context) {
 			}
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
-			encoded, err := StringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
+			encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
 			if err != nil {
 				p.logger.Error().Err(err).Msg("Failed to convert asset ID")
 				continue

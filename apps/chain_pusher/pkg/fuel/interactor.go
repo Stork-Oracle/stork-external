@@ -117,34 +117,34 @@ func (fci *ContractInteractor) BatchPushToContract(
 		quantizedPriceBigInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
 		// Parse signature components
-		rBytes, err := pusher.StringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.R)
+		rBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.R)
 		if err != nil {
 			fci.logger.Error().Err(err).Msg("Failed to parse signature R")
 			continue
 		}
 
-		sBytes, err := pusher.StringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.S)
+		sBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.S)
 		if err != nil {
 			fci.logger.Error().Err(err).Msg("Failed to parse signature S")
 			continue
 		}
 
 		// Parse encoded asset ID
-		encodedAssetIdBytes, err := pusher.StringToByte32(string(update.StorkSignedPrice.EncodedAssetId))
+		encodedAssetIdBytes, err := pusher.HexStringToByte32(string(update.StorkSignedPrice.EncodedAssetId))
 		if err != nil {
 			fci.logger.Error().Err(err).Msg("Failed to parse encoded asset ID")
 			continue
 		}
 
 		// Parse publisher merkle root
-		publisherMerkleRootBytes, err := pusher.StringToByte32(update.StorkSignedPrice.PublisherMerkleRoot)
+		publisherMerkleRootBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.PublisherMerkleRoot)
 		if err != nil {
 			fci.logger.Error().Err(err).Msg("Failed to parse publisher merkle root")
 			continue
 		}
 
 		// Parse value compute algorithm hash
-		valueComputeAlgHashBytes, err := pusher.StringToByte32(update.StorkSignedPrice.StorkCalculationAlg.Checksum)
+		valueComputeAlgHashBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.StorkCalculationAlg.Checksum)
 		if err != nil {
 			fci.logger.Error().Err(err).Msg("Failed to parse value compute alg hash")
 			continue

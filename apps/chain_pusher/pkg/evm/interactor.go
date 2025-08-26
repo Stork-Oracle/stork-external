@@ -253,27 +253,27 @@ func getUpdatePayload(priceUpdates map[types.InternalEncodedAssetId]types.Aggreg
 		quantizedPriceBigInt := new(big.Int)
 		quantizedPriceBigInt.SetString(string(priceUpdate.StorkSignedPrice.QuantizedPrice), 10)
 
-		encodedAssetId, err := pusher.StringToByte32(string(priceUpdate.StorkSignedPrice.EncodedAssetId))
+		encodedAssetId, err := pusher.HexStringToByte32(string(priceUpdate.StorkSignedPrice.EncodedAssetId))
 		if err != nil {
 			return nil, err
 		}
 
-		rBytes, err := pusher.StringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
+		rBytes, err := pusher.HexStringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.R)
 		if err != nil {
 			return nil, err
 		}
 
-		sBytes, err := pusher.StringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
+		sBytes, err := pusher.HexStringToByte32(priceUpdate.StorkSignedPrice.TimestampedSignature.Signature.S)
 		if err != nil {
 			return nil, err
 		}
 
-		publisherMerkleRoot, err := pusher.StringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+		publisherMerkleRoot, err := pusher.HexStringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 		if err != nil {
 			return nil, err
 		}
 
-		checksum, err := pusher.StringToByte32(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+		checksum, err := pusher.HexStringToByte32(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
 		if err != nil {
 			return nil, err
 		}
@@ -310,7 +310,7 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 	payloads := make([]verifyPayload, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
-		merkleRootBytes, err := pusher.StringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
+		merkleRootBytes, err := pusher.HexStringToByte32(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 		if err != nil {
 			return nil, err
 		}
@@ -321,7 +321,7 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 		}
 		j := 0
 		for _, signedPrice := range priceUpdate.SignedPrices {
-			pubKeyBytes, err := pusher.StringToByte20(string(signedPrice.PublisherKey))
+			pubKeyBytes, err := pusher.HexStringToByte20(string(signedPrice.PublisherKey))
 			if err != nil {
 				return nil, err
 			}
@@ -329,12 +329,12 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 			quantizedPriceBigInt := new(big.Int)
 			quantizedPriceBigInt.SetString(string(signedPrice.QuantizedPrice), 10)
 
-			rBytes, err := pusher.StringToByte32(signedPrice.TimestampedSignature.Signature.R)
+			rBytes, err := pusher.HexStringToByte32(signedPrice.TimestampedSignature.Signature.R)
 			if err != nil {
 				return nil, err
 			}
 
-			sBytes, err := pusher.StringToByte32(signedPrice.TimestampedSignature.Signature.S)
+			sBytes, err := pusher.HexStringToByte32(signedPrice.TimestampedSignature.Signature.S)
 			if err != nil {
 				return nil, err
 			}

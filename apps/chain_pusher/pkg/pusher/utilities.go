@@ -14,7 +14,7 @@ func Pluralize(n int) string {
 }
 
 // stringToBytes decodes a hex string to a byte slice.
-func stringToBytes(input string) ([]byte, error) {
+func hexStringToBytes(input string) ([]byte, error) {
 	// Remove the "0x" prefix unconditionally
 	input = strings.TrimPrefix(input, "0x")
 
@@ -23,8 +23,8 @@ func stringToBytes(input string) ([]byte, error) {
 }
 
 // stringToFixedBytes converts a hex string to a fixed-length byte array.
-func stringToFixedBytes(input string, length int) ([]byte, error) {
-	bytes, err := stringToBytes(input)
+func hexStringToFixedBytes(input string, length int) ([]byte, error) {
+	bytes, err := hexStringToBytes(input)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +41,10 @@ func stringToFixedBytes(input string, length int) ([]byte, error) {
 }
 
 // stringToByte20 converts a hex string to a [20]byte array.
-func StringToByte20(input string) ([20]byte, error) {
+func HexStringToByte20(input string) ([20]byte, error) {
 	var result [20]byte
 
-	bytes, err := stringToFixedBytes(input, 20)
+	bytes, err := hexStringToFixedBytes(input, 20)
 	if err != nil {
 		return result, err
 	}
@@ -54,10 +54,10 @@ func StringToByte20(input string) ([20]byte, error) {
 }
 
 // stringToByte32 converts a hex string to a [32]byte array.
-func StringToByte32(input string) ([32]byte, error) {
+func HexStringToByte32(input string) ([32]byte, error) {
 	var result [32]byte
 
-	bytes, err := stringToFixedBytes(input, 32)
+	bytes, err := hexStringToFixedBytes(input, 32)
 	if err != nil {
 		return result, err
 	}
