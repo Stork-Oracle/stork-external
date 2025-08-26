@@ -8,34 +8,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var EvmpushCmd = &cobra.Command{
+var PushCmd = &cobra.Command{
 	Use:   "evm",
 	Short: "Push WebSocket prices to EVM contract",
-	Run:   runEvmPush,
+	Run:   runPush,
 }
 
 func init() {
-	EvmpushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	EvmpushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	EvmpushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
-	EvmpushCmd.Flags().StringP(pusher.ChainWsUrlFlag, "u", "", pusher.ChainWsUrlDesc)
-	EvmpushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	EvmpushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	EvmpushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
-	EvmpushCmd.Flags().BoolP(pusher.VerifyPublishersFlag, "v", false, pusher.VerifyPublishersDesc)
-	EvmpushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	EvmpushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
-	EvmpushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
+	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
+	PushCmd.Flags().StringP(pusher.ChainWsUrlFlag, "u", "", pusher.ChainWsUrlDesc)
+	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	PushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
+	PushCmd.Flags().BoolP(pusher.VerifyPublishersFlag, "v", false, pusher.VerifyPublishersDesc)
+	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
+	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
+	PushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
 
-	EvmpushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	EvmpushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	EvmpushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	EvmpushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	EvmpushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	EvmpushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	PushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
 }
 
-func runEvmPush(cmd *cobra.Command, args []string) {
+func runPush(cmd *cobra.Command, args []string) {
 	storkWsEndpoint, _ := cmd.Flags().GetString(pusher.StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(pusher.StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(pusher.ChainRpcUrlFlag)
@@ -55,11 +55,11 @@ func runEvmPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
 	}
 
-	evmInteractor, err := NewEvmContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, mnemonic, verifyPublishers, logger, gasLimit)
+	interactor, err := NewContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, mnemonic, verifyPublishers, logger, gasLimit)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize Evm contract interactor")
+		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	evmPusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, evmInteractor, &logger)
-	evmPusher.Run(context.Background())
+	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher.Run(context.Background())
 }

@@ -14,14 +14,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type CosmwasmContractInteractor struct {
+type ContractInteractor struct {
 	logger   zerolog.Logger
 	contract *bindings.StorkContract
 
 	pollingPeriodSec int
 }
 
-func NewCosmwasmContractInteractor(
+func NewContractInteractor(
 	chainGrpcUrl string,
 	contractAddress string,
 	mnemonic []byte,
@@ -33,7 +33,7 @@ func NewCosmwasmContractInteractor(
 	denom string,
 	chainID string,
 	chainPrefix string,
-) (*CosmwasmContractInteractor, error) {
+) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "cosmwasm-contract-interactor").Logger()
 
 	mnemonicString := strings.TrimSpace(string(mnemonic))
@@ -41,20 +41,20 @@ func NewCosmwasmContractInteractor(
 	if err != nil {
 		return nil, err
 	}
-	return &CosmwasmContractInteractor{
+	return &ContractInteractor{
 		logger:           logger,
 		contract:         contract,
 		pollingPeriodSec: pollingPeriod,
 	}, nil
 }
 
-func (sci *CosmwasmContractInteractor) ListenContractEvents(
+func (sci *ContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
 ) {
 	sci.logger.Warn().Msg("Cosmwasm pusher does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
+func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		var encodeAssetIdInt [32]int
@@ -83,7 +83,7 @@ func (sci *CosmwasmContractInteractor) PullValues(encodedAssetIds []types.Intern
 	return polledVals, nil
 }
 
-func (sci *CosmwasmContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
 	var updateData []bindings.UpdateData
 	for _, price := range priceUpdates {
 		update, err := sci.aggregatedSignedPriceToUpdateData(price)
@@ -104,11 +104,11 @@ func (sci *CosmwasmContractInteractor) BatchPushToContract(priceUpdates map[type
 }
 
 // todo: implement
-func (sci *CosmwasmContractInteractor) GetWalletBalance() (float64, error) {
+func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (sci *CosmwasmContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
+func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := hexStringToIntArray(string(signedPrice.EncodedAssetId))
 	if err != nil {

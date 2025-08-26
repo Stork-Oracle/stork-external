@@ -14,17 +14,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type FuelContractInteractor struct {
+type ContractInteractor struct {
 	logger   zerolog.Logger
 	contract *bindings.StorkContract
 }
 
-func NewFuelContractInteractor(
+func NewContractInteractor(
 	rpcUrl string,
 	contractAddress string,
 	privateKey string,
 	logger zerolog.Logger,
-) (*FuelContractInteractor, error) {
+) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "fuel-contract-interactor").Logger()
 
 	config := bindings.Config{
@@ -38,20 +38,20 @@ func NewFuelContractInteractor(
 		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
 	}
 
-	return &FuelContractInteractor{
+	return &ContractInteractor{
 		logger:   logger,
 		contract: contract,
 	}, nil
 }
 
-func (fci *FuelContractInteractor) ListenContractEvents(
+func (fci *ContractInteractor) ListenContractEvents(
 	ctx context.Context,
 	ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
 ) {
 	fci.logger.Warn().Msg("Fuel does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (fci *FuelContractInteractor) PullValues(
+func (fci *ContractInteractor) PullValues(
 	encodedAssetIds []types.InternalEncodedAssetId,
 ) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
@@ -97,7 +97,7 @@ func (fci *FuelContractInteractor) PullValues(
 	return result, nil
 }
 
-func (fci *FuelContractInteractor) BatchPushToContract(
+func (fci *ContractInteractor) BatchPushToContract(
 	priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice,
 ) error {
 	if len(priceUpdates) == 0 {
@@ -188,7 +188,7 @@ func (fci *FuelContractInteractor) BatchPushToContract(
 	return nil
 }
 
-func (fci *FuelContractInteractor) GetWalletBalance() (float64, error) {
+func (fci *ContractInteractor) GetWalletBalance() (float64, error) {
 	balance, err := fci.contract.GetWalletBalance()
 	if err != nil {
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
@@ -197,7 +197,7 @@ func (fci *FuelContractInteractor) GetWalletBalance() (float64, error) {
 	return float64(balance), nil
 }
 
-func (fci *FuelContractInteractor) Close() {
+func (fci *ContractInteractor) Close() {
 	if fci.contract != nil {
 		fci.contract.Close()
 	}

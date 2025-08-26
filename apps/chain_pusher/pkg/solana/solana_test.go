@@ -102,7 +102,7 @@ func TestBatchPriceUpdates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sci := &SolanaContractInteractor{
+			sci := &ContractInteractor{
 				batchSize: tt.batchSize,
 			}
 			batches := sci.batchPriceUpdates(tt.priceUpdates)
@@ -150,7 +150,7 @@ func TestQuantizedPriceToInt128(t *testing.T) {
 		},
 	}
 
-	sci := &SolanaContractInteractor{}
+	sci := &ContractInteractor{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := sci.quantizedPriceToInt128(tt.quantizedPrice)
@@ -163,7 +163,7 @@ func TestQuantizedPriceToInt128(t *testing.T) {
 
 func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 	logger := zerolog.New(nil)
-	sci := &SolanaContractInteractor{
+	sci := &ContractInteractor{
 		logger: logger,
 	}
 

@@ -12,21 +12,21 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type SuiContractInteractor struct {
+type ContractInteractor struct {
 	logger   zerolog.Logger
 	contract *bindings.StorkContract
 
 	pollingPeriodSec int
 }
 
-func NewSuiContractInteractor(
+func NewContractInteractor(
 	rpcUrl string,
 	contractAddr string,
 	keyFileContent []byte,
 	assetConfigFile string,
 	pollingPeriodSec int,
 	logger zerolog.Logger,
-) (*SuiContractInteractor, error) {
+) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
 
 	lines := strings.Split(string(keyFileContent), "\n")
@@ -44,7 +44,7 @@ func NewSuiContractInteractor(
 	if err != nil {
 		return nil, err
 	}
-	return &SuiContractInteractor{
+	return &ContractInteractor{
 		logger:           logger,
 		contract:         contract,
 		pollingPeriodSec: pollingPeriodSec,
@@ -53,11 +53,11 @@ func NewSuiContractInteractor(
 
 // unfortunately, Sui doesn't currently support websocket RPCs, so we can't listen to events from the contract
 // the contract does emit events, so this can be implemented in the future if Sui re-adds websocket support
-func (sci *SuiContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
+func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
 	sci.logger.Warn().Msg("Sui does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (sci *SuiContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
+func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetId
 	bindingsEncodedAssetIds := []bindings.EncodedAssetId{}
 	for _, encodedAssetId := range encodedAssetIds {
@@ -79,7 +79,7 @@ func (sci *SuiContractInteractor) PullValues(encodedAssetIds []types.InternalEnc
 	return result, nil
 }
 
-func (sci *SuiContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
 	var updateData []bindings.UpdateData
 	for _, price := range priceUpdates {
 		update, err := sci.aggregatedSignedPriceToUpdateData(price)
@@ -101,7 +101,7 @@ func (sci *SuiContractInteractor) BatchPushToContract(priceUpdates map[types.Int
 }
 
 // todo: implement
-func (sci *SuiContractInteractor) GetWalletBalance() (float64, error) {
+func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
@@ -120,7 +120,7 @@ func temporalNumericValueToInternal(value bindings.TemporalNumericValue) types.I
 	}
 }
 
-func (sci *SuiContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
+func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
 	assetId, err := pusher.HexStringToByteArray(string(signedPrice.EncodedAssetId))
 	if err != nil {

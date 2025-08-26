@@ -22,7 +22,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type EvmContractInteractor struct {
+type ContractInteractor struct {
 	logger zerolog.Logger
 
 	contract   *bindings.StorkContract
@@ -43,7 +43,7 @@ const (
 	exponentialBackoffFactor = 1.5
 )
 
-func NewEvmContractInteractor(
+func NewContractInteractor(
 	rpcUrl string,
 	wsUrl string,
 	contractAddr string,
@@ -51,7 +51,7 @@ func NewEvmContractInteractor(
 	verifyPublishers bool,
 	logger zerolog.Logger,
 	gasLimit uint64,
-) (*EvmContractInteractor, error) {
+) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(mnemonic)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func NewEvmContractInteractor(
 		}
 	}
 
-	return &EvmContractInteractor{
+	return &ContractInteractor{
 		logger: logger,
 
 		contract:   contract,
@@ -105,7 +105,7 @@ func NewEvmContractInteractor(
 	}, nil
 }
 
-func (eci *EvmContractInteractor) ListenContractEvents(
+func (eci *ContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
 ) {
 	if eci.wsContract == nil {
@@ -150,7 +150,7 @@ func (eci *EvmContractInteractor) ListenContractEvents(
 }
 
 func setupSubscription(
-	eci *EvmContractInteractor,
+	eci *ContractInteractor,
 	watchOpts *bind.WatchOpts,
 ) (ethereum.Subscription, chan *bindings.StorkContractValueUpdate, error) {
 	eventCh := make(chan *bindings.StorkContractValueUpdate)
@@ -161,7 +161,7 @@ func setupSubscription(
 	return sub, eventCh, nil
 }
 
-func (eci *EvmContractInteractor) listenLoop(
+func (eci *ContractInteractor) listenLoop(
 	ctx context.Context,
 	sub ethereum.Subscription,
 	eventCh chan *bindings.StorkContractValueUpdate,
@@ -194,7 +194,7 @@ func (eci *EvmContractInteractor) listenLoop(
 	}
 }
 
-func (eci *EvmContractInteractor) reconnect(
+func (eci *ContractInteractor) reconnect(
 	ctx context.Context,
 	watchOpts *bind.WatchOpts,
 ) (ethereum.Subscription, chan *bindings.StorkContractValueUpdate, error) {
@@ -227,7 +227,7 @@ func (eci *EvmContractInteractor) reconnect(
 	return nil, nil, errors.New("max retry attempts reached")
 }
 
-func (eci *EvmContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
+func (eci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
 	for _, encodedAssetId := range encodedAssetIds {
 		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetId)
@@ -361,7 +361,7 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 	return payloads, nil
 }
 
-func (eci *EvmContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (eci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
 	if eci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {
@@ -412,7 +412,7 @@ func (eci *EvmContractInteractor) BatchPushToContract(priceUpdates map[types.Int
 	return nil
 }
 
-func (eci *EvmContractInteractor) GetWalletBalance() (float64, error) {
+func (eci *ContractInteractor) GetWalletBalance() (float64, error) {
 	publicKey := eci.privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {

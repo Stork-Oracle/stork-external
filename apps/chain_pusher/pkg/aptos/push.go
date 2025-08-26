@@ -8,31 +8,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var AptospushCmd = &cobra.Command{
+var PushCmd = &cobra.Command{
 	Use:   "aptos",
 	Short: "Push WebSocket prices to Aptos contract",
-	Run:   runAptosPush,
+	Run:   runPush,
 }
 
 func init() {
-	AptospushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	AptospushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	AptospushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
-	AptospushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	AptospushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	AptospushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
-	AptospushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	AptospushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
+	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
+	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	PushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
+	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
+	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
 
-	AptospushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	AptospushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	AptospushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	AptospushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	AptospushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	AptospushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	PushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
 }
 
-func runAptosPush(cmd *cobra.Command, args []string) {
+func runPush(cmd *cobra.Command, args []string) {
 	storkWsEndpoint, _ := cmd.Flags().GetString(pusher.StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(pusher.StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(pusher.ChainRpcUrlFlag)
@@ -49,11 +49,11 @@ func runAptosPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	aptosInteractor, err := NewAptosContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingPeriod, logger)
+	interactor, err := NewContractInteractor(chainRpcUrl, contractAddress, keyFileContent, pollingPeriod, logger)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize Aptos contract interactor")
+		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	aptosPusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, aptosInteractor, &logger)
-	aptosPusher.Run(context.Background())
+	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher.Run(context.Background())
 }

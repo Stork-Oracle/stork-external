@@ -21,7 +21,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type SolanaContractInteractor struct {
+type ContractInteractor struct {
 	logger             zerolog.Logger
 	client             *rpc.Client
 	wsClient           *ws.Client
@@ -41,14 +41,14 @@ const MAX_BATCH_SIZE = 4
 
 const NUM_CONFIRMATION_WORKERS = 10
 
-func NewSolanaContractInteractor(
+func NewContractInteractor(
 	rpcUrl string,
 	wsUrl string,
 	contractAddr string,
 	payer []byte,
 	assetConfigFile string,
 	pollingPeriodSec int, logger zerolog.Logger, limitPerSecond int, burstLimit int, batchSize int,
-) (*SolanaContractInteractor, error) {
+) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
 	if 0 < batchSize && batchSize < MAX_BATCH_SIZE {
@@ -122,7 +122,7 @@ func NewSolanaContractInteractor(
 	confirmationOutChan := make(chan solana.Signature)
 
 	bindings.SetProgramID(contractPubKey)
-	sci := &SolanaContractInteractor{
+	sci := &ContractInteractor{
 		logger:             logger,
 		client:             client,
 		wsClient:           wsClient,
@@ -143,7 +143,7 @@ func NewSolanaContractInteractor(
 	return sci, nil
 }
 
-func (sci *SolanaContractInteractor) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
+func (sci *ContractInteractor) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
 	var queue []solana.Signature
 	for {
 		if len(queue) == 0 {
@@ -159,14 +159,14 @@ func (sci *SolanaContractInteractor) runUnboundedConfirmationBuffer(confirmation
 	}
 }
 
-func (sci *SolanaContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
+func (sci *ContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
 	for i := 0; i < numWorkers; i++ {
 		go sci.confirmationWorker(ch)
 	}
 	sci.logger.Info().Int("numWorkers", numWorkers).Msg("Started confirmation workers")
 }
 
-func (sci *SolanaContractInteractor) confirmationWorker(ch chan solana.Signature) {
+func (sci *ContractInteractor) confirmationWorker(ch chan solana.Signature) {
 	for sig := range ch {
 		_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
 		if err != nil {
@@ -177,7 +177,7 @@ func (sci *SolanaContractInteractor) confirmationWorker(ch chan solana.Signature
 	}
 }
 
-func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
+func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
 	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
 		select {
@@ -192,7 +192,7 @@ func (sci *SolanaContractInteractor) ListenContractEvents(ctx context.Context, c
 	wg.Wait()
 }
 
-func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+func (sci *ContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
 	if err != nil {
@@ -234,7 +234,7 @@ func (sci *SolanaContractInteractor) listenSingleContractEvent(ctx context.Conte
 	}
 }
 
-func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
+func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
 
 	for _, encodedAssetId := range encodedAssetIds {
@@ -268,7 +268,7 @@ func (sci *SolanaContractInteractor) PullValues(encodedAssetIds []types.Internal
 	return polledVals, nil
 }
 
-func (sci *SolanaContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(priceUpdates))
 	sigChan := make(chan solana.Signature, len(priceUpdates))
@@ -318,11 +318,11 @@ func (sci *SolanaContractInteractor) BatchPushToContract(priceUpdates map[types.
 }
 
 // todo: implement
-func (sci *SolanaContractInteractor) GetWalletBalance() (float64, error) {
+func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (sci *SolanaContractInteractor) batchPriceUpdates(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) []map[types.InternalEncodedAssetId]types.AggregatedSignedPrice {
+func (sci *ContractInteractor) batchPriceUpdates(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) []map[types.InternalEncodedAssetId]types.AggregatedSignedPrice {
 	priceUpdatesBatches := []map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{}
 
 	priceUpdatesBatch := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
@@ -343,7 +343,7 @@ func (sci *SolanaContractInteractor) batchPriceUpdates(priceUpdates map[types.In
 	return priceUpdatesBatches
 }
 
-func (sci *SolanaContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) (solana.Signature, error) {
+func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) (solana.Signature, error) {
 	if len(priceUpdates) > MAX_BATCH_SIZE {
 		return solana.Signature{}, fmt.Errorf("batch size exceeds limit, skipping update")
 	}
@@ -422,7 +422,7 @@ func (sci *SolanaContractInteractor) pushLimitedBatchUpdateToContract(priceUpdat
 	return sig, nil
 }
 
-func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetId types.InternalEncodedAssetId, treasuryId uint8) (bindings.TemporalNumericValueEvmInput, error) {
+func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetId types.InternalEncodedAssetId, treasuryId uint8) (bindings.TemporalNumericValueEvmInput, error) {
 	var assetId [32]uint8
 	copy(assetId[:], encodedAssetId[:])
 
@@ -477,7 +477,7 @@ func (sci *SolanaContractInteractor) priceUpdateToTemporalNumericValueEvmInput(p
 	}, nil
 }
 
-func (sci *SolanaContractInteractor) quantizedPriceToInt128(quantizedPrice types.QuantizedPrice) bin.Int128 {
+func (sci *ContractInteractor) quantizedPriceToInt128(quantizedPrice types.QuantizedPrice) bin.Int128 {
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
 

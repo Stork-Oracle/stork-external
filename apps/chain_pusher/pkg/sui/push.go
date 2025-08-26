@@ -8,28 +8,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var SuipushCmd = &cobra.Command{
+var PushCmd = &cobra.Command{
 	Use:   "sui",
 	Short: "Push WebSocket prices to Sui contract",
 	Run:   runSuiPush,
 }
 
 func init() {
-	SuipushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	SuipushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	SuipushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
-	SuipushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	SuipushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	SuipushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
-	SuipushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	SuipushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
+	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
+	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	PushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
+	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
+	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
 
-	SuipushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	SuipushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	SuipushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	SuipushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	SuipushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	SuipushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	PushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
 }
 
 func runSuiPush(cmd *cobra.Command, args []string) {
@@ -49,11 +49,11 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	suiInteractor, err := NewSuiContractInteractor(chainRpcUrl, contractAddress, keyFileContent, assetConfigFile, pollingPeriod, logger)
+	interactor, err := NewContractInteractor(chainRpcUrl, contractAddress, keyFileContent, assetConfigFile, pollingPeriod, logger)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize Sui contract interactor")
+		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	suiPusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, suiInteractor, &logger)
-	suiPusher.Run(context.Background())
+	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher.Run(context.Background())
 }

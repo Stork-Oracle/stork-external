@@ -8,35 +8,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CosmwasmPushCmd = &cobra.Command{
+var PushCmd = &cobra.Command{
 	Use:   "cosmwasm",
 	Short: "Push WebSocket prices to Cosmwasm contract",
-	Run:   runCosmwasmPush,
+	Run:   runPush,
 }
 
 func init() {
-	CosmwasmPushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "r", "", pusher.ChainRpcUrlDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
-	CosmwasmPushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	CosmwasmPushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
-	CosmwasmPushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
-	CosmwasmPushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.DenomFlag, "d", "", pusher.DenomDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.ChainIDFlag, "i", "", pusher.ChainIDDesc)
-	CosmwasmPushCmd.Flags().StringP(pusher.ChainPrefixFlag, "c", "", pusher.ChainPrefixDesc)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	CosmwasmPushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "r", "", pusher.ChainRpcUrlDesc)
+	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	PushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
+	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
+	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
+	PushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
+	PushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
+	PushCmd.Flags().StringP(pusher.DenomFlag, "d", "", pusher.DenomDesc)
+	PushCmd.Flags().StringP(pusher.ChainIDFlag, "i", "", pusher.ChainIDDesc)
+	PushCmd.Flags().StringP(pusher.ChainPrefixFlag, "c", "", pusher.ChainPrefixDesc)
+	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	PushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
 }
 
-func runCosmwasmPush(cmd *cobra.Command, args []string) {
+func runPush(cmd *cobra.Command, args []string) {
 	storkWsEndpoint, _ := cmd.Flags().GetString(pusher.StorkWebsocketEndpointFlag)
 	storkAuth, _ := cmd.Flags().GetString(pusher.StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(pusher.ChainRpcUrlFlag)
@@ -58,11 +58,11 @@ func runCosmwasmPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
 	}
 
-	cosmwasmInteractor, err := NewCosmwasmContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingPeriod, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
+	interactor, err := NewContractInteractor(chainRpcUrl, contractAddress, mnemonic, batchingWindow, pollingPeriod, logger, gasPrice, gasAdjustment, denom, chainID, chainPrefix)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to create cosmwasm interactor")
+		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	cosmwasmPusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, cosmwasmInteractor, &logger)
-	cosmwasmPusher.Run(context.Background())
+	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher.Run(context.Background())
 }
