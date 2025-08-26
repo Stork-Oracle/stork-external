@@ -13,10 +13,10 @@ use fuels::{
 };
 use serde::{Deserialize, Serialize};
 
-// Generate the contract bindings from ABI
+// Generate the contract bindings from ABI (path is relative to the workspace root Cargo.toml)
 abigen!(Contract(
     name = "StorkContract",
-    abi = "apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi/stork-abi.json"
+    abi = "./apps/chain_pusher/pkg/fuel/bindings/fuel_ffi/stork-abi.json"
 ),);
 
 // re-export generated StorkError
