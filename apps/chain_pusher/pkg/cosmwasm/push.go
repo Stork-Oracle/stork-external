@@ -51,7 +51,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	denom, _ := cmd.Flags().GetString(pusher.DenomFlag)
 	chainID, _ := cmd.Flags().GetString(pusher.ChainIDFlag)
 	chainPrefix, _ := cmd.Flags().GetString(pusher.ChainPrefixFlag)
-	logger := pusher.CosmwasmPusherLogger(chainRpcUrl, contractAddress)
+	logger := PusherLogger(chainRpcUrl, contractAddress)
 
 	mnemonic, err := os.ReadFile(mnemonicFile)
 	if err != nil {

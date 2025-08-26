@@ -42,7 +42,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 
-	logger := pusher.AptosPusherLogger(chainRpcUrl, contractAddress)
+	logger := PusherLogger(chainRpcUrl, contractAddress)
 
 	keyFileContent, err := os.ReadFile(privateKeyFile)
 	if err != nil {

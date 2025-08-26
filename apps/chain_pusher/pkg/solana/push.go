@@ -50,7 +50,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	burstLimit, _ := cmd.Flags().GetInt(pusher.BurstLimitFlag)
 	batchSize, _ := cmd.Flags().GetInt(pusher.BatchSizeFlag)
 
-	logger := pusher.SolanaPusherLogger(chainRpcUrl, contractAddress)
+	logger := PusherLogger(chainRpcUrl, contractAddress)
 
 	payer, err := solana.PrivateKeyFromSolanaKeygenFile(privateKeyFile)
 	if err != nil {

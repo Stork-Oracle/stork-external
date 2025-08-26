@@ -48,7 +48,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
 
-	logger := pusher.EvmPusherLogger(chainRpcUrl, contractAddress)
+	logger := PusherLogger(chainRpcUrl, contractAddress)
 
 	mnemonic, err := os.ReadFile(mnemonicFile)
 	if err != nil {
