@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import { vars } from "hardhat/config";
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
+const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
 
 import './tasks/get_latest_round_data';
 
@@ -20,6 +21,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 84532,
     },
+    mainnet: {
+      url: "https://ethereum-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 1,
+    },
     plumeMainnet: {
       url: "https://phoenix-rpc.plumenetwork.xyz",
       accounts: [PRIVATE_KEY],
@@ -28,6 +34,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
       plumeMainnet: 'fake',
     },
     customChains: [
