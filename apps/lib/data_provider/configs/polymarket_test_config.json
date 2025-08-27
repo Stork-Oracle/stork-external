@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "id": "POLYMARKET_TEST",
+      "config": {
+        "dataSource": "polymarketprovider",
+        "tokenId": "60487116984468020978247225474488676749601001829886755968952521846780452448915",
+        "side": "buy",
+        "updateFrequency": "5s"
+      }
+    }
+  ]
+}

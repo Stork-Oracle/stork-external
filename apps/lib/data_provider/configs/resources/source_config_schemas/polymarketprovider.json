@@ -1,0 +1,26 @@
+{
+  "$id": "/resources/source_config_schemas/polymarketprovider",
+  "type": "object",
+  "properties": {
+    "dataSource": {
+      "type": "string",
+      "const": "polymarketprovider"
+    },
+    "tokenId": {
+      "type": "string",
+      "description": "Polymarket token ID to query for price data"
+    },
+    "side": {
+      "type": "string",
+      "enum": ["buy", "sell"],
+      "description": "Which side of the orderbook to query (buy or sell)"
+    },
+    "updateFrequency": {
+      "type": "string",
+      "description": "Frequency at which updates should occur.",
+      "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+    }
+  },
+  "required": ["dataSource", "tokenId", "side", "updateFrequency"],
+  "additionalProperties": false
+} 
