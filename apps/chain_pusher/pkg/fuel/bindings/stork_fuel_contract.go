@@ -35,7 +35,7 @@ type TemporalNumericValue struct {
 
 type TemporalNumericValueInput struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
-	Id                   string               `json:"id"`
+	ID                   string               `json:"id"`
 	PublisherMerkleRoot  string               `json:"publisher_merkle_root"`
 	ValueComputeAlgHash  string               `json:"value_compute_alg_hash"`
 	R                    string               `json:"r"`

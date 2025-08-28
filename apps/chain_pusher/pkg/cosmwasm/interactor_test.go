@@ -22,7 +22,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "valid positive price update",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID: "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice: "1000000000000000000",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,
@@ -39,7 +39,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 				},
 			},
 			expected: bindings.UpdateData{
-				Id: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
+				ID: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
 				TemporalNumericValue: bindings.TemporalNumericValue{
 					QuantizedValue: bindings.Int128("1000000000000000000"),
 					TimestampNs:    bindings.Uint64("1722632569208762117"),
@@ -56,7 +56,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "valid negative price update",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID: "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice: "-1000000000000000000",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,
@@ -73,7 +73,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 				},
 			},
 			expected: bindings.UpdateData{
-				Id: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
+				ID: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
 				TemporalNumericValue: bindings.TemporalNumericValue{
 					QuantizedValue: bindings.Int128("-1000000000000000000"),
 					TimestampNs:    bindings.Uint64("1722632569208762117"),
@@ -90,7 +90,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "zero price",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID: "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice: "0",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,
@@ -107,7 +107,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 				},
 			},
 			expected: bindings.UpdateData{
-				Id: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
+				ID: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
 				TemporalNumericValue: bindings.TemporalNumericValue{
 					QuantizedValue: bindings.Int128("0"),
 					TimestampNs:    bindings.Uint64("1722632569208762117"),
@@ -124,7 +124,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "valid price with V=0x1b",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID: "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice: "1000000000000000000",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,
@@ -141,7 +141,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 				},
 			},
 			expected: bindings.UpdateData{
-				Id: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
+				ID: [32]int{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
 				TemporalNumericValue: bindings.TemporalNumericValue{
 					QuantizedValue: bindings.Int128("1000000000000000000"),
 					TimestampNs:    bindings.Uint64("1722632569208762117"),
@@ -158,7 +158,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "invalid encoded asset id",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "invalid hex",
+					EncodedAssetID: "invalid hex",
 					QuantizedPrice: "1000000000000000000",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,
@@ -181,7 +181,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			name: "invalid V signature",
 			input: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId: "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID: "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice: "1000000000000000000",
 					TimestampedSignature: types.TimestampedSignature{
 						TimestampNano: 1722632569208762117,

@@ -11,16 +11,15 @@ import (
 )
 
 type Pusher struct {
-	storkWsEndpoint  string
-	storkAuth        string
-	chainRpcUrl      string
-	contractAddress  string
-	assetConfigFile  string
-	verifyPublishers bool
-	batchingWindow   int
-	pollingPeriod    int
-	interactor       types.ContractInteractor
-	logger           *zerolog.Logger
+	storkWsEndpoint string
+	storkAuth       string
+	chainRpcUrl     string
+	contractAddress string
+	assetConfigFile string
+	batchingWindow  int
+	pollingPeriod   int
+	interactor      types.ContractInteractor
+	logger          *zerolog.Logger
 }
 
 func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingPeriod int, interactor types.ContractInteractor, logger *zerolog.Logger) *Pusher {
@@ -43,44 +42,44 @@ func (p *Pusher) Run(ctx context.Context) {
 		log.Fatal().Err(err).Msg("Failed to load price config")
 	}
 
-	assetIds := make([]types.AssetId, len(priceConfig.Assets))
-	encodedAssetIds := make([]types.InternalEncodedAssetId, len(priceConfig.Assets))
+	assetIDs := make([]types.AssetID, len(priceConfig.Assets))
+	encodedAssetIDs := make([]types.InternalEncodedAssetID, len(priceConfig.Assets))
 
 	i := 0
 	for _, entry := range priceConfig.Assets {
-		assetIds[i] = entry.AssetId
+		assetIDs[i] = entry.AssetID
 
-		encoded, err := HexStringToByte32(string(entry.EncodedAssetId))
+		encoded, err := HexStringToByte32(string(entry.EncodedAssetID))
 		if err != nil {
 			p.logger.Fatal().Err(err).Msg("Failed to convert asset ID")
 		}
 
-		encodedAssetIds[i] = encoded
+		encodedAssetIDs[i] = encoded
 		i++
 	}
 
 	storkWsCh := make(chan types.AggregatedSignedPrice)
-	contractCh := make(chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
+	contractCh := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	storkWs := NewStorkAggregatorWebsocketClient(p.storkWsEndpoint, p.storkAuth, assetIds, p.logger)
+	storkWs := NewStorkAggregatorWebsocketClient(p.storkWsEndpoint, p.storkAuth, assetIDs, p.logger)
 	go storkWs.Run(storkWsCh)
 
-	latestContractValueMap := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
-	latestStorkValueMap := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
+	latestContractValueMap := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+	latestStorkValueMap := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	initialValues, err := p.interactor.PullValues(encodedAssetIds)
+	initialValues, err := p.interactor.PullValues(encodedAssetIDs)
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
 	}
 
-	for encodedAssetId, value := range initialValues {
-		latestContractValueMap[encodedAssetId] = value
+	for encodedAssetID, value := range initialValues {
+		latestContractValueMap[encodedAssetID] = value
 	}
 
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
 	go p.interactor.ListenContractEvents(ctx, contractCh)
-	go p.poll(encodedAssetIds, contractCh)
+	go p.poll(encodedAssetIDs, contractCh)
 
 	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)
 	defer ticker.Stop()
@@ -92,20 +91,20 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			updates := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
+			updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-			for encodedAssetId, latestStorkPrice := range latestStorkValueMap {
-				latestValue, ok := latestContractValueMap[encodedAssetId]
+			for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
+				latestValue, ok := latestContractValueMap[encodedAssetID]
 				if !ok {
-					p.logger.Debug().Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetId)
-					updates[encodedAssetId] = latestStorkPrice
+					p.logger.Debug().Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+					updates[encodedAssetID] = latestStorkPrice
 				} else if shouldUpdateAsset(
 					latestValue,
 					latestStorkPrice,
-					priceConfig.Assets[latestStorkPrice.AssetId].FallbackPeriodSecs,
-					priceConfig.Assets[latestStorkPrice.AssetId].PercentChangeThreshold,
+					priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+					priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
 				) {
-					updates[encodedAssetId] = latestStorkPrice
+					updates[encodedAssetID] = latestStorkPrice
 				}
 			}
 
@@ -115,11 +114,11 @@ func (p *Pusher) Run(ctx context.Context) {
 					p.logger.Error().Err(err).Msg("Failed to push batch to contract")
 				}
 				// include this to prevent race conditions
-				for encodedAssetId, update := range updates {
+				for encodedAssetID, update := range updates {
 					quantizedValInt := new(big.Int)
 					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
-					latestContractValueMap[encodedAssetId] = types.InternalTemporalNumericValue{
+					latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
 						TimestampNs:    uint64(update.TimestampNano),
 						QuantizedValue: quantizedValInt,
 					}
@@ -129,7 +128,7 @@ func (p *Pusher) Run(ctx context.Context) {
 			}
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
-			encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
+			encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetID))
 			if err != nil {
 				p.logger.Error().Err(err).Msg("Failed to convert asset ID")
 
@@ -139,8 +138,8 @@ func (p *Pusher) Run(ctx context.Context) {
 			latestStorkValueMap[encoded] = valueUpdate
 		// Handle contract updates
 		case chainUpdate := <-contractCh:
-			for encodedAssetId, storkStructsTemporalNumericValue := range chainUpdate {
-				latestContractValueMap[encodedAssetId] = storkStructsTemporalNumericValue
+			for encodedAssetID, storkStructsTemporalNumericValue := range chainUpdate {
+				latestContractValueMap[encodedAssetID] = storkStructsTemporalNumericValue
 			}
 		}
 	}
@@ -177,11 +176,11 @@ func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestSto
 	return percentChange.Cmp(thresholdBig) > 0
 }
 
-func (p *Pusher) poll(encodedAssetIds []types.InternalEncodedAssetId, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
-	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
+func (p *Pusher) poll(encodedAssetIDs []types.InternalEncodedAssetID, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue) {
+	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIDs))
 
 	for range time.Tick(time.Duration(p.pollingPeriod) * time.Second) {
-		polledVals, err := p.interactor.PullValues(encodedAssetIds)
+		polledVals, err := p.interactor.PullValues(encodedAssetIDs)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
 

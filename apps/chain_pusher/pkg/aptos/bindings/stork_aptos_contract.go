@@ -21,7 +21,7 @@ type StorkContract struct {
 	ContractAddress aptos.AccountAddress
 }
 
-type EncodedAssetId [32]byte
+type EncodedAssetID [32]byte
 
 type TemporalNumericValue struct {
 	TimestampNs    uint64
@@ -34,7 +34,7 @@ type I128 struct {
 }
 
 type UpdateData struct {
-	Id                              []byte
+	ID                              []byte
 	TemporalNumericValueTimestampNs uint64
 	TemporalNumericValueMagnitude   *big.Int
 	TemporalNumericValueNegative    bool
@@ -72,10 +72,10 @@ func NewStorkContract(rpcUrl string, contractAddress string, key *crypto.Ed25519
 	return &StorkContract{Client: client, Account: account, ContractAddress: address}, nil
 }
 
-func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetId) (TemporalNumericValue, error) {
+func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetID) (TemporalNumericValue, error) {
 	serializer := bcs.Serializer{}
 	serializer.WriteBytes(id[:])
-	encodedAssetId := serializer.ToBytes()
+	encodedAssetID := serializer.ToBytes()
 
 	payload := &aptos.ViewPayload{
 		Module: aptos.ModuleId{
@@ -84,7 +84,7 @@ func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetId) (Te
 		},
 		Function: "get_temporal_numeric_value_unchecked",
 		ArgTypes: []aptos.TypeTag{},
-		Args:     [][]byte{encodedAssetId},
+		Args:     [][]byte{encodedAssetID},
 	}
 
 	value, err := sc.Client.View(payload)
@@ -117,14 +117,14 @@ func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetId) (Te
 }
 
 // GetMultipleTemporalNumericValuesUnchecked returns the temporal numeric values for the given feed IDs.
-func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []EncodedAssetId) (map[EncodedAssetId]TemporalNumericValue, error) {
-	response := map[EncodedAssetId]TemporalNumericValue{}
+func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIDs []EncodedAssetID) (map[EncodedAssetID]TemporalNumericValue, error) {
+	response := map[EncodedAssetID]TemporalNumericValue{}
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for _, id := range feedIds {
+	for _, id := range feedIDs {
 		wg.Add(1)
-		go func(id EncodedAssetId) {
+		go func(id EncodedAssetID) {
 			defer wg.Done()
 
 			value, err := sc.getTemporalNumericValueUnchecked(id)
@@ -159,7 +159,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	// Serialize each vector with its own serializer
 	idsSerializer.Uleb128(uint32(len(updateData)))
 	for _, data := range updateData {
-		idsSerializer.WriteBytes(data.Id)
+		idsSerializer.WriteBytes(data.ID)
 	}
 
 	timestampsSerializer.Uleb128(uint32(len(updateData)))

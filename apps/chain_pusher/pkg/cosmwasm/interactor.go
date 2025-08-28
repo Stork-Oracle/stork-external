@@ -49,19 +49,19 @@ func NewContractInteractor(
 }
 
 func (sci *ContractInteractor) ListenContractEvents(
-	ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
+	ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	sci.logger.Warn().Msg("Cosmwasm pusher does not currently support listening to events via websocket, falling back to polling")
 }
 
-func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
-	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
-	for _, encodedAssetId := range encodedAssetIds {
-		var encodeAssetIdInt [32]int
-		for i, b := range encodedAssetId {
-			encodeAssetIdInt[i] = int(b)
+func (sci *ContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+	for _, encodedAssetID := range encodedAssetIDs {
+		var encodeAssetIDInt [32]int
+		for i, b := range encodedAssetID {
+			encodeAssetIDInt[i] = int(b)
 		}
-		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIdInt)
+		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIDInt)
 		if err != nil {
 			continue
 		}
@@ -74,7 +74,7 @@ func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncode
 		if err != nil {
 			return nil, err
 		}
-		polledVals[encodedAssetId] = types.InternalTemporalNumericValue{
+		polledVals[encodedAssetID] = types.InternalTemporalNumericValue{
 			TimestampNs:    timestampNs,
 			QuantizedValue: quantizedValueBigInt,
 		}
@@ -83,7 +83,7 @@ func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncode
 	return polledVals, nil
 }
 
-func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
 	var updateData []bindings.UpdateData
 	for _, price := range priceUpdates {
 		update, err := sci.aggregatedSignedPriceToUpdateData(price)
@@ -110,7 +110,7 @@ func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 
 func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
-	assetId, err := pusher.HexStringToInt32(string(signedPrice.EncodedAssetId))
+	assetID, err := pusher.HexStringToInt32(string(signedPrice.EncodedAssetID))
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
@@ -142,7 +142,7 @@ func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.Agg
 	}
 	v := int(vInt)
 	return bindings.UpdateData{
-		Id:                   assetId,
+		ID:                   assetID,
 		TemporalNumericValue: temporalNumericValue,
 		ValueComputeAlgHash:  valueComputeAlgHash,
 		PublisherMerkleRoot:  publisherMerkleRoot,

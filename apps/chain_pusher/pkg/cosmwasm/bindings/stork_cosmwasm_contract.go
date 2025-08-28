@@ -83,14 +83,14 @@ type UpdateData struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
 	V                    int                  `json:"v"`
 	ValueComputeAlgHash  [32]int              `json:"value_compute_alg_hash"`
-	Id                   [32]int              `json:"id"`
+	ID                   [32]int              `json:"id"`
 	PublisherMerkleRoot  [32]int              `json:"publisher_merkle_root"`
 	R                    [32]int              `json:"r"`
 	S                    [32]int              `json:"s"`
 }
 
 type QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked struct {
-	Id [32]int `json:"id"`
+	ID [32]int `json:"id"`
 }
 
 type QueryMsg_GetSingleUpdateFee struct{}
@@ -331,7 +331,7 @@ func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error
 }
 
 func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(id [32]int) (*GetTemporalNumericValueResponse, error) {
-	rawQueryData, err := json.Marshal(map[string]any{"get_latest_canonical_temporal_numeric_value_unchecked": &QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked{Id: id}})
+	rawQueryData, err := json.Marshal(map[string]any{"get_latest_canonical_temporal_numeric_value_unchecked": &QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked{ID: id}})
 	if err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ type ContractInteractor struct {
 	client             *rpc.Client
 	wsClient           *ws.Client
 	contractAddr       solana.PublicKey
-	feedAccounts       map[types.InternalEncodedAssetId]solana.PublicKey
+	feedAccounts       map[types.InternalEncodedAssetID]solana.PublicKey
 	treasuryAccounts   map[uint8]solana.PublicKey
 	configAccount      solana.PublicKey
 	payer              solana.PrivateKey
@@ -76,28 +76,28 @@ func NewContractInteractor(
 		return nil, err
 	}
 
-	feedAccounts := make(map[types.InternalEncodedAssetId]solana.PublicKey)
+	feedAccounts := make(map[types.InternalEncodedAssetID]solana.PublicKey)
 	for _, asset := range assetConfig.Assets {
-		encodedAssetIdBytes, err := pusher.HexStringToByteArray(string(asset.EncodedAssetId))
+		encodedAssetIDBytes, err := pusher.HexStringToByteArray(string(asset.EncodedAssetID))
 		if err != nil {
-			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to convert encoded asset ID to bytes")
+			logger.Fatal().Err(err).Str("assetID", fmt.Sprintf("%v", asset.AssetID)).Msg("Failed to convert encoded asset ID to bytes")
 			return nil, err
 		}
 		// derive pda
 		feedAccount, _, err := solana.FindProgramAddress(
 			[][]byte{
 				[]byte("stork_feed"),
-				encodedAssetIdBytes,
+				encodedAssetIDBytes,
 			},
 			contractPubKey,
 		)
 		if err != nil {
-			logger.Fatal().Err(err).Str("assetId", fmt.Sprintf("%v", asset.AssetId)).Msg("Failed to derive PDA for feed account")
+			logger.Fatal().Err(err).Str("assetID", fmt.Sprintf("%v", asset.AssetID)).Msg("Failed to derive PDA for feed account")
 			return nil, err
 		}
 
-		encodedAssetId := types.InternalEncodedAssetId(encodedAssetIdBytes)
-		feedAccounts[encodedAssetId] = feedAccount
+		encodedAssetID := types.InternalEncodedAssetID(encodedAssetIDBytes)
+		feedAccounts[encodedAssetID] = feedAccount
 	}
 
 	treasuryAccounts := make(map[uint8]solana.PublicKey)
@@ -105,7 +105,7 @@ func NewContractInteractor(
 		treasuryAccount, _, err := solana.FindProgramAddress(
 			[][]byte{[]byte("stork_treasury"), {uint8(i)}}, contractPubKey)
 		if err != nil {
-			logger.Fatal().Err(err).Uint8("treasuryId", uint8(i)).Msg("Failed to derive PDA for treasury account")
+			logger.Fatal().Err(err).Uint8("treasuryID", uint8(i)).Msg("Failed to derive PDA for treasury account")
 			return nil, err
 		}
 		treasuryAccounts[uint8(i)] = treasuryAccount
@@ -177,7 +177,7 @@ func (sci *ContractInteractor) confirmationWorker(ch chan solana.Signature) {
 	}
 }
 
-func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
+func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue) {
 	wg := sync.WaitGroup{}
 	for _, feedAccount := range sci.feedAccounts {
 		select {
@@ -192,7 +192,7 @@ func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan
 	wg.Wait()
 }
 
-func (sci *ContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
+func (sci *ContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
 	if err != nil {
@@ -230,16 +230,16 @@ func (sci *ContractInteractor) listenSingleContractEvent(ctx context.Context, ch
 			TimestampNs:    latestValue.TimestampNs,
 		}
 
-		ch <- map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue{account.Id: tv}
+		ch <- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue{account.Id: tv}
 	}
 }
 
-func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
-	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
+func (sci *ContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	for _, encodedAssetId := range encodedAssetIds {
+	for _, encodedAssetID := range encodedAssetIDs {
 
-		feedAccount := sci.feedAccounts[encodedAssetId]
+		feedAccount := sci.feedAccounts[encodedAssetID]
 		accountInfo, err := sci.client.GetAccountInfo(context.Background(), feedAccount)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to get account info")
@@ -247,7 +247,7 @@ func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncode
 		}
 
 		if accountInfo == nil || len(accountInfo.Value.Data.GetBinary()) == 0 {
-			sci.logger.Debug().Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
+			sci.logger.Debug().Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			continue
 		}
 
@@ -259,7 +259,7 @@ func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncode
 			continue
 		}
 
-		polledVals[encodedAssetId] = types.InternalTemporalNumericValue{
+		polledVals[encodedAssetID] = types.InternalTemporalNumericValue{
 			QuantizedValue: account.LatestValue.QuantizedValue.BigInt(),
 			TimestampNs:    account.LatestValue.TimestampNs,
 		}
@@ -268,14 +268,14 @@ func (sci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncode
 	return polledVals, nil
 }
 
-func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(priceUpdates))
 	sigChan := make(chan solana.Signature, len(priceUpdates))
 	priceUpdatesBatches := sci.batchPriceUpdates(priceUpdates)
 	for _, priceUpdateBatch := range priceUpdatesBatches {
 		wg.Add(1)
-		go func(priceUpdateBatch map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) {
+		go func(priceUpdateBatch map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) {
 			defer wg.Done()
 			err := sci.limiter.Wait(context.Background())
 			if err != nil {
@@ -322,49 +322,49 @@ func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (sci *ContractInteractor) batchPriceUpdates(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) []map[types.InternalEncodedAssetId]types.AggregatedSignedPrice {
-	priceUpdatesBatches := []map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{}
+func (sci *ContractInteractor) batchPriceUpdates(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) []map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+	priceUpdatesBatches := []map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{}
 
-	priceUpdatesBatch := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
+	priceUpdatesBatch := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 	i := 0
-	for encodedAssetId, priceUpdate := range priceUpdates {
-		priceUpdatesBatch[encodedAssetId] = priceUpdate
+	for encodedAssetID, priceUpdate := range priceUpdates {
+		priceUpdatesBatch[encodedAssetID] = priceUpdate
 		i++
 		if len(priceUpdatesBatch) == sci.batchSize || i == len(priceUpdates) {
-			batchCopy := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice, len(priceUpdatesBatch))
+			batchCopy := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice, len(priceUpdatesBatch))
 			for k, v := range priceUpdatesBatch {
 				batchCopy[k] = v
 			}
 			priceUpdatesBatches = append(priceUpdatesBatches, batchCopy)
-			priceUpdatesBatch = make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
+			priceUpdatesBatch = make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 		}
 	}
 
 	return priceUpdatesBatches
 }
 
-func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) (solana.Signature, error) {
+func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) (solana.Signature, error) {
 	if len(priceUpdates) > MAX_BATCH_SIZE {
 		return solana.Signature{}, fmt.Errorf("batch size exceeds limit, skipping update")
 	}
 
-	randomId, err := rand.Int(rand.Reader, big.NewInt(256))
+	randomID, err := rand.Int(rand.Reader, big.NewInt(256))
 	if err != nil {
 		return solana.Signature{}, fmt.Errorf("failed to generate random ID: %w", err)
 	}
-	treasuryId := uint8(randomId.Uint64())
+	treasuryID := uint8(randomID.Uint64())
 
-	treasuryAccount := sci.treasuryAccounts[treasuryId]
+	treasuryAccount := sci.treasuryAccounts[treasuryID]
 	instructions := []solana.Instruction{}
-	assetIds := []string{}
+	assetIDs := []string{}
 
-	for encodedAssetId, priceUpdate := range priceUpdates {
-		updateData, err := sci.priceUpdateToTemporalNumericValueEvmInput(priceUpdate, encodedAssetId, treasuryId)
+	for encodedAssetID, priceUpdate := range priceUpdates {
+		updateData, err := sci.priceUpdateToTemporalNumericValueEvmInput(priceUpdate, encodedAssetID, treasuryID)
 		if err != nil {
 			return solana.Signature{}, fmt.Errorf("failed to convert price update to TemporalNumericValueEvmInput: %w", err)
 		}
 
-		feedAccount := sci.feedAccounts[encodedAssetId]
+		feedAccount := sci.feedAccounts[encodedAssetID]
 
 		instruction, err := bindings.NewUpdateTemporalNumericValueEvmInstruction(
 			updateData,
@@ -415,16 +415,16 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map
 
 	sci.logger.Debug().
 		Str("signature", sig.String()).
-		Strs("assetIds", assetIds).
-		Uint8("treasuryId", treasuryId).
+		Strs("assetIDs", assetIDs).
+		Uint8("treasuryID", treasuryID).
 		Msg("Pushed batch update to contract")
 
 	return sig, nil
 }
 
-func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetId types.InternalEncodedAssetId, treasuryId uint8) (bindings.TemporalNumericValueEvmInput, error) {
-	var assetId [32]uint8
-	copy(assetId[:], encodedAssetId[:])
+func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetID types.InternalEncodedAssetID, treasuryID uint8) (bindings.TemporalNumericValueEvmInput, error) {
+	var assetID [32]uint8
+	copy(assetID[:], encodedAssetID[:])
 
 	quantizedPrice := sci.quantizedPriceToInt128(priceUpdate.StorkSignedPrice.QuantizedPrice)
 
@@ -467,13 +467,13 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUp
 			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 			QuantizedValue: quantizedPrice,
 		},
-		Id:                  assetId,
+		Id:                  assetID,
 		PublisherMerkleRoot: publisherMerkleRoot,
 		ValueComputeAlgHash: valueComputeAlgHash,
 		R:                   r,
 		S:                   s,
 		V:                   v,
-		TreasuryId:          treasuryId,
+		TreasuryId:          treasuryID,
 	}, nil
 }
 

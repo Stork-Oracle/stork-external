@@ -29,7 +29,7 @@ type StorkContract struct {
 }
 
 type MultipleUpdateData struct {
-	Ids                              [][]byte
+	IDs                              [][]byte
 	TemporalNumericValueTimestampNss []big.Int
 	TemporalNumericValueMagnitudes   []big.Int
 	TemporalNumericValueNegatives    []bool
@@ -41,7 +41,7 @@ type MultipleUpdateData struct {
 }
 
 type UpdateData struct {
-	Id                              []byte
+	ID                              []byte
 	TemporalNumericValueTimestampNs uint64
 	TemporalNumericValueMagnitude   *big.Int
 	TemporalNumericValueNegative    bool
@@ -53,7 +53,7 @@ type UpdateData struct {
 }
 
 type StorkState struct {
-	Id                    sui_types.SuiAddress
+	ID                    sui_types.SuiAddress
 	StorkSuiPublicKey     sui_types.SuiAddress
 	StorkEvmPublicKey     string
 	SingleUpdateFeeInMist uint64
@@ -63,8 +63,8 @@ type StorkState struct {
 }
 
 type FeedRegistry struct {
-	Id      sui_types.SuiAddress
-	Entries map[EncodedAssetId]sui_types.SuiAddress
+	ID      sui_types.SuiAddress
+	Entries map[EncodedAssetID]sui_types.SuiAddress
 }
 
 type TemporalNumericValue struct {
@@ -72,7 +72,7 @@ type TemporalNumericValue struct {
 	QuantizedValue I128
 }
 
-type EncodedAssetId [32]byte
+type EncodedAssetID [32]byte
 
 type I128 struct {
 	Magnitude *big.Int
@@ -109,41 +109,41 @@ func (sc *StorkContract) getReferenceGasPrice() (uint64, error) {
 }
 
 // gets multiple temporal numeric values at a time to save on RPC calls
-func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIds []EncodedAssetId) (map[EncodedAssetId]TemporalNumericValue, error) {
-	feedIdsMap := sc.State.FeedRegistry.Entries
+func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIDs []EncodedAssetID) (map[EncodedAssetID]TemporalNumericValue, error) {
+	feedIDsMap := sc.State.FeedRegistry.Entries
 
-	unknownFeedIDs := []EncodedAssetId{}
-	for _, feedId := range feedIds {
-		if _, ok := feedIdsMap[feedId]; !ok {
-			unknownFeedIDs = append(unknownFeedIDs, feedId)
+	unknownFeedIDs := []EncodedAssetID{}
+	for _, feedID := range feedIDs {
+		if _, ok := feedIDsMap[feedID]; !ok {
+			unknownFeedIDs = append(unknownFeedIDs, feedID)
 		}
 	}
 
-	resolvedFeedIDs, err := sc.getFeedIds(unknownFeedIDs)
+	resolvedFeedIDs, err := sc.getFeedIDs(unknownFeedIDs)
 	if err != nil {
 		return nil, err
 	}
-	for feedId, feedObjectId := range resolvedFeedIDs {
-		feedIdsMap[feedId] = feedObjectId
+	for feedID, feedObjectID := range resolvedFeedIDs {
+		feedIDsMap[feedID] = feedObjectID
 	}
-	feedIDs := []sui_types.SuiAddress{}
-	for _, feedID := range feedIdsMap {
-		feedIDs = append(feedIDs, feedID)
+	feedAddresses := []sui_types.SuiAddress{}
+	for _, feedID := range feedIDsMap {
+		feedAddresses = append(feedAddresses, feedID)
 	}
 
 	options := &types.SuiObjectDataOptions{
 		ShowContent: true,
 	}
 
-	feeds, err := sc.Client.MultiGetObjects(context.Background(), feedIDs, options)
+	feeds, err := sc.Client.MultiGetObjects(context.Background(), feedAddresses, options)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make(map[EncodedAssetId]TemporalNumericValue)
+	result := make(map[EncodedAssetID]TemporalNumericValue)
 
 	for _, feed := range feeds {
-		var id EncodedAssetId
+		var id EncodedAssetID
 		slice := feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})["asset_id"].(map[string]interface{})["fields"].(map[string]interface{})["bytes"]
 		idBytes, err := interfaceSliceToBytes(slice)
 		if err != nil {
@@ -216,7 +216,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	ss := [][]byte{}
 	vs := []byte{}
 	for _, update := range updateData {
-		ids = append(ids, update.Id)
+		ids = append(ids, update.ID)
 		temporalNumericValueTimestampNss = append(temporalNumericValueTimestampNss, update.TemporalNumericValueTimestampNs)
 		temporalNumericValueMagnitudes = append(temporalNumericValueMagnitudes, update.TemporalNumericValueMagnitude)
 		temporalNumericValueNegatives = append(temporalNumericValueNegatives, update.TemporalNumericValueNegative)
@@ -301,7 +301,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 			InitialSharedVersion uint64
 			Mutable              bool
 		}{
-			Id:                   sc.State.Id,
+			Id:                   sc.State.ID,
 			InitialSharedVersion: sc.State.InitialSharedVersion,
 			Mutable:              true,
 		},
@@ -412,8 +412,8 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 		return StorkState{}, err
 	}
 
-	storkStateIdHex := event.Data[0].ParsedJson.(map[string]interface{})["stork_state_id"].(string)
-	storkStateId, err := sui_types.NewAddressFromHex(storkStateIdHex)
+	storkStateIDHex := event.Data[0].ParsedJson.(map[string]interface{})["stork_state_id"].(string)
+	storkStateID, err := sui_types.NewAddressFromHex(storkStateIDHex)
 	if err != nil {
 		return StorkState{}, err
 	}
@@ -422,7 +422,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 		ShowContent: true,
 		ShowOwner:   true,
 	}
-	object, err := client.GetObject(context.Background(), *storkStateId, options)
+	object, err := client.GetObject(context.Background(), *storkStateID, options)
 	if err != nil {
 		return StorkState{}, err
 	}
@@ -446,31 +446,31 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 	version := object.Data.Version.Uint64()
 	initialSharedVersion := uint64(*object.Data.Owner.Shared.InitialSharedVersion)
 	// registry
-	stateDynamicFields, err := client.GetDynamicFields(context.Background(), *storkStateId, nil, nil)
+	stateDynamicFields, err := client.GetDynamicFields(context.Background(), *storkStateID, nil, nil)
 	if err != nil {
 		return StorkState{}, err
 	}
-	registryId := sui_types.SuiAddress{}
+	registryID := sui_types.SuiAddress{}
 	for _, dynamicField := range stateDynamicFields.Data {
 		nameBytes, err := interfaceSliceToBytes(dynamicField.Name.Value)
 		if err != nil {
 			return StorkState{}, fmt.Errorf("failed to convert name bytes: %w", err)
 		}
 		if bytes.Equal(nameBytes, []byte("temporal_numeric_value_feed_registry")) {
-			registryId = dynamicField.ObjectId
+			registryID = dynamicField.ObjectId
 			break
 		}
 	}
 
-	if registryId == (sui_types.SuiAddress{}) {
+	if registryID == (sui_types.SuiAddress{}) {
 		return StorkState{}, errors.New("feed registry not found")
 	}
 
-	feedIds := make(map[EncodedAssetId]sui_types.SuiAddress)
+	feedIDs := make(map[EncodedAssetID]sui_types.SuiAddress)
 
-	registry := FeedRegistry{Id: registryId, Entries: feedIds}
+	registry := FeedRegistry{ID: registryID, Entries: feedIDs}
 
-	return StorkState{Id: *storkStateId, StorkEvmPublicKey: storkEvmPublicKey, StorkSuiPublicKey: *storkSuiPublicKey, SingleUpdateFeeInMist: singleUpdateFeeInMist, Version: version, InitialSharedVersion: initialSharedVersion, FeedRegistry: registry}, nil
+	return StorkState{ID: *storkStateID, StorkEvmPublicKey: storkEvmPublicKey, StorkSuiPublicKey: *storkSuiPublicKey, SingleUpdateFeeInMist: singleUpdateFeeInMist, Version: version, InitialSharedVersion: initialSharedVersion, FeedRegistry: registry}, nil
 }
 
 func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransaction, referenceGasPrice uint64) (uint64, error) {
@@ -504,31 +504,31 @@ func (sc *StorkContract) getGasBudgetFromDryRun(pt *sui_types.ProgrammableTransa
 	return uint64(gasUsed), nil
 }
 
-func (sc *StorkContract) getFeedIds(feedIds []EncodedAssetId) (map[EncodedAssetId]sui_types.SuiAddress, error) {
-	feedIdsMap := make(map[EncodedAssetId]sui_types.SuiAddress)
+func (sc *StorkContract) getFeedIDs(feedIDs []EncodedAssetID) (map[EncodedAssetID]sui_types.SuiAddress, error) {
+	feedIDsMap := make(map[EncodedAssetID]sui_types.SuiAddress)
 
-	registryId := sc.State.FeedRegistry.Id
+	registryID := sc.State.FeedRegistry.ID
 
-	registryEntries, err := sc.Client.GetDynamicFields(context.Background(), registryId, nil, nil)
+	registryEntries, err := sc.Client.GetDynamicFields(context.Background(), registryID, nil, nil)
 	if err != nil {
-		return feedIdsMap, err
+		return feedIDsMap, err
 	}
 
-	for _, feedId := range feedIds {
+	for _, feedID := range feedIDs {
 		for _, entry := range registryEntries.Data {
 			nameBytes, err := interfaceSliceToBytes(entry.Name.Value.(map[string]interface{})["bytes"])
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert name2 bytes: %w", err)
 			}
-			if bytes.Equal(nameBytes, feedId[:]) {
-				feedObjectId := entry.ObjectId
-				feedIdsMap[feedId] = feedObjectId
+			if bytes.Equal(nameBytes, feedID[:]) {
+				feedObjectID := entry.ObjectId
+				feedIDsMap[feedID] = feedObjectID
 				break
 			}
 		}
 	}
 
-	return feedIdsMap, nil
+	return feedIDsMap, nil
 }
 
 func interfaceSliceToBytes(slice interface{}) ([]byte, error) {

@@ -3,9 +3,11 @@ package pusher
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 )
 
+// Pluralize returns an empty string if n is 1, otherwise returns "s".
 func Pluralize(n int) string {
 	if n == 1 {
 		return ""
@@ -14,16 +16,20 @@ func Pluralize(n int) string {
 	return "s"
 }
 
-// stringToBytes decodes a hex string to a byte slice.
+// hexStringToBytes decodes a hex string to a byte slice.
 func hexStringToBytes(input string) ([]byte, error) {
 	// Remove the "0x" prefix unconditionally
 	input = strings.TrimPrefix(input, "0x")
 
-	// Decode the hex string to bytes
-	return hex.DecodeString(input)
+	bytes, err := hex.DecodeString(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode hex string: %w", err)
+	}
+
+	return bytes, nil
 }
 
-// stringToFixedBytes converts a hex string to a fixed-length byte array.
+// hexStringToFixedBytes converts a hex string to a fixed-length byte array.
 func hexStringToFixedBytes(input string, length int) ([]byte, error) {
 	bytes, err := hexStringToBytes(input)
 	if err != nil {
@@ -41,7 +47,7 @@ func hexStringToFixedBytes(input string, length int) ([]byte, error) {
 	return result, nil
 }
 
-// stringToByte20 converts a hex string to a [20]byte array.
+// HexStringToByte20 converts a hex string to a [20]byte array.
 func HexStringToByte20(input string) ([20]byte, error) {
 	var result [20]byte
 
@@ -55,7 +61,7 @@ func HexStringToByte20(input string) ([20]byte, error) {
 	return result, nil
 }
 
-// stringToByte32 converts a hex string to a [32]byte array.
+// HexStringToByte32 converts a hex string to a [32]byte array.
 func HexStringToByte32(input string) ([32]byte, error) {
 	var result [32]byte
 
@@ -69,12 +75,19 @@ func HexStringToByte32(input string) ([32]byte, error) {
 	return result, nil
 }
 
+// HexStringToByteArray converts a hex string to a byte array.
 func HexStringToByteArray(hexString string) ([]byte, error) {
 	hexString = strings.TrimPrefix(hexString, "0x")
 
-	return hex.DecodeString(hexString)
+	array, err := hex.DecodeString(hexString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode hex string: %w", err)
+	}
+
+	return array, nil
 }
 
+// HexStringToInt32 converts a hex string to a [32]int array.
 func HexStringToInt32(hexString string) ([32]int, error) {
 	bytes, err := HexStringToByte32(hexString)
 	if err != nil {

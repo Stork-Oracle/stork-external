@@ -34,16 +34,16 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 600`,
 			fileName: "test_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetId]AssetEntry{
+				Assets: map[AssetID]AssetEntry{
 					"BTC": {
-						AssetId:                "BTC",
-						EncodedAssetId:         "0x1234567890123456789012345678901234567890123456789012345678901234",
+						AssetID:                "BTC",
+						EncodedAssetID:         "0x1234567890123456789012345678901234567890123456789012345678901234",
 						PercentChangeThreshold: 1.5,
 						FallbackPeriodSecs:     300,
 					},
 					"ETH": {
-						AssetId:                "ETH",
-						EncodedAssetId:         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+						AssetID:                "ETH",
+						EncodedAssetID:         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
 						PercentChangeThreshold: 2.0,
 						FallbackPeriodSecs:     600,
 					},
@@ -56,7 +56,7 @@ func TestLoadConfig(t *testing.T) {
 			fileContent: `assets: {}`,
 			fileName:    "empty_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetId]AssetEntry{},
+				Assets: map[AssetID]AssetEntry{},
 			},
 			wantError: false,
 		},
@@ -70,10 +70,10 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 120`,
 			fileName: "single_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetId]AssetEntry{
+				Assets: map[AssetID]AssetEntry{
 					"SOL": {
-						AssetId:                "SOL",
-						EncodedAssetId:         "0x1111111111111111111111111111111111111111111111111111111111111111",
+						AssetID:                "SOL",
+						EncodedAssetID:         "0x1111111111111111111111111111111111111111111111111111111111111111",
 						PercentChangeThreshold: 0.5,
 						FallbackPeriodSecs:     120,
 					},
@@ -107,10 +107,10 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 0`,
 			fileName: "zero_values_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetId]AssetEntry{
+				Assets: map[AssetID]AssetEntry{
 					"TEST": {
-						AssetId:                "TEST",
-						EncodedAssetId:         "0x0000000000000000000000000000000000000000000000000000000000000000",
+						AssetID:                "TEST",
+						EncodedAssetID:         "0x0000000000000000000000000000000000000000000000000000000000000000",
 						PercentChangeThreshold: 0,
 						FallbackPeriodSecs:     0,
 					},

@@ -17,40 +17,44 @@ const (
 	ReconnectionAttemptErrorThreshold = 5
 )
 
+// StorkAggregatorWebsocketClient is a client for the Stork aggregator websocket.
 type StorkAggregatorWebsocketClient struct {
 	logger       zerolog.Logger
 	baseEndpoint string
 	authToken    string
-	assetIds     []types.AssetId
+	assetIDs     []types.AssetID
 
 	conn           *websocket.Conn
 	reconnAttempts int
 }
 
-func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIds []types.AssetId, logger *zerolog.Logger) StorkAggregatorWebsocketClient {
+// NewStorkAggregatorWebsocketClient creates a new StorkAggregatorWebsocketClient with the given parameters.
+func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIDs []types.AssetID, logger *zerolog.Logger) StorkAggregatorWebsocketClient {
 	return StorkAggregatorWebsocketClient{
 		logger:       logger.With().Str("component", "stork-ws").Logger(),
 		baseEndpoint: baseEndpoint,
 		authToken:    authToken,
-		assetIds:     assetIds,
+		assetIDs:     assetIDs,
 	}
 }
 
-func (p *StorkAggregatorWebsocketClient) Run(priceChan chan types.AggregatedSignedPrice) {
+// Run connects to the Stork aggregator websocket and reads prices from the channel.
+func (c *StorkAggregatorWebsocketClient) Run(priceChan chan types.AggregatedSignedPrice) {
 	for {
-		p.connect()
+		c.connect()
 
-		if p.conn != nil {
-			p.readLoop(priceChan)
+		if c.conn != nil {
+			c.readLoop(priceChan)
 		}
 
-		p.handleDisconnect()
+		c.handleDisconnect()
 	}
 }
 
+// SubscriberMessage is a message to subscribe to one or more feeds.
 type SubscriberMessage struct {
 	Type string          `json:"type"`
-	Data []types.AssetId `json:"data"`
+	Data []types.AssetID `json:"data"`
 }
 
 func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.AggregatedSignedPrice) {
@@ -108,7 +112,7 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 
 	subscribeMessage := SubscriberMessage{
 		Type: "subscribe",
-		Data: c.assetIds,
+		Data: c.assetIDs,
 	}
 
 	subscribeMessageBytes, err := json.Marshal(subscribeMessage)
@@ -125,7 +129,7 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 		return
 	}
 
-	c.logger.Info().Msgf("subscribed to %d feed%s", len(c.assetIds), Pluralize(len(c.assetIds)))
+	c.logger.Info().Msgf("subscribed to %d feed%s", len(c.assetIDs), Pluralize(len(c.assetIDs)))
 
 	c.reconnAttempts = 0
 	c.conn = evmConn

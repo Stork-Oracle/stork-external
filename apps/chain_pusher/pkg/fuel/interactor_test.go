@@ -81,7 +81,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "valid positive price update",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice:      "1000000000000000000",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{
@@ -102,7 +102,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 					TimestampNs:    1722632569208762117,
 					QuantizedValue: func() *big.Int { v := new(big.Int); v.SetString("1000000000000000000", 10); return v }(),
 				},
-				Id:                  "1234567890123456789012345678901234567890123456789012345678901234",
+				ID:                  "1234567890123456789012345678901234567890123456789012345678901234",
 				PublisherMerkleRoot: "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 				ValueComputeAlgHash: "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 				R:                   "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
@@ -115,7 +115,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "valid negative price update",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice:      "-1000000000000000000",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{
@@ -136,7 +136,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 					TimestampNs:    1722632569208762117,
 					QuantizedValue: func() *big.Int { v := new(big.Int); v.SetString("-1000000000000000000", 10); return v }(),
 				},
-				Id:                  "1234567890123456789012345678901234567890123456789012345678901234",
+				ID:                  "1234567890123456789012345678901234567890123456789012345678901234",
 				PublisherMerkleRoot: "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 				ValueComputeAlgHash: "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 				R:                   "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
@@ -149,7 +149,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "zero price",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice:      "0",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{
@@ -170,7 +170,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 					TimestampNs:    1722632569208762117,
 					QuantizedValue: big.NewInt(0),
 				},
-				Id:                  "1234567890123456789012345678901234567890123456789012345678901234",
+				ID:                  "1234567890123456789012345678901234567890123456789012345678901234",
 				PublisherMerkleRoot: "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 				ValueComputeAlgHash: "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 				R:                   "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
@@ -183,7 +183,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "valid price with V=0x1b",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice:      "1000000000000000000",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{
@@ -204,7 +204,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 					TimestampNs:    1722632569208762117,
 					QuantizedValue: func() *big.Int { v := new(big.Int); v.SetString("1000000000000000000", 10); return v }(),
 				},
-				Id:                  "1234567890123456789012345678901234567890123456789012345678901234",
+				ID:                  "1234567890123456789012345678901234567890123456789012345678901234",
 				PublisherMerkleRoot: "e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 				ValueComputeAlgHash: "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 				R:                   "b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
@@ -217,7 +217,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "invalid encoded asset ID",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "invalid hex",
+					EncodedAssetID:      "invalid hex",
 					QuantizedPrice:      "1000000000000000000",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{
@@ -240,7 +240,7 @@ func TestAggregatedSignedPriceToTemporalNumericValueInput(t *testing.T) {
 			name: "invalid V signature",
 			update: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 					QuantizedPrice:      "1000000000000000000",
 					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 					StorkCalculationAlg: types.StorkCalculationAlg{

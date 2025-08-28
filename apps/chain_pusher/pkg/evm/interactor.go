@@ -106,7 +106,7 @@ func NewContractInteractor(
 }
 
 func (eci *ContractInteractor) ListenContractEvents(
-	ctx context.Context, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
+	ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	if eci.wsContract == nil {
 		eci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
@@ -165,7 +165,7 @@ func (eci *ContractInteractor) listenLoop(
 	ctx context.Context,
 	sub ethereum.Subscription,
 	eventCh chan *bindings.StorkContractValueUpdate,
-	outCh chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
+	outCh chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) error {
 	for {
 		select {
@@ -186,7 +186,7 @@ func (eci *ContractInteractor) listenLoop(
 				TimestampNs:    vLog.TimestampNs,
 			}
 			select {
-			case outCh <- map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue{vLog.Id: tv}:
+			case outCh <- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue{vLog.Id: tv}:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
@@ -227,25 +227,25 @@ func (eci *ContractInteractor) reconnect(
 	return nil, nil, errors.New("max retry attempts reached")
 }
 
-func (eci *ContractInteractor) PullValues(encodedAssetIds []types.InternalEncodedAssetId) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
-	polledVals := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
-	for _, encodedAssetId := range encodedAssetIds {
-		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetId)
+func (eci *ContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+	for _, encodedAssetID := range encodedAssetIDs {
+		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") {
-				eci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("No value found")
+				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
-				eci.logger.Warn().Err(err).Str("assetId", hex.EncodeToString(encodedAssetId[:])).Msg("Failed to get latest value")
+				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
 			}
 
 			continue
 		}
-		polledVals[encodedAssetId] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+		polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
 	return polledVals, nil
 }
 
-func getUpdatePayload(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) ([]bindings.StorkStructsTemporalNumericValueInput, error) {
+func getUpdatePayload(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) ([]bindings.StorkStructsTemporalNumericValueInput, error) {
 	updates := make([]bindings.StorkStructsTemporalNumericValueInput, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
@@ -253,7 +253,7 @@ func getUpdatePayload(priceUpdates map[types.InternalEncodedAssetId]types.Aggreg
 		quantizedPriceBigInt := new(big.Int)
 		quantizedPriceBigInt.SetString(string(priceUpdate.StorkSignedPrice.QuantizedPrice), 10)
 
-		encodedAssetId, err := pusher.HexStringToByte32(string(priceUpdate.StorkSignedPrice.EncodedAssetId))
+		encodedAssetID, err := pusher.HexStringToByte32(string(priceUpdate.StorkSignedPrice.EncodedAssetID))
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +288,7 @@ func getUpdatePayload(priceUpdates map[types.InternalEncodedAssetId]types.Aggreg
 				TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
 				QuantizedValue: quantizedPriceBigInt,
 			},
-			Id:                  encodedAssetId,
+			Id:                  encodedAssetID,
 			PublisherMerkleRoot: publisherMerkleRoot,
 			ValueComputeAlgHash: checksum,
 			R:                   rBytes,
@@ -306,7 +306,7 @@ type verifyPayload struct {
 	merkleRoot [32]byte
 }
 
-func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) ([]verifyPayload, error) {
+func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) ([]verifyPayload, error) {
 	payloads := make([]verifyPayload, len(priceUpdates))
 	i := 0
 	for _, priceUpdate := range priceUpdates {
@@ -346,7 +346,7 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 
 			payloads[i].pubSigs[j] = bindings.StorkStructsPublisherSignature{
 				PubKey:         pubKeyBytes,
-				AssetPairId:    signedPrice.ExternalAssetId,
+				AssetPairId:    signedPrice.ExternalAssetID,
 				Timestamp:      uint64(signedPrice.TimestampedSignature.TimestampNano) / 1000000000,
 				QuantizedValue: quantizedPriceBigInt,
 				R:              rBytes,
@@ -361,7 +361,7 @@ func getVerifyPublishersPayloads(priceUpdates map[types.InternalEncodedAssetId]t
 	return payloads, nil
 }
 
-func (eci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice) error {
+func (eci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
 	if eci.verifyPublishers {
 		publisherVerifyPayloads, err := getVerifyPublishersPayloads(priceUpdates)
 		if err != nil {

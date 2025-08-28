@@ -51,19 +51,19 @@ func NewContractInteractor(
 
 func (fci *ContractInteractor) ListenContractEvents(
 	ctx context.Context,
-	ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue,
+	ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	fci.logger.Warn().Msg("Fuel does not currently support listening to events via websocket, falling back to polling")
 }
 
 func (fci *ContractInteractor) PullValues(
-	encodedAssetIds []types.InternalEncodedAssetId,
-) (map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue, error) {
-	result := make(map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue)
+	encodedAssetIDs []types.InternalEncodedAssetID,
+) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	for _, assetId := range encodedAssetIds {
+	for _, assetID := range encodedAssetIDs {
 		// Convert asset ID to hex string
-		idHex := hex.EncodeToString(assetId[:])
+		idHex := hex.EncodeToString(assetID[:])
 
 		// Convert hex string to bytes for FFI call
 		idBytes, err := hex.DecodeString(idHex)
@@ -96,14 +96,14 @@ func (fci *ContractInteractor) PullValues(
 			QuantizedValue: valueJson.QuantizedValue,
 		}
 
-		result[assetId] = internalValue
+		result[assetID] = internalValue
 	}
 
 	return result, nil
 }
 
 func (fci *ContractInteractor) BatchPushToContract(
-	priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice,
+	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	if len(priceUpdates) == 0 {
 		return nil
@@ -113,13 +113,13 @@ func (fci *ContractInteractor) BatchPushToContract(
 
 	for _, update := range priceUpdates {
 		if update.StorkSignedPrice == nil {
-			fci.logger.Error().Str("asset_id", string(update.AssetId)).Msg("StorkSignedPrice is nil")
+			fci.logger.Error().Str("asset_id", string(update.AssetID)).Msg("StorkSignedPrice is nil")
 			continue
 		}
 
 		fuelInput, err := aggregatedSignedPriceToTemporalNumericValueInput(update)
 		if err != nil {
-			fci.logger.Error().Err(err).Str("asset_id", string(update.AssetId)).Msg("Failed to convert price update")
+			fci.logger.Error().Err(err).Str("asset_id", string(update.AssetID)).Msg("Failed to convert price update")
 			continue
 		}
 
@@ -172,7 +172,7 @@ func aggregatedSignedPriceToTemporalNumericValueInput(update types.AggregatedSig
 	}
 
 	// Parse encoded asset ID
-	encodedAssetIdBytes, err := pusher.HexStringToByte32(string(update.StorkSignedPrice.EncodedAssetId))
+	encodedAssetIDBytes, err := pusher.HexStringToByte32(string(update.StorkSignedPrice.EncodedAssetID))
 	if err != nil {
 		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse encoded asset ID: %w", err)
 	}
@@ -201,7 +201,7 @@ func aggregatedSignedPriceToTemporalNumericValueInput(update types.AggregatedSig
 			TimestampNs:    uint64(update.StorkSignedPrice.TimestampedSignature.TimestampNano),
 			QuantizedValue: quantizedPriceBigInt,
 		},
-		Id:                  hex.EncodeToString(encodedAssetIdBytes[:]),
+		ID:                  hex.EncodeToString(encodedAssetIDBytes[:]),
 		PublisherMerkleRoot: hex.EncodeToString(publisherMerkleRootBytes[:]),
 		ValueComputeAlgHash: hex.EncodeToString(valueComputeAlgHashBytes[:]),
 		R:                   hex.EncodeToString(rBytes[:]),
@@ -216,11 +216,11 @@ func loadPrivateKey(keyFileContent []byte) (string, error) {
 	if len(privateKeyStr) > 0 && privateKeyStr[len(privateKeyStr)-1] == '\n' {
 		privateKeyStr = privateKeyStr[:len(privateKeyStr)-1]
 	}
-	
+
 	// Validate that private key is not empty
 	if len(privateKeyStr) == 0 {
 		return "", fmt.Errorf("private key cannot be empty")
 	}
-	
+
 	return privateKeyStr, nil
 }

@@ -9,12 +9,12 @@ import (
 
 // Config
 type AssetConfig struct {
-	Assets map[AssetId]AssetEntry `yaml:"assets"`
+	Assets map[AssetID]AssetEntry `yaml:"assets"`
 }
 
 type AssetEntry struct {
-	AssetId                AssetId        `yaml:"asset_id"`
-	EncodedAssetId         EncodedAssetId `yaml:"encoded_asset_id"`
+	AssetID                AssetID        `yaml:"asset_id"`
+	EncodedAssetID         EncodedAssetID `yaml:"encoded_asset_id"`
 	PercentChangeThreshold float64        `yaml:"percent_change_threshold"`
 	FallbackPeriodSecs     uint64         `yaml:"fallback_period_sec"`
 }
@@ -34,8 +34,8 @@ func LoadConfig(filename string) (*AssetConfig, error) {
 
 // Stork Aggregator Types
 type (
-	AssetId        string
-	EncodedAssetId string
+	AssetID        string
+	EncodedAssetID string
 	PublisherKey   string
 	QuantizedPrice string
 )
@@ -60,7 +60,7 @@ type TimestampedSignature struct {
 
 type StorkSignedPrice struct {
 	PublicKey            string               `json:"public_key"`
-	EncodedAssetId       EncodedAssetId       `json:"encoded_asset_id"`
+	EncodedAssetID       EncodedAssetID       `json:"encoded_asset_id"`
 	QuantizedPrice       QuantizedPrice       `json:"price"`
 	TimestampedSignature TimestampedSignature `json:"timestamped_signature"`
 	PublisherMerkleRoot  string               `json:"publisher_merkle_root"`
@@ -69,14 +69,14 @@ type StorkSignedPrice struct {
 
 type PublisherSignedPrice struct {
 	PublisherKey         PublisherKey         `json:"publisher_key"`
-	ExternalAssetId      string               `json:"external_asset_id"`
+	ExternalAssetID      string               `json:"external_asset_id"`
 	QuantizedPrice       QuantizedPrice       `json:"price"`
 	TimestampedSignature TimestampedSignature `json:"timestamped_signature"`
 }
 
 type AggregatedSignedPrice struct {
 	TimestampNano    int64                   `json:"timestamp"`
-	AssetId          AssetId                 `json:"asset_id"`
+	AssetID          AssetID                 `json:"asset_id"`
 	StorkSignedPrice *StorkSignedPrice       `json:"stork_signed_price,omitempty"`
 	SignedPrices     []*PublisherSignedPrice `json:"signed_prices"`
 }
@@ -88,7 +88,7 @@ type OraclePricesMessage struct {
 }
 
 // Internal types
-type InternalEncodedAssetId [32]byte
+type InternalEncodedAssetID [32]byte
 
 type InternalTemporalNumericValue struct {
 	TimestampNs    uint64

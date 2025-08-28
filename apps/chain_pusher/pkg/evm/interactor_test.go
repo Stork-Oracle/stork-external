@@ -102,16 +102,16 @@ func TestGetUpdatePayload(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice
+		priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
 		expected     []bindings.StorkStructsTemporalNumericValueInput
 		wantError    bool
 	}{
 		{
 			name: "valid positive price update",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+						EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 						QuantizedPrice:      "1000000000000000000",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -144,10 +144,10 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name: "valid negative price update",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+						EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 						QuantizedPrice:      "-1000000000000000000",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -180,10 +180,10 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name: "zero price",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+						EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 						QuantizedPrice:      "0",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -216,10 +216,10 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name: "valid price with V=0x1b",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+						EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 						QuantizedPrice:      "1000000000000000000",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -252,10 +252,10 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name: "invalid encoded asset id",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "invalid hex",
+						EncodedAssetID:      "invalid hex",
 						QuantizedPrice:      "1000000000000000000",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -277,10 +277,10 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name: "invalid V signature",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
-						EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+						EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
 						QuantizedPrice:      "1000000000000000000",
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 						StorkCalculationAlg: types.StorkCalculationAlg{
@@ -302,7 +302,7 @@ func TestGetUpdatePayload(t *testing.T) {
 		},
 		{
 			name:         "empty price updates",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{},
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{},
 			expected:     []bindings.StorkStructsTemporalNumericValueInput{},
 			wantError:    false,
 		},
@@ -330,13 +330,13 @@ func TestGetVerifyPublishersPayloads(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		priceUpdates map[types.InternalEncodedAssetId]types.AggregatedSignedPrice
+		priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
 		expected     []verifyPayload
 		wantError    bool
 	}{
 		{
 			name: "valid price update with signatures",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{1, 2, 3, 4}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
 						PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
@@ -344,7 +344,7 @@ func TestGetVerifyPublishersPayloads(t *testing.T) {
 					SignedPrices: []*types.PublisherSignedPrice{
 						{
 							PublisherKey:    "0x1234567890123456789012345678901234567890",
-							ExternalAssetId: "BTCUSD",
+							ExternalAssetID: "BTCUSD",
 							QuantizedPrice:  "1000000000000000000",
 							TimestampedSignature: types.TimestampedSignature{
 								TimestampNano: 1722632569208762117,
@@ -374,7 +374,7 @@ func TestGetVerifyPublishersPayloads(t *testing.T) {
 		},
 		{
 			name: "invalid merkle root",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				[32]byte{1, 2, 3, 4}: {
 					StorkSignedPrice: &types.StorkSignedPrice{
 						PublisherMerkleRoot: "invalid hex",
@@ -382,7 +382,7 @@ func TestGetVerifyPublishersPayloads(t *testing.T) {
 					SignedPrices: []*types.PublisherSignedPrice{
 						{
 							PublisherKey:    "0x1234567890123456789012345678901234567890",
-							ExternalAssetId: "BTCUSD",
+							ExternalAssetID: "BTCUSD",
 							QuantizedPrice:  "1000000000000000000",
 							TimestampedSignature: types.TimestampedSignature{
 								TimestampNano: 1722632569208762117,
@@ -401,7 +401,7 @@ func TestGetVerifyPublishersPayloads(t *testing.T) {
 		},
 		{
 			name:         "empty price updates",
-			priceUpdates: map[types.InternalEncodedAssetId]types.AggregatedSignedPrice{},
+			priceUpdates: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{},
 			expected:     []verifyPayload{},
 			wantError:    false,
 		},
