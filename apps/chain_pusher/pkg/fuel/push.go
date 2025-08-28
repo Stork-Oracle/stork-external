@@ -49,13 +49,7 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	// Extract private key from file content (assuming it's on the first line)
-	privateKeyStr := string(keyFileContent)
-	if len(privateKeyStr) > 0 && privateKeyStr[len(privateKeyStr)-1] == '\n' {
-		privateKeyStr = privateKeyStr[:len(privateKeyStr)-1]
-	}
-
-	interactor, err := NewContractInteractor(chainRpcUrl, contractAddress, privateKeyStr, logger)
+	interactor, err := NewContractInteractor(chainRpcUrl, contractAddress, keyFileContent, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}

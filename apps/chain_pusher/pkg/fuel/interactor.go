@@ -22,10 +22,15 @@ type ContractInteractor struct {
 func NewContractInteractor(
 	rpcUrl string,
 	contractAddress string,
-	privateKey string,
+	keyFileContent []byte,
 	logger zerolog.Logger,
 ) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "fuel-contract-interactor").Logger()
+
+	privateKey, err := loadPrivateKey(keyFileContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load private key: %w", err)
+	}
 
 	config := bindings.Config{
 		RpcUrl:          rpcUrl,
@@ -112,63 +117,10 @@ func (fci *ContractInteractor) BatchPushToContract(
 			continue
 		}
 
-		// Parse quantized price
-		quantizedPriceBigInt := new(big.Int)
-		quantizedPriceBigInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
-
-		// Parse signature components
-		rBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.R)
+		fuelInput, err := aggregatedSignedPriceToTemporalNumericValueInput(update)
 		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse signature R")
+			fci.logger.Error().Err(err).Str("asset_id", string(update.AssetId)).Msg("Failed to convert price update")
 			continue
-		}
-
-		sBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.S)
-		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse signature S")
-			continue
-		}
-
-		// Parse encoded asset ID
-		encodedAssetIdBytes, err := pusher.HexStringToByte32(string(update.StorkSignedPrice.EncodedAssetId))
-		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse encoded asset ID")
-			continue
-		}
-
-		// Parse publisher merkle root
-		publisherMerkleRootBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.PublisherMerkleRoot)
-		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse publisher merkle root")
-			continue
-		}
-
-		// Parse value compute algorithm hash
-		valueComputeAlgHashBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.StorkCalculationAlg.Checksum)
-		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse value compute alg hash")
-			continue
-		}
-
-		// Convert V from string to uint8 (remove "0x" prefix and parse as hex)
-		vInt, err := strconv.ParseInt(update.StorkSignedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
-		if err != nil {
-			fci.logger.Error().Err(err).Msg("Failed to parse signature V")
-			continue
-		}
-
-		// Convert internal format to Fuel format
-		fuelInput := bindings.TemporalNumericValueInput{
-			TemporalNumericValue: bindings.TemporalNumericValue{
-				TimestampNs:    uint64(update.StorkSignedPrice.TimestampedSignature.TimestampNano),
-				QuantizedValue: quantizedPriceBigInt,
-			},
-			Id:                  hex.EncodeToString(encodedAssetIdBytes[:]),
-			PublisherMerkleRoot: hex.EncodeToString(publisherMerkleRootBytes[:]),
-			ValueComputeAlgHash: hex.EncodeToString(valueComputeAlgHashBytes[:]),
-			R:                   hex.EncodeToString(rBytes[:]),
-			S:                   hex.EncodeToString(sBytes[:]),
-			V:                   uint8(vInt),
 		}
 
 		inputs = append(inputs, fuelInput)
@@ -201,4 +153,74 @@ func (fci *ContractInteractor) Close() {
 	if fci.contract != nil {
 		fci.contract.Close()
 	}
+}
+
+func aggregatedSignedPriceToTemporalNumericValueInput(update types.AggregatedSignedPrice) (bindings.TemporalNumericValueInput, error) {
+	// Parse quantized price
+	quantizedPriceBigInt := new(big.Int)
+	quantizedPriceBigInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
+
+	// Parse signature components
+	rBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.R)
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse signature R: %w", err)
+	}
+
+	sBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.TimestampedSignature.Signature.S)
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse signature S: %w", err)
+	}
+
+	// Parse encoded asset ID
+	encodedAssetIdBytes, err := pusher.HexStringToByte32(string(update.StorkSignedPrice.EncodedAssetId))
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse encoded asset ID: %w", err)
+	}
+
+	// Parse publisher merkle root
+	publisherMerkleRootBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.PublisherMerkleRoot)
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse publisher merkle root: %w", err)
+	}
+
+	// Parse value compute algorithm hash
+	valueComputeAlgHashBytes, err := pusher.HexStringToByte32(update.StorkSignedPrice.StorkCalculationAlg.Checksum)
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse value compute alg hash: %w", err)
+	}
+
+	// Convert V from string to uint8 (remove "0x" prefix and parse as hex)
+	vInt, err := strconv.ParseInt(update.StorkSignedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
+	if err != nil {
+		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse signature V: %w", err)
+	}
+
+	// Convert internal format to Fuel format
+	return bindings.TemporalNumericValueInput{
+		TemporalNumericValue: bindings.TemporalNumericValue{
+			TimestampNs:    uint64(update.StorkSignedPrice.TimestampedSignature.TimestampNano),
+			QuantizedValue: quantizedPriceBigInt,
+		},
+		Id:                  hex.EncodeToString(encodedAssetIdBytes[:]),
+		PublisherMerkleRoot: hex.EncodeToString(publisherMerkleRootBytes[:]),
+		ValueComputeAlgHash: hex.EncodeToString(valueComputeAlgHashBytes[:]),
+		R:                   hex.EncodeToString(rBytes[:]),
+		S:                   hex.EncodeToString(sBytes[:]),
+		V:                   uint8(vInt),
+	}, nil
+}
+
+func loadPrivateKey(keyFileContent []byte) (string, error) {
+	// Extract private key from file content (assuming it's on the first line)
+	privateKeyStr := string(keyFileContent)
+	if len(privateKeyStr) > 0 && privateKeyStr[len(privateKeyStr)-1] == '\n' {
+		privateKeyStr = privateKeyStr[:len(privateKeyStr)-1]
+	}
+	
+	// Validate that private key is not empty
+	if len(privateKeyStr) == 0 {
+		return "", fmt.Errorf("private key cannot be empty")
+	}
+	
+	return privateKeyStr, nil
 }
