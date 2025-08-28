@@ -25,6 +25,7 @@ func TestPluralize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result := Pluralize(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -53,10 +54,12 @@ func TestHexStringToBytes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := hexStringToBytes(tt.input)
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -87,10 +90,12 @@ func TestHexStringToFixedBytes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := hexStringToFixedBytes(tt.input, tt.length)
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -135,10 +140,12 @@ func TestHexStringToByte20(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := HexStringToByte20(tt.input)
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -185,10 +192,12 @@ func TestHexStringToByte32(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := HexStringToByte32(tt.input)
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -221,10 +230,12 @@ func TestHexStringToByteArray(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := HexStringToByteArray(tt.input)
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -313,6 +324,7 @@ func TestHexStringToInt32(t *testing.T) {
 
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 

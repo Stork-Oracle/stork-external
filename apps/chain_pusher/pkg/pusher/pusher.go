@@ -45,13 +45,16 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	assetIds := make([]types.AssetId, len(priceConfig.Assets))
 	encodedAssetIds := make([]types.InternalEncodedAssetId, len(priceConfig.Assets))
+
 	i := 0
 	for _, entry := range priceConfig.Assets {
 		assetIds[i] = entry.AssetId
+
 		encoded, err := HexStringToByte32(string(entry.EncodedAssetId))
 		if err != nil {
 			p.logger.Fatal().Err(err).Msg("Failed to convert asset ID")
 		}
+
 		encodedAssetIds[i] = encoded
 		i++
 	}
@@ -69,9 +72,11 @@ func (p *Pusher) Run(ctx context.Context) {
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
 	}
+
 	for encodedAssetId, value := range initialValues {
 		latestContractValueMap[encodedAssetId] = value
 	}
+
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
 	go p.interactor.ListenContractEvents(ctx, contractCh)
@@ -84,9 +89,11 @@ func (p *Pusher) Run(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			p.logger.Info().Msg("Pusher stopping due to context cancellation")
+
 			return
 		case <-ticker.C:
 			updates := make(map[types.InternalEncodedAssetId]types.AggregatedSignedPrice)
+
 			for encodedAssetId, latestStorkPrice := range latestStorkValueMap {
 				latestValue, ok := latestContractValueMap[encodedAssetId]
 				if !ok {
@@ -125,8 +132,10 @@ func (p *Pusher) Run(ctx context.Context) {
 			encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetId))
 			if err != nil {
 				p.logger.Error().Err(err).Msg("Failed to convert asset ID")
+
 				continue
 			}
+
 			latestStorkValueMap[encoded] = valueUpdate
 		// Handle contract updates
 		case chainUpdate := <-contractCh:
@@ -164,17 +173,21 @@ func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestSto
 	percentChange := new(big.Float).Mul(absRatio, big.NewFloat(100))
 
 	thresholdBig := big.NewFloat(changeThreshold)
+
 	return percentChange.Cmp(thresholdBig) > 0
 }
 
 func (p *Pusher) poll(encodedAssetIds []types.InternalEncodedAssetId, ch chan map[types.InternalEncodedAssetId]types.InternalTemporalNumericValue) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIds))
+
 	for range time.Tick(time.Duration(p.pollingPeriod) * time.Second) {
 		polledVals, err := p.interactor.PullValues(encodedAssetIds)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
+
 			continue
 		}
+
 		if len(polledVals) > 0 {
 			ch <- polledVals
 		}

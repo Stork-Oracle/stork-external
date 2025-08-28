@@ -39,9 +39,11 @@ func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIds 
 func (p *StorkAggregatorWebsocketClient) Run(priceChan chan types.AggregatedSignedPrice) {
 	for {
 		p.connect()
+
 		if p.conn != nil {
 			p.readLoop(priceChan)
 		}
+
 		p.handleDisconnect()
 	}
 }
@@ -56,12 +58,15 @@ func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.Aggregate
 		_, message, err := c.conn.ReadMessage()
 		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 			c.logger.Info().Msg("websocket closed")
+
 			return
 		} else if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
 			c.logger.Warn().Err(err).Msg("unexpected websocket close")
+
 			return
 		} else if err != nil {
 			c.logger.Error().Err(err).Msg("failed to read websocket message")
+
 			return
 		} else if strings.Contains(string(message), `"type":"subscribe"`) {
 			continue
@@ -70,6 +75,7 @@ func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.Aggregate
 		var oracleMsg types.OraclePricesMessage
 		if err := json.Unmarshal(message, &oracleMsg); err != nil {
 			c.logger.Error().Err(err).Msg("failed to unmarshal message")
+
 			continue
 		}
 
@@ -85,8 +91,8 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 		EnableCompression: true,
 	}
 
-	evmConn, _, err := dialer.Dial(fmt.Sprintf("%s/evm/subscribe", c.baseEndpoint), http.Header{
-		"Authorization": []string{fmt.Sprintf("Basic %s", c.authToken)},
+	evmConn, _, err := dialer.Dial(c.baseEndpoint+"/evm/subscribe", http.Header{
+		"Authorization": []string{"Basic " + c.authToken},
 	})
 	if err != nil {
 		if c.reconnAttempts < ReconnectionAttemptErrorThreshold {
@@ -94,25 +100,31 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 		} else {
 			c.logger.Error().Err(err).Msgf("failed to connect to websocket after %d attempts", ReconnectionAttemptErrorThreshold)
 		}
+
 		return
 	}
+
 	c.logger.Info().Msg("websocket connected")
 
 	subscribeMessage := SubscriberMessage{
 		Type: "subscribe",
 		Data: c.assetIds,
 	}
+
 	subscribeMessageBytes, err := json.Marshal(subscribeMessage)
 	if err != nil {
 		c.logger.Error().Err(err).Msg("failed to marshal subscribe message")
+
 		return
 	}
 
 	err = evmConn.WriteMessage(websocket.TextMessage, subscribeMessageBytes)
 	if err != nil {
 		c.logger.Error().Err(err).Msg("failed to subscribe to feeds")
+
 		return
 	}
+
 	c.logger.Info().Msgf("subscribed to %d feed%s", len(c.assetIds), Pluralize(len(c.assetIds)))
 
 	c.reconnAttempts = 0

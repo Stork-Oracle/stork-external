@@ -10,6 +10,7 @@ func Pluralize(n int) string {
 	if n == 1 {
 		return ""
 	}
+
 	return "s"
 }
 
@@ -50,6 +51,7 @@ func HexStringToByte20(input string) ([20]byte, error) {
 	}
 
 	copy(result[:], bytes)
+
 	return result, nil
 }
 
@@ -63,11 +65,13 @@ func HexStringToByte32(input string) ([32]byte, error) {
 	}
 
 	copy(result[:], bytes)
+
 	return result, nil
 }
 
 func HexStringToByteArray(hexString string) ([]byte, error) {
 	hexString = strings.TrimPrefix(hexString, "0x")
+
 	return hex.DecodeString(hexString)
 }
 
@@ -76,9 +80,11 @@ func HexStringToInt32(hexString string) ([32]int, error) {
 	if err != nil {
 		return [32]int{}, err
 	}
+
 	var result [32]int
 	for i, b := range bytes {
 		result[i] = int(b)
 	}
+
 	return result, nil
 }

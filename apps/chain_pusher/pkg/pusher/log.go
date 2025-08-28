@@ -17,4 +17,3 @@ func BaseLogger(application string) zerolog.Logger {
 func AppLogger(command string) zerolog.Logger {
 	return BaseLogger("stork-chain-pusher").With().Str("command", command).Logger()
 }
-
