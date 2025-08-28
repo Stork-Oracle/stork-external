@@ -9,6 +9,7 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/aptos-labs/aptos-go-sdk/crypto"
 	"github.com/rs/zerolog"
 )
 
@@ -28,7 +29,10 @@ func NewContractInteractor(
 ) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "aptos-contract-interactor").Logger()
 
-	privateKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
+	privateKey, err := loadPrivateKey(keyFileContent)
+	if err != nil {
+		return nil, err
+	}
 
 	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, privateKey)
 	if err != nil {
@@ -162,4 +166,18 @@ func (aci *ContractInteractor) aggregatedSignedPriceToAptosUpdateData(price type
 		S:                               s,
 		V:                               v,
 	}, nil
+}
+
+func loadPrivateKey(keyFileContent []byte) (*crypto.Ed25519PrivateKey, error) {
+	trimmedKey := strings.TrimSpace(strings.Split(string(keyFileContent), "\n")[0])
+	formattedPrivateKey, err := crypto.FormatPrivateKey(trimmedKey, crypto.PrivateKeyVariantEd25519)
+	if err != nil {
+		return nil, err
+	}
+	privateKey := &crypto.Ed25519PrivateKey{}
+	err = privateKey.FromHex(formattedPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	return privateKey, nil
 }

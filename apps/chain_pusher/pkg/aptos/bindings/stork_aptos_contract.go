@@ -45,7 +45,7 @@ type UpdateData struct {
 	V                               byte
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, key string) (*StorkContract, error) {
+func NewStorkContract(rpcUrl string, contractAddress string, key *crypto.Ed25519PrivateKey) (*StorkContract, error) {
 	config := aptos.NetworkConfig{
 		Name:       "",
 		ChainId:    0,
@@ -58,19 +58,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, key string) (*Stork
 		return nil, err
 	}
 
-	formattedPrivateKey, err := crypto.FormatPrivateKey(key, crypto.PrivateKeyVariantEd25519)
-	if err != nil {
-		return nil, err
-	}
-
-	privateKey := &crypto.Ed25519PrivateKey{}
-	err = privateKey.FromHex(formattedPrivateKey)
-
-	if err != nil {
-		return nil, err
-	}
-
-	account, err := aptos.NewAccountFromSigner(privateKey)
+	account, err := aptos.NewAccountFromSigner(key)
 	if err != nil {
 		return nil, err
 	}

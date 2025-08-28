@@ -1,110 +1,48 @@
-package sui
+package aptos
 
 import (
 	"math/big"
 	"testing"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestTemporalNumericValueToInternal(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		input    bindings.TemporalNumericValue
-		expected types.InternalTemporalNumericValue
-	}{
-		{
-			name: "positive value",
-			input: bindings.TemporalNumericValue{
-				TimestampNs: 1722632569208762117,
-				QuantizedValue: bindings.I128{
-					Magnitude: big.NewInt(1000000000000000000),
-					Negative:  false,
-				},
-			},
-			expected: types.InternalTemporalNumericValue{
-				TimestampNs:    1722632569208762117,
-				QuantizedValue: big.NewInt(1000000000000000000),
-			},
-		},
-		{
-			name: "negative value",
-			input: bindings.TemporalNumericValue{
-				TimestampNs: 1722632569208762117,
-				QuantizedValue: bindings.I128{
-					Magnitude: big.NewInt(1000000000000000000),
-					Negative:  true,
-				},
-			},
-			expected: types.InternalTemporalNumericValue{
-				TimestampNs:    1722632569208762117,
-				QuantizedValue: big.NewInt(-1000000000000000000),
-			},
-		},
-		{
-			name: "zero value",
-			input: bindings.TemporalNumericValue{
-				TimestampNs: 1000000000000,
-				QuantizedValue: bindings.I128{
-					Magnitude: big.NewInt(0),
-					Negative:  false,
-				},
-			},
-			expected: types.InternalTemporalNumericValue{
-				TimestampNs:    1000000000000,
-				QuantizedValue: big.NewInt(0),
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := temporalNumericValueToInternal(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestLoadPrivateKey(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name            string
-		keyFileContent  []byte
-		expectedAddress string
-		wantError       bool
+		name           string
+		keyFileContent []byte
+		expectedPubKey string
+		wantError      bool
 	}{
 		{
-			name:            "keypair prefix format",
-			keyFileContent:  []byte("address: 0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6\nkeypair: AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy\nflag: 0"),
-			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
-			wantError:       false,
+			name:           "valid private key",
+			keyFileContent: []byte("8a7b8c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b"),
+			expectedPubKey: "0x86f0cdc8814eee42f6ced3d82efd52e1b2a8d57210a21e59524457c85d3d6cb3",
+			wantError:      false,
 		},
 		{
-			name:            "single line without prefix",
-			keyFileContent:  []byte("AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy"),
-			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
-			wantError:       false,
+			name:           "valid private key with newline",
+			keyFileContent: []byte("8a7b8c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b\n"),
+			expectedPubKey: "0x86f0cdc8814eee42f6ced3d82efd52e1b2a8d57210a21e59524457c85d3d6cb3",
+			wantError:      false,
 		},
 		{
-			name:            "invalid keypair",
-			keyFileContent:  []byte("B2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy"),
-			expectedAddress: "",
-			wantError:       true,
+			name:           "invalid private key format",
+			keyFileContent: []byte("invalid_key"),
+			expectedPubKey: "",
+			wantError:      true,
 		},
 		{
-			name:            "empty content",
-			keyFileContent:  []byte(""),
-			expectedAddress: "",
-			wantError:       true,
+			name:           "empty content",
+			keyFileContent: []byte(""),
+			expectedPubKey: "",
+			wantError:      true,
 		},
 	}
 
@@ -119,17 +57,19 @@ func TestLoadPrivateKey(t *testing.T) {
 				return
 			}
 
+			pubKey := result.PubKey()
+			assert.Equal(t, tt.expectedPubKey, pubKey.ToHex())
 			require.NoError(t, err)
-			assert.Equal(t, tt.expectedAddress, result.Address)
+			assert.NotNil(t, result)
 		})
 	}
 }
 
-func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
+func TestAggregatedSignedPriceToAptosUpdateData(t *testing.T) {
 	t.Parallel()
 
 	logger := zerolog.New(nil)
-	sci := &ContractInteractor{
+	aci := &ContractInteractor{
 		logger: logger,
 	}
 
@@ -140,7 +80,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 		wantError bool
 	}{
 		{
-			name: "valid positive price",
+			name: "valid positive price update",
 			price: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
 					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
@@ -173,7 +113,7 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name: "valid negative price",
+			name: "valid negative price update",
 			price: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
 					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
@@ -272,29 +212,6 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name: "invalid V signature",
-			price: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "1000000000000000000",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "invalid",
-						},
-					},
-				},
-			},
-			expected:  bindings.UpdateData{},
-			wantError: true,
-		},
-		{
 			name: "invalid encoded asset id",
 			price: types.AggregatedSignedPrice{
 				StorkSignedPrice: &types.StorkSignedPrice{
@@ -317,13 +234,36 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			expected:  bindings.UpdateData{},
 			wantError: true,
 		},
+		{
+			name: "invalid V signature",
+			price: types.AggregatedSignedPrice{
+				StorkSignedPrice: &types.StorkSignedPrice{
+					EncodedAssetId:      "0x1234567890123456789012345678901234567890123456789012345678901234",
+					QuantizedPrice:      "1000000000000000000",
+					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
+					StorkCalculationAlg: types.StorkCalculationAlg{
+						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
+					},
+					TimestampedSignature: types.TimestampedSignature{
+						TimestampNano: 1722632569208762117,
+						Signature: types.EvmSignature{
+							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
+							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
+							V: "invalid",
+						},
+					},
+				},
+			},
+			expected:  bindings.UpdateData{},
+			wantError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := sci.aggregatedSignedPriceToUpdateData(tt.price)
+			result, err := aci.aggregatedSignedPriceToAptosUpdateData(tt.price)
 
 			if tt.wantError {
 				assert.Error(t, err)
