@@ -47,12 +47,12 @@ func NewContractInteractor(
 	rpcUrl string,
 	wsUrl string,
 	contractAddr string,
-	mnemonic []byte,
+	keyFileContent []byte,
 	verifyPublishers bool,
 	logger zerolog.Logger,
 	gasLimit uint64,
 ) (*ContractInteractor, error) {
-	privateKey, err := loadPrivateKey(mnemonic)
+	privateKey, err := loadPrivateKey(keyFileContent)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ func init() {
 	PushCmd.Flags().StringP(pusher.ChainWsUrlFlag, "u", "", pusher.ChainWsUrlDesc)
 	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
 	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	PushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
+	PushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	PushCmd.Flags().BoolP(pusher.VerifyPublishersFlag, "v", false, pusher.VerifyPublishersDesc)
 	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
 	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
@@ -32,7 +32,7 @@ func init() {
 	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
 	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
 	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	PushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+	PushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
 }
 
 func runPush(cmd *cobra.Command, args []string) {
@@ -42,7 +42,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	chainWsUrl, _ := cmd.Flags().GetString(pusher.ChainWsUrlFlag)
 	contractAddress, _ := cmd.Flags().GetString(pusher.ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
-	mnemonicFile, _ := cmd.Flags().GetString(pusher.MnemonicFileFlag)
+	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
 	verifyPublishers, _ := cmd.Flags().GetBool(pusher.VerifyPublishersFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
@@ -50,12 +50,12 @@ func runPush(cmd *cobra.Command, args []string) {
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)
 
-	mnemonic, err := os.ReadFile(mnemonicFile)
+	keyFileContent, err := os.ReadFile(privateKeyFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to read mnemonic file")
+		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	interactor, err := NewContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, mnemonic, verifyPublishers, logger, gasLimit)
+	interactor, err := NewContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, keyFileContent, verifyPublishers, logger, gasLimit)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
