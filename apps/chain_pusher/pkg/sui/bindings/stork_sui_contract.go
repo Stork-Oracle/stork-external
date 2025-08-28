@@ -83,12 +83,8 @@ type U128 struct {
 	Value []byte
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, key string) (*StorkContract, error) {
+func NewStorkContract(rpcUrl string, contractAddress string, account *account.Account) (*StorkContract, error) {
 	client, err := sui_client.Dial(rpcUrl)
-	if err != nil {
-		return nil, err
-	}
-	account, err := account.NewAccountWithKeystore(key)
 	if err != nil {
 		return nil, err
 	}

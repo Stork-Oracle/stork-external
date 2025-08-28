@@ -103,6 +103,87 @@ func TestTemporalNumericValueToInternal(t *testing.T) {
 	}
 }
 
+func TestLoadPrivateKey(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		keyFileContent  []byte
+		expectedAddress string
+		wantError       bool
+	}{
+		{
+			name:            "keypair prefix format",
+			keyFileContent:  []byte("address: 0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6\nkeypair: AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy\nflag: 0"),
+			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
+			wantError:       false,
+		},
+		{
+			name:            "keypair prefix with extra whitespace",
+			keyFileContent:  []byte("address: 0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6\nkeypair:      AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy   \nflag: 0"),
+			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
+			wantError:       false,
+		},
+		{
+			name:            "single line without prefix",
+			keyFileContent:  []byte("AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy"),
+			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
+			wantError:       false,
+		},
+		{
+			name:            "single line with whitespace",
+			keyFileContent:  []byte("  AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy  "),
+			expectedAddress: "0x5de3f40b2403956cbd852628dbe1dbe78cefce89ef6db8b38855203bcafe13e6",
+			wantError:       false,
+		},
+		{
+			name:            "single line with newline",
+			keyFileContent:  []byte("AJ2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy\n"),
+			expectedAddress: "",
+			wantError:       true,
+		},
+		{
+			name:            "Invalid keypair",
+			keyFileContent:  []byte("B2dgFpuOlnVZgraFYZAX18Detm77CMKYGdw3o5QdPDy"),
+			expectedAddress: "",
+			wantError:       true,
+		},
+		{
+			name:            "empty content",
+			keyFileContent:  []byte(""),
+			expectedAddress: "",
+			wantError:       true,
+		},
+		{
+			name:            "only whitespace",
+			keyFileContent:  []byte("   \n  \t  "),
+			expectedAddress: "",
+			wantError:       true,
+		},
+		{
+			name:            "keypair prefix with empty value",
+			keyFileContent:  []byte("keypair: "),
+			expectedAddress: "",
+			wantError:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := loadPrivateKey(tt.keyFileContent)
+
+			if tt.wantError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedAddress, result.Address)
+			}
+		})
+	}
+}
+
 func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 	t.Parallel()
 

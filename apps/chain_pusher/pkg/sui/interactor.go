@@ -9,6 +9,7 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/coming-chat/go-sui/v2/account"
 	"github.com/rs/zerolog"
 )
 
@@ -29,18 +30,11 @@ func NewContractInteractor(
 ) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
 
-	lines := strings.Split(string(keyFileContent), "\n")
-	var privateKey string
-	for _, line := range lines {
-		if strings.HasPrefix(line, "keypair:") {
-			privateKey = strings.TrimSpace(line[len("keypair:"):])
-			break
-		}
+	account, err := loadPrivateKey(keyFileContent)
+	if err != nil {
+		return nil, err
 	}
-	if privateKey == "" && len(lines) == 1 {
-		privateKey = strings.TrimSpace(lines[0])
-	}
-	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, privateKey)
+	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, account)
 	if err != nil {
 		return nil, err
 	}
@@ -172,4 +166,31 @@ func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.Agg
 		S:                               s,
 		V:                               v,
 	}, nil
+}
+
+func loadPrivateKey(keyFileContent []byte) (*account.Account, error) {
+	lines := strings.Split(string(keyFileContent), "\n")
+	if len(lines) == 0 {
+		return nil, fmt.Errorf("private key is empty")
+	}
+	var privateKey string
+	for _, line := range lines {
+		if strings.HasPrefix(line, "keypair:") {
+			privateKey = strings.TrimSpace(line[len("keypair:"):])
+			break
+		}
+	}
+	if privateKey == "" && len(lines) == 1 {
+		privateKey = strings.TrimSpace(lines[0])
+	}
+	privateKey = strings.TrimSpace(privateKey)
+
+	if len(privateKey) == 0 {
+		return nil, fmt.Errorf("private key is empty")
+	}
+	account, err := account.NewAccountWithKeystore(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return account, nil
 }
