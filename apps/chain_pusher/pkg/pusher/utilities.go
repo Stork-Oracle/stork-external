@@ -70,3 +70,15 @@ func HexStringToByteArray(hexString string) ([]byte, error) {
 	hexString = strings.TrimPrefix(hexString, "0x")
 	return hex.DecodeString(hexString)
 }
+
+func HexStringToInt32(hexString string) ([32]int, error) {
+	bytes, err := HexStringToByte32(hexString)
+	if err != nil {
+		return [32]int{}, err
+	}
+	var result [32]int
+	for i, b := range bytes {
+		result[i] = int(b)
+	}
+	return result, nil
+}

@@ -110,7 +110,7 @@ func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 
 func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.AggregatedSignedPrice) (bindings.UpdateData, error) {
 	signedPrice := price.StorkSignedPrice
-	assetId, err := hexStringToIntArray(string(signedPrice.EncodedAssetId))
+	assetId, err := pusher.HexStringToInt32(string(signedPrice.EncodedAssetId))
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert encoded asset id to byte array: %w", err)
 	}
@@ -120,27 +120,27 @@ func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.Agg
 		QuantizedValue: bindings.Int128(quantizedValue),
 		TimestampNs:    bindings.Uint64(timestampNs),
 	}
-	valueComputeAlgHash, err := hexStringToIntArray(signedPrice.StorkCalculationAlg.Checksum)
+	valueComputeAlgHash, err := pusher.HexStringToInt32(signedPrice.StorkCalculationAlg.Checksum)
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert value compute alg hash to byte array: %w", err)
 	}
-	publisherMerkleRoot, err := hexStringToIntArray(signedPrice.PublisherMerkleRoot)
+	publisherMerkleRoot, err := pusher.HexStringToInt32(signedPrice.PublisherMerkleRoot)
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert publisher merkle root to byte array: %w", err)
 	}
-	r, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.R)
+	r, err := pusher.HexStringToInt32(signedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert R to byte array: %w", err)
 	}
-	s, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.S)
+	s, err := pusher.HexStringToInt32(signedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert S to byte array: %w", err)
 	}
-	vInts, err := hexStringToIntArray(signedPrice.TimestampedSignature.Signature.V)
+	vInt, err := strconv.ParseInt(signedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
 	if err != nil {
 		return bindings.UpdateData{}, fmt.Errorf("failed to convert V to byte array: %w", err)
 	}
-	v := vInts[0]
+	v := int(vInt)
 	return bindings.UpdateData{
 		Id:                   assetId,
 		TemporalNumericValue: temporalNumericValue,
@@ -150,16 +150,4 @@ func (sci *ContractInteractor) aggregatedSignedPriceToUpdateData(price types.Agg
 		S:                    s,
 		V:                    v,
 	}, nil
-}
-
-func hexStringToIntArray(hexString string) ([32]int, error) {
-	bytes, err := pusher.HexStringToByteArray(hexString)
-	if err != nil {
-		return [32]int{}, fmt.Errorf("failed to convert hex string to byte array: %w", err)
-	}
-	var result [32]int
-	for i, b := range bytes {
-		result[i] = int(b)
-	}
-	return result, nil
 }

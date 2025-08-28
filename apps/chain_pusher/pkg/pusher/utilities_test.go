@@ -233,3 +233,91 @@ func TestHexStringToByteArray(t *testing.T) {
 		})
 	}
 }
+
+func TestHexStringToInt32(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		input     string
+		expected  [32]int
+		wantError bool
+	}{
+		{
+			name:      "valid 32 byte hex",
+			input:     "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			expected:  [32]int{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef},
+			wantError: false,
+		},
+		{
+			name:      "valid hex without prefix",
+			input:     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			expected:  [32]int{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef},
+			wantError: false,
+		},
+		{
+			name:      "all zeros",
+			input:     "0x0000000000000000000000000000000000000000000000000000000000000000",
+			expected:  [32]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			wantError: false,
+		},
+		{
+			name:      "all 255s",
+			input:     "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+			expected:  [32]int{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
+			wantError: false,
+		},
+		{
+			name:      "shorter than 32 bytes",
+			input:     "0x1234",
+			expected:  [32]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34},
+			wantError: false,
+		},
+		{
+			name:      "longer than 32 bytes",
+			input:     "0x123456789012345678901234567890123456789012345678901234567890123456789012",
+			expected:  [32]int{},
+			wantError: true,
+		},
+		{
+			name:      "invalid hex",
+			input:     "0xZZ",
+			expected:  [32]int{},
+			wantError: true,
+		},
+		{
+			name:      "odd length",
+			input:     "0x123",
+			expected:  [32]int{},
+			wantError: true,
+		},
+		{
+			name:      "empty string",
+			input:     "",
+			expected:  [32]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			wantError: false,
+		},
+		{
+			name:      "only prefix",
+			input:     "0x",
+			expected:  [32]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := HexStringToInt32(tt.input)
+
+			if tt.wantError {
+				assert.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
