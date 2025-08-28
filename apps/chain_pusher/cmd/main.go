@@ -1,8 +1,8 @@
+// Package main provides the CLI entrypoint for the chain pusher.
 package main
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos"
@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//nolint:gochecknoglobals
 var verbose bool
 
 func main() {
@@ -25,9 +26,12 @@ func main() {
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			//nolint:reassign
 			zerolog.TimeFieldFormat = time.RFC3339Nano
+			//nolint:reassign
 			zerolog.DurationFieldUnit = time.Nanosecond
+			//nolint:reassign
 			zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
 			var logLevel zerolog.Level
@@ -50,8 +54,8 @@ func main() {
 	rootCmd.AddCommand(aptos.PushCmd)
 	rootCmd.AddCommand(fuel.PushCmd)
 
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 }
