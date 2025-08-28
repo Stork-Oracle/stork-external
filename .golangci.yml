@@ -4,6 +4,7 @@ linters:
   disable:
     - testpackage
     - wsl
+    - depguard
   settings:
     errcheck:
       check-type-assertions: true
