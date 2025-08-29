@@ -31,7 +31,11 @@ type StorkAggregatorWebsocketClient struct {
 }
 
 // NewStorkAggregatorWebsocketClient creates a new StorkAggregatorWebsocketClient with the given parameters.
-func NewStorkAggregatorWebsocketClient(baseEndpoint, authToken string, assetIDs []types.AssetID, logger *zerolog.Logger) StorkAggregatorWebsocketClient {
+func NewStorkAggregatorWebsocketClient(
+	baseEndpoint, authToken string,
+	assetIDs []types.AssetID,
+	logger *zerolog.Logger,
+) StorkAggregatorWebsocketClient {
 	return StorkAggregatorWebsocketClient{
 		logger:       logger.With().Str("component", "stork-ws").Logger(),
 		baseEndpoint: baseEndpoint,

@@ -24,7 +24,12 @@ type Pusher struct {
 }
 
 // NewPusher creates a new Pusher with the given parameters.
-func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingPeriod int, interactor types.ContractInteractor, logger *zerolog.Logger) *Pusher {
+func NewPusher(
+	storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string,
+	batchingWindow, pollingPeriod int,
+	interactor types.ContractInteractor,
+	logger *zerolog.Logger,
+) *Pusher {
 	return &Pusher{
 		storkWsEndpoint: storkWsEndpoint,
 		storkAuth:       storkAuth,
@@ -99,7 +104,8 @@ func (p *Pusher) Run(ctx context.Context) {
 			for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
 				latestValue, ok := latestContractValueMap[encodedAssetID]
 				if !ok {
-					p.logger.Debug().Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+					p.logger.Debug().
+						Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
 					updates[encodedAssetID] = latestStorkPrice
 				} else if shouldUpdateAsset(
 					latestValue,
@@ -149,7 +155,12 @@ func (p *Pusher) Run(ctx context.Context) {
 	}
 }
 
-func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestStorkPrice types.AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
+func shouldUpdateAsset(
+	latestValue types.InternalTemporalNumericValue,
+	latestStorkPrice types.AggregatedSignedPrice,
+	fallbackPeriodSecs uint64,
+	changeThreshold float64,
+) bool {
 	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
 		return true
 	}
@@ -180,7 +191,10 @@ func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestSto
 	return percentChange.Cmp(thresholdBig) > 0
 }
 
-func (p *Pusher) poll(encodedAssetIDs []types.InternalEncodedAssetID, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue) {
+func (p *Pusher) poll(
+	encodedAssetIDs []types.InternalEncodedAssetID,
+	ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIDs))
 
 	for range time.Tick(time.Duration(p.pollingPeriod) * time.Second) {
