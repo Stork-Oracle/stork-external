@@ -149,6 +149,11 @@ formatters:
     - gofmt
     - gofumpt
     - goimports
+    - golines
+  settings:
+    golines:
+      max-len: 120
+      reformat-tags: false
   exclusions:
     generated: lax
     paths:
