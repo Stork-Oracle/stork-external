@@ -131,6 +131,7 @@ linters:
         source: ^func Test
       - linters:
           - exhaustruct
+          - lll
         path: _test.go
       - linters:
           - dupl
