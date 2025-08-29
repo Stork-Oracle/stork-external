@@ -12,6 +12,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/yaml.v2"
+
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
 )
 
 type AssetPushConfig struct {
@@ -36,20 +39,14 @@ type EvmSelfServeConfig struct {
 }
 
 type AssetPushState struct {
-	AssetId      string
-	Config       AssetPushConfig
-	LastPrice    *big.Float
-	LastPushTime time.Time
-	PendingValue *ValueUpdate
-	NextPushTime time.Time
+	AssetId                    string
+	Config                     AssetPushConfig
+	LastPrice                  *big.Float
+	LastPushTime               time.Time
+	PendingSignedPriceUpdate   *publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
+	NextPushTime               time.Time
 }
 
-type ValueUpdate struct {
-	Asset                string
-	Value                *big.Float
-	PublishTimestampNano int64
-	Metadata             map[string]any
-}
 
 func LoadAssetConfig(filename string) (*AssetConfigFile, error) {
 	data, err := os.ReadFile(filename)

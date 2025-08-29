@@ -49,4 +49,4 @@ clean: clean-rust
 
 # pass in a target to run-local to run a specific binary
 run-local: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
-	@$(GO) run ./apps/cmd/$(target) $(args)
+	@$(GO) run ./apps/$(target)/cmd $(args)

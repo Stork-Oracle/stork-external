@@ -12,6 +12,9 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
 )
 
 const (
@@ -21,34 +24,21 @@ const (
 	WriteTimeout     = 10 * time.Second
 )
 
-type WebsocketMessage[T any] struct {
-	Type    string `json:"type"`
-	Error   string `json:"error,omitempty"`
-	TraceId string `json:"trace_id,omitempty"`
-	Data    T      `json:"data,omitempty"`
-}
-
-type ValueUpdateMessage struct {
-	PublishTimestampNano int64          `json:"t"`
-	Asset                string         `json:"a"`
-	Value                any            `json:"v"`
-	Metadata             map[string]any `json:"m,omitempty"`
-}
 
 type WebsocketServer struct {
 	port           string
 	upgrader       websocket.Upgrader
-	valueUpdateCh  chan ValueUpdate
+	signedPriceUpdateCh  chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
 	logger         zerolog.Logger
 	server         *http.Server
 	mutex          sync.RWMutex
 	connections    map[*websocket.Conn]bool
 }
 
-func NewWebsocketServer(port string, valueUpdateCh chan ValueUpdate) *WebsocketServer {
+func NewWebsocketServer(port string, signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) *WebsocketServer {
 	return &WebsocketServer{
 		port:          port,
-		valueUpdateCh: valueUpdateCh,
+		signedPriceUpdateCh: signedPriceUpdateCh,
 		logger:        log.With().Str("component", "websocket_server").Logger(),
 		connections:   make(map[*websocket.Conn]bool),
 		upgrader: websocket.Upgrader{
@@ -138,49 +128,31 @@ func (ws *WebsocketServer) handleConnection(conn *websocket.Conn) {
 }
 
 func (ws *WebsocketServer) processMessage(data []byte) error {
-	var msg WebsocketMessage[[]ValueUpdateMessage]
+	var msg publisher_agent.WebsocketMessage[publisher_agent.SignedPriceUpdateBatch[*signer.EvmSignature]]
 	if err := json.Unmarshal(data, &msg); err != nil {
 		return fmt.Errorf("failed to unmarshal message: %w", err)
 	}
 
-	if msg.Type != "prices" {
+	if msg.Type != "signed_prices" {
 		return fmt.Errorf("unsupported message type: %s", msg.Type)
 	}
 
-	for _, valueMsg := range msg.Data {
-		valueUpdate, err := ws.convertToValueUpdate(valueMsg)
-		if err != nil {
-			return fmt.Errorf("failed to convert value update: %w", err)
-		}
-
+	for assetId, signedPriceUpdate := range msg.Data {
 		select {
-		case ws.valueUpdateCh <- *valueUpdate:
+		case ws.signedPriceUpdateCh <- signedPriceUpdate:
 			ws.logger.Debug().
-				Str("asset", valueUpdate.Asset).
-				Str("value", valueUpdate.Value.Text('f', 6)).
-				Int64("timestamp", valueUpdate.PublishTimestampNano).
-				Msg("Received value update")
+				Str("asset", string(assetId)).
+				Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
+				Int64("timestamp", signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano).
+				Msg("Received signed price update")
 		default:
-			ws.logger.Warn().Str("asset", valueUpdate.Asset).Msg("Value update channel full, dropping message")
+			ws.logger.Warn().Str("asset", string(assetId)).Msg("Signed price update channel full, dropping message")
 		}
 	}
 
 	return nil
 }
 
-func (ws *WebsocketServer) convertToValueUpdate(valueMsg ValueUpdateMessage) (*ValueUpdate, error) {
-	bigFloatValue, err := ws.getBigFloatValue(valueMsg.Value)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ValueUpdate{
-		Asset:                valueMsg.Asset,
-		Value:                bigFloatValue,
-		PublishTimestampNano: valueMsg.PublishTimestampNano,
-		Metadata:             valueMsg.Metadata,
-	}, nil
-}
 
 func (ws *WebsocketServer) getBigFloatValue(value any) (*big.Float, error) {
 	switch v := value.(type) {
@@ -203,7 +175,7 @@ func (ws *WebsocketServer) getBigFloatValue(value any) (*big.Float, error) {
 }
 
 func (ws *WebsocketServer) sendErrorResponse(conn *websocket.Conn, errMsg string) {
-	response := WebsocketMessage[interface{}]{
+	response := publisher_agent.WebsocketMessage[interface{}]{
 		Type:  "error",
 		Error: errMsg,
 	}

@@ -8,6 +8,10 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"fmt"
 )
 
 type EvmSelfServeRunner struct {
@@ -15,7 +19,7 @@ type EvmSelfServeRunner struct {
 	logger             zerolog.Logger
 	websocketServer    *WebsocketServer
 	contractInteractor *SelfServeContractInteractor
-	valueUpdateCh      chan ValueUpdate
+	signedPriceUpdateCh      chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
 	assetStates        map[string]*AssetPushState
 	assetStatesMutex   sync.RWMutex
 	ctx                context.Context
@@ -28,7 +32,7 @@ func NewEvmSelfServeRunner(config *EvmSelfServeConfig) *EvmSelfServeRunner {
 	return &EvmSelfServeRunner{
 		config:           config,
 		logger:           log.With().Str("component", "evm_runner").Logger(),
-		valueUpdateCh:    make(chan ValueUpdate, 1000),
+		signedPriceUpdateCh:    make(chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature], 1000),
 		assetStates:      make(map[string]*AssetPushState),
 		assetStatesMutex: sync.RWMutex{},
 		ctx:              ctx,
@@ -59,7 +63,7 @@ func (r *EvmSelfServeRunner) Run() {
 	defer r.contractInteractor.Close()
 
 	// Initialize websocket server
-	r.websocketServer = NewWebsocketServer(r.config.WebsocketPort, r.valueUpdateCh)
+	r.websocketServer = NewWebsocketServer(r.config.WebsocketPort, r.signedPriceUpdateCh)
 
 	// Start processing goroutines
 	go r.processValueUpdates()
@@ -91,7 +95,7 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 			Config:       assetConfig,
 			LastPrice:    nil,
 			LastPushTime: time.Time{},
-			PendingValue: nil,
+			PendingSignedPriceUpdate: nil,
 			NextPushTime: time.Now().Add(time.Duration(assetConfig.PushIntervalSec) * time.Second),
 		}
 
@@ -112,36 +116,44 @@ func (r *EvmSelfServeRunner) processValueUpdates() {
 			r.logger.Info().Msg("Value update processor stopped")
 			return
 
-		case valueUpdate := <-r.valueUpdateCh:
-			r.handleValueUpdate(valueUpdate)
+		case signedPriceUpdate := <-r.signedPriceUpdateCh:
+			r.handleSignedPriceUpdate(signedPriceUpdate)
 		}
 	}
 }
 
-func (r *EvmSelfServeRunner) handleValueUpdate(valueUpdate ValueUpdate) {
+func (r *EvmSelfServeRunner) handleSignedPriceUpdate(signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
-	assetState, exists := r.assetStates[valueUpdate.Asset]
+	assetId := string(signedPriceUpdate.AssetId)
+	assetState, exists := r.assetStates[assetId]
 	if !exists {
-		r.logger.Debug().Str("asset", valueUpdate.Asset).Msg("Received update for unconfigured asset")
+		r.logger.Debug().Str("asset", assetId).Msg("Received update for unconfigured asset")
+		return
+	}
+
+	// Convert quantized price to big.Float for comparison
+	priceValue, err := r.convertQuantizedPriceToBigFloat(string(signedPriceUpdate.SignedPrice.QuantizedPrice))
+	if err != nil {
+		r.logger.Error().Err(err).Str("asset", assetId).Msg("Failed to convert quantized price")
 		return
 	}
 
 	r.logger.Debug().
-		Str("asset", valueUpdate.Asset).
-		Str("value", valueUpdate.Value.Text('f', 6)).
-		Msg("Processing value update")
+		Str("asset", assetId).
+		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
+		Msg("Processing signed price update")
 
 	// Update pending value
-	assetState.PendingValue = &valueUpdate
+	assetState.PendingSignedPriceUpdate = &signedPriceUpdate
 
 	// Check if we should trigger a push based on price change
-	if r.shouldPushBasedOnDelta(assetState, valueUpdate.Value) {
+	if r.shouldPushBasedOnDelta(assetState, priceValue) {
 		r.logger.Info().
-			Str("asset", valueUpdate.Asset).
+			Str("asset", assetId).
 			Str("old_price", assetState.LastPrice.Text('f', 6)).
-			Str("new_price", valueUpdate.Value.Text('f', 6)).
+			Str("new_price", priceValue.Text('f', 6)).
 			Msg("Triggering push due to price delta threshold")
 
 		r.triggerPush(assetState)
@@ -188,7 +200,7 @@ func (r *EvmSelfServeRunner) checkTimerTriggers() {
 
 	now := time.Now()
 	for assetId, state := range r.assetStates {
-		if now.After(state.NextPushTime) && state.PendingValue != nil {
+		if now.After(state.NextPushTime) && state.PendingSignedPriceUpdate != nil {
 			r.logger.Info().
 				Str("asset", assetId).
 				Time("next_push_time", state.NextPushTime).
@@ -200,19 +212,16 @@ func (r *EvmSelfServeRunner) checkTimerTriggers() {
 }
 
 func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
-	if state.PendingValue == nil {
+	if state.PendingSignedPriceUpdate == nil {
 		return
 	}
-
-	// Generate nonce for this push
-	nonce := GenerateNonce()
 
 	// Push to contract
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		err := r.contractInteractor.PushValue(ctx, state.Config, state.PendingValue.Value, nonce)
+		err := r.contractInteractor.PushSignedPriceUpdate(ctx, state.Config, *state.PendingSignedPriceUpdate)
 		if err != nil {
 			r.logger.Error().
 				Err(err).
@@ -221,12 +230,13 @@ func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
 			return
 		}
 
-		// Update state after successful push
+		// Update state after successful push  
 		r.assetStatesMutex.Lock()
-		state.LastPrice = new(big.Float).Set(state.PendingValue.Value)
+		priceValue, _ := r.convertQuantizedPriceToBigFloat(string(state.PendingSignedPriceUpdate.SignedPrice.QuantizedPrice))
+		state.LastPrice = priceValue
 		state.LastPushTime = time.Now()
 		state.NextPushTime = time.Now().Add(time.Duration(state.Config.PushIntervalSec) * time.Second)
-		state.PendingValue = nil
+		state.PendingSignedPriceUpdate = nil
 		r.assetStatesMutex.Unlock()
 
 		r.logger.Info().
@@ -234,4 +244,12 @@ func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
 			Str("value", state.LastPrice.Text('f', 6)).
 			Msg("Successfully pushed value to contract")
 	}()
+}
+
+func (r *EvmSelfServeRunner) convertQuantizedPriceToBigFloat(quantizedPrice string) (*big.Float, error) {
+	bf, success := new(big.Float).SetString(quantizedPrice)
+	if !success {
+		return nil, fmt.Errorf("failed to convert quantized price to big.Float: %s", quantizedPrice)
+	}
+	return bf, nil
 }

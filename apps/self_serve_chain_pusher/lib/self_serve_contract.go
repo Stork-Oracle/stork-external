@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/big"
 	"time"
+	"encoding/hex"
+	"strings"
 
 	contract_bindings "github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/lib/contract_bindings/evm"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -13,6 +15,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
+
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
 )
 
 const (
@@ -140,6 +145,110 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 	}
 
 	return fmt.Errorf("failed to push value after %d attempts: %w", maxRetryAttempts, lastErr)
+}
+
+func (ci *SelfServeContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset AssetPushConfig, signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) error {
+	ci.logger.Info().
+		Str("asset", string(signedPriceUpdate.AssetId)).
+		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
+		Str("encoded_asset_id", asset.EncodedAssetId).
+		Msg("Pushing signed price update to self-serve contract")
+
+	// Convert the signed price update to contract input
+	updateInput, err := ci.convertSignedPriceUpdateToInput(signedPriceUpdate, asset)
+	if err != nil {
+		return fmt.Errorf("failed to convert signed price update: %w", err)
+	}
+
+	// Retry logic for transaction submission
+	var lastErr error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetryAttempts; attempt++ {
+		if attempt > 0 {
+			ci.logger.Warn().
+				Int("attempt", attempt+1).
+				Dur("backoff", backoff).
+				Err(lastErr).
+				Msg("Retrying push signed price update transaction")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
+		}
+
+		txHash, err := ci.submitPushValueTransaction(ctx, []contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{updateInput})
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		ci.logger.Info().
+			Str("asset", string(signedPriceUpdate.AssetId)).
+			Str("tx_hash", txHash.Hex()).
+			Msg("Successfully submitted signed price update transaction")
+		return nil
+	}
+
+	return fmt.Errorf("failed to push signed price update after %d attempts: %w", maxRetryAttempts, lastErr)
+}
+
+func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
+	signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature],
+	asset AssetPushConfig,
+) (contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput, error) {
+	// Convert quantized price to big.Int
+	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
+	if !success {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+			fmt.Errorf("failed to convert quantized price to big.Int: %s", signedPriceUpdate.SignedPrice.QuantizedPrice)
+	}
+
+	// Create the temporal numeric value using the signed data timestamp
+	temporalValue := contract_bindings.SelfServeStorkStructsTemporalNumericValue{
+		TimestampNs:    uint64(signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano),
+		QuantizedValue: quantizedValue,
+	}
+
+	// Parse the publisher key
+	pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(string(signedPriceUpdate.SignedPrice.PublisherKey), "0x"))
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+			fmt.Errorf("failed to decode publisher key: %w", err)
+	}
+	var pubKeyAddress common.Address
+	copy(pubKeyAddress[:], pubKeyBytes)
+
+	// Parse the signature components
+	rBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R, "0x"))
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+			fmt.Errorf("failed to decode signature R: %w", err)
+	}
+	sBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S, "0x"))
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+			fmt.Errorf("failed to decode signature S: %w", err)
+	}
+	vBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V, "0x"))
+	if err != nil {
+		return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+			fmt.Errorf("failed to decode signature V: %w", err)
+	}
+
+	// Convert to fixed-size arrays
+	var r [32]byte
+	var s [32]byte
+	copy(r[:], rBytes)
+	copy(s[:], sBytes)
+	v := vBytes[0] // V is a single byte
+
+	return contract_bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{
+		TemporalNumericValue: temporalValue,
+		PubKey:               pubKeyAddress,
+		AssetPairId:          asset.AssetId,
+		R:                    r,
+		S:                    s,
+		V:                    v,
+	}, nil
 }
 
 func (ci *SelfServeContractInteractor) createUpdateInput(
