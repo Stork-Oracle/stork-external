@@ -77,12 +77,19 @@ linters:
     reassign:
       patterns:
         - ".*"
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - ["RPC", "URL"]
     staticcheck:
       checks:
         - all
         - -ST1000
         - -ST1016
         - -QF1008
+        # Taken care of by revive var-naming
+        - -ST1003
     tagliatelle:
       case:
         rules:
