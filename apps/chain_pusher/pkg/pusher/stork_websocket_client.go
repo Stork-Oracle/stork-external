@@ -83,7 +83,9 @@ func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.Aggregate
 		}
 
 		var oracleMsg types.OraclePricesMessage
-		if err := json.Unmarshal(message, &oracleMsg); err != nil {
+
+		err = json.Unmarshal(message, &oracleMsg)
+		if err != nil {
 			c.logger.Error().Err(err).Msg("failed to unmarshal message")
 
 			continue

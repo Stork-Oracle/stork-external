@@ -57,7 +57,9 @@ func (p *Pusher) Run(ctx context.Context) {
 	for _, entry := range priceConfig.Assets {
 		assetIDs[i] = entry.AssetID
 
-		encoded, err := HexStringToByte32(string(entry.EncodedAssetID))
+		var encoded [32]byte
+
+		encoded, err = HexStringToByte32(string(entry.EncodedAssetID))
 		if err != nil {
 			p.logger.Fatal().Err(err).Msg("Failed to convert asset ID")
 		}
@@ -118,7 +120,7 @@ func (p *Pusher) Run(ctx context.Context) {
 			}
 
 			if len(updates) > 0 {
-				err := p.interactor.BatchPushToContract(updates)
+				err = p.interactor.BatchPushToContract(updates)
 				if err != nil {
 					p.logger.Error().Err(err).Msg("Failed to push batch to contract")
 				}
@@ -138,7 +140,9 @@ func (p *Pusher) Run(ctx context.Context) {
 			}
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
-			encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetID))
+			var encoded [32]byte
+
+			encoded, err = HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetID))
 			if err != nil {
 				p.logger.Error().Err(err).Msg("Failed to convert asset ID")
 
@@ -161,6 +165,7 @@ func shouldUpdateAsset(
 	fallbackPeriodSecs uint64,
 	changeThreshold float64,
 ) bool {
+
 	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
 		return true
 	}
