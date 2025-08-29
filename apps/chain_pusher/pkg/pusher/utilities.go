@@ -51,6 +51,7 @@ func hexStringToFixedBytes(input string, length int) ([]byte, error) {
 func HexStringToByte20(input string) ([20]byte, error) {
 	var result [20]byte
 
+	//nolint:mnd // 20 is not magic here, but rather is clearly tied to the purpose of this function
 	bytes, err := hexStringToFixedBytes(input, 20)
 	if err != nil {
 		return result, err
@@ -65,6 +66,7 @@ func HexStringToByte20(input string) ([20]byte, error) {
 func HexStringToByte32(input string) ([32]byte, error) {
 	var result [32]byte
 
+	//nolint:mnd // 32 is not magic here, but rather is clearly tied to the purpose of this function
 	bytes, err := hexStringToFixedBytes(input, 32)
 	if err != nil {
 		return result, err

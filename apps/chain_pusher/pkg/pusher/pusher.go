@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
 	storkWsEndpoint string
 	storkAuth       string
@@ -22,6 +23,7 @@ type Pusher struct {
 	logger          *zerolog.Logger
 }
 
+// NewPusher creates a new Pusher with the given parameters.
 func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string, batchingWindow, pollingPeriod int, interactor types.ContractInteractor, logger *zerolog.Logger) *Pusher {
 	return &Pusher{
 		storkWsEndpoint: storkWsEndpoint,
@@ -36,6 +38,7 @@ func NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetCo
 	}
 }
 
+// Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
 	priceConfig, err := types.LoadConfig(p.assetConfigFile)
 	if err != nil {
@@ -116,6 +119,7 @@ func (p *Pusher) Run(ctx context.Context) {
 				// include this to prevent race conditions
 				for encodedAssetID, update := range updates {
 					quantizedValInt := new(big.Int)
+					//nolint:mnd // Base number
 					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
 					latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
@@ -146,7 +150,7 @@ func (p *Pusher) Run(ctx context.Context) {
 }
 
 func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestStorkPrice types.AggregatedSignedPrice, fallbackPeriodSecs uint64, changeThreshold float64) bool {
-	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*1000000000 {
+	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
 		return true
 	}
 
@@ -168,7 +172,7 @@ func shouldUpdateAsset(latestValue types.InternalTemporalNumericValue, latestSto
 	ratio := new(big.Float).Quo(absDifference, quantizedCurrVal)
 	absRatio := new(big.Float).Abs(ratio)
 
-	// Multiply by 100 to get the percentage
+	//nolint:mnd // The purpose of 100 here is evident in order to get a percentage
 	percentChange := new(big.Float).Mul(absRatio, big.NewFloat(100))
 
 	thresholdBig := big.NewFloat(changeThreshold)

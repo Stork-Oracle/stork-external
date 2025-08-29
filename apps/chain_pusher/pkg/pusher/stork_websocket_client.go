@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	ReconnectInterval                 = 1 * time.Second
+	// ReconnectInterval is the interval at which the client will attempt to reconnect to the websocket.
+	ReconnectInterval = 1 * time.Second
+	// ReconnectionAttemptErrorThreshold is the number of attempts at which the client will give up and log an error.
 	ReconnectionAttemptErrorThreshold = 5
 )
 
