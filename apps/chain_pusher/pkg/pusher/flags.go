@@ -1,5 +1,11 @@
 package pusher
 
+// Utility defaults for the pusher.
+const (
+	DefaultBatchingWindow = 5
+	DefaultPollingPeriod  = 3
+)
+
 const (
 	StorkWebsocketEndpointFlag = "stork-ws-endpoint"
 	//nolint:gosec // This is not a credential
