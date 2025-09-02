@@ -130,6 +130,7 @@ linters:
     rules:
       - linters:
           - funlen
+          - maintidx
         source: ^func Test
       - linters:
           - exhaustruct
@@ -141,9 +142,10 @@ linters:
           - paralleltest
         path: lib/service
       - linters:
-          - revive
-        path: 'types/*'
-        text: 'var-naming: avoid meaningless package names'
+          - mnd
+          - funlen
+          - exhaustruct
+        path: testutil/*
     paths:
       - mock_*.go
       - third_party$
