@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-var ErrInputTooLong = errors.New("input string too long for specified length")
+var (
+	ErrInputTooLong  = errors.New("input string too long for specified length")
+	ErrNegativeInput = errors.New("input is negative")
+)
 
 // Pluralize returns an empty string if n is 1, otherwise returns "s".
 func Pluralize(n int) string {
@@ -104,4 +107,12 @@ func HexStringToInt32(hexString string) ([32]int, error) {
 	}
 
 	return result, nil
+}
+
+func SafeInt64ToUint64(input int64) (uint64, error) {
+	if input < 0 {
+		return 0, ErrNegativeInput
+	}
+
+	return uint64(input), nil
 }

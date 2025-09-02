@@ -564,3 +564,50 @@ func TestHexStringToInt32(t *testing.T) {
 		})
 	}
 }
+
+func TestSafeInt64ToUint64(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		input     int64
+		expected  uint64
+		wantError bool
+	}{
+		{
+			name:      "positive input",
+			input:     1,
+			expected:  1,
+			wantError: false,
+		},
+		{
+			name:      "negative input",
+			input:     -1,
+			expected:  0,
+			wantError: true,
+		},
+		{
+			name:      "zero input",
+			input:     0,
+			expected:  0,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := SafeInt64ToUint64(tt.input)
+
+			if tt.wantError {
+				assert.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
