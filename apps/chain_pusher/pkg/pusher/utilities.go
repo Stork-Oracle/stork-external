@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var ErrInputTooLong = errors.New("input string too long for specified length")
+
 // Pluralize returns an empty string if n is 1, otherwise returns "s".
 func Pluralize(n int) string {
 	if n == 1 {
@@ -37,7 +39,7 @@ func hexStringToFixedBytes(input string, length int) ([]byte, error) {
 	}
 
 	if len(bytes) > length {
-		return nil, errors.New("input string too long for specified length")
+		return nil, ErrInputTooLong
 	}
 
 	// Create a fixed-size byte array and copy the input bytes into it

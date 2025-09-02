@@ -2,14 +2,15 @@ package pusher
 
 const (
 	StorkWebsocketEndpointFlag = "stork-ws-endpoint"
-	StorkAuthCredentialsFlag   = "stork-auth-credentials"
-	ChainRpcUrlFlag            = "chain-rpc-url"
-	ChainGrpcUrlFlag           = "chain-grpc-url"
-	ChainWsUrlFlag             = "chain-ws-url"
-	ContractAddressFlag        = "contract-address"
-	AssetConfigFileFlag        = "asset-config-file"
-	MnemonicFileFlag           = "mnemonic-file"
-	PrivateKeyFileFlag         = "private-key-file"
+	//nolint:gosec // This is not a credential
+	StorkAuthCredentialsFlag = "stork-auth-credentials"
+	ChainRpcUrlFlag          = "chain-rpc-url"
+	ChainGrpcUrlFlag         = "chain-grpc-url"
+	ChainWsUrlFlag           = "chain-ws-url"
+	ContractAddressFlag      = "contract-address"
+	AssetConfigFileFlag      = "asset-config-file"
+	MnemonicFileFlag         = "mnemonic-file"
+	PrivateKeyFileFlag       = "private-key-file"
 )
 
 const (
@@ -34,21 +35,22 @@ const (
 // Descriptions for the flags.
 const (
 	StorkWebsocketEndpointDesc = "Stork WebSocket endpoint"
-	StorkAuthCredentialsDesc   = "Stork auth credentials - base64(username:password)"
-	ChainRpcUrlDesc            = "Chain RPC URL"
-	ChainGrpcUrlDesc           = "Chain gRPC URL"
-	ChainWsUrlDesc             = "Chain WebSocket URL"
-	ContractAddressDesc        = "Contract address"
-	AssetConfigFileDesc        = "Asset config file"
-	MnemonicFileDesc           = "Mnemonic file"
-	PrivateKeyFileDesc         = "Private key file"
-	VerifyPublishersDesc       = "Verify the publisher signed prices before pushing stork signed value to contract"
-	BatchingWindowDesc         = "Batching window (seconds)"
-	PollingPeriodDesc          = "Asset Polling Period (seconds)"
-	LimitPerSecondDesc         = "JSON RPC call limit per second"
-	BurstLimitDesc             = "JSON RPC call Burst limit"
-	BatchSizeDesc              = "Batch size between 1 and 4"
-	GasLimitDesc               = "Gas limit (0 to use estimate)"
+	//nolint:gosec // This is an example of credentials, not actual credentials
+	StorkAuthCredentialsDesc = "Stork auth credentials - base64(username:password)"
+	ChainRpcUrlDesc          = "Chain RPC URL"
+	ChainGrpcUrlDesc         = "Chain gRPC URL"
+	ChainWsUrlDesc           = "Chain WebSocket URL"
+	ContractAddressDesc      = "Contract address"
+	AssetConfigFileDesc      = "Asset config file"
+	MnemonicFileDesc         = "Mnemonic file"
+	PrivateKeyFileDesc       = "Private key file"
+	VerifyPublishersDesc     = "Verify the publisher signed prices before pushing stork signed value to contract"
+	BatchingWindowDesc       = "Batching window (seconds)"
+	PollingPeriodDesc        = "Asset Polling Period (seconds)"
+	LimitPerSecondDesc       = "JSON RPC call limit per second"
+	BurstLimitDesc           = "JSON RPC call Burst limit"
+	BatchSizeDesc            = "Batch size between 1 and 4"
+	GasLimitDesc             = "Gas limit (0 to use estimate)"
 )
 
 // Cosmwasm descriptions.

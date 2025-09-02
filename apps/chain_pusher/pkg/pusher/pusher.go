@@ -2,12 +2,12 @@ package pusher
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 // Pusher is a struct that contains the configuration for the Pusher.
@@ -45,27 +45,9 @@ func NewPusher(
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
-	priceConfig, err := types.LoadConfig(p.assetConfigFile)
+	priceConfig, assetIDs, encodedAssetIDs, err := p.initializeAssets()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load price config")
-	}
-
-	assetIDs := make([]types.AssetID, len(priceConfig.Assets))
-	encodedAssetIDs := make([]types.InternalEncodedAssetID, len(priceConfig.Assets))
-
-	i := 0
-	for _, entry := range priceConfig.Assets {
-		assetIDs[i] = entry.AssetID
-
-		var encoded [32]byte
-
-		encoded, err = HexStringToByte32(string(entry.EncodedAssetID))
-		if err != nil {
-			p.logger.Fatal().Err(err).Msg("Failed to convert asset ID")
-		}
-
-		encodedAssetIDs[i] = encoded
-		i++
+		p.logger.Fatal().Err(err).Msg("Failed to initialize assets")
 	}
 
 	storkWsCh := make(chan types.AggregatedSignedPrice)
@@ -101,60 +83,13 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
-
-			for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
-				latestValue, ok := latestContractValueMap[encodedAssetID]
-				if !ok {
-					p.logger.Debug().
-						Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
-					updates[encodedAssetID] = latestStorkPrice
-				} else if shouldUpdateAsset(
-					latestValue,
-					latestStorkPrice,
-					priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-					priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
-				) {
-					updates[encodedAssetID] = latestStorkPrice
-				}
-			}
-
-			if len(updates) > 0 {
-				err = p.interactor.BatchPushToContract(updates)
-				if err != nil {
-					p.logger.Error().Err(err).Msg("Failed to push batch to contract")
-				}
-				// include this to prevent race conditions
-				for encodedAssetID, update := range updates {
-					quantizedValInt := new(big.Int)
-					//nolint:mnd // Base number
-					quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
-
-					latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
-						TimestampNs:    uint64(update.TimestampNano),
-						QuantizedValue: quantizedValInt,
-					}
-				}
-			} else {
-				p.logger.Debug().Msg("No updates to push")
-			}
+			p.handlePushUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
-			var encoded [32]byte
-
-			encoded, err = HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetID))
-			if err != nil {
-				p.logger.Error().Err(err).Msg("Failed to convert asset ID")
-
-				continue
-			}
-
-			latestStorkValueMap[encoded] = valueUpdate
+			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
 		// Handle contract updates
 		case chainUpdate := <-contractCh:
-			for encodedAssetID, storkStructsTemporalNumericValue := range chainUpdate {
-				latestContractValueMap[encodedAssetID] = storkStructsTemporalNumericValue
-			}
+			p.handleContractUpdate(chainUpdate, latestContractValueMap)
 		}
 	}
 }
@@ -165,8 +100,7 @@ func shouldUpdateAsset(
 	fallbackPeriodSecs uint64,
 	changeThreshold float64,
 ) bool {
-
-	if uint64(latestStorkPrice.TimestampNano)-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
+	if latestStorkPrice.TimestampNano-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
 		return true
 	}
 
@@ -213,5 +147,105 @@ func (p *Pusher) poll(
 		if len(polledVals) > 0 {
 			ch <- polledVals
 		}
+	}
+}
+
+// initializeAssets loads config and prepares asset IDs.
+func (p *Pusher) initializeAssets() (*types.AssetConfig, []types.AssetID, []types.InternalEncodedAssetID, error) {
+	priceConfig, err := types.LoadConfig(p.assetConfigFile)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to load price config: %w", err)
+	}
+
+	assetIDs := make([]types.AssetID, len(priceConfig.Assets))
+	encodedAssetIDs := make([]types.InternalEncodedAssetID, len(priceConfig.Assets))
+
+	i := 0
+	for _, entry := range priceConfig.Assets {
+		assetIDs[i] = entry.AssetID
+
+		var encoded [32]byte
+
+		encoded, err = HexStringToByte32(string(entry.EncodedAssetID))
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		encodedAssetIDs[i] = encoded
+		i++
+	}
+
+	return priceConfig, assetIDs, encodedAssetIDs, nil
+}
+
+// handlePushUpdates processes updates and pushes them to the contract.
+func (p *Pusher) handlePushUpdates(
+	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+	priceConfig *types.AssetConfig,
+) {
+	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+
+	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
+		latestValue, ok := latestContractValueMap[encodedAssetID]
+		if !ok {
+			p.logger.Debug().
+				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+			updates[encodedAssetID] = latestStorkPrice
+
+			continue
+		}
+
+		if shouldUpdateAsset(
+			latestValue,
+			latestStorkPrice,
+			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+		) {
+			updates[encodedAssetID] = latestStorkPrice
+		}
+	}
+
+	if len(updates) > 0 {
+		err := p.interactor.BatchPushToContract(updates)
+		if err != nil {
+			p.logger.Error().Err(err).Msg("Failed to push batch to contract")
+		} else {
+			for encodedAssetID, update := range updates {
+				quantizedValInt := new(big.Int)
+				//nolint:mnd // Base number
+				quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
+
+				latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
+					TimestampNs:    update.TimestampNano,
+					QuantizedValue: quantizedValInt,
+				}
+			}
+		}
+	}
+}
+
+// handleStorkUpdate processes updates from the Stork websocket.
+func (p *Pusher) handleStorkUpdate(
+	valueUpdate types.AggregatedSignedPrice,
+	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+) {
+	encoded, err := HexStringToByte32(string(valueUpdate.StorkSignedPrice.EncodedAssetID))
+	if err != nil {
+		p.logger.Error().Err(err).Msg("Failed to convert asset ID")
+
+		return
+	}
+
+	latestStorkValueMap[encoded] = valueUpdate
+}
+
+// handleContractUpdate processes updates from contract events.
+func (p *Pusher) handleContractUpdate(
+	chainUpdate map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+) {
+	for encodedAssetID, storkStructsTemporalNumericValue := range chainUpdate {
+		latestContractValueMap[encodedAssetID] = storkStructsTemporalNumericValue
 	}
 }

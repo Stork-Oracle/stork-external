@@ -22,28 +22,28 @@ func TestLoadConfig(t *testing.T) {
 		{
 			name: "valid config",
 			fileContent: `assets:
-  BTC:
-    asset_id: "BTC"
-    encoded_asset_id: "0x1234567890123456789012345678901234567890123456789012345678901234"
+  BTCUSD:
+    asset_id: "BTCUSD"
+    encoded_asset_id: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de"
     percent_change_threshold: 1.5
     fallback_period_sec: 300
-  ETH:
-    asset_id: "ETH"
-    encoded_asset_id: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+  ETHUSD:
+    asset_id: "ETHUSD"
+    encoded_asset_id: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160"
     percent_change_threshold: 2.0
     fallback_period_sec: 600`,
 			fileName: "test_config.yaml",
 			expected: &AssetConfig{
 				Assets: map[AssetID]AssetEntry{
-					"BTC": {
-						AssetID:                "BTC",
-						EncodedAssetID:         "0x1234567890123456789012345678901234567890123456789012345678901234",
+					"BTCUSD": {
+						AssetID:                "BTCUSD",
+						EncodedAssetID:         "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
 						PercentChangeThreshold: 1.5,
 						FallbackPeriodSecs:     300,
 					},
-					"ETH": {
-						AssetID:                "ETH",
-						EncodedAssetID:         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+					"ETHUSD": {
+						AssetID:                "ETHUSD",
+						EncodedAssetID:         "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 						PercentChangeThreshold: 2.0,
 						FallbackPeriodSecs:     600,
 					},
@@ -63,17 +63,17 @@ func TestLoadConfig(t *testing.T) {
 		{
 			name: "single asset",
 			fileContent: `assets:
-  SOL:
-    asset_id: "SOL"
-    encoded_asset_id: "0x1111111111111111111111111111111111111111111111111111111111111111"
+  SOLUSD:
+    asset_id: "SOLUSD"
+    encoded_asset_id: "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837"
     percent_change_threshold: 0.5
     fallback_period_sec: 120`,
 			fileName: "single_config.yaml",
 			expected: &AssetConfig{
 				Assets: map[AssetID]AssetEntry{
-					"SOL": {
-						AssetID:                "SOL",
-						EncodedAssetID:         "0x1111111111111111111111111111111111111111111111111111111111111111",
+					"SOLUSD": {
+						AssetID:                "SOLUSD",
+						EncodedAssetID:         "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837",
 						PercentChangeThreshold: 0.5,
 						FallbackPeriodSecs:     120,
 					},

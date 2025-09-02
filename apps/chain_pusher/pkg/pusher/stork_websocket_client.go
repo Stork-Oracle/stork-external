@@ -25,7 +25,7 @@ type StorkAggregatorWebsocketClient struct {
 	baseEndpoint string
 	authToken    string
 	assetIDs     []types.AssetID
-
+	// Default values for conn and reconnAttempts. Call connect() to set them properly.
 	conn           *websocket.Conn
 	reconnAttempts int
 }
@@ -41,6 +41,9 @@ func NewStorkAggregatorWebsocketClient(
 		baseEndpoint: baseEndpoint,
 		authToken:    authToken,
 		assetIDs:     assetIDs,
+		// Default values for conn and reconnAttempts. Call connect() to set them properly.
+		conn:           nil,
+		reconnAttempts: 0,
 	}
 }
 
@@ -70,15 +73,21 @@ func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.Aggregate
 			c.logger.Info().Msg("websocket closed")
 
 			return
-		} else if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+		}
+
+		if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
 			c.logger.Warn().Err(err).Msg("unexpected websocket close")
 
 			return
-		} else if err != nil {
+		}
+
+		if err != nil {
 			c.logger.Error().Err(err).Msg("failed to read websocket message")
 
 			return
-		} else if strings.Contains(string(message), `"type":"subscribe"`) {
+		}
+
+		if strings.Contains(string(message), `"type":"subscribe"`) {
 			continue
 		}
 
@@ -103,9 +112,13 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 		EnableCompression: true,
 	}
 
-	evmConn, _, err := dialer.Dial(c.baseEndpoint+"/evm/subscribe", http.Header{
+	evmConn, resp, err := dialer.Dial(c.baseEndpoint+"/evm/subscribe", http.Header{
 		"Authorization": []string{"Basic " + c.authToken},
 	})
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		if c.reconnAttempts < ReconnectionAttemptErrorThreshold {
 			c.logger.Warn().Err(err).Msg("failed to connect to websocket")

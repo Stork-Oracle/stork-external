@@ -33,6 +33,8 @@ linters:
         - ^golang.org/x/tools/go/analysis.Analyzer$
         - ^google.golang.org/protobuf/.+Options$
         - ^gopkg.in/yaml.v3.Node$
+        - ^github.com/gorilla/websocket.Dialer$
+        - ^github.com/gorilla/websocket.Conn$
     embeddedstructfieldcheck:
       forbid-mutex: true
     exhaustive:
