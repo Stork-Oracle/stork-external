@@ -8,28 +8,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var PushCmd = &cobra.Command{
-	Use:   "fuel",
-	Short: "Push WebSocket prices to Fuel contract",
-	Run:   runPush,
-}
+func NewPushCmd() *cobra.Command {
+	pushCmd := &cobra.Command{
+		Use:   "fuel",
+		Short: "Push WebSocket prices to Fuel contract",
+		Run:   runPush,
+	}
 
-func init() {
-	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
-	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	PushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
-	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
+	pushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	pushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	pushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
+	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
+	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 
-	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	PushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
+
+	return pushCmd
 }
 
 func runPush(cmd *cobra.Command, args []string) {

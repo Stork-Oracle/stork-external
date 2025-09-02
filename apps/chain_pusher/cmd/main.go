@@ -47,12 +47,12 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(evm.PushCmd)
-	rootCmd.AddCommand(solana.PushCmd)
-	rootCmd.AddCommand(sui.PushCmd)
-	rootCmd.AddCommand(cosmwasm.PushCmd)
-	rootCmd.AddCommand(aptos.PushCmd)
-	rootCmd.AddCommand(fuel.PushCmd)
+	rootCmd.AddCommand(evm.NewPushCmd())
+	rootCmd.AddCommand(solana.NewPushCmd())
+	rootCmd.AddCommand(sui.NewPushCmd())
+	rootCmd.AddCommand(cosmwasm.NewPushCmd())
+	rootCmd.AddCommand(aptos.NewPushCmd())
+	rootCmd.AddCommand(fuel.NewPushCmd())
 
 	err := rootCmd.Execute()
 	if err != nil {

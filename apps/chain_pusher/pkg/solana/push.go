@@ -8,32 +8,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var PushCmd = &cobra.Command{
-	Use:   "solana",
-	Short: "Push WebSocket prices to Solana contract",
-	Run:   runSolanaPush,
-}
+func NewPushCmd() *cobra.Command {
+	pushCmd := &cobra.Command{
+		Use:   "solana",
+		Short: "Push WebSocket prices to Solana contract",
+		Run:   runSolanaPush,
+	}
 
-func init() {
-	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
-	PushCmd.Flags().StringP(pusher.ChainWsUrlFlag, "u", "", pusher.ChainWsUrlDesc)
-	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	PushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
-	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
-	PushCmd.Flags().IntP(pusher.LimitPerSecondFlag, "l", 40, pusher.LimitPerSecondDesc)
-	PushCmd.Flags().IntP(pusher.BurstLimitFlag, "r", 10, pusher.BurstLimitDesc)
-	PushCmd.Flags().IntP(pusher.BatchSizeFlag, "s", 4, pusher.BatchSizeDesc)
+	pushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	pushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	pushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
+	pushCmd.Flags().StringP(pusher.ChainWsUrlFlag, "u", "", pusher.ChainWsUrlDesc)
+	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
+	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
+	pushCmd.Flags().IntP(pusher.LimitPerSecondFlag, "l", 40, pusher.LimitPerSecondDesc)
+	pushCmd.Flags().IntP(pusher.BurstLimitFlag, "r", 10, pusher.BurstLimitDesc)
+	pushCmd.Flags().IntP(pusher.BatchSizeFlag, "s", 4, pusher.BatchSizeDesc)
 
-	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	PushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+
+	return pushCmd
 }
 
 func runSolanaPush(cmd *cobra.Command, args []string) {

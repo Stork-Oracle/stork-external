@@ -8,32 +8,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var PushCmd = &cobra.Command{
-	Use:   "cosmwasm",
-	Short: "Push WebSocket prices to Cosmwasm contract",
-	Run:   runPush,
-}
+func NewPushCmd() *cobra.Command {
+	pushCmd := &cobra.Command{
+		Use:   "cosmwasm",
+		Short: "Push WebSocket prices to Cosmwasm contract",
+		Run:   runPush,
+	}
 
-func init() {
-	PushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
-	PushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
-	PushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "r", "", pusher.ChainRpcUrlDesc)
-	PushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
-	PushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
-	PushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
-	PushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", 5, pusher.BatchingWindowDesc)
-	PushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", 3, pusher.PollingPeriodDesc)
-	PushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
-	PushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
-	PushCmd.Flags().StringP(pusher.DenomFlag, "d", "", pusher.DenomDesc)
-	PushCmd.Flags().StringP(pusher.ChainIDFlag, "i", "", pusher.ChainIDDesc)
-	PushCmd.Flags().StringP(pusher.ChainPrefixFlag, "c", "", pusher.ChainPrefixDesc)
-	PushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
-	PushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
-	PushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	PushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	PushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	PushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+	pushCmd.Flags().StringP(pusher.StorkWebsocketEndpointFlag, "w", "", pusher.StorkWebsocketEndpointDesc)
+	pushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
+	pushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "r", "", pusher.ChainRpcUrlDesc)
+	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
+	pushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
+	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
+	pushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
+	pushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
+	pushCmd.Flags().StringP(pusher.DenomFlag, "d", "", pusher.DenomDesc)
+	pushCmd.Flags().StringP(pusher.ChainIDFlag, "i", "", pusher.ChainIDDesc)
+	pushCmd.Flags().StringP(pusher.ChainPrefixFlag, "c", "", pusher.ChainPrefixDesc)
+
+	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.MnemonicFileFlag)
+
+	return pushCmd
 }
 
 func runPush(cmd *cobra.Command, args []string) {
