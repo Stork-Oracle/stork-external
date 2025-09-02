@@ -611,3 +611,50 @@ func TestSafeInt64ToUint64(t *testing.T) {
 		})
 	}
 }
+
+func TestSafeUint64ToInt64(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		input     uint64
+		expected  int64
+		wantError bool
+	}{
+		{
+			name:      "positive input",
+			input:     1,
+			expected:  1,
+			wantError: false,
+		},
+		{
+			name:      "input too large",
+			input:     uint64(18446744073709551615),
+			expected:  0,
+			wantError: true,
+		},
+		{
+			name:      "zero input",
+			input:     0,
+			expected:  0,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := SafeUint64ToInt64(tt.input)
+
+			if tt.wantError {
+				assert.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

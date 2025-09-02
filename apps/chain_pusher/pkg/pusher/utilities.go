@@ -4,12 +4,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
 var (
 	ErrInputTooLong  = errors.New("input string too long for specified length")
 	ErrNegativeInput = errors.New("input is negative")
+	ErrInputTooLarge = errors.New("input is too large for int64")
 )
 
 // Pluralize returns an empty string if n is 1, otherwise returns "s".
@@ -115,4 +117,12 @@ func SafeInt64ToUint64(input int64) (uint64, error) {
 	}
 
 	return uint64(input), nil
+}
+
+func SafeUint64ToInt64(input uint64) (int64, error) {
+	if input > math.MaxInt64 {
+		return 0, ErrInputTooLarge
+	}
+
+	return int64(input), nil
 }
