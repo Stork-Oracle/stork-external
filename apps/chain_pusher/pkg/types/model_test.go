@@ -125,21 +125,22 @@ func TestLoadConfig(t *testing.T) {
 			t.Parallel()
 
 			// Create temporary directory
-			tempDir, err := os.MkdirTemp("", "config_test")
-			require.NoError(t, err)
+			tempDir := t.TempDir()
+
 			defer os.RemoveAll(tempDir)
 
 			// Write test file
 			filePath := filepath.Join(tempDir, tt.fileName)
-			err = os.WriteFile(filePath, []byte(tt.fileContent), 0644)
+			err := os.WriteFile(filePath, []byte(tt.fileContent), 0o600)
 			require.NoError(t, err)
 
 			// Test LoadConfig
 			result, err := LoadConfig(filePath)
 
 			if tt.wantError {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Equal(t, tt.expected, result)
+
 				return
 			}
 
@@ -155,7 +156,7 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 	// if this test is failing, ensure that this file doesn't exist.
 	result, err := LoadConfig("nonexistent_file.yaml")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, result)
 }
 
@@ -164,6 +165,6 @@ func TestLoadConfig_EmptyFilename(t *testing.T) {
 
 	result, err := LoadConfig("")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, result)
 }
