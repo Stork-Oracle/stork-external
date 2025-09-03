@@ -57,11 +57,29 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	interactor, err := NewContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, keyFileContent, verifyPublishers, logger, gasLimit)
+	interactor, err := NewContractInteractor(
+		chainRpcUrl,
+		chainWsUrl,
+		contractAddress,
+		keyFileContent,
+		verifyPublishers,
+		logger,
+		gasLimit,
+	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher := pusher.NewPusher(
+		storkWsEndpoint,
+		storkAuth,
+		chainRpcUrl,
+		contractAddress,
+		assetConfigFile,
+		batchingWindow,
+		pollingPeriod,
+		interactor,
+		&logger,
+	)
 	pusher.Run(context.Background())
 }
