@@ -59,6 +59,16 @@ func runPush(cmd *cobra.Command, args []string) {
 	// Ensure cleanup on exit
 	defer interactor.Close()
 
-	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher := pusher.NewPusher(
+		storkWsEndpoint,
+		storkAuth,
+		chainRpcUrl,
+		contractAddress,
+		assetConfigFile,
+		batchingWindow,
+		pollingPeriod,
+		interactor,
+		&logger,
+	)
 	pusher.Run(context.Background())
 }

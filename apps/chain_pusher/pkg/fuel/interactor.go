@@ -3,6 +3,7 @@ package fuel
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -13,6 +14,8 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/rs/zerolog"
 )
+
+var ErrPrivateKeyEmpty = errors.New("private key cannot be empty")
 
 type ContractInteractor struct {
 	logger   zerolog.Logger
@@ -69,31 +72,35 @@ func (fci *ContractInteractor) PullValues(
 		idBytes, err := hex.DecodeString(idHex)
 		if err != nil {
 			fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to decode asset ID")
+
 			continue
 		}
 
 		// Ensure we have exactly 32 bytes
+		//nolint:mnd // 32 bytes is the expected length for a Fuel asset ID.
 		if len(idBytes) != 32 {
 			fci.logger.Error().Str("asset_id", idHex).Msg("Asset ID must be 32 bytes")
+
 			continue
 		}
 
 		// Call FFI function
-		valueJson, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
+		valueJSON, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
 		if err != nil {
 			if strings.Contains(err.Error(), "feed not found") {
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
 			} else {
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
 			}
+
 			continue
 		}
 
 		// Convert to internal format
 
 		internalValue := types.InternalTemporalNumericValue{
-			TimestampNs:    valueJson.TimestampNs,
-			QuantizedValue: valueJson.QuantizedValue,
+			TimestampNs:    valueJSON.TimestampNs,
+			QuantizedValue: valueJSON.QuantizedValue,
 		}
 
 		result[assetID] = internalValue
@@ -109,17 +116,19 @@ func (fci *ContractInteractor) BatchPushToContract(
 		return nil
 	}
 
-	var inputs []bindings.TemporalNumericValueInput
+	inputs := make([]bindings.TemporalNumericValueInput, 0, len(priceUpdates))
 
 	for _, update := range priceUpdates {
 		if update.StorkSignedPrice == nil {
 			fci.logger.Error().Str("asset_id", string(update.AssetID)).Msg("StorkSignedPrice is nil")
+
 			continue
 		}
 
 		fuelInput, err := aggregatedSignedPriceToTemporalNumericValueInput(update)
 		if err != nil {
 			fci.logger.Error().Err(err).Str("asset_id", string(update.AssetID)).Msg("Failed to convert price update")
+
 			continue
 		}
 
@@ -155,9 +164,12 @@ func (fci *ContractInteractor) Close() {
 	}
 }
 
-func aggregatedSignedPriceToTemporalNumericValueInput(update types.AggregatedSignedPrice) (bindings.TemporalNumericValueInput, error) {
+func aggregatedSignedPriceToTemporalNumericValueInput(
+	update types.AggregatedSignedPrice,
+) (bindings.TemporalNumericValueInput, error) {
 	// Parse quantized price
 	quantizedPriceBigInt := new(big.Int)
+	//nolint:mnd // base number.
 	quantizedPriceBigInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
 	// Parse signature components
@@ -191,14 +203,14 @@ func aggregatedSignedPriceToTemporalNumericValueInput(update types.AggregatedSig
 
 	// Convert V from string to uint8 (remove "0x" prefix and parse as hex)
 	vInt, err := strconv.ParseInt(update.StorkSignedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
-	if err != nil {
+	if err != nil || vInt < 0 || vInt > 255 {
 		return bindings.TemporalNumericValueInput{}, fmt.Errorf("failed to parse signature V: %w", err)
 	}
 
 	// Convert internal format to Fuel format
 	return bindings.TemporalNumericValueInput{
 		TemporalNumericValue: bindings.TemporalNumericValue{
-			TimestampNs:    uint64(update.StorkSignedPrice.TimestampedSignature.TimestampNano),
+			TimestampNs:    update.StorkSignedPrice.TimestampedSignature.TimestampNano,
 			QuantizedValue: quantizedPriceBigInt,
 		},
 		ID:                  hex.EncodeToString(encodedAssetIDBytes[:]),
@@ -219,7 +231,7 @@ func loadPrivateKey(keyFileContent []byte) (string, error) {
 
 	// Validate that private key is not empty
 	if len(privateKeyStr) == 0 {
-		return "", fmt.Errorf("private key cannot be empty")
+		return "", ErrPrivateKeyEmpty
 	}
 
 	return privateKeyStr, nil
