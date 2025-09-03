@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -24,20 +25,35 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// Types
+var (
+	ErrNilTxEncoder          = errors.New("tx encoder is nil")
+	ErrFailedToDecodeAccount = errors.New("failed to decode account")
+	ErrNoAccountFound        = errors.New("no account found")
+	ErrQueryFailed           = errors.New("query failed")
+	ErrTxFailed              = errors.New("transaction failed")
+)
+
+// Addr is a type representing an address.
 type Addr string
 
+// Uint128 is a type representing a 128 bit unsigned integer.
 type Uint128 string
 
+// Uint64 is a type representing a 64 bit unsigned integer.
 type Uint64 string
 
+// Int128 is a type representing a 128 bit signed integer.
 type Int128 string
 
+// QueryMsg is a type representing a query message.
+//
+//nolint:lll // long field name.
 type QueryMsg struct {
 	GetLatestCanonicalTemporalNumericValueUnchecked *QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked `json:"get_latest_canonical_temporal_numeric_value_unchecked,omitempty"`
 	GetSingleUpdateFee                              *QueryMsg_GetSingleUpdateFee                              `json:"get_single_update_fee,omitempty"`
 }
 
+// Coin is a type representing a coin.
 type Coin struct {
 	Amount Uint128 `json:"amount"`
 	Denom  string  `json:"denom"`
@@ -45,19 +61,22 @@ type Coin struct {
 
 func (c *Coin) toCosmosCoin() sdktypes.Coin {
 	bi := new(big.Int)
+
+	//nolint:mnd // base number.
 	bi, ok := bi.SetString(string(c.Amount), 10)
 	if !ok {
 		panic("failed to convert Uint128 string to big.Int")
 	}
+
 	return sdktypes.NewCoin(c.Denom, cosmossdk_io_math.NewIntFromBigInt(bi))
 }
 
-// Response for the `get_single_update_fee` query containing the fee for a single update.
+// GetSingleUpdateFeeResponse is a response for the `get_single_update_fee` query.
 type GetSingleUpdateFeeResponse struct {
 	Fee Coin `json:"fee"`
 }
 
-// A struct representing a timestamped value.
+// TemporalNumericValue is a struct representing a timestamped value.
 type TemporalNumericValue struct {
 	// The quantized value.
 	QuantizedValue Int128 `json:"quantized_value"`
@@ -65,20 +84,24 @@ type TemporalNumericValue struct {
 	TimestampNs Uint64 `json:"timestamp_ns"`
 }
 
+// ExecMsg is a struct representing a message to update temporal numeric values.
 type ExecMsg struct {
+	//nolint:lll // long field name.
 	UpdateTemporalNumericValuesEvm *ExecMsg_UpdateTemporalNumericValuesEvm `json:"update_temporal_numeric_values_evm,omitempty"`
 }
 
-// Response for the `get_temporal_numeric_value` query containing the [`TemporalNumericValue`](./temporal_numeric_value.rs) for a given asset id.
+// GetTemporalNumericValueResponse is a response for the `get_temporal_numeric_value` query.
 type GetTemporalNumericValueResponse struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
 }
 
+// QueryAccountInfoRequest is a request for the account info.
 type QueryAccountInfoRequest struct {
 	Address string `json:"address"`
 }
 
-// The data structure for an update to a Stork feed. This is used in the `UpdateTemporalNumericValuesEvm` `ExecMsg" variant
+// UpdateData is a data structure for an update to a Stork feed.
+// This is used in the `UpdateTemporalNumericValuesEvm` `ExecMsg" variant.
 type UpdateData struct {
 	TemporalNumericValue TemporalNumericValue `json:"temporal_numeric_value"`
 	V                    int                  `json:"v"`
@@ -89,12 +112,15 @@ type UpdateData struct {
 	S                    [32]int              `json:"s"`
 }
 
+//nolint:revive // underscore provides clarity here.
 type QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked struct {
 	ID [32]int `json:"id"`
 }
 
+//nolint:revive // underscore provides clarity here.
 type QueryMsg_GetSingleUpdateFee struct{}
 
+//nolint:revive // underscore provides clarity here.
 type ExecMsg_UpdateTemporalNumericValuesEvm struct {
 	UpdateData []UpdateData `json:"update_data"`
 }
@@ -108,22 +134,35 @@ type StorkContract struct {
 	marshaler       codec.Codec
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, gasPrice float64, gasAdjustment float64, denom string, chainID string, chainPrefix string) (*StorkContract, error) {
+func NewStorkContract(
+	rpcUrl string,
+	contractAddress string,
+	mnemonic string,
+	gasPrice float64,
+	gasAdjustment float64,
+	denom string,
+	chainID string,
+	chainPrefix string,
+) (*StorkContract, error) {
 	config := sdktypes.GetConfig()
 	config.SetBech32PrefixForAccount(chainPrefix, chainPrefix+"pub")
 	config.Seal()
 
 	rpcClient, err := http.New(rpcUrl, "/websocket")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create rpc http client: %w", err)
 	}
+
 	hdPath := hd.NewFundraiserParams(0, sdktypes.CoinType, 0).String()
+
 	derivedPrivKey, err := hd.Secp256k1.Derive()(mnemonic, "", hdPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to derive private key: %w", err)
 	}
+
 	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
 
+	//nolint:exhaustruct // all fields are set in the constructor.
 	storkContract := &StorkContract{ContractAddress: contractAddress, ChainPrefix: chainPrefix}
 
 	// set up execution context and factory
@@ -141,6 +180,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 
 	kr := keyring.NewInMemory(marshaler)
 	keyName := privKey.PubKey().Address().String()
+
 	err = kr.ImportPrivKeyHex(
 		keyName,
 		hex.EncodeToString(privKey.Key),
@@ -180,9 +220,81 @@ func NewStorkContract(rpcUrl string, contractAddress string, mnemonic string, ga
 	if err != nil {
 		return nil, err
 	}
+
 	storkContract.singleUpdateFee = singleUpdateFee.Fee
 
 	return storkContract, nil
+}
+
+func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(
+	id [32]int,
+) (*GetTemporalNumericValueResponse, error) {
+	rawQueryData, err := json.Marshal(
+		map[string]any{
+			"get_latest_canonical_temporal_numeric_value_unchecked": &QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked{
+				ID: id,
+			},
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query data: %w", err)
+	}
+
+	rawResponseData, err := s.queryContract(rawQueryData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query contract: %w", err)
+	}
+
+	var response GetTemporalNumericValueResponse
+
+	err = json.Unmarshal(rawResponseData, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &response, nil
+}
+
+func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
+	rawExecData, err := json.Marshal(
+		map[string]any{
+			"update_temporal_numeric_values_evm": &ExecMsg_UpdateTemporalNumericValuesEvm{UpdateData: updateData},
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal exec data: %w", err)
+	}
+
+	fee := s.singleUpdateFee.toCosmosCoin()
+	fee.Amount = fee.Amount.MulRaw(int64(len(updateData)))
+
+	txHash, err := s.executeContract(rawExecData, []sdktypes.Coin{fee})
+	if err != nil {
+		return "", fmt.Errorf("failed to execute contract: %w", err)
+	}
+
+	return txHash, nil
+}
+
+func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error) {
+	rawQueryData, err := json.Marshal(map[string]any{"get_single_update_fee": new(QueryMsg_GetSingleUpdateFee)})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query data: %w", err)
+	}
+
+	rawResponseData, err := s.queryContract(rawQueryData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query contract: %w", err)
+	}
+
+	var response GetSingleUpdateFeeResponse
+
+	err = json.Unmarshal(rawResponseData, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &response, nil
 }
 
 func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
@@ -205,22 +317,25 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 		bz,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query contract: %w", err)
 	}
+
 	if result.Response.Code != 0 {
-		return nil, fmt.Errorf("query failed with code %d", result.Response.Code)
+		return nil, ErrQueryFailed
 	}
 
 	var resp wasmtypes.QuerySmartContractStateResponse
-	if err := marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+
+	err = marshaler.Unmarshal(result.Response.Value, &resp)
+	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	return resp.Data, nil
 }
 
+//nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
 func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
-
 	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
@@ -236,6 +351,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	accMsg := &authtypes.QueryAccountRequest{
 		Address: s.clientCtx.FromAddress.String(),
 	}
+
 	rawAccMsg, err := s.marshaler.Marshal(accMsg)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal account message: %w", err)
@@ -251,25 +367,29 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	if result.Response.Value == nil {
-		return "", fmt.Errorf("no account data returned for address %s", senderBech32)
+		return "", ErrNoAccountFound
 	}
 
 	var resp authtypes.QueryAccountResponse
-	if err := s.marshaler.Unmarshal(result.Response.Value, &resp); err != nil {
+
+	err = s.marshaler.Unmarshal(result.Response.Value, &resp)
+	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal account: %w", err)
 	}
 
 	if resp.Account == nil {
-		return "", fmt.Errorf("no account found for address %s", senderBech32)
+		return "", ErrNoAccountFound
 	}
 
 	var acc sdktypes.AccountI
-	if err := s.clientCtx.InterfaceRegistry.UnpackAny(resp.Account, &acc); err != nil {
+
+	err = s.clientCtx.InterfaceRegistry.UnpackAny(resp.Account, &acc)
+	if err != nil {
 		return "", fmt.Errorf("failed to unpack account: %w", err)
 	}
 
 	if acc == nil {
-		return "", fmt.Errorf("failed to decode account for address %s", senderBech32)
+		return "", ErrFailedToDecodeAccount
 	}
 
 	txf := s.txf.
@@ -280,6 +400,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	if err != nil {
 		return "", fmt.Errorf("failed to calculate gas: %w", err)
 	}
+
 	txf = txf.WithGas(adjusted)
 
 	tx, err := txf.BuildUnsignedTx(msg)
@@ -287,13 +408,14 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
-	if err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true); err != nil {
+	err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true)
+	if err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
 	encoder := s.clientCtx.TxConfig.TxEncoder()
 	if encoder == nil {
-		return "", fmt.Errorf("failed to encode transaction: tx json encoder is nil")
+		return "", ErrNilTxEncoder
 	}
 
 	txBytes, err := encoder(tx.GetTx())
@@ -306,57 +428,10 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	if err != nil {
 		return "", fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
+
 	if res.Code != 0 {
-		return "", fmt.Errorf("transaction failed %s", res)
+		return "", ErrTxFailed
 	}
 
 	return res.TxHash, nil
-}
-
-func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error) {
-	rawQueryData, err := json.Marshal(map[string]any{"get_single_update_fee": new(QueryMsg_GetSingleUpdateFee)})
-	if err != nil {
-		return nil, err
-	}
-	rawResponseData, err := s.queryContract(rawQueryData)
-	if err != nil {
-		return nil, err
-	}
-	var response GetSingleUpdateFeeResponse
-	err = json.Unmarshal(rawResponseData, &response)
-	if err != nil {
-		return nil, err
-	}
-	return &response, nil
-}
-
-func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(id [32]int) (*GetTemporalNumericValueResponse, error) {
-	rawQueryData, err := json.Marshal(map[string]any{"get_latest_canonical_temporal_numeric_value_unchecked": &QueryMsg_GetLatestCanonicalTemporalNumericValueUnchecked{ID: id}})
-	if err != nil {
-		return nil, err
-	}
-	rawResponseData, err := s.queryContract(rawQueryData)
-	if err != nil {
-		return nil, err
-	}
-	var response GetTemporalNumericValueResponse
-	err = json.Unmarshal(rawResponseData, &response)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	return &response, nil
-}
-
-func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
-	rawExecData, err := json.Marshal(map[string]any{"update_temporal_numeric_values_evm": &ExecMsg_UpdateTemporalNumericValuesEvm{UpdateData: updateData}})
-	if err != nil {
-		return "", err
-	}
-	fee := s.singleUpdateFee.toCosmosCoin()
-	fee.Amount = fee.Amount.MulRaw(int64(len(updateData)))
-	txHash, err := s.executeContract(rawExecData, []sdktypes.Coin{fee})
-	if err != nil {
-		return "", err
-	}
-	return txHash, nil
 }
