@@ -6,6 +6,8 @@ linters:
     - wsl
     - depguard
   settings:
+    cyclop:
+      max-complexity: 15
     errcheck:
       check-type-assertions: true
     exhaustruct:
@@ -37,12 +39,17 @@ linters:
         - ^github.com/gorilla/websocket.Conn$
         - ^github.com/coming-chat/go-sui/v2/types.+$
         - ^github.com/coming-chat/go-sui/v2/sui_types.+$
+        - ^github.com/gagliardetto/binary.Int128$
+        # generated internal libs
+        - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings.+$
     embeddedstructfieldcheck:
       forbid-mutex: true
     exhaustive:
       check:
         - switch
         - map
+    funlen:
+      lines: 100
     gocritic:
       settings:
         ifElseChain:

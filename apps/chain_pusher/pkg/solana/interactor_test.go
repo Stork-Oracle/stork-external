@@ -3,10 +3,9 @@ package solana
 import (
 	"testing"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	bin "github.com/gagliardetto/binary"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +32,9 @@ func TestBatchPriceUpdates(t *testing.T) {
 
 			// Create test price updates map
 			priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
-			for i := 0; i < tt.numUpdates; i++ {
+			for i := range tt.numUpdates {
 				var assetID types.InternalEncodedAssetID
+
 				assetID[0] = byte(i + 1) // Create unique asset IDs
 				priceUpdates[assetID] = types.AggregatedSignedPrice{}
 			}
@@ -45,7 +45,7 @@ func TestBatchPriceUpdates(t *testing.T) {
 
 			batches := sci.batchPriceUpdates(priceUpdates)
 
-			assert.Equal(t, tt.expectedBatches, len(batches))
+			assert.Len(t, batches, tt.expectedBatches)
 
 			// Verify each batch size is correct
 			for i, batch := range batches {
@@ -53,9 +53,55 @@ func TestBatchPriceUpdates(t *testing.T) {
 					// Last batch might be smaller
 					assert.LessOrEqual(t, len(batch), tt.batchSize)
 				} else {
-					assert.Equal(t, tt.batchSize, len(batch))
+					assert.Len(t, batch, tt.batchSize)
 				}
 			}
+		})
+	}
+}
+
+func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
+	t.Parallel()
+
+	tests := testutil.StandardPriceCase()
+
+	sci := &ContractInteractor{}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := sci.priceUpdateToTemporalNumericValueEvmInput(tt.Price, 0)
+
+			if tt.WantError {
+				assert.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			// convert bytes representation to expected
+			expectedID := tt.PriceBytes.StorkSignedPrice.EncodedAssetID
+			expectedTemporalNumericValueTimestampNs := tt.PriceBytes.StorkSignedPrice.TimestampedSignature.TimestampNano
+			expectedTemporalNumericValueQuantizedValue := quantizedPriceToInt128(
+				types.QuantizedPrice(tt.PriceBytes.StorkSignedPrice.QuantizedPrice.String()),
+			)
+			expectedPublisherMerkleRoot := tt.PriceBytes.StorkSignedPrice.PublisherMerkleRoot
+			expectedValueComputeAlgHash := tt.PriceBytes.StorkSignedPrice.StorkCalculationAlg
+			expectedR := tt.PriceBytes.StorkSignedPrice.TimestampedSignature.Signature.R
+			expectedS := tt.PriceBytes.StorkSignedPrice.TimestampedSignature.Signature.S
+			expectedV := tt.PriceBytes.StorkSignedPrice.TimestampedSignature.Signature.V
+			expectedTreasuryID := uint8(0)
+
+			assert.Equal(t, expectedID, result.Id)
+			assert.Equal(t, expectedTemporalNumericValueTimestampNs, result.TemporalNumericValue.TimestampNs)
+			assert.Equal(t, expectedTemporalNumericValueQuantizedValue, result.TemporalNumericValue.QuantizedValue)
+			assert.Equal(t, expectedPublisherMerkleRoot, result.PublisherMerkleRoot)
+			assert.Equal(t, expectedValueComputeAlgHash, result.ValueComputeAlgHash)
+			assert.Equal(t, expectedR, result.R)
+			assert.Equal(t, expectedS, result.S)
+			assert.Equal(t, expectedV, result.V)
+			assert.Equal(t, expectedTreasuryID, result.TreasuryId)
 		})
 	}
 }
@@ -65,239 +111,33 @@ func TestQuantizedPriceToInt128(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		quantizedPrice string
+		quantizedPrice types.QuantizedPrice
 		expected       bin.Int128
 	}{
-		{"zero value", "0", bin.Int128{Lo: 0, Hi: 0}},
-		{"small number", "1000000000000000000", bin.Int128{Lo: 1000000000000000000, Hi: 0}},
-		{"large number", "115792089237316195423570985008687907853269984665640564039457584007913129639935", bin.Int128{Lo: 18446744073709551615, Hi: 18446744073709551615}},
-	}
-
-	sci := &ContractInteractor{}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			result := sci.quantizedPriceToInt128(types.QuantizedPrice(tt.quantizedPrice))
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
-	t.Parallel()
-
-	logger := zerolog.New(nil)
-	sci := &ContractInteractor{
-		logger: logger,
-	}
-
-	tests := []struct {
-		name        string
-		priceUpdate types.AggregatedSignedPrice
-		assetID     types.InternalEncodedAssetID
-		treasuryID  uint8
-		expected    bindings.TemporalNumericValueEvmInput
-		wantError   bool
-	}{
 		{
-			name: "valid positive price update",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "1000000000000000000",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "0x1c",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected: bindings.TemporalNumericValueEvmInput{
-				Id: [32]uint8{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-				TemporalNumericValue: bindings.TemporalNumericValue{
-					TimestampNs:    1722632569208762117,
-					QuantizedValue: bin.Int128{Lo: 1000000000000000000, Hi: 0},
-				},
-				PublisherMerkleRoot: [32]uint8{0xe5, 0xff, 0x77, 0x3b, 0x03, 0x16, 0x05, 0x9c, 0x04, 0xaa, 0x15, 0x78, 0x98, 0x76, 0x67, 0x31, 0x01, 0x76, 0x10, 0xdc, 0xbe, 0xed, 0xe7, 0xd7, 0xf1, 0x69, 0xbf, 0xea, 0xab, 0x7c, 0xc3, 0x18},
-				ValueComputeAlgHash: [32]uint8{0x9b, 0xe7, 0xe9, 0xf9, 0xed, 0x45, 0x94, 0x17, 0xd9, 0x61, 0x12, 0xa7, 0x46, 0x7b, 0xd0, 0xb2, 0x75, 0x75, 0xa2, 0xc7, 0x84, 0x71, 0x95, 0xc6, 0x8f, 0x80, 0x5b, 0x70, 0xce, 0x17, 0x95, 0xba},
-				R:                   [32]uint8{0xb9, 0xb3, 0xc9, 0xf8, 0x0a, 0x35, 0x5b, 0xd0, 0xcd, 0x6f, 0x60, 0x9f, 0xff, 0x4a, 0x4b, 0x15, 0xfa, 0x4e, 0x3b, 0x46, 0x32, 0xad, 0xab, 0xb7, 0x4c, 0x02, 0x0f, 0x5b, 0xcd, 0x24, 0x07, 0x41},
-				S:                   [32]uint8{0x16, 0xfa, 0xb5, 0x26, 0x52, 0x9a, 0xc7, 0x95, 0x10, 0x8d, 0x20, 0x18, 0x32, 0xcf, 0xf8, 0xc2, 0xd2, 0xb1, 0xc7, 0x10, 0xda, 0x67, 0x11, 0xfe, 0x9f, 0x7a, 0xb2, 0x88, 0xa7, 0x14, 0x97, 0x58},
-				V:                   28,
-				TreasuryId:          1,
-			},
-			wantError: false,
+			name:           "zero value",
+			quantizedPrice: types.QuantizedPrice("0"),
+			expected:       bin.Int128{Lo: 0, Hi: 0},
 		},
 		{
-			name: "valid negative price update",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "-1000000000000000000",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "0x1c",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected: bindings.TemporalNumericValueEvmInput{
-				Id: [32]uint8{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-				TemporalNumericValue: bindings.TemporalNumericValue{
-					TimestampNs:    1722632569208762117,
-					QuantizedValue: sci.quantizedPriceToInt128("-1000000000000000000"), // Use actual function to get correct representation
-				},
-				PublisherMerkleRoot: [32]uint8{0xe5, 0xff, 0x77, 0x3b, 0x03, 0x16, 0x05, 0x9c, 0x04, 0xaa, 0x15, 0x78, 0x98, 0x76, 0x67, 0x31, 0x01, 0x76, 0x10, 0xdc, 0xbe, 0xed, 0xe7, 0xd7, 0xf1, 0x69, 0xbf, 0xea, 0xab, 0x7c, 0xc3, 0x18},
-				ValueComputeAlgHash: [32]uint8{0x9b, 0xe7, 0xe9, 0xf9, 0xed, 0x45, 0x94, 0x17, 0xd9, 0x61, 0x12, 0xa7, 0x46, 0x7b, 0xd0, 0xb2, 0x75, 0x75, 0xa2, 0xc7, 0x84, 0x71, 0x95, 0xc6, 0x8f, 0x80, 0x5b, 0x70, 0xce, 0x17, 0x95, 0xba},
-				R:                   [32]uint8{0xb9, 0xb3, 0xc9, 0xf8, 0x0a, 0x35, 0x5b, 0xd0, 0xcd, 0x6f, 0x60, 0x9f, 0xff, 0x4a, 0x4b, 0x15, 0xfa, 0x4e, 0x3b, 0x46, 0x32, 0xad, 0xab, 0xb7, 0x4c, 0x02, 0x0f, 0x5b, 0xcd, 0x24, 0x07, 0x41},
-				S:                   [32]uint8{0x16, 0xfa, 0xb5, 0x26, 0x52, 0x9a, 0xc7, 0x95, 0x10, 0x8d, 0x20, 0x18, 0x32, 0xcf, 0xf8, 0xc2, 0xd2, 0xb1, 0xc7, 0x10, 0xda, 0x67, 0x11, 0xfe, 0x9f, 0x7a, 0xb2, 0x88, 0xa7, 0x14, 0x97, 0x58},
-				V:                   28,
-				TreasuryId:          1,
-			},
-			wantError: false,
+			name:           "small positive number",
+			quantizedPrice: types.QuantizedPrice("1000"),
+			expected:       bin.Int128{Lo: 1000, Hi: 0},
 		},
 		{
-			name: "zero price",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "0",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "0x1c",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected: bindings.TemporalNumericValueEvmInput{
-				Id: [32]uint8{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-				TemporalNumericValue: bindings.TemporalNumericValue{
-					TimestampNs:    1722632569208762117,
-					QuantizedValue: bin.Int128{Lo: 0, Hi: 0},
-				},
-				PublisherMerkleRoot: [32]uint8{0xe5, 0xff, 0x77, 0x3b, 0x03, 0x16, 0x05, 0x9c, 0x04, 0xaa, 0x15, 0x78, 0x98, 0x76, 0x67, 0x31, 0x01, 0x76, 0x10, 0xdc, 0xbe, 0xed, 0xe7, 0xd7, 0xf1, 0x69, 0xbf, 0xea, 0xab, 0x7c, 0xc3, 0x18},
-				ValueComputeAlgHash: [32]uint8{0x9b, 0xe7, 0xe9, 0xf9, 0xed, 0x45, 0x94, 0x17, 0xd9, 0x61, 0x12, 0xa7, 0x46, 0x7b, 0xd0, 0xb2, 0x75, 0x75, 0xa2, 0xc7, 0x84, 0x71, 0x95, 0xc6, 0x8f, 0x80, 0x5b, 0x70, 0xce, 0x17, 0x95, 0xba},
-				R:                   [32]uint8{0xb9, 0xb3, 0xc9, 0xf8, 0x0a, 0x35, 0x5b, 0xd0, 0xcd, 0x6f, 0x60, 0x9f, 0xff, 0x4a, 0x4b, 0x15, 0xfa, 0x4e, 0x3b, 0x46, 0x32, 0xad, 0xab, 0xb7, 0x4c, 0x02, 0x0f, 0x5b, 0xcd, 0x24, 0x07, 0x41},
-				S:                   [32]uint8{0x16, 0xfa, 0xb5, 0x26, 0x52, 0x9a, 0xc7, 0x95, 0x10, 0x8d, 0x20, 0x18, 0x32, 0xcf, 0xf8, 0xc2, 0xd2, 0xb1, 0xc7, 0x10, 0xda, 0x67, 0x11, 0xfe, 0x9f, 0x7a, 0xb2, 0x88, 0xa7, 0x14, 0x97, 0x58},
-				V:                   28,
-				TreasuryId:          1,
-			},
-			wantError: false,
+			name:           "large positive number",
+			quantizedPrice: types.QuantizedPrice("10000000000000000000000000"),
+			expected:       bin.Int128{Lo: 1590897978359414784, Hi: 542101},
 		},
 		{
-			name: "valid price with V=0x1b",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "1000000000000000000",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "0x1b",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected: bindings.TemporalNumericValueEvmInput{
-				Id: [32]uint8{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-				TemporalNumericValue: bindings.TemporalNumericValue{
-					TimestampNs:    1722632569208762117,
-					QuantizedValue: bin.Int128{Lo: 1000000000000000000, Hi: 0},
-				},
-				PublisherMerkleRoot: [32]uint8{0xe5, 0xff, 0x77, 0x3b, 0x03, 0x16, 0x05, 0x9c, 0x04, 0xaa, 0x15, 0x78, 0x98, 0x76, 0x67, 0x31, 0x01, 0x76, 0x10, 0xdc, 0xbe, 0xed, 0xe7, 0xd7, 0xf1, 0x69, 0xbf, 0xea, 0xab, 0x7c, 0xc3, 0x18},
-				ValueComputeAlgHash: [32]uint8{0x9b, 0xe7, 0xe9, 0xf9, 0xed, 0x45, 0x94, 0x17, 0xd9, 0x61, 0x12, 0xa7, 0x46, 0x7b, 0xd0, 0xb2, 0x75, 0x75, 0xa2, 0xc7, 0x84, 0x71, 0x95, 0xc6, 0x8f, 0x80, 0x5b, 0x70, 0xce, 0x17, 0x95, 0xba},
-				R:                   [32]uint8{0xb9, 0xb3, 0xc9, 0xf8, 0x0a, 0x35, 0x5b, 0xd0, 0xcd, 0x6f, 0x60, 0x9f, 0xff, 0x4a, 0x4b, 0x15, 0xfa, 0x4e, 0x3b, 0x46, 0x32, 0xad, 0xab, 0xb7, 0x4c, 0x02, 0x0f, 0x5b, 0xcd, 0x24, 0x07, 0x41},
-				S:                   [32]uint8{0x16, 0xfa, 0xb5, 0x26, 0x52, 0x9a, 0xc7, 0x95, 0x10, 0x8d, 0x20, 0x18, 0x32, 0xcf, 0xf8, 0xc2, 0xd2, 0xb1, 0xc7, 0x10, 0xda, 0x67, 0x11, 0xfe, 0x9f, 0x7a, 0xb2, 0x88, 0xa7, 0x14, 0x97, 0x58},
-				V:                   27,
-				TreasuryId:          1,
-			},
-			wantError: false,
+			name:           "small negative number",
+			quantizedPrice: types.QuantizedPrice("-1000"),
+			expected:       bin.Int128{Lo: 18446744073709550616, Hi: 18446744073709551615},
 		},
 		{
-			name: "invalid hex in merkle root",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "1000000000000000000",
-					PublisherMerkleRoot: "invalid hex",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "0x1c",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected:   bindings.TemporalNumericValueEvmInput{},
-			wantError:  true,
-		},
-		{
-			name: "invalid V signature",
-			priceUpdate: types.AggregatedSignedPrice{
-				StorkSignedPrice: &types.StorkSignedPrice{
-					EncodedAssetID:      "0x1234567890123456789012345678901234567890123456789012345678901234",
-					QuantizedPrice:      "1000000000000000000",
-					PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
-					StorkCalculationAlg: types.StorkCalculationAlg{
-						Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
-					},
-					TimestampedSignature: types.TimestampedSignature{
-						TimestampNano: 1722632569208762117,
-						Signature: types.EvmSignature{
-							R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
-							S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
-							V: "invalid",
-						},
-					},
-				},
-			},
-			assetID:    [32]byte{0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34},
-			treasuryID: 1,
-			expected:   bindings.TemporalNumericValueEvmInput{},
-			wantError:  true,
+			name:           "large negative number",
+			quantizedPrice: types.QuantizedPrice("-10000000000000000000000000"),
+			expected:       bin.Int128{Lo: 16855846095350136832, Hi: 18446744073709009514},
 		},
 	}
 
@@ -305,14 +145,7 @@ func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := sci.priceUpdateToTemporalNumericValueEvmInput(tt.priceUpdate, tt.assetID, tt.treasuryID)
-
-			if tt.wantError {
-				assert.Error(t, err)
-				return
-			}
-
-			require.NoError(t, err)
+			result := quantizedPriceToInt128(tt.quantizedPrice)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

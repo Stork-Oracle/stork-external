@@ -8,6 +8,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	DefaultLimitPerSecond = 40
+	DefaultBurstLimit     = 10
+	DefaultBatchSize      = 4
+)
+
 func NewPushCmd() *cobra.Command {
 	pushCmd := &cobra.Command{
 		Use:   "solana",
@@ -24,9 +30,9 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
-	pushCmd.Flags().IntP(pusher.LimitPerSecondFlag, "l", 40, pusher.LimitPerSecondDesc)
-	pushCmd.Flags().IntP(pusher.BurstLimitFlag, "r", 10, pusher.BurstLimitDesc)
-	pushCmd.Flags().IntP(pusher.BatchSizeFlag, "s", 4, pusher.BatchSizeDesc)
+	pushCmd.Flags().IntP(pusher.LimitPerSecondFlag, "l", DefaultLimitPerSecond, pusher.LimitPerSecondDesc)
+	pushCmd.Flags().IntP(pusher.BurstLimitFlag, "r", DefaultBurstLimit, pusher.BurstLimitDesc)
+	pushCmd.Flags().IntP(pusher.BatchSizeFlag, "s", DefaultBatchSize, pusher.BatchSizeDesc)
 
 	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
@@ -59,10 +65,32 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to parse private key")
 	}
 
-	interactor, err := NewContractInteractor(chainRpcUrl, chainWsUrl, contractAddress, payer, assetConfigFile, pollingPeriod, logger, limitPerSecond, burstLimit, batchSize)
+	interactor, err := NewContractInteractor(
+		chainRpcUrl,
+		chainWsUrl,
+		contractAddress,
+		payer,
+		assetConfigFile,
+		pollingPeriod,
+		logger,
+		limitPerSecond,
+		burstLimit,
+		batchSize,
+	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
-	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+
+	pusher := pusher.NewPusher(
+		storkWsEndpoint,
+		storkAuth,
+		chainRpcUrl,
+		contractAddress,
+		assetConfigFile,
+		batchingWindow,
+		pollingPeriod,
+		interactor,
+		&logger,
+	)
 	pusher.Run(context.Background())
 }

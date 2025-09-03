@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -21,6 +22,11 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// NumTreasuryAccounts is the number of treasury accounts to use.
+const NumTreasuryAccounts = 256
+
+var ErrBatchSizeExceedsLimit = errors.New("batch size exceeds limit, skipping update")
+
 type ContractInteractor struct {
 	logger             zerolog.Logger
 	client             *rpc.Client
@@ -36,10 +42,11 @@ type ContractInteractor struct {
 	confirmationInChan chan solana.Signature
 }
 
-// this is a limit imposed by the Solana blockchain and the size of the instruction
-const MAX_BATCH_SIZE = 4
+// MaxBatchSize is a limit imposed by the Solana blockchain and the size our update instruction.
+const MaxBatchSize = 4
 
-const NUM_CONFIRMATION_WORKERS = 10
+// NumConfirmationWorkers is the number of confirmation workers to run.
+const NumConfirmationWorkers = 10
 
 func NewContractInteractor(
 	rpcUrl string,
@@ -51,71 +58,51 @@ func NewContractInteractor(
 ) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "solana-contract-interactor").Logger()
 
-	if 0 < batchSize && batchSize < MAX_BATCH_SIZE {
-		logger.Fatal().Msgf("Batch size must be between 1 and %d", MAX_BATCH_SIZE)
+	if 0 < batchSize && batchSize < MaxBatchSize {
+		logger.Fatal().Msgf("Batch size must be between 1 and %d", MaxBatchSize)
 	}
 	// calculate the time between requests bases on limitPerSecond
-	timeBetweenRequestsMs := 1000 / limitPerSecond
-	limiter := rate.NewLimiter(rate.Every(time.Duration(timeBetweenRequestsMs)*time.Millisecond), burstLimit)
+	timeBetweenRequests := time.Second / time.Duration(limitPerSecond)
+	limiter := rate.NewLimiter(rate.Every(timeBetweenRequests), burstLimit)
 	client := rpc.New(rpcUrl)
+
 	wsClient, err := ws.Connect(context.Background(), wsUrl)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to connect to Solana WebSocket client")
-		return nil, err
+
+		return nil, fmt.Errorf("failed to connect to Solana WebSocket client: %w", err)
 	}
 
 	contractPubKey, err := solana.PublicKeyFromBase58(contractAddr)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Invalid contract address")
-		return nil, err
+
+		return nil, fmt.Errorf("invalid contract address: %w", err)
 	}
 
 	assetConfig, err := types.LoadConfig(assetConfigFile)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to load asset config")
+
+		return nil, fmt.Errorf("failed to load asset config: %w", err)
+	}
+
+	feedAccounts, err := getFeedAccountsFromAssets(assetConfig.Assets, contractPubKey, logger)
+	if err != nil {
 		return nil, err
 	}
 
-	feedAccounts := make(map[types.InternalEncodedAssetID]solana.PublicKey)
-	for _, asset := range assetConfig.Assets {
-		encodedAssetIDBytes, err := pusher.HexStringToByteArray(string(asset.EncodedAssetID))
-		if err != nil {
-			logger.Fatal().Err(err).Str("assetID", fmt.Sprintf("%v", asset.AssetID)).Msg("Failed to convert encoded asset ID to bytes")
-			return nil, err
-		}
-		// derive pda
-		feedAccount, _, err := solana.FindProgramAddress(
-			[][]byte{
-				[]byte("stork_feed"),
-				encodedAssetIDBytes,
-			},
-			contractPubKey,
-		)
-		if err != nil {
-			logger.Fatal().Err(err).Str("assetID", fmt.Sprintf("%v", asset.AssetID)).Msg("Failed to derive PDA for feed account")
-			return nil, err
-		}
-
-		encodedAssetID := types.InternalEncodedAssetID(encodedAssetIDBytes)
-		feedAccounts[encodedAssetID] = feedAccount
-	}
-
-	treasuryAccounts := make(map[uint8]solana.PublicKey)
-	for i := 0; i < 256; i++ {
-		treasuryAccount, _, err := solana.FindProgramAddress(
-			[][]byte{[]byte("stork_treasury"), {uint8(i)}}, contractPubKey)
-		if err != nil {
-			logger.Fatal().Err(err).Uint8("treasuryID", uint8(i)).Msg("Failed to derive PDA for treasury account")
-			return nil, err
-		}
-		treasuryAccounts[uint8(i)] = treasuryAccount
+	treasuryAccounts, err := getTreasuryAccounts(contractPubKey, logger)
+	if err != nil {
+		return nil, err
 	}
 
 	configAccount, _, err := solana.FindProgramAddress(
 		[][]byte{[]byte("stork_config")}, contractPubKey)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to derive PDA for config account")
-		return nil, err
+
+		return nil, fmt.Errorf("failed to derive PDA for config account: %w", err)
 	}
 
 	confirmationInChan := make(chan solana.Signature)
@@ -138,53 +125,25 @@ func NewContractInteractor(
 	}
 
 	go sci.runUnboundedConfirmationBuffer(confirmationOutChan)
-	sci.startConfirmationWorkers(confirmationOutChan, NUM_CONFIRMATION_WORKERS)
+
+	sci.startConfirmationWorkers(confirmationOutChan, NumConfirmationWorkers)
 
 	return sci, nil
 }
 
-func (sci *ContractInteractor) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
-	var queue []solana.Signature
-	for {
-		if len(queue) == 0 {
-			sig := <-sci.confirmationInChan
-			queue = append(queue, sig)
-		}
-		select {
-		case sig := <-sci.confirmationInChan:
-			queue = append(queue, sig)
-		case confirmationOutChan <- queue[0]:
-			queue = queue[1:]
-		}
-	}
-}
-
-func (sci *ContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
-	for i := 0; i < numWorkers; i++ {
-		go sci.confirmationWorker(ch)
-	}
-	sci.logger.Info().Int("numWorkers", numWorkers).Msg("Started confirmation workers")
-}
-
-func (sci *ContractInteractor) confirmationWorker(ch chan solana.Signature) {
-	for sig := range ch {
-		_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
-		if err != nil {
-			sci.logger.Error().Str("signature", sig.String()).Err(err).Msg("failed to confirm transaction")
-		} else {
-			sci.logger.Debug().Str("signature", sig.String()).Msg("confirmed transaction")
-		}
-	}
-}
-
-func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue) {
+func (sci *ContractInteractor) ListenContractEvents(
+	ctx context.Context,
+	ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+) {
 	wg := sync.WaitGroup{}
+
 	for _, feedAccount := range sci.feedAccounts {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			wg.Add(1)
+
 			go sci.listenSingleContractEvent(ctx, ch, feedAccount, &wg)
 		}
 	}
@@ -192,70 +151,34 @@ func (sci *ContractInteractor) ListenContractEvents(ctx context.Context, ch chan
 	wg.Wait()
 }
 
-func (sci *ContractInteractor) listenSingleContractEvent(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, feedAccount solana.PublicKey, wg *sync.WaitGroup) {
-	defer wg.Done()
-	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
-	if err != nil {
-		sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to subscribe to feed account")
-		return
-	}
-	defer sub.Unsubscribe()
-
-	for {
-		if ctx.Err() != nil {
-			return
-		}
-
-		msg, err := sub.Recv()
-		if err != nil {
-			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Error receiving contract events")
-			return
-		}
-
-		data := msg.Value.Data.GetBinary()
-
-		decoder := bin.NewBorshDecoder(data)
-
-		account := &bindings.TemporalNumericValueFeedAccount{}
-
-		err = account.UnmarshalWithDecoder(decoder)
-		if err != nil {
-			sci.logger.Error().Err(err).Msg("Error getting account from message")
-			continue
-		}
-
-		latestValue := account.LatestValue
-		tv := types.InternalTemporalNumericValue{
-			QuantizedValue: latestValue.QuantizedValue.BigInt(),
-			TimestampNs:    latestValue.TimestampNs,
-		}
-
-		ch <- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue{account.Id: tv}
-	}
-}
-
-func (sci *ContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+func (sci *ContractInteractor) PullValues(
+	encodedAssetIDs []types.InternalEncodedAssetID,
+) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
 	for _, encodedAssetID := range encodedAssetIDs {
-
 		feedAccount := sci.feedAccounts[encodedAssetID]
+
 		accountInfo, err := sci.client.GetAccountInfo(context.Background(), feedAccount)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to get account info")
+
 			continue
 		}
 
 		if accountInfo == nil || len(accountInfo.Value.Data.GetBinary()) == 0 {
 			sci.logger.Debug().Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
+
 			continue
 		}
 
 		decoder := bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary())
 		account := &bindings.TemporalNumericValueFeedAccount{}
+
 		err = account.UnmarshalWithDecoder(decoder)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to decode account data")
+
 			continue
 		}
 
@@ -268,20 +191,28 @@ func (sci *ContractInteractor) PullValues(encodedAssetIDs []types.InternalEncode
 	return polledVals, nil
 }
 
-func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
+func (sci *ContractInteractor) BatchPushToContract(
+	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+) error {
 	var wg sync.WaitGroup
+
 	errChan := make(chan error, len(priceUpdates))
 	sigChan := make(chan solana.Signature, len(priceUpdates))
+
 	priceUpdatesBatches := sci.batchPriceUpdates(priceUpdates)
 	for _, priceUpdateBatch := range priceUpdatesBatches {
 		wg.Add(1)
+
 		go func(priceUpdateBatch map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) {
 			defer wg.Done()
+
 			err := sci.limiter.Wait(context.Background())
 			if err != nil {
 				errChan <- fmt.Errorf("rate limiter error: %w", err)
+
 				return
 			}
+
 			sig, err := sci.pushLimitedBatchUpdateToContract(priceUpdateBatch)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to push batch: %w", err)
@@ -295,12 +226,13 @@ func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.Intern
 	close(errChan)
 	close(sigChan)
 	// Collect any errors
-	var errs []error
+	errs := make([]error, 0, len(priceUpdates))
 	for err := range errChan {
 		errs = append(errs, err)
 	}
 
 	if len(errs) > 0 {
+		//nolint:err113 // This is essentially wrapping the errors
 		return fmt.Errorf("batch push encountered %d errors: %v", len(errs), errs)
 	}
 
@@ -317,24 +249,197 @@ func (sci *ContractInteractor) BatchPushToContract(priceUpdates map[types.Intern
 	return nil
 }
 
+// GetWalletBalance is a placeholder function to get the balance of the wallet being used to push to the contract.
 // todo: implement
+//
+//nolint:godox // This function has unmet criteria to be implemented.
 func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return -1, nil
 }
 
-func (sci *ContractInteractor) batchPriceUpdates(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) []map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+func getFeedAccountsFromAssets(
+	assets map[types.AssetID]types.AssetEntry,
+	contractPubKey solana.PublicKey,
+	logger zerolog.Logger,
+) (map[types.InternalEncodedAssetID]solana.PublicKey, error) {
+	feedAccounts := make(map[types.InternalEncodedAssetID]solana.PublicKey)
+
+	var (
+		encodedAssetIDBytes []byte
+		feedAccount         solana.PublicKey
+		err                 error
+	)
+
+	for _, asset := range assets {
+		encodedAssetIDBytes, err = pusher.HexStringToByteArray(string(asset.EncodedAssetID))
+		if err != nil {
+			logger.Fatal().
+				Err(err).
+				Str("assetID", fmt.Sprintf("%v", asset.AssetID)).
+				Msg("Failed to convert encoded asset ID to bytes")
+
+			return nil, fmt.Errorf("failed to convert encoded asset ID to bytes: %w", err)
+		}
+		// derive pda
+		feedAccount, _, err = solana.FindProgramAddress(
+			[][]byte{
+				[]byte("stork_feed"),
+				encodedAssetIDBytes,
+			},
+			contractPubKey,
+		)
+		if err != nil {
+			logger.Fatal().
+				Err(err).
+				Str("assetID", fmt.Sprintf("%v", asset.AssetID)).
+				Msg("Failed to derive PDA for feed account")
+
+			return nil, fmt.Errorf("failed to derive PDA for feed account: %w", err)
+		}
+
+		encodedAssetID := types.InternalEncodedAssetID(encodedAssetIDBytes)
+		feedAccounts[encodedAssetID] = feedAccount
+	}
+
+	return feedAccounts, nil
+}
+
+func getTreasuryAccounts(
+	contractPubKey solana.PublicKey,
+	logger zerolog.Logger,
+) (map[uint8]solana.PublicKey, error) {
+	treasuryAccounts := make(map[uint8]solana.PublicKey)
+
+	for i := range NumTreasuryAccounts {
+		//nolint:gosec // "i" is clearly constrained to uint8 range
+		uint8i := uint8(i)
+
+		var (
+			treasuryAccount solana.PublicKey
+			err             error
+		)
+
+		treasuryAccount, _, err = solana.FindProgramAddress(
+			[][]byte{[]byte("stork_treasury"), {uint8i}}, contractPubKey)
+		if err != nil {
+			logger.Fatal().Err(err).Uint8("treasuryID", uint8i).Msg("Failed to derive PDA for treasury account")
+
+			return nil, fmt.Errorf("failed to derive PDA for treasury account: %w", err)
+		}
+
+		treasuryAccounts[uint8i] = treasuryAccount
+	}
+
+	return treasuryAccounts, nil
+}
+
+func (sci *ContractInteractor) runUnboundedConfirmationBuffer(confirmationOutChan chan solana.Signature) {
+	var queue []solana.Signature
+	for {
+		if len(queue) == 0 {
+			sig := <-sci.confirmationInChan
+			queue = append(queue, sig)
+		}
+
+		select {
+		case sig := <-sci.confirmationInChan:
+			queue = append(queue, sig)
+		case confirmationOutChan <- queue[0]:
+			queue = queue[1:]
+		}
+	}
+}
+
+func (sci *ContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
+	for range numWorkers {
+		go sci.confirmationWorker(ch)
+	}
+
+	sci.logger.Info().Int("numWorkers", numWorkers).Msg("Started confirmation workers")
+}
+
+func (sci *ContractInteractor) confirmationWorker(ch chan solana.Signature) {
+	for sig := range ch {
+		_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
+		if err != nil {
+			sci.logger.Error().Str("signature", sig.String()).Err(err).Msg("failed to confirm transaction")
+		} else {
+			sci.logger.Debug().Str("signature", sig.String()).Msg("confirmed transaction")
+		}
+	}
+}
+
+func (sci *ContractInteractor) listenSingleContractEvent(
+	ctx context.Context,
+	ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+	feedAccount solana.PublicKey,
+	wg *sync.WaitGroup,
+) {
+	defer wg.Done()
+
+	sub, err := sci.wsClient.AccountSubscribe(feedAccount, rpc.CommitmentFinalized)
+	if err != nil {
+		sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to subscribe to feed account")
+
+		return
+	}
+	defer sub.Unsubscribe()
+
+	for {
+		if ctx.Err() != nil {
+			return
+		}
+
+		var msg *ws.AccountResult
+
+		msg, err = sub.Recv()
+		if err != nil {
+			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Error receiving contract events")
+
+			return
+		}
+
+		data := msg.Value.Data.GetBinary()
+
+		decoder := bin.NewBorshDecoder(data)
+
+		account := &bindings.TemporalNumericValueFeedAccount{}
+
+		err = account.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			sci.logger.Error().Err(err).Msg("Error getting account from message")
+
+			continue
+		}
+
+		latestValue := account.LatestValue
+		tv := types.InternalTemporalNumericValue{
+			QuantizedValue: latestValue.QuantizedValue.BigInt(),
+			TimestampNs:    latestValue.TimestampNs,
+		}
+
+		ch <- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue{account.Id: tv}
+	}
+}
+
+func (sci *ContractInteractor) batchPriceUpdates(
+	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+) []map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdatesBatches := []map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{}
 
 	priceUpdatesBatch := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 	i := 0
+
 	for encodedAssetID, priceUpdate := range priceUpdates {
 		priceUpdatesBatch[encodedAssetID] = priceUpdate
+
 		i++
 		if len(priceUpdatesBatch) == sci.batchSize || i == len(priceUpdates) {
 			batchCopy := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice, len(priceUpdatesBatch))
 			for k, v := range priceUpdatesBatch {
 				batchCopy[k] = v
 			}
+
 			priceUpdatesBatches = append(priceUpdatesBatches, batchCopy)
 			priceUpdatesBatch = make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 		}
@@ -343,30 +448,40 @@ func (sci *ContractInteractor) batchPriceUpdates(priceUpdates map[types.Internal
 	return priceUpdatesBatches
 }
 
-func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) (solana.Signature, error) {
-	if len(priceUpdates) > MAX_BATCH_SIZE {
-		return solana.Signature{}, fmt.Errorf("batch size exceeds limit, skipping update")
+func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(
+	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+) (solana.Signature, error) {
+	if len(priceUpdates) > MaxBatchSize {
+		return solana.Signature{}, ErrBatchSizeExceedsLimit
 	}
 
-	randomID, err := rand.Int(rand.Reader, big.NewInt(256))
+	randomID, err := rand.Int(rand.Reader, big.NewInt(NumTreasuryAccounts))
 	if err != nil {
 		return solana.Signature{}, fmt.Errorf("failed to generate random ID: %w", err)
 	}
+
+	//nolint:gosec // "randomID" is clearly constrained to uint8 range
 	treasuryID := uint8(randomID.Uint64())
 
 	treasuryAccount := sci.treasuryAccounts[treasuryID]
 	instructions := []solana.Instruction{}
 	assetIDs := []string{}
 
+	var updateData bindings.TemporalNumericValueEvmInput
 	for encodedAssetID, priceUpdate := range priceUpdates {
-		updateData, err := sci.priceUpdateToTemporalNumericValueEvmInput(priceUpdate, encodedAssetID, treasuryID)
+		updateData, err = sci.priceUpdateToTemporalNumericValueEvmInput(priceUpdate, treasuryID)
 		if err != nil {
-			return solana.Signature{}, fmt.Errorf("failed to convert price update to TemporalNumericValueEvmInput: %w", err)
+			return solana.Signature{}, fmt.Errorf(
+				"failed to convert price update to TemporalNumericValueEvmInput: %w",
+				err,
+			)
 		}
 
 		feedAccount := sci.feedAccounts[encodedAssetID]
 
-		instruction, err := bindings.NewUpdateTemporalNumericValueEvmInstruction(
+		var instruction *bindings.Instruction
+
+		instruction, err = bindings.NewUpdateTemporalNumericValueEvmInstruction(
 			updateData,
 			sci.configAccount,
 			treasuryAccount,
@@ -377,8 +492,8 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map
 		if err != nil {
 			return solana.Signature{}, fmt.Errorf("failed to build instruction: %w", err)
 		}
-		instructions = append(instructions, instruction)
 
+		instructions = append(instructions, instruction)
 	}
 
 	recentBlockHash, err := sci.client.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
@@ -400,6 +515,7 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map
 			if key == sci.payer.PublicKey() {
 				return &sci.payer
 			}
+
 			return nil
 		})
 	if err != nil {
@@ -422,23 +538,36 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(priceUpdates map
 	return sig, nil
 }
 
-func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUpdate types.AggregatedSignedPrice, encodedAssetID types.InternalEncodedAssetID, treasuryID uint8) (bindings.TemporalNumericValueEvmInput, error) {
+func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(
+	priceUpdate types.AggregatedSignedPrice,
+	treasuryID uint8,
+) (bindings.TemporalNumericValueEvmInput, error) {
 	var assetID [32]uint8
-	copy(assetID[:], encodedAssetID[:])
 
-	quantizedPrice := sci.quantizedPriceToInt128(priceUpdate.StorkSignedPrice.QuantizedPrice)
+	encodedAssetIDBytes, err := pusher.HexStringToByte32(string(priceUpdate.StorkSignedPrice.EncodedAssetID))
+	if err != nil {
+		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert EncodedAssetID: %w", err)
+	}
+
+	copy(assetID[:], encodedAssetIDBytes[:])
+
+	quantizedPrice := quantizedPriceToInt128(priceUpdate.StorkSignedPrice.QuantizedPrice)
 
 	publisherMerkleRootBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.PublisherMerkleRoot)
 	if err != nil {
 		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert PublisherMerkleRoot: %w", err)
 	}
+
 	var publisherMerkleRoot [32]uint8
 	copy(publisherMerkleRoot[:], publisherMerkleRootBytes)
 
-	valueComputeAlgHashBytes, err := pusher.HexStringToByteArray(priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum)
+	valueComputeAlgHashBytes, err := pusher.HexStringToByteArray(
+		priceUpdate.StorkSignedPrice.StorkCalculationAlg.Checksum,
+	)
 	if err != nil {
 		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert ValueComputeAlgHash: %w", err)
 	}
+
 	var valueComputeAlgHash [32]uint8
 	copy(valueComputeAlgHash[:], valueComputeAlgHashBytes)
 
@@ -446,6 +575,8 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUp
 	if err != nil {
 		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert R: %w", err)
 	}
+
+	//nolint:varnamelen // "r" is a valid variable name in the context of rsv signature
 	var r [32]uint8
 	copy(r[:], rBytes)
 
@@ -453,6 +584,7 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUp
 	if err != nil {
 		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert S: %w", err)
 	}
+
 	var s [32]uint8
 	copy(s[:], sBytes)
 
@@ -460,11 +592,12 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUp
 	if err != nil {
 		return bindings.TemporalNumericValueEvmInput{}, fmt.Errorf("failed to convert V: %w", err)
 	}
-	v := uint8(vBytes[0])
+
+	v := vBytes[0]
 
 	return bindings.TemporalNumericValueEvmInput{
 		TemporalNumericValue: bindings.TemporalNumericValue{
-			TimestampNs:    uint64(priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano),
+			TimestampNs:    priceUpdate.StorkSignedPrice.TimestampedSignature.TimestampNano,
 			QuantizedValue: quantizedPrice,
 		},
 		Id:                  assetID,
@@ -477,7 +610,8 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(priceUp
 	}, nil
 }
 
-func (sci *ContractInteractor) quantizedPriceToInt128(quantizedPrice types.QuantizedPrice) bin.Int128 {
+//nolint:mnd // twos compliment conversions contain magic numbers
+func quantizedPriceToInt128(quantizedPrice types.QuantizedPrice) bin.Int128 {
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
 
@@ -487,6 +621,7 @@ func (sci *ContractInteractor) quantizedPriceToInt128(quantizedPrice types.Quant
 			Lo: quantizedPriceBigInt.Uint64(),
 			Hi: new(big.Int).Rsh(quantizedPriceBigInt, 64).Uint64(),
 		}
+
 		return quantizedPrice128
 	} else {
 		maxUint128 := new(big.Int).Lsh(big.NewInt(1), 128)
@@ -501,6 +636,7 @@ func (sci *ContractInteractor) quantizedPriceToInt128(quantizedPrice types.Quant
 			Lo: twosComplement.Uint64(),
 			Hi: new(big.Int).Rsh(twosComplement, 64).Uint64(),
 		}
+
 		return quantizedPrice128
 	}
 }
