@@ -100,7 +100,7 @@ pub unsafe extern "C" fn fuel_get_latest_value(
     }
 
     let result = (|| -> Result<Option<String>, FuelClientError> {
-        let client = unsafe { & *client };
+        let client = unsafe { &*client };
 
         let id: [u8; 32] = unsafe { *id_ptr };
 
@@ -161,7 +161,7 @@ pub unsafe extern "C" fn fuel_update_values(
     }
 
     let result = (|| -> Result<String, FuelClientError> {
-        let client = unsafe { & *client };
+        let client = unsafe { &*client };
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
 
@@ -207,7 +207,7 @@ pub unsafe extern "C" fn fuel_get_wallet_balance(
     }
 
     let result = {
-        let client = unsafe { & *client };
+        let client = unsafe { &*client };
         client.rt.block_on(client.get_wallet_balance())
     };
 
