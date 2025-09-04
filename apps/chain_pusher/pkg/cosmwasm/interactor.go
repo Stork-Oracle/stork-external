@@ -61,6 +61,9 @@ func NewContractInteractor(
 	}, nil
 }
 
+// ListenContractEvents is a placeholder function for the contract interactor.
+// unfortunately, Cosmwasm doesn't currently support websocket RPCs, so we can't listen to events from the contract
+// this contract does emit events, so this can be implemented in the future if Cosmwasm re-adds websocket support.
 func (sci *ContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {

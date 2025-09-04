@@ -56,6 +56,16 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
 
-	pusher := pusher.NewPusher(storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile, batchingWindow, pollingPeriod, interactor, &logger)
+	pusher := pusher.NewPusher(
+		storkWsEndpoint,
+		storkAuth,
+		chainRpcUrl,
+		contractAddress,
+		assetConfigFile,
+		batchingWindow,
+		pollingPeriod,
+		interactor,
+		&logger,
+	)
 	pusher.Run(context.Background())
 }

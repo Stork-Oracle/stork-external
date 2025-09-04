@@ -1,3 +1,6 @@
+// These bindings are not generated.
+// Instead, this file contains utility functions for interacting with the Cosmwasm Stork contract.
+
 package bindings
 
 import (

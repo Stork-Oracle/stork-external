@@ -1,11 +1,12 @@
-// Unlike the EVM and Solana bindings, the Aptos bindings are generated from the Move source code, as a tool for this does currently exist.
+// These bindings are not generated.
 // Instead, this file contains utility functions for interacting with the Aptos Stork contract.
-// These functions are written using the official aptos go sdk.
 
 package bindings
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -13,6 +14,13 @@ import (
 	"github.com/aptos-labs/aptos-go-sdk"
 	"github.com/aptos-labs/aptos-go-sdk/bcs"
 	"github.com/aptos-labs/aptos-go-sdk/crypto"
+)
+
+var (
+	ErrInvalidLengths = errors.New("invalid lengths")
+	ErrEmptyResponse  = errors.New("empty response")
+	ErrWrongType      = errors.New("wrong type")
+	ErrTxFailed       = errors.New("transaction failed")
 )
 
 type StorkContract struct {
@@ -53,77 +61,41 @@ func NewStorkContract(rpcUrl string, contractAddress string, key *crypto.Ed25519
 		FaucetUrl:  "",
 		IndexerUrl: "",
 	}
+
 	client, err := aptos.NewClient(config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 
 	account, err := aptos.NewAccountFromSigner(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create account from signer: %w", err)
 	}
 
 	address := aptos.AccountAddress{}
+
 	err = address.ParseStringRelaxed(contractAddress)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse contract address: %w", err)
 	}
 
 	return &StorkContract{Client: client, Account: account, ContractAddress: address}, nil
 }
 
-func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetID) (TemporalNumericValue, error) {
-	serializer := bcs.Serializer{}
-	serializer.WriteBytes(id[:])
-	encodedAssetID := serializer.ToBytes()
-
-	payload := &aptos.ViewPayload{
-		Module: aptos.ModuleId{
-			Address: sc.ContractAddress,
-			Name:    "stork",
-		},
-		Function: "get_temporal_numeric_value_unchecked",
-		ArgTypes: []aptos.TypeTag{},
-		Args:     [][]byte{encodedAssetID},
-	}
-
-	value, err := sc.Client.View(payload)
-	if err != nil {
-		return TemporalNumericValue{}, err
-	}
-
-	if len(value) == 0 {
-		return TemporalNumericValue{}, fmt.Errorf("empty response")
-	}
-
-	responseMap := value[0].(map[string]interface{})
-	timestamp, err := strconv.ParseUint(responseMap["timestamp_ns"].(string), 10, 64)
-	if err != nil {
-		return TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp: %w", err)
-	}
-
-	quantizedValue := responseMap["quantized_value"].(map[string]interface{})
-	magnitude := new(big.Int)
-	magnitude.SetString(quantizedValue["magnitude"].(string), 10)
-	negative := quantizedValue["negative"].(bool)
-
-	return TemporalNumericValue{
-		TimestampNs: timestamp,
-		QuantizedValue: I128{
-			Magnitude: magnitude,
-			Negative:  negative,
-		},
-	}, nil
-}
-
 // GetMultipleTemporalNumericValuesUnchecked returns the temporal numeric values for the given feed IDs.
-func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIDs []EncodedAssetID) (map[EncodedAssetID]TemporalNumericValue, error) {
+func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
+	feedIDs []EncodedAssetID,
+) (map[EncodedAssetID]TemporalNumericValue, error) {
 	response := map[EncodedAssetID]TemporalNumericValue{}
-	var mu sync.Mutex
-	var wg sync.WaitGroup
+
+	var (
+		mu sync.Mutex
+		wg sync.WaitGroup
+	)
 
 	for _, id := range feedIDs {
 		wg.Add(1)
+
 		go func(id EncodedAssetID) {
 			defer wg.Done()
 
@@ -134,7 +106,9 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIDs []Enc
 			}
 
 			mu.Lock()
+
 			response[id] = value
+
 			mu.Unlock()
 		}(id)
 	}
@@ -144,6 +118,7 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(feedIDs []Enc
 	return response, nil
 }
 
+//nolint:funlen // This is a long function but does related work.
 func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
 	// Create separate serializers for each vector
 	idsSerializer := bcs.Serializer{}
@@ -157,47 +132,63 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	vsSerializer := bcs.Serializer{}
 
 	// Serialize each vector with its own serializer
-	idsSerializer.Uleb128(uint32(len(updateData)))
+	if len(updateData) > math.MaxUint32 {
+		return "", ErrInvalidLengths
+	}
+
+	//nolint:all // safe to cast to uint32.
+	lenUpdateData := uint32(len(updateData))
+
+	idsSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		idsSerializer.WriteBytes(data.ID)
 	}
 
-	timestampsSerializer.Uleb128(uint32(len(updateData)))
+	timestampsSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		timestampsSerializer.U64(data.TemporalNumericValueTimestampNs)
 	}
 
-	magnitudesSerializer.Uleb128(uint32(len(updateData)))
+	magnitudesSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		magnitudesSerializer.U128(*data.TemporalNumericValueMagnitude)
 	}
 
-	negativesSerializer.Uleb128(uint32(len(updateData)))
+	negativesSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		negativesSerializer.Bool(data.TemporalNumericValueNegative)
 	}
 
-	merkleRootsSerializer.Uleb128(uint32(len(updateData)))
+	merkleRootsSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		merkleRootsSerializer.WriteBytes(data.PublisherMerkleRoot)
 	}
 
-	algHashesSerializer.Uleb128(uint32(len(updateData)))
+	algHashesSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		algHashesSerializer.WriteBytes(data.ValueComputeAlgHash)
 	}
 
-	rsSerializer.Uleb128(uint32(len(updateData)))
+	rsSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		rsSerializer.WriteBytes(data.R)
 	}
 
-	ssSerializer.Uleb128(uint32(len(updateData)))
+	ssSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		ssSerializer.WriteBytes(data.S)
 	}
 
-	vsSerializer.Uleb128(uint32(len(updateData)))
+	vsSerializer.Uleb128(lenUpdateData)
+
 	for _, data := range updateData {
 		vsSerializer.U8(data.V)
 	}
@@ -223,20 +214,91 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 		},
 	}
 
-	submitResponse, err := sc.Client.BuildSignAndSubmitTransaction(sc.Account, aptos.TransactionPayload{Payload: payload})
+	submitResponse, err := sc.Client.BuildSignAndSubmitTransaction(
+		sc.Account,
+		aptos.TransactionPayload{Payload: payload},
+	)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to build sign and submit transaction: %w", err)
 	}
 
 	hash := submitResponse.Hash
+
 	tx, err := sc.Client.WaitForTransaction(hash)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to wait for transaction: %w", err)
 	}
 
 	if !tx.Success {
-		return "", fmt.Errorf("transaction failed: %s", tx.VmStatus)
+		return "", fmt.Errorf("%s: %w", tx.VmStatus, ErrTxFailed)
 	}
 
 	return tx.Hash, nil
+}
+
+func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetID) (TemporalNumericValue, error) {
+	serializer := bcs.Serializer{}
+	serializer.WriteBytes(id[:])
+	encodedAssetID := serializer.ToBytes()
+
+	payload := &aptos.ViewPayload{
+		Module: aptos.ModuleId{
+			Address: sc.ContractAddress,
+			Name:    "stork",
+		},
+		Function: "get_temporal_numeric_value_unchecked",
+		ArgTypes: []aptos.TypeTag{},
+		Args:     [][]byte{encodedAssetID},
+	}
+
+	value, err := sc.Client.View(payload)
+	if err != nil {
+		return TemporalNumericValue{}, fmt.Errorf("failed to get temporal numeric value: %w", err)
+	}
+
+	if len(value) == 0 {
+		return TemporalNumericValue{}, ErrEmptyResponse
+	}
+
+	responseMap, ok := value[0].(map[string]interface{})
+	if !ok {
+		return TemporalNumericValue{}, ErrWrongType
+	}
+
+	timestampString, ok := responseMap["timestamp_ns"].(string)
+	if !ok {
+		return TemporalNumericValue{}, ErrWrongType
+	}
+
+	timestamp, err := strconv.ParseUint(timestampString, 10, 64)
+	if err != nil {
+		return TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp: %w", err)
+	}
+
+	quantizedValue, ok := responseMap["quantized_value"].(map[string]interface{})
+	if !ok {
+		return TemporalNumericValue{}, ErrWrongType
+	}
+
+	magnitudeString, ok := quantizedValue["magnitude"].(string)
+	if !ok {
+		return TemporalNumericValue{}, ErrWrongType
+	}
+
+	magnitude := new(big.Int)
+	//nolint:mnd // base number.
+	magnitude.SetString(magnitudeString, 10)
+
+	negative, ok := quantizedValue["negative"].(bool)
+	if !ok {
+		return TemporalNumericValue{}, ErrWrongType
+	}
+
+	return TemporalNumericValue{
+		TimestampNs: timestamp,
+		QuantizedValue: I128{
+			Magnitude: magnitude,
+			Negative:  negative,
+		},
+	}, nil
 }

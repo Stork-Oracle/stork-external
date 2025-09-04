@@ -42,6 +42,7 @@ linters:
         - ^github.com/gagliardetto/binary.Int128$
         - ^github.com/ethereum/go-ethereum/accounts/abi/bind.WatchOpts$
         - ^github.com/cosmos/cosmos-sdk/client.Context$
+        - ^github.com/aptos-labs/aptos-go-sdk/crypto.Ed25519PrivateKey$
         # generated internal libs
         - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings.+$
     embeddedstructfieldcheck:
