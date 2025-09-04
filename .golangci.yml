@@ -96,6 +96,8 @@ linters:
         - name: var-naming
           arguments:
             - ["RPC", "URL"]
+            - []
+            - - skip-package-name-checks: true
     staticcheck:
       checks:
         - all
