@@ -6,7 +6,7 @@ It is available on [forc.pub](https://forc.pub/package/stork_sway_sdk).
 
 ## Pull Model 
 
-The Stork Sway SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/docs/chain_pusher.md) in order to do this.
+The Stork Sway SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/chain_pusher/README.md) in order to do this.
 
 ## Details
 
@@ -18,7 +18,7 @@ The Stork Sway SDK provides a set of useful features for building Fuel contracts
 
 ## Example 
 
-The following snippet is an example of how to use this sdk to consume Stork price feeds on chain. A full example is available [here](https://github.com/Stork-Oracle/stork-external/tree/main/examples/fuel).
+The following snippet is an example of how to use this sdk to consume Stork price feeds on chain. A full example is available [here](https://github.com/Stork-Oracle/stork-external/tree/main/chains/fuel/examples).
 
 ```rust
     // This function reads the latest price from a Stork feed

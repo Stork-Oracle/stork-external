@@ -2,7 +2,7 @@
 
 This directory contains the Stork compatible Fuel contract written in [Sway](https://docs.fuel.network/docs/sway/), as well as a CLI tool used to manage the Stork Fuel compatible contract.
 
-This contract is used to read and write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-fuel-sdk](../../sdks/fuel/stork-sway-sdk).
+This contract is used to read and write the latest values from the Stork network on-chain. For reading values on chain, see the [stork-sway-sdk](./sdks/stork_sway_sdk).
 
 ### Getting started
 
