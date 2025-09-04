@@ -18,7 +18,7 @@ assets:
         percent_change_threshold: 1
 ```
 
-See [sample.asset-config.yaml](../apps/sample.asset-config.yaml) for an example.
+See [sample.asset-config.yaml](sample.asset-config.yaml) for an example.
 
 ### Rust
 
@@ -32,18 +32,18 @@ Create a `private-key.secret` file containing the private key of your wallet. Th
 ### Running the EVM Pusher
 For full explanation of the flags, run:
 ```bash
-go run . evm --help
+go run ./cmd/main.go evm --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go evm \
+go run ./cmd/main.go evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
     -x <contract-id> \
     -f <asset-config-file> \
-    -m <private-key-file>
+    -k <private-key-file>
 ```
 
 ### EVM Development Setup
@@ -54,7 +54,7 @@ go install github.com/ethereum/go-ethereum/cmd/abigen@latest
 
 2. Generate the contract bindings
 ```bash
-abigen --abi ../contracts/evm/stork.abi --pkg contract_bindings_evm --type StorkContract --out chain_pusher/lib/contract_bindings/evm/stork_evm_contract.go
+abigen --abi ../../chains/evm/contracts/stork/stork.abi --pkg bindings --type StorkContract --out chain_pusher/pkg/evm/bindings/stork_evm_contract.go
 ```
 
 ## Solana Chain Setup
@@ -65,12 +65,12 @@ Create a `keypair.json` file containing your Solana wallet keypair. This file is
 ### Running the Solana Pusher
 For full explanation of the flags, run:
 ```bash
-go run . solana --help
+go run ./cmd/main.go solana --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go solana \
+go run ./cmd/main.go solana \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -90,7 +90,7 @@ go build
 
 2. Generate the contract bindings
 ```bash
-./solana-anchor-go src=../contracts/solana/programs/stork/src/target/idl
+./solana-anchor-go src=../../chains/solana/contracts/target/idl/stork.json -pkg bindings -dst pkg/solana/bindings
 ```
 
 ## Sui Chain Setup
@@ -101,12 +101,12 @@ Creat a `.key` file containing your Sui wallet keypair. This file is needed to s
 ### Running the Sui Pusher
 For full explanation of the flags, run:
 ```bash
-go run . sui --help
+go run ./cmd/main.go sui --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go sui \
+go run ./cmd/main.go sui \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -116,7 +116,7 @@ go run ./cmd/chain_pusher/main.go sui \
 ```
 
 ### Sui Development Setup
-At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](../apps/chain_pusher/lib/contract_bindings/sui/stork_sui_contract.go).
+At the time of writing there is no way to generate Go bindings for Sui automatically. Manually built contract bindings/utilities can be found [here](pkg/sui/bindings/stork_sui_contract.go).
 
 ## Aptos Chain Setup
 
@@ -146,14 +146,14 @@ go run ./cmd/chain_pusher/main.go aptos \
 Create a `.key` file containing only your private key mnemonic.
 
 ### Running the CosmWasm Pusher
-For full explanation of the flags, run:
+For a full explanation of the flags, run:
 ```bash
-go run . cosmwasm --help
+go run ./cmd/main.go cosmwasm --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go cosmwasm \
+go run ./cmd/main.go cosmwasm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -r <chain-rpc-url> \
@@ -168,7 +168,7 @@ go run ./cmd/chain_pusher/main.go cosmwasm \
 ```
 
 ### CosmWasm Development Setup
-At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](../apps/chain_pusher/lib/contract_bindings/cosmwasm/stork_cosmwasm_contract.go).
+At the time of writing there is no way to generate Go bindings for CosmWasm automatically. Manually built contract bindings/utilities can be found [here](pkg/cosmwasm/bindings/stork_cosmwasm_contract.go).
 
 ## Fuel Chain Setup
 
@@ -176,23 +176,27 @@ At the time of writing there is no way to generate Go bindings for CosmWasm auto
 Create a `.key` file containing only your fuel private key hex string (without the `0x` prefix).
 
 ### Running the Fuel Pusher
+For a full explanation of the flags, run:
+```bash
+go run ./cmd/main.go fuel --help
+```
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go fuel \
+go run ./cmd/main.go fuel \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <fuel-rpc-url> \
     -x <contract-id> \
     -f <asset-config-file> \
-    -m <private-key-file>
+    -k <private-key-file>
 ```
 
 ### Fuel Development Setup
 
-The Fuel pusher relies on [rust bindings](../chain_pusher/lib/contract_bindings/fuel/fuel_ffi/src/lib.rs) called from go via cgo [here](../chain_pusher/lib/contract_bindings/fuel/stork_fuel_contract.go). The rust bindings are reliant on [stork-abi.json](../chain_pusher/lib/contract_bindings/fuel/fuel_ffi/stork-abi.json). Ensure this is the latest version of the abi. The abi is generated by running `npx fuels build` in the `contracts/fuel/cli` directory, and can be found in `/contracts/fuel/out/release/stork-abi.json` once built.
+The Fuel pusher relies on [rust bindings](pkg/fuel/bindings/fuel_ffi/src/lib.rs) called from go via cgo [here](pkg/fuel/bindings/stork_fuel_contract.go). The rust bindings are reliant on [stork-abi.json](pkg/fuel/bindings/fuel_ffi/stork-abi.json). Ensure this is the latest version of the abi. The abi is generated by running `npx fuels build` in the `chains/fuel/cli` directory, and can be found in `/chains/fuel/contracts/out/release/stork-abi.json` once built.
 
-To update the rust bindings used by the pusher, run `make rust` in the root of this repo, then run `go build` in the `apps/cmd/chain_pusher` directory.
+To update the rust bindings used by the pusher, run `make rust` in the root of this repo.
 
 ## Deployment
 ### Running with Docker
@@ -214,6 +218,6 @@ docker run \
     -c https://rpc-amoy.polygon.technology \
     -x 0xacc0a0cf13571d30b4b8637996f5d6d774d4fd62 \
     -f /etc/asset-config.yaml \
-    -m /etc/private-key.secret \
+    -k /etc/private-key.secret \
     -b 60
 ```
