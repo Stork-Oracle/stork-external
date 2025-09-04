@@ -92,6 +92,18 @@ jobs:
             with:
               go-version: stable
           
+          - name: Cache Rust dependencies and build artifacts
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+              key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
+
           - name: Build Rust Dependencies
             run: make rust
 
