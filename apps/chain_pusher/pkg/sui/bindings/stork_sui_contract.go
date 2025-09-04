@@ -660,12 +660,12 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 		return StorkState{}, fmt.Errorf("stork evm public key is not a map: %w", ErrWrongType)
 	}
 
-	storkEvmPublicKeyFieldsField, exists := storkEvmPublicKeyMap["fields"]
+	storkEvmPublicKeyFields, exists := storkEvmPublicKeyMap["fields"]
 	if !exists {
 		return StorkState{}, fmt.Errorf("stork evm public key fields field not found: %w", ErrFieldNotFound)
 	}
 
-	fieldsMap, ok := storkEvmPublicKeyFieldsField.(map[string]interface{})
+	fieldsMap, ok := storkEvmPublicKeyFields.(map[string]interface{})
 	if !ok {
 		return StorkState{}, fmt.Errorf("stork evm public key fields is not a map: %w", ErrWrongType)
 	}
@@ -675,12 +675,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 		return StorkState{}, fmt.Errorf("stork evm public key fields map bytes field not found: %w", ErrFieldNotFound)
 	}
 
-	bytesMap, ok := fieldsMapBytesField.(map[string]interface{})
-	if !ok {
-		return StorkState{}, fmt.Errorf("stork evm public key fields map bytes is not a map: %w", ErrWrongType)
-	}
-
-	byteSlice, err := interfaceSliceToBytes(bytesMap)
+	byteSlice, err := interfaceSliceToBytes(fieldsMapBytesField)
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to convert public key bytes: %w", err)
 	}
