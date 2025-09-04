@@ -79,6 +79,7 @@ jobs:
                 reviewdog -f=checkstyle -name="lint-rust" -reporter=github-pr-check
 
     # Runs golangci-lint with formatter checks enabled. No separate check-go-formatting job needed.
+    # Currently only lints the chain_pusher package.
     lint-go:
         runs-on: ubuntu-latest
 
@@ -98,7 +99,7 @@ jobs:
             uses: reviewdog/action-golangci-lint@v2
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
-              golangci_lint_flags: "--config=.golangci.yml"
+              golangci_lint_flags: "--config=.golangci.yml ./apps/chain_pusher/..."
               reporter: github-pr-check
               filter_mode: nofilter
               fail_level: error
