@@ -1,0 +1,8 @@
+{
+  "EvmPrivateKey": "0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
+  "EvmPublicKey": "0x99e295e85cb07c16b7bb62a44df532a7f2620237",
+  "StarkPrivateKey": "0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a",
+  "StarkPublicKey": "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06",
+  "OracleId": "czowx",
+  "StorkAuth": "fakeauth"
+}

@@ -1,7 +1,7 @@
 package signer
 
 /*
-#include "signing.h"
+#include "signer_ffi.h"
 */
 import "C"
 

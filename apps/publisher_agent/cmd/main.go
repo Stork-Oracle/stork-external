@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
 
-	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 )
 
 var verbose bool
