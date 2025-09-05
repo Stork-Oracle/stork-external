@@ -22,7 +22,7 @@ var resourcesFS embed.FS
 const (
 	dirMode      = 0o777
 	templatesDir = "resources/templates"
-	sourceDir    = "apps/data_provider/lib/sources"
+	sourceDir    = "apps/data_provider/pkg/sources"
 	pathPrefix   = "// @path: "
 )
 

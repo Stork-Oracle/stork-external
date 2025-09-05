@@ -8,7 +8,7 @@ This crate can be used as an SDK to build contracts that interact with the Stork
 
 ## Pull Model
 
-The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/Stork-Oracle/stork-external/blob/main/apps/docs/chain_pusher.md) in order to do this.
+The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/Stork-Oracle/stork-external/blob/main/apps/chain_pusher/README.md) in order to do this.
 
 ## Stork Feeds
 
@@ -18,4 +18,4 @@ On CosmWasm, Stork feeds exist inside a table stored on-chain. This table associ
 
 This contract is built using the [Sylvia Framework](https://github.com/CosmWasm/sylvia). This heavily reduces the amount of boilerplate needed to create a CosmWasm contract while remaining fully compatible with the CosmWasm SDK. This generates the `sv` and `entry_points` modules, in the `contract` module.
 
-Examples of using this crate as an SDK in both Sylvia and Non-Sylvia contracts to consume Stork data can be found in the [stork-external github repo](https://github.com/stork-oracle/stork-external/tree/main/examples/cosmwasm).
+Examples of using this crate as an SDK in both Sylvia and Non-Sylvia contracts to consume Stork data can be found in the [stork-external github repo](https://github.com/stork-oracle/stork-external/tree/main/chains/cosmwasm/examples).

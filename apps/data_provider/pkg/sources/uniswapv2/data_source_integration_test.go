@@ -1,10 +1,7 @@
-// @path: /apps/data_provider/pkg/sources/{{ .LowerStr }}/data_source_integration_test.go
 //go:build integration
 // +build integration
-// This file contains integration tests for this data source.
 
-
-package {{ .LowerStr }}
+package uniswapv2
 
 import (
 	"context"
@@ -15,17 +12,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// This test will hit real external data sources. It's meant to be run manually so you can manually examine the results.
-func Test{{ .PascalStr }}DataSource_RunDataSource(t *testing.T) {
+func TestUniswapDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "MY_TEST_VALUE_ID",
-		Config: {{ .PascalStr }}Config{
-			DataSource:      {{ .PascalStr }}DataSourceId,
-			// TODO: add valid configuration
+		Id: "WETHUSDT",
+		Config: UniswapV2Config{
+			DataSource:         UniswapV2DataSourceId,
+			UpdateFrequency:    "5s",
+			HttpProviderUrl:    "https://ethereum-rpc.publicnode.com",
+			ContractAddress:    "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
+			BaseTokenIndex:     0,
+			QuoteTokenIndex:    1,
+			BaseTokenDecimals:  18,
+			QuoteTokenDecimals: 6,
 		},
 	}
-
-	dataSource := new{{ .PascalStr }}DataSource(config)
+	dataSource := newUniswapV2DataSource(config)
 	updateCh := make(chan types.DataSourceUpdateMap)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -33,7 +34,7 @@ func Test{{ .PascalStr }}DataSource_RunDataSource(t *testing.T) {
 
 	// print a few messages, fail if none come through within the timeout period
 	numMessages := 10
-	timeoutDuration := 10 * time.Second // TODO: change this timeout if needed
+	timeoutDuration := 10 * time.Second
 
 	for i := 0; i < numMessages; i++ {
 		select {
