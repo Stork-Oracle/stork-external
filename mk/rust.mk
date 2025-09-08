@@ -1,7 +1,7 @@
 # Rust workspace build configuration
-WORKSPACE_ROOT := $(CURDIR)
+WORKSPACE_ROOT ?= $(CURDIR)
 RUST_TARGET_DIR := $(WORKSPACE_ROOT)/target
-RUST_LIB_DIR := $(CURDIR)/.lib
+RUST_LIB_DIR := $(WORKSPACE_ROOT)/.lib
 
 # Detect platform and set library extensions
 UNAME_S := $(shell uname -s)
@@ -32,7 +32,7 @@ FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 .PHONY: build-rust-workspace
 build-rust-workspace:
 	@echo "Building Rust workspace..."
-	@cargo build --release
+	@cd $(WORKSPACE_ROOT) && cargo build --release
 
 # Copy artifacts to lib directory
 $(SIGNER_LIB_DEST): build-rust-workspace
@@ -71,7 +71,7 @@ rust: signer_ffi fuel_ffi
 clean-rust:
 	@echo "Cleaning Rust workspace..."
 	@rm -rf $(RUST_LIB_DIR)
-	@cargo clean
+	@cd $(WORKSPACE_ROOT) && cargo clean
 	@echo "Cleaning copied libraries..."
 	@rm -rf $(RUST_LIB_DIR)
 
@@ -80,10 +80,10 @@ clean-rust:
 .PHONY: lint-rust
 lint-rust:
 	@echo "Linting Rust workspace..."
-	@cargo clippy --all-targets --all-features -- -D warnings
+	@cd $(WORKSPACE_ROOT) && cargo clippy --all-targets --all-features -- -D warnings
 
 # Format rust code
 .PHONY: format-rust
 format-rust:
 	@echo "Formatting Rust workspace..."
-	@cargo fmt --all
+	@cd $(WORKSPACE_ROOT) && cargo fmt --all
