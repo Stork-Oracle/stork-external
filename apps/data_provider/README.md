@@ -17,7 +17,7 @@ To add a new source:
 ## Configuration
 The Data Provider can report many feeds, each sourced from any of the data sources implemented in [sources](./pkg/sources).
 
-You can configure the Data Provider by passing it a [config json file](../sample.data-provider.config.json) which can be deserialized into a [DataProviderConfig](./pkg/types/model.go) object. 
+You can configure the Data Provider by passing it a [config json file](./sample.data-provider.config.json) which can be deserialized into a [DataProviderConfig](./pkg/types/model.go) object. 
 
 The `sources` tag is a list of configurations for different feeds, where each feed has a unique `id` and a `config` which can be deserialized into the appropriate [source config](./pkg/sources/random/config.go). 
 
