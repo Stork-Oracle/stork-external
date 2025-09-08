@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	generate "github.com/Stork-Oracle/stork-external/tools/generate/lib"
+	generate "github.com/Stork-Oracle/stork-external/tools/generate/pkg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
