@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,10 +43,13 @@ func TestAggregatedSignedPriceToUpdateData(t *testing.T) {
 			}
 
 			//nolint:all // this is safe to convert to an int.
-			expectedTemporalNumericValueTimestampNs := strconv.Itoa(
+			expectedTemporalNumericValueTimestampNs := bindings.Uint64(strconv.Itoa(
 				int(tt.PriceBytes.StorkSignedPrice.TimestampedSignature.TimestampNano),
+			))
+
+			expectedTemporalNumericValueQuantizedValue := bindings.Int128(
+				tt.PriceBytes.StorkSignedPrice.QuantizedPrice.String(),
 			)
-			expectedTemporalNumericValueQuantizedValue := tt.PriceBytes.StorkSignedPrice.QuantizedPrice.String()
 
 			var expectedPublisherMerkleRoot [32]int
 			for i, b := range tt.PriceBytes.StorkSignedPrice.PublisherMerkleRoot {

@@ -64,7 +64,9 @@ func CallEthereumFunction(
 	for attempt := 0; attempt < maxQueryAttempts; attempt++ {
 		queryError = contract.Call(nil, &result, functionName)
 		if queryError != nil {
-			logger.Warn().Err(queryError).Msgf("Failed to query contract method %s for value id %s (attempt %v): %v", functionName, valueId, attempt, queryError)
+			logger.Warn().
+				Err(queryError).
+				Msgf("Failed to query contract method %s for value id %s (attempt %v): %v", functionName, valueId, attempt, queryError)
 			time.Sleep(delay)
 			delay = delay * 2
 		} else {
@@ -73,7 +75,12 @@ func CallEthereumFunction(
 	}
 
 	if queryError != nil {
-		return nil, fmt.Errorf("failed to hit contract method %s for value id %s: %v", functionName, valueId, queryError)
+		return nil, fmt.Errorf(
+			"failed to hit contract method %s for value id %s: %v",
+			functionName,
+			valueId,
+			queryError,
+		)
 	}
 
 	return result, nil

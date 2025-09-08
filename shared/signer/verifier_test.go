@@ -137,7 +137,6 @@ func TestStarkVerifier_VerifyPublisherPrice(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
-
 }
 
 func TestStarkVerifier_VerifyPublisherPriceLongAssetId(t *testing.T) {
@@ -187,7 +186,6 @@ func TestVerifyEvmAuth(t *testing.T) {
 		"0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a",
 	)
 	assert.ErrorContains(t, err, "invalid EVM signature length")
-
 }
 
 func TestVerifyStarkAuth(t *testing.T) {

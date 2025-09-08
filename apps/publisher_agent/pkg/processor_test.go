@@ -21,7 +21,10 @@ const (
 
 const assetId = "fakeAsset"
 
-func getNextSignedOutput[T signer.Signature](ch chan SignedPriceUpdateBatch[T], timeout time.Duration) (SignedPriceUpdateBatch[T], bool) {
+func getNextSignedOutput[T signer.Signature](
+	ch chan SignedPriceUpdateBatch[T],
+	timeout time.Duration,
+) (SignedPriceUpdateBatch[T], bool) {
 	select {
 	case value := <-ch:
 		return value, true

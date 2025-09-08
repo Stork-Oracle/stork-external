@@ -20,8 +20,10 @@ func init() {
 }
 
 // assert we're satisfying our interfaces
-var _ types.DataSource = (*randomDataSource)(nil)
-var _ types.DataSourceFactory = (*randomDataSourceFactory)(nil)
+var (
+	_ types.DataSource        = (*randomDataSource)(nil)
+	_ types.DataSourceFactory = (*randomDataSourceFactory)(nil)
+)
 
 func GetSourceSpecificConfig(sourceConfig types.DataProviderSourceConfig) (RandomConfig, error) {
 	var config RandomConfig

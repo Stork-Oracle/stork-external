@@ -11,7 +11,6 @@ import (
 )
 
 func TestValidRandomConfig(t *testing.T) {
-
 	validRandomConfig := `
 	{
 	  "sources": [

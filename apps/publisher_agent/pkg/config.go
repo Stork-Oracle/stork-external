@@ -14,16 +14,18 @@ import (
 
 var Hex32Regex = regexp.MustCompile(`^0x[0-9a-fA-F]+$`)
 
-const DefaultClockUpdatePeriod = "500ms"
-const DefaultDeltaUpdatePeriod = "10ms"
-const DefaultChangeThresholdPercent = 0.1
-const DefaultStorkRegistryRefreshInterval = "10m"
-const DefaultPublisherMetadataRefreshInterval = "1h"
-const DefaultStorkRegistryBaseUrl = "https://rest.jp.stork-oracle.network"
-const DefaultPublisherMetadataBaseUrl = "https://rest.jp.stork-oracle.network"
-const DefaultBrokerReconnectDelay = "5s"
-const DefaultPullBasedReconnectDelay = "5s"
-const DefaultPullBasedReadTimeout = "10s"
+const (
+	DefaultClockUpdatePeriod                = "500ms"
+	DefaultDeltaUpdatePeriod                = "10ms"
+	DefaultChangeThresholdPercent           = 0.1
+	DefaultStorkRegistryRefreshInterval     = "10m"
+	DefaultPublisherMetadataRefreshInterval = "1h"
+	DefaultStorkRegistryBaseUrl             = "https://rest.jp.stork-oracle.network"
+	DefaultPublisherMetadataBaseUrl         = "https://rest.jp.stork-oracle.network"
+	DefaultBrokerReconnectDelay             = "5s"
+	DefaultPullBasedReconnectDelay          = "5s"
+	DefaultPullBasedReadTimeout             = "10s"
+)
 
 type Config struct {
 	SignatureTypes                   []signer.SignatureType
@@ -96,7 +98,10 @@ func readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgentConfig, *StorkPublisherAgentSecrets, error) {
+func LoadConfig(
+	configFilePath string,
+	keysFilePath string,
+) (*StorkPublisherAgentConfig, *StorkPublisherAgentSecrets, error) {
 	configFileData, err := readFile(configFilePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to read config file: %w", err)
@@ -203,7 +208,10 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 	publisherMetadataUpdateDuration, err := time.ParseDuration(publisherMetadataUpdateIntervalStr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid publisher metadata update duration: %s", publisherMetadataUpdateIntervalStr)
+		return nil, nil, fmt.Errorf(
+			"invalid publisher metadata update duration: %s",
+			publisherMetadataUpdateIntervalStr,
+		)
 	}
 
 	changeThresholdPercent := configFile.ChangeThresholdPercent
@@ -219,7 +227,9 @@ func LoadConfig(configFilePath string, keysFilePath string) (*StorkPublisherAgen
 	}
 
 	if configFile.IncomingWsPort == 0 && len(configFile.PullBasedWsUrl) == 0 {
-		return nil, nil, errors.New("must specify an incoming ws url to pull from or a port to expose for our incoming ws")
+		return nil, nil, errors.New(
+			"must specify an incoming ws url to pull from or a port to expose for our incoming ws",
+		)
 	}
 
 	pullBasedReconnectDelayStr := configFile.PullBasedWsReconnectDelay

@@ -73,7 +73,9 @@ func (p *IncomingWebsocketPuller) Run() {
 			var message WebsocketMessage[[]PriceUpdatePullWebsocket]
 			err = json.Unmarshal(messageBytes, &message)
 			if err != nil {
-				p.Logger.Error().Err(err).Msgf("Failed to unmarshal message from pull-based WebSocket: %s", messageBytes)
+				p.Logger.Error().
+					Err(err).
+					Msgf("Failed to unmarshal message from pull-based WebSocket: %s", messageBytes)
 				break
 			}
 			for _, priceUpdatePullWebsocket := range message.Data {

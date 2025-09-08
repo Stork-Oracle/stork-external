@@ -13,9 +13,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const publicIpUrl = "https://api.ipify.org"
-const awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
-const versionFile = "version.txt"
+const (
+	publicIpUrl    = "https://api.ipify.org"
+	awsMetadataUrl = "http://169.254.169.254/latest/meta-data"
+	versionFile    = "version.txt"
+)
 
 type PublisherMetadata struct {
 	PublisherKey          signer.PublisherKey       `json:"publisher_key"`
@@ -86,7 +88,13 @@ func (p *PublisherMetadataReporter) report() error {
 	if err != nil {
 		return fmt.Errorf("error getting auth headers: %v", err)
 	}
-	_, err = RestQuery("POST", p.publisherMetadataBaseUrl+"/v1/publisher/metadata", nil, bytes.NewReader(metadataJson), authHeaders)
+	_, err = RestQuery(
+		"POST",
+		p.publisherMetadataBaseUrl+"/v1/publisher/metadata",
+		nil,
+		bytes.NewReader(metadataJson),
+		authHeaders,
+	)
 	if err != nil {
 		return fmt.Errorf("error reporting publisher metadata: %v", err)
 	}

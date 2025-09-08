@@ -92,7 +92,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 	// remove undesired connections
 	r.outgoingConnectionsLock.Lock()
-	for url, _ := range r.assetsByBroker {
+	for url := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
 			r.outgoingConnectionsByBroker[url].Remove()

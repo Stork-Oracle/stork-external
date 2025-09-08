@@ -177,14 +177,18 @@ type OutgoingWebsocketConnectionAssets[T signer.Signature] struct {
 	assetIdsLock sync.RWMutex
 }
 
-func NewOutgoingWebsocketConnectionAssets[T signer.Signature](assetIds map[AssetId]struct{}) *OutgoingWebsocketConnectionAssets[T] {
+func NewOutgoingWebsocketConnectionAssets[T signer.Signature](
+	assetIds map[AssetId]struct{},
+) *OutgoingWebsocketConnectionAssets[T] {
 	return &OutgoingWebsocketConnectionAssets[T]{
 		assetIds:     assetIds,
 		assetIdsLock: sync.RWMutex{},
 	}
 }
 
-func (a *OutgoingWebsocketConnectionAssets[T]) filterSignedPriceUpdateBatch(signedPriceUpdateBatch SignedPriceUpdateBatch[T]) SignedPriceUpdateBatch[T] {
+func (a *OutgoingWebsocketConnectionAssets[T]) filterSignedPriceUpdateBatch(
+	signedPriceUpdateBatch SignedPriceUpdateBatch[T],
+) SignedPriceUpdateBatch[T] {
 	filteredPriceUpdates := make(SignedPriceUpdateBatch[T])
 	a.assetIdsLock.RLock()
 	_, allAssets := a.assetIds[WildcardSubscriptionAsset]
@@ -216,7 +220,11 @@ type OutgoingWebsocketConnection[T signer.Signature] struct {
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T signer.Signature](conn WebsocketConnection, assets *OutgoingWebsocketConnectionAssets[T], logger zerolog.Logger) *OutgoingWebsocketConnection[T] {
+func NewOutgoingWebsocketConnection[T signer.Signature](
+	conn WebsocketConnection,
+	assets *OutgoingWebsocketConnectionAssets[T],
+	logger zerolog.Logger,
+) *OutgoingWebsocketConnection[T] {
 	return &OutgoingWebsocketConnection[T]{
 		WebsocketConnection:      conn,
 		assets:                   assets,
@@ -274,7 +282,12 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 
 // readLoop is a generalized function for the use case of read looping a websocket connection while enforcing rate limits.
 // The callback handles the actual websocket message bytes (only TextMessage type is allowed).
-func readLoop(conn *websocket.Conn, readTimeout *time.Duration, logger zerolog.Logger, callback func(wsMsgReader io.Reader) error) error {
+func readLoop(
+	conn *websocket.Conn,
+	readTimeout *time.Duration,
+	logger zerolog.Logger,
+	callback func(wsMsgReader io.Reader) error,
+) error {
 	for {
 		// set read timeout
 		if readTimeout != nil {
@@ -322,7 +335,14 @@ func readLoop(conn *websocket.Conn, readTimeout *time.Duration, logger zerolog.L
 	}
 }
 
-func SendWebsocketMsg[T any](conn *websocket.Conn, msgType string, data T, traceId string, errMsg string, logger zerolog.Logger) error {
+func SendWebsocketMsg[T any](
+	conn *websocket.Conn,
+	msgType string,
+	data T,
+	traceId string,
+	errMsg string,
+	logger zerolog.Logger,
+) error {
 	// create a new websocket message
 	msg := WebsocketMessage[T]{
 		Type:    msgType,
@@ -334,7 +354,12 @@ func SendWebsocketMsg[T any](conn *websocket.Conn, msgType string, data T, trace
 	return sendWebsocketResponse(conn, msg, logger, OutgoingWriteTimeout)
 }
 
-func sendWebsocketResponse[T any](conn *websocket.Conn, msg T, logger zerolog.Logger, writeTimeout time.Duration) error {
+func sendWebsocketResponse[T any](
+	conn *websocket.Conn,
+	msg T,
+	logger zerolog.Logger,
+	writeTimeout time.Duration,
+) error {
 	if writeTimeout.Nanoseconds() > 0 {
 		deadline := time.Now().Add(writeTimeout)
 		_ = conn.SetWriteDeadline(deadline)
@@ -380,7 +405,14 @@ func sendWebsocketResponse[T any](conn *websocket.Conn, msg T, logger zerolog.Lo
 	return nil
 }
 
-func upgradeAndEnforceCompression(resp http.ResponseWriter, req *http.Request, enforceCompression bool, upgrader websocket.Upgrader, logger zerolog.Logger, authToken AuthToken) (*websocket.Conn, error) {
+func upgradeAndEnforceCompression(
+	resp http.ResponseWriter,
+	req *http.Request,
+	enforceCompression bool,
+	upgrader websocket.Upgrader,
+	logger zerolog.Logger,
+	authToken AuthToken,
+) (*websocket.Conn, error) {
 	// all subscriber connections (except stork) must have the permessage-deflate extension to enable compression,
 	// this cuts outgoing data size by ~75% per subscriber, huge aws egress cost savings.
 	hasCompressionHeader := false
@@ -392,14 +424,21 @@ func upgradeAndEnforceCompression(resp http.ResponseWriter, req *http.Request, e
 			}
 		}
 		if !hasCompressionHeader {
-			http.Error(resp, `{"type":"handshake","error":"missing permessage-deflate extension"}`, http.StatusBadRequest)
+			http.Error(
+				resp,
+				`{"type":"handshake","error":"missing permessage-deflate extension"}`,
+				http.StatusBadRequest,
+			)
 			return nil, errors.New("compression not negotiated")
 		}
 	}
 
 	// handshake
 	if ws, err := upgrader.Upgrade(resp, req, nil); err != nil {
-		logger.Warn().Str("token", string(authToken)).Object("request_headers", HttpHeaders(req.Header)).Msg("websocket handshake failed")
+		logger.Warn().
+			Str("token", string(authToken)).
+			Object("request_headers", HttpHeaders(req.Header)).
+			Msg("websocket handshake failed")
 		// http response happens in Upgrade(...)
 		return nil, err
 	} else {
@@ -432,11 +471,19 @@ func getWsUpgrader() websocket.Upgrader {
 	}
 }
 
-func HandleNewIncomingWsConnection(resp http.ResponseWriter, req *http.Request, logger zerolog.Logger, valueUpdateChannels []chan ValueUpdate) {
+func HandleNewIncomingWsConnection(
+	resp http.ResponseWriter,
+	req *http.Request,
+	logger zerolog.Logger,
+	valueUpdateChannels []chan ValueUpdate,
+) {
 	conn, err := upgradeAndEnforceCompression(resp, req, false, getWsUpgrader(), logger, "")
 	if err != nil {
 		// debug log because err could be rate limit violation
-		logger.Debug().Err(err).Object("request_headers", HttpHeaders(req.Header)).Msg("failed to complete publisher websocket handshake")
+		logger.Debug().
+			Err(err).
+			Object("request_headers", HttpHeaders(req.Header)).
+			Msg("failed to complete publisher websocket handshake")
 		return
 	}
 

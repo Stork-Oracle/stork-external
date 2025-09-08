@@ -80,7 +80,13 @@ func TestCalculatePrice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			price, err := calculatePrice(tt.result, tt.baseTokenIndex, tt.quoteTokenIndex, tt.baseTokenDecimals, tt.quoteTokenDecimals)
+			price, err := calculatePrice(
+				tt.result,
+				tt.baseTokenIndex,
+				tt.quoteTokenIndex,
+				tt.baseTokenDecimals,
+				tt.quoteTokenDecimals,
+			)
 
 			if tt.expectedError && err == nil {
 				t.Errorf("expected error but got none")

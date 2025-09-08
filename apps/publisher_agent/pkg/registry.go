@@ -23,7 +23,9 @@ func NewRegistryClient(baseUrl string, storkAuthSigner signer.StorkAuthSigner, l
 	}
 }
 
-func (c *RegistryClient) GetBrokersForPublisher(publisherKey signer.PublisherKey) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
+func (c *RegistryClient) GetBrokersForPublisher(
+	publisherKey signer.PublisherKey,
+) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))
@@ -55,7 +57,8 @@ func (c *RegistryClient) GetBrokersForPublisher(publisherKey signer.PublisherKey
 	brokerMap := make(map[BrokerPublishUrl]map[AssetId]struct{})
 
 	if len(brokers) == 0 {
-		c.logger.Warn().Msgf("no stork registry broker found for public key (%s) - reach out to Stork to make sure you're whitelisted", publisherKey)
+		c.logger.Warn().
+			Msgf("no stork registry broker found for public key (%s) - reach out to Stork to make sure you're whitelisted", publisherKey)
 		return brokerMap, nil
 	}
 

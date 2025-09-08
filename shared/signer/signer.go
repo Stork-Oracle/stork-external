@@ -39,7 +39,11 @@ const (
 )
 
 type Signer[T Signature] interface {
-	SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
+	SignPublisherPrice(
+		publishTimestamp int64,
+		asset string,
+		quantizedValue string,
+	) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
 	GetPublisherKey() PublisherKey
 	GetSignatureType() SignatureType
 }
@@ -71,7 +75,11 @@ func NewEvmSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmSigne
 	}, nil
 }
 
-func NewStarkSigner(privateKeyStr StarkPrivateKey, publicKeyStr, oracleId string, logger zerolog.Logger) (*StarkSigner, error) {
+func NewStarkSigner(
+	privateKeyStr StarkPrivateKey,
+	publicKeyStr, oracleId string,
+	logger zerolog.Logger,
+) (*StarkSigner, error) {
 	oracleNameHex := hex.EncodeToString([]byte(oracleId))
 	oracleNameInt, _ := new(big.Int).SetString(oracleNameHex, 16)
 
@@ -94,7 +102,11 @@ func NewStarkSigner(privateKeyStr StarkPrivateKey, publicKeyStr, oracleId string
 	}, nil
 }
 
-func (s *EvmSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[*EvmSignature], encodedAssetId string, err error) {
+func (s *EvmSigner) SignPublisherPrice(
+	publishTimestamp int64,
+	asset string,
+	quantizedValue string,
+) (timestampedSig *TimestampedSignature[*EvmSignature], encodedAssetId string, err error) {
 	timestampBigInt := big.NewInt(publishTimestamp / 1_000_000_000)
 
 	quantizedPriceBigInt := new(big.Int)
@@ -135,7 +147,11 @@ func (s *EvmSigner) GetSignatureType() SignatureType {
 	return EvmSignatureType
 }
 
-func (s *StarkSigner) SignPublisherPrice(publishTimestamp int64, asset string, quantizedValue string) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
+func (s *StarkSigner) SignPublisherPrice(
+	publishTimestamp int64,
+	asset string,
+	quantizedValue string,
+) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
 	// Convert asset to hex string
 	assetHex := hex.EncodeToString([]byte(asset))
 	assetHexPadded := assetHex
@@ -254,7 +270,11 @@ type StarkAuthSigner struct {
 	starkSigner *StarkSigner
 }
 
-func NewStarkAuthSigner(privateKeyStr StarkPrivateKey, publicKeyStr string, logger zerolog.Logger) (*StarkAuthSigner, error) {
+func NewStarkAuthSigner(
+	privateKeyStr StarkPrivateKey,
+	publicKeyStr string,
+	logger zerolog.Logger,
+) (*StarkAuthSigner, error) {
 	starkSigner, err := NewStarkSigner(privateKeyStr, publicKeyStr, StorkAuthOracleId, logger)
 	if err != nil {
 		return nil, err
@@ -263,7 +283,11 @@ func NewStarkAuthSigner(privateKeyStr StarkPrivateKey, publicKeyStr string, logg
 }
 
 func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
-	timestampedSignature, _, err := s.starkSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
+	timestampedSignature, _, err := s.starkSigner.SignPublisherPrice(
+		publishTimestamp,
+		StorkAuthAssetId,
+		StorkMagicNumber,
+	)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign auth: %v", err)
 	}

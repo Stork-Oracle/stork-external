@@ -8,7 +8,13 @@ import (
 	"time"
 )
 
-func RestQuery(method string, baseUrl string, query url.Values, requestBody io.Reader, header http.Header) ([]byte, error) {
+func RestQuery(
+	method string,
+	baseUrl string,
+	query url.Values,
+	requestBody io.Reader,
+	header http.Header,
+) ([]byte, error) {
 	// Parse the base URL
 	parsedURL, err := url.Parse(baseUrl)
 	if err != nil {
@@ -33,13 +39,17 @@ func RestQuery(method string, baseUrl string, query url.Values, requestBody io.R
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error making %s request for url %s: %v", method, urlString, err)
-
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response responseBody for %s request for url %s: %v", method, urlString, err)
+		return nil, fmt.Errorf(
+			"error reading response responseBody for %s request for url %s: %v",
+			method,
+			urlString,
+			err,
+		)
 	}
 
 	return responseBody, nil

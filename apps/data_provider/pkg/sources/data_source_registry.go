@@ -35,7 +35,9 @@ func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFact
 	return factory, nil
 }
 
-func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.DataSource, map[types.ValueId]any, error) {
+func BuildDataSources(
+	sourceConfigs []types.DataProviderSourceConfig,
+) ([]types.DataSource, map[types.ValueId]any, error) {
 	dataSources := make([]types.DataSource, 0)
 	valueIds := make(map[types.ValueId]any)
 	for _, source := range sourceConfigs {
@@ -51,7 +53,11 @@ func BuildDataSources(sourceConfigs []types.DataProviderSourceConfig) ([]types.D
 		}
 		factory, err := GetDataSourceFactory(dataSourceId)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to get data source factory for data source id %s: %v", dataSourceId, err)
+			return nil, nil, fmt.Errorf(
+				"unable to get data source factory for data source id %s: %v",
+				dataSourceId,
+				err,
+			)
 		}
 		dataSource := factory.Build(source)
 		dataSources = append(dataSources, dataSource)

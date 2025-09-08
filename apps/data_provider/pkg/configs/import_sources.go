@@ -4,8 +4,6 @@ package configs
 import (
 	_ "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/sources/boringvaultevm"
 	_ "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/sources/random"
-
 	_ "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/sources/raydiumclmm"
-
 	_ "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/sources/uniswapv2"
 )

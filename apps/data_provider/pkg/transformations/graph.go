@@ -91,7 +91,10 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 	return finalUpdateMap
 }
 
-func BuildTransformationGraph(transformations []types.DataProviderTransformationConfig, sourceIds map[types.ValueId]any) (*TransformationGraph, error) {
+func BuildTransformationGraph(
+	transformations []types.DataProviderTransformationConfig,
+	sourceIds map[types.ValueId]any,
+) (*TransformationGraph, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> value id
