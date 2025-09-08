@@ -20,7 +20,7 @@ mocks: $(GOBIN)/mockery
 # TODO: Add race checker
 .PHONY: test
 ## Run all Go tests
-test: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) $(SIGNER_HEADER_DEST) $(FUEL_HEADER_DEST)
+test: signer_ffi fuel_ffi
 	@$(GO) test -v ./...
 
 .PHONY: install-cosmwasm-libs
@@ -37,7 +37,7 @@ install-cosmwasm-libs:
 .PHONY: install
 
 ## Aggregate target to install all Go binaries
-install: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) (SIGNER_HEADER_DEST) (FUEL_HEADER_DEST) install-cosmwasm-libs
+install: signer_ffi fuel_ffi install-cosmwasm-libs
 	@$(GO) install -v ./apps/cmd/...
 	@echo "All Go binaries have been installed successfully."
 
@@ -48,7 +48,7 @@ clean: clean-rust
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) $(SIGNER_HEADER_DEST) $(FUEL_HEADER_DEST) install-cosmwasm-libs
+run-local: signer_ffi fuel_ffi install-cosmwasm-libs
 	@$(GO) run ./apps/cmd/$(target) $(args)
 
 # Lint Go code using golangci-lint
