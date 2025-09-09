@@ -1,9 +1,14 @@
 FROM node:20-alpine
+
+# Copy in contract and sdk, preserving relative paths
 COPY chains/evm/contracts/stork /usr/src/app
+COPY chains/evm/sdks/stork_evm_sdk /usr/sdks/stork_evm_sdk
+
 WORKDIR /usr/src/app
 
 ARG STORK_PUBLIC_KEY
 ENV STORK_PUBLIC_KEY=${STORK_PUBLIC_KEY}
+
 
 RUN npm install
 RUN npm install -g wait-on

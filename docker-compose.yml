@@ -1,8 +1,10 @@
 services:
   publisher-agent:
+    profiles:
+      - services
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/images/Dockerfile
       args:
         SERVICE: "publisher_agent"
     command:
@@ -18,9 +20,11 @@ services:
       - "./path-to-keys.json:/etc/keys.json"
 
   data-provider:
+    profiles:
+      - services
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/images/Dockerfile
       args:
         SERVICE: "data_provider"
     command:
@@ -34,9 +38,11 @@ services:
       - "./sample.data-provider.config.json:/etc/data_provider_config.json"
 
   evm-pusher:
+    profiles:
+      - services
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/images/Dockerfile
       args:
         SERVICE: "chain_pusher"
     command:
@@ -68,7 +74,7 @@ services:
       context: .
       dockerfile: docker/images/evm.Dockerfile
       args:
-        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xC4A02e7D370402F4afC36032076B05e74FF81786}
+        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44}
     ports:
       - "8545:8545"
     healthcheck:

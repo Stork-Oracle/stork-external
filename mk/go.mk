@@ -23,34 +23,46 @@ mocks: $(GOBIN)/mockery
 test: signer_ffi fuel_ffi
 	@$(GO) test -v ./...
 
+.PHONY: integration-test
+## Run all Go integration tests
+integration-test: signer_ffi fuel_ffi
+	@echo "Running Go integration tests..."
+	@set -e; \
+	for pkg in $$($(GO) list ./... | grep -v "/integration$$"); do \
+	    $(GO) test -v -tags integration $$pkg; \
+	done
+
 .PHONY: install-cosmwasm-libs
 install-cosmwasm-libs:
-	@mkdir -p .lib
-	@if [ ! -f ".lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
+	@if [ ! -f "$(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
 		echo "Installing CosmWasm libraries..."; \
-		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o .lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
-		echo "Successfully installed CosmWasm libraries to .lib/"; \
+		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o $(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
+		echo "Successfully installed CosmWasm libraries to $(RUST_LIB_DIR)/"; \
 	else \
 		echo "CosmWasm libraries already installed"; \
 	fi
 
 # Individual Go Targets
-chain_pusher: signer_ffi fuel_ffi
-	@$(GO) install -v ./apps/chain_pusher/cmd
+chain_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
+	@echo "Installing chain pusher..."
+	@$(GO) install -v ./apps/chain_pusher
 
 publisher_agent: signer_ffi
-	@$(GO) install -v ./apps/publisher_agent/cmd
+	@echo "Installing publisher agent..."
+	@$(GO) install -v ./apps/publisher_agent
 
 data_provider: 
-	@$(GO) install -v ./apps/data_provider/cmd
+	@echo "Installing data provider..."
+	@$(GO) install -v ./apps/data_provider
 
 generate: 
-	@$(GO) install -v ./tools/generate/cmd
+	@echo "Installing generate..."
+	@$(GO) install -v ./tools/generate
 
 .PHONY: install
 ## Aggregate target to install all Go binaries	
 install: chain_pusher publisher_agent data_provider generate install-cosmwasm-libs
-	@echo "All Go binaries have been installed successfully."
+	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean
 ## Clean up the project
