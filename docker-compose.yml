@@ -60,3 +60,26 @@ services:
     volumes:
       - "./path-to-asset-config.yaml:/etc/asset-config.yaml"
       - "./path-to-private-key.secret:/etc/private-key.secret"
+
+  evm-contract:
+    profiles:
+      - integration
+    build:
+      context: .
+      dockerfile: docker/images/evm.Dockerfile
+      args:
+        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xC4A02e7D370402F4afC36032076B05e74FF81786}
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result"
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 2s
