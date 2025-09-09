@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	data_provider "github.com/Stork-Oracle/stork-external/apps/data_provider/lib"
+	data_provider "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"

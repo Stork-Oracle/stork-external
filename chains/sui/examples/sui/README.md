@@ -2,8 +2,8 @@
 This is a very simple Sui project to show how you would use the Stork Sui program to consume Stork price updates in your Sui program.
 
 ## Deploy locally
-1. Deploy a local version of the [Stork contract](../../contracts/sui) 
-2. Initialize the contract and write some data to it for your desired asset id using the cli in [admin.ts](../../contracts/sui/cli/admin.ts)
+1. Deploy a local version of the [Stork contract](../../contracts) 
+2. Initialize the contract and write some data to it for your desired asset id using the cli in [admin.ts](../../cli/admin.ts)
 3. Compile and deploy this example contract.
 ```bash
 sui move build

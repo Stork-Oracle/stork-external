@@ -6,7 +6,7 @@ It is available on [npm](https://www.npmjs.com/package/@stork-network/stork-evm-
 
 ## Pull Model
 
-The Stork EVM SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/docs/chain_pusher.md) in order to do this.
+The Stork EVM SDK allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/stork-oracle/stork-external/tree/main/apps/chain_pusher/README.md) in order to do this.
 
 ## Details
 

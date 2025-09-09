@@ -7,7 +7,11 @@ import (
 
 const starkOracleNameHexLength = 10
 
-func getPublisherPriceStarkXY(publishTimestamp int64, asset string, quantizedValue string) (xInt *big.Int, yInt *big.Int) {
+func getPublisherPriceStarkXY(
+	publishTimestamp int64,
+	asset string,
+	quantizedValue string,
+) (xInt *big.Int, yInt *big.Int) {
 	trimmedExternalAssetId, _ := strings.CutPrefix(asset, "0x")
 
 	assetLength := len(trimmedExternalAssetId) - starkOracleNameHexLength

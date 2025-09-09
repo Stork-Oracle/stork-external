@@ -20,7 +20,7 @@ mocks: $(GOBIN)/mockery
 # TODO: Add race checker
 .PHONY: test
 ## Run all Go tests
-test: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST)
+test: signer_ffi fuel_ffi
 	@$(GO) test -v ./...
 
 .PHONY: install-cosmwasm-libs
@@ -34,11 +34,22 @@ install-cosmwasm-libs:
 		echo "CosmWasm libraries already installed"; \
 	fi
 
-.PHONY: install
+# Individual Go Targets
+chain_pusher: signer_ffi fuel_ffi
+	@$(GO) install -v ./apps/chain_pusher/cmd
 
-## Aggregate target to install all Go binaries
-install: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
-	@$(GO) install -v ./apps/cmd/...
+publisher_agent: signer_ffi
+	@$(GO) install -v ./apps/publisher_agent/cmd
+
+data_provider: 
+	@$(GO) install -v ./apps/data_provider/cmd
+
+generate: 
+	@$(GO) install -v ./tools/generate/cmd
+
+.PHONY: install
+## Aggregate target to install all Go binaries	
+install: chain_pusher publisher_agent data_provider generate install-cosmwasm-libs
 	@echo "All Go binaries have been installed successfully."
 
 .PHONY: clean
@@ -48,8 +59,8 @@ clean: clean-rust
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: $(SIGNER_LIB_DEST) $(FUEL_LIB_DEST) install-cosmwasm-libs
-	@$(GO) run ./apps/cmd/$(target) $(args)
+run-local: signer_ffi fuel_ffi install-cosmwasm-libs
+	@$(GO) run ./apps/$(target)/cmd $(args)
 
 # Lint Go code using golangci-lint
 .PHONY: lint-go

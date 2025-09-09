@@ -1,0 +1,55 @@
+// @path: apps/data_provider/pkg/configs/resources/data_provider_config.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DataProviderConfig",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "description": "A list of source configurations",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this source"
+          },
+          "config": {
+            "description": "An arbitrary configuration object for a data source",
+            "type": "object",
+            "oneOf": [
+              {{- range $i, $sourceType := .PackageNames }}
+                {{- if $i }},{{ end }}
+                { "$ref": "/resources/source_config_schemas/{{ $sourceType }}" }
+              {{- end }}
+            ]
+          }
+        },
+        "required": [
+          "id", 
+          "config"
+        ]
+      }
+    },
+    "transformations": {
+      "type": "array",
+      "description": "A list of transformations to apply to the data",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "formula": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "formula"
+        ]
+      }
+    }
+  },
+  "required": [
+    "sources"
+  ],
+  "additionalProperties": false
+}

@@ -5,11 +5,10 @@ import (
 	"os"
 	"time"
 
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
-
-	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/lib"
 )
 
 var verbose bool

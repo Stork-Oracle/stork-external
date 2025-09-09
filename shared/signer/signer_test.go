@@ -23,7 +23,11 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 			V: "0x1b",
 		},
 	}
-	signedPriceUpdate, assetId, err := signer.SignPublisherPrice(1710191092123456789, "BTCUSDMARK", "72147681412670819000000")
+	signedPriceUpdate, assetId, err := signer.SignPublisherPrice(
+		1710191092123456789,
+		"BTCUSDMARK",
+		"72147681412670819000000",
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, "BTCUSDMARK", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
@@ -39,7 +43,11 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 		},
 	}
 
-	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1710191092123456789, "BTCUSDMARK", "-72147681412670819000000")
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(
+		1710191092123456789,
+		"BTCUSDMARK",
+		"-72147681412670819000000",
+	)
 	assert.NoError(t, err)
 	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
 	assert.Equal(t, "BTCUSDMARK", assetId)
@@ -47,7 +55,12 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 }
 
 func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
-	signer, err := NewStarkSigner("0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a", "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06", "czowx", zerolog.Logger{})
+	signer, err := NewStarkSigner(
+		"0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a",
+		"0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06",
+		"czowx",
+		zerolog.Logger{},
+	)
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
@@ -78,7 +91,11 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 			S: "0x6777f741610f8ebe69707ab12bda9c6efc03cf6aafe919b187d226ac8ece6b8",
 		},
 	}
-	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "-3335950349880000000")
+	signedNegativePriceUpdate, assetId, err := signer.SignPublisherPrice(
+		1708940577123456789,
+		"DYDXUSD",
+		"-3335950349880000000",
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, "0x44594458555344000000000000000000637a6f7778", assetId)
 	assert.NotEqual(t, signedPriceUpdate.Signature, signedNegativePriceUpdate.Signature)
@@ -93,30 +110,49 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 			S: "0x31a930c2989244043c86b138ea75ba2bbb18f51012c6b00fe8e4d93ce03c030",
 		},
 	}
-	signedPriceUpdate, assetId, err = signer.SignPublisherPrice(1708940577123456789, "DJTWINYESUSDTWAP480", "3335950349880000000")
+	signedPriceUpdate, assetId, err = signer.SignPublisherPrice(
+		1708940577123456789,
+		"DJTWINYESUSDTWAP480",
+		"3335950349880000000",
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, "0x444a5457494e59455355534454574150343830637a6f7778", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 }
 
 func TestSigner_SignAuth_Evm(t *testing.T) {
-	signer, err := NewEvmAuthSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	signer, err := NewEvmAuthSigner(
+		"0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de",
+		zerolog.Logger{},
+	)
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
 	signatureStr, err := signer.SignAuth(1710191092123456789)
 	assert.NoError(t, err)
-	assert.Equal(t, "0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a1b", signatureStr)
+	assert.Equal(
+		t,
+		"0x2bde80c32c372aaf187b793d188ac13f7f1c92ec0121dc99b57ebfbfda74cecf06d37333f3b56864090d77b7fe3efb815ced8270bfb47cbc3f806d957063bf3a1b",
+		signatureStr,
+	)
 }
 
 func TestSigner_SignAuth_Stark(t *testing.T) {
-	signer, err := NewStarkAuthSigner("0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a", "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06", zerolog.Logger{})
+	signer, err := NewStarkAuthSigner(
+		"0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a",
+		"0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06",
+		zerolog.Logger{},
+	)
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
 	signatureStr, err := signer.SignAuth(1708940577123456789)
 	assert.NoError(t, err)
-	assert.Equal(t, "0x06d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a70296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2", signatureStr)
+	assert.Equal(
+		t,
+		"0x06d317d0c403d4bb822db27843f7cca56f5922863ced48b380e6c4494c7d23a70296da7fd09ed7e436a91d5667fa7d5f0f969d739231c2ba1fa00aa364b2dfe2",
+		signatureStr,
+	)
 }
 
 func BenchmarkSigner_SignPublisherPrice_Evm(b *testing.B) {
@@ -130,7 +166,12 @@ func BenchmarkSigner_SignPublisherPrice_Evm(b *testing.B) {
 }
 
 func BenchmarkSigner_SignPublisherPrice_Stark(b *testing.B) {
-	signer, err := NewStarkSigner("0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a", "0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06", "czowx", zerolog.Logger{})
+	signer, err := NewStarkSigner(
+		"0x66253bdeb3c1a235cf4376611e3a14474e2c00fd2fb225f9a388faae7fb095a",
+		"0x418d3fd8219a2cf32a00d458f61802d17f01c5bcde5a4f82008ee4a7c8e9a06",
+		"czowx",
+		zerolog.Logger{},
+	)
 	if err != nil {
 		b.Fatalf("error creating signer: %v", err)
 	}
@@ -146,12 +187,20 @@ func TestBigIntBytesToTwosComplement(t *testing.T) {
 	intBigInt.SetString(intString, 10)
 
 	twosComplement := bigIntToTwosComplement32(intBigInt)
-	assert.Equal(t, "ffffffffffffffffffffffffffffffffffffffffffffffffffffefe0de163740", hex.EncodeToString(twosComplement))
+	assert.Equal(
+		t,
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffefe0de163740",
+		hex.EncodeToString(twosComplement),
+	)
 
 	// positive
 	intString = "12500000000000"
 	intBigInt.SetString(intString, 10)
 
 	twosComplement = bigIntToTwosComplement32(intBigInt)
-	assert.Equal(t, "00000000000000000000000000000000000000000000000000000b5e620f4800", hex.EncodeToString(twosComplement))
+	assert.Equal(
+		t,
+		"00000000000000000000000000000000000000000000000000000b5e620f4800",
+		hex.EncodeToString(twosComplement),
+	)
 }

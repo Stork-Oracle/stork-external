@@ -48,7 +48,7 @@ RUN apt-get update && \
 
 # Copy libraries from builder stage
 COPY --from=builder /app/.lib/libwasmvm.*.so /usr/local/lib/
-COPY --from=builder /app/.lib/libstork.so /usr/local/lib/
+COPY --from=builder /app/.lib/libsigner_ffi.so /usr/local/lib/
 COPY --from=builder /app/.lib/libfuel_ffi.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
@@ -59,7 +59,7 @@ RUN if [ -z "$SERVICE" ]; then echo "SERVICE argument is not defined"; exit 1; f
 
 COPY --from=builder /app/.bin/${SERVICE} /app/
 
-COPY docker-entrypoint.sh /app/
+COPY docker/scripts/docker-entrypoint.sh /app/
 COPY version.txt /app/
 RUN chmod +x /app/docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
