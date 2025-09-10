@@ -74,7 +74,7 @@ jobs:
 
     - name: Install CLI directly
       run: |
-        go build -o $(go env GOPATH)/bin/stork-generate ./tools/generate/cmd
+        go build -o $(go env GOPATH)/bin/stork-generate ./tools/generate
 
     - name: Run update command
       run: stork-generate update
