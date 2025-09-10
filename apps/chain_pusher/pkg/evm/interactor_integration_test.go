@@ -5,6 +5,7 @@ package evm
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -150,12 +151,15 @@ func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Multipl
 // Test_05_ListenContractEvents tests the behavior of listening for contract events.
 func (s *InteractorTestSuite) Test_05_ListenContractEvents() {
 	ch := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
-	defer close(ch)
 
 	listenCtx, listenCtxCancel := context.WithCancel(s.ctx)
-	defer listenCtxCancel()
 
-	go s.interactor.ListenContractEvents(listenCtx, ch)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.interactor.ListenContractEvents(listenCtx, ch)
+	}()
 
 	priceUpdates := s.getAllPriceUpdates()
 	s.Require().NotNil(priceUpdates)
@@ -199,6 +203,9 @@ func (s *InteractorTestSuite) Test_05_ListenContractEvents() {
 	case <-time.After(5 * time.Second):
 		s.Require().Fail("test timed out after 5 seconds, should have received all values")
 	}
+	listenCtxCancel()
+	wg.Wait()
+	close(ch)
 }
 
 func (s *InteractorTestSuite) Test_06_GetWalletBalance_After_Push() {
