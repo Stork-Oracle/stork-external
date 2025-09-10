@@ -52,8 +52,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Run Docker Compose Integration Profile
+        run: docker compose --profile integration up -d --build --quiet-pull
+
       - name: Run tests
-        run: make test
+        run: make integration-test
         env:
           TARGETPLATFORM: linux/amd64
           
