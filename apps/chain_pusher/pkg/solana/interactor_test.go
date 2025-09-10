@@ -3,7 +3,7 @@ package solana
 import (
 	"testing"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/internal/testutil"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	bin "github.com/gagliardetto/binary"
 	"github.com/stretchr/testify/assert"

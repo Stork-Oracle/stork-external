@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/internal/testutil"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/caarlos0/env/v11"
 	"github.com/rs/zerolog"

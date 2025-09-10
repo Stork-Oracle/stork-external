@@ -19,9 +19,10 @@ import (
 var (
 	ErrFailedToGetPrices = errors.New("failed to get prices")
 	ErrNoMorePrices      = errors.New("no more prices")
+	ErrFailedToGetCaller = errors.New("failed to get caller")
 )
 
-// directory containing the pre-generated websocket message json files
+// directory containing the pre-generated websocket message json files.
 const (
 	messagesDir          = "testdata"
 	BtcUsdEncodedAssetID = "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de"
@@ -158,11 +159,23 @@ func (s *SampleAggregatedSignedPrices) SuiUsdEncodedAssetID() types.InternalEnco
 }
 
 func (s *SampleAggregatedSignedPrices) AllEncodedAssetIDs() []types.InternalEncodedAssetID {
-	return []types.InternalEncodedAssetID{s.btcUsdEncodedAssetID, s.ethUsdEncodedAssetID, s.solUsdEncodedAssetID, s.suiUsdEncodedAssetID}
+	return []types.InternalEncodedAssetID{
+		s.btcUsdEncodedAssetID,
+		s.ethUsdEncodedAssetID,
+		s.solUsdEncodedAssetID,
+		s.suiUsdEncodedAssetID,
+	}
 }
 
 func loadWsMessages(assetID string) ([]types.AggregatedSignedPrice, error) {
-	_, thisFile, _, _ := runtime.Caller(0)
+	pc, thisFile, line, ok := runtime.Caller(0)
+	if !ok {
+		return nil, ErrFailedToGetCaller
+	}
+
+	_ = pc
+	_ = line
+
 	file, err := os.ReadFile(filepath.Join(filepath.Dir(thisFile), messagesDir, assetID+".json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s.json: %w", assetID, err)
@@ -176,8 +189,10 @@ func loadWsMessages(assetID string) ([]types.AggregatedSignedPrice, error) {
 	}
 
 	prices := make([]types.AggregatedSignedPrice, len(messages))
+
+	var price types.AggregatedSignedPrice
 	for i, message := range messages {
-		price, ok := message.Data[assetID]
+		price, ok = message.Data[assetID]
 		if !ok {
 			return nil, ErrFailedToGetPrices
 		}

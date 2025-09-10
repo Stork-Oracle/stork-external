@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/internal/testutil"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/stretchr/testify/assert"
