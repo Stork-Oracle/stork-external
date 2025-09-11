@@ -74,7 +74,7 @@ services:
       context: .
       dockerfile: docker/images/evm.Dockerfile
       args:
-        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44}
+        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xC4A02e7D370402F4afC36032076B05e74FF81786}
     ports:
       - "8545:8545"
     healthcheck:

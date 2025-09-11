@@ -78,42 +78,65 @@ func (s *InteractorTestSuite) Test_02_PullValues_Initial() {
 }
 
 // Test_03_BatchPushToContract tests the behavior of batch pushing to the contract.
-func (s *InteractorTestSuite) Test_03_BatchPushToContract_and_PullValues_Single_Asset() {
-	btcUsdEncodedAssetID := s.prices.BtcUsdEncodedAssetID()
-	s.Require().NotNil(btcUsdEncodedAssetID)
+func (s *InteractorTestSuite) Test_03_BatchPushToContract_and_PullValues_Single_Asset_Positive() {
+	positiveAsset1EncodedAssetID := s.prices.PositiveAsset1EncodedAssetID()
+	s.Require().NotNil(positiveAsset1EncodedAssetID)
 
-	priceUpdates := s.getBtcUsdPriceUpdate()
+	priceUpdates := s.getPositiveAsset1PriceUpdate()
 	s.Require().NotNil(priceUpdates)
 
-	// Push the BTCUSD price to the contract
+	// Push the POSITIVE_ASSET_1 price to the contract
 	err := s.interactor.BatchPushToContract(priceUpdates)
 	s.Require().NoError(err)
 
-	// Pull the BTCUSD price from the contract
-	values, err := s.interactor.PullValues([]types.InternalEncodedAssetID{btcUsdEncodedAssetID})
+	// Pull the POSITIVE_ASSET_1 price from the contract
+	values, err := s.interactor.PullValues([]types.InternalEncodedAssetID{positiveAsset1EncodedAssetID})
 	s.Require().NoError(err)
 	s.Require().NotNil(values)
 	s.Require().Equal(1, len(values))
 
 	// Check the quantized value and timestamp
-	s.Require().Equal(string(priceUpdates[btcUsdEncodedAssetID].StorkSignedPrice.QuantizedPrice), values[btcUsdEncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[btcUsdEncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[btcUsdEncodedAssetID].TimestampNs)
+	s.Require().Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
 	s.Require().NoError(err)
 }
 
-// Test_04_BatchPushToContract_and_PullValues_Multiple_Assets tests the behavior of batch pushing to the contract and pulling values from the contract.
-func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Multiple_Assets() {
-	btcUsdEncodedAssetID := s.prices.BtcUsdEncodedAssetID()
-	s.Require().NotNil(btcUsdEncodedAssetID)
+func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Single_Asset_Negative() {
+	negativeAsset1EncodedAssetID := s.prices.NegativeAsset1EncodedAssetID()
+	s.Require().NotNil(negativeAsset1EncodedAssetID)
 
-	ethUsdEncodedAssetID := s.prices.EthUsdEncodedAssetID()
-	s.Require().NotNil(ethUsdEncodedAssetID)
+	priceUpdates := s.getNegativeAsset1PriceUpdate()
+	s.Require().NotNil(priceUpdates)
 
-	solUsdEncodedAssetID := s.prices.SolUsdEncodedAssetID()
-	s.Require().NotNil(solUsdEncodedAssetID)
+	// Push the prices to the contract
+	err := s.interactor.BatchPushToContract(priceUpdates)
+	s.Require().NoError(err)
 
-	suiUsdEncodedAssetID := s.prices.SuiUsdEncodedAssetID()
-	s.Require().NotNil(suiUsdEncodedAssetID)
+	// Pull the prices from the contract
+	values, err := s.interactor.PullValues([]types.InternalEncodedAssetID{negativeAsset1EncodedAssetID})
+	s.Require().NoError(err)
+	s.Require().NotNil(values)
+	s.Require().Equal(1, len(values))
+
+	// Check the quantized value and timestamp
+	s.Require().Equal(string(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[negativeAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[negativeAsset1EncodedAssetID].TimestampNs)
+	s.Require().NoError(err)
+}
+
+// Test_05_BatchPushToContract_and_PullValues_Multiple_Assets tests the behavior of batch pushing to the contract and pulling values from the contract.
+func (s *InteractorTestSuite) Test_05_BatchPushToContract_and_PullValues_Multiple_Assets_Positive_Negative() {
+	positiveAsset1EncodedAssetID := s.prices.PositiveAsset1EncodedAssetID()
+	s.Require().NotNil(positiveAsset1EncodedAssetID)
+
+	positiveAsset2EncodedAssetID := s.prices.PositiveAsset2EncodedAssetID()
+	s.Require().NotNil(positiveAsset2EncodedAssetID)
+
+	positiveAsset3EncodedAssetID := s.prices.PositiveAsset3EncodedAssetID()
+	s.Require().NotNil(positiveAsset3EncodedAssetID)
+
+	positiveAsset4EncodedAssetID := s.prices.PositiveAsset4EncodedAssetID()
+	s.Require().NotNil(positiveAsset4EncodedAssetID)
 
 	priceUpdates := s.getAllPriceUpdates()
 	s.Require().NotNil(priceUpdates)
@@ -130,26 +153,26 @@ func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Multipl
 	s.Require().NoError(err)
 
 	// Check the quantized value and timestamps
-	// BTCUSD
-	s.Require().Equal(string(priceUpdates[btcUsdEncodedAssetID].StorkSignedPrice.QuantizedPrice), values[btcUsdEncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[btcUsdEncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[btcUsdEncodedAssetID].TimestampNs)
+	// POSITIVE_ASSET_1
+	s.Require().Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
 
-	// ETHUSD
-	s.Require().Equal(string(priceUpdates[ethUsdEncodedAssetID].StorkSignedPrice.QuantizedPrice), values[ethUsdEncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[ethUsdEncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[ethUsdEncodedAssetID].TimestampNs)
+	// POSITIVE_ASSET_2
+	s.Require().Equal(string(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset2EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset2EncodedAssetID].TimestampNs)
 
-	// SOLUSD
-	s.Require().Equal(string(priceUpdates[solUsdEncodedAssetID].StorkSignedPrice.QuantizedPrice), values[solUsdEncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[solUsdEncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[solUsdEncodedAssetID].TimestampNs)
+	// POSITIVE_ASSET_3
+	s.Require().Equal(string(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset3EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset3EncodedAssetID].TimestampNs)
 
-	// SUIUSD
-	s.Require().Equal(string(priceUpdates[suiUsdEncodedAssetID].StorkSignedPrice.QuantizedPrice), values[suiUsdEncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[suiUsdEncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[suiUsdEncodedAssetID].TimestampNs)
+	// POSITIVE_ASSET_4
+	s.Require().Equal(string(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset4EncodedAssetID].QuantizedValue.String())
+	s.Require().Equal(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset4EncodedAssetID].TimestampNs)
 	s.Require().NoError(err)
 }
 
-// Test_05_ListenContractEvents tests the behavior of listening for contract events.
-func (s *InteractorTestSuite) Test_05_ListenContractEvents() {
+// Test_06_ListenContractEvents tests the behavior of listening for contract events.
+func (s *InteractorTestSuite) Test_06_ListenContractEvents() {
 	ch := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
 	listenCtx, listenCtxCancel := context.WithCancel(s.ctx)
@@ -168,35 +191,35 @@ func (s *InteractorTestSuite) Test_05_ListenContractEvents() {
 	s.Require().NoError(err)
 
 	// Bool flags for each asset
-	receivedBtcUsd := false
-	receivedEthUsd := false
-	receivedSolUsd := false
-	receivedSuiUsd := false
+	receivedPositiveAsset1 := false
+	receivedPositiveAsset2 := false
+	receivedPositiveAsset3 := false
+	receivedPositiveAsset4 := false
 
 	select {
 	case update := <-ch:
 		for encodedAssetID, value := range update {
-			if encodedAssetID == s.prices.BtcUsdEncodedAssetID() {
-				receivedBtcUsd = true
+			if encodedAssetID == s.prices.PositiveAsset1EncodedAssetID() {
+				receivedPositiveAsset1 = true
 				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
 				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
-			if encodedAssetID == s.prices.EthUsdEncodedAssetID() {
-				receivedEthUsd = true
+			if encodedAssetID == s.prices.PositiveAsset2EncodedAssetID() {
+				receivedPositiveAsset2 = true
 				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
 				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
-			if encodedAssetID == s.prices.SolUsdEncodedAssetID() {
-				receivedSolUsd = true
+			if encodedAssetID == s.prices.PositiveAsset3EncodedAssetID() {
+				receivedPositiveAsset3 = true
 				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
 				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
-			if encodedAssetID == s.prices.SuiUsdEncodedAssetID() {
-				receivedSuiUsd = true
+			if encodedAssetID == s.prices.PositiveAsset4EncodedAssetID() {
+				receivedPositiveAsset4 = true
 				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
 				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
-			if receivedBtcUsd && receivedEthUsd && receivedSolUsd && receivedSuiUsd {
+			if receivedPositiveAsset1 && receivedPositiveAsset2 && receivedPositiveAsset3 && receivedPositiveAsset4 {
 				break
 			}
 		}
@@ -208,7 +231,10 @@ func (s *InteractorTestSuite) Test_05_ListenContractEvents() {
 	close(ch)
 }
 
-func (s *InteractorTestSuite) Test_06_GetWalletBalance_After_Push() {
+// Test_07_GetWalletBalance_After_Push tests the behavior of getting the wallet balance after pushing to the contract.
+// As this test runs last, we don't have to push, as we stored the initial balance in Test_01_GetWalletBalance_Initial,
+// and have pushed in the previous tests.
+func (s *InteractorTestSuite) Test_07_GetWalletBalance_After_Push() {
 	balance, err := s.interactor.GetWalletBalance()
 	s.Require().NoError(err)
 	s.Require().Less(balance, s.balance, "balance should be less than initial balance")
@@ -216,50 +242,62 @@ func (s *InteractorTestSuite) Test_06_GetWalletBalance_After_Push() {
 
 // Helper functions
 
-func (s *InteractorTestSuite) getBtcUsdPriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+func (s *InteractorTestSuite) getPositiveAsset1PriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	btcUsdPrice, err := s.prices.NextBtcUsd()
+	positiveAsset1Price, err := s.prices.NextPositiveAsset1()
 	s.Require().NoError(err)
-	s.Require().NotNil(btcUsdPrice)
+	s.Require().NotNil(positiveAsset1Price)
 
-	priceUpdates[s.prices.BtcUsdEncodedAssetID()] = *btcUsdPrice
+	priceUpdates[s.prices.PositiveAsset1EncodedAssetID()] = *positiveAsset1Price
 
 	return priceUpdates
 }
 
-func (s *InteractorTestSuite) getEthUsdPriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+func (s *InteractorTestSuite) getPositiveAsset2PriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	ethUsdPrice, err := s.prices.NextEthUsd()
+	positiveAsset2Price, err := s.prices.NextPositiveAsset2()
 	s.Require().NoError(err)
-	s.Require().NotNil(ethUsdPrice)
+	s.Require().NotNil(positiveAsset2Price)
 
-	priceUpdates[s.prices.EthUsdEncodedAssetID()] = *ethUsdPrice
+	priceUpdates[s.prices.PositiveAsset2EncodedAssetID()] = *positiveAsset2Price
 
 	return priceUpdates
 }
 
-func (s *InteractorTestSuite) getSolUsdPriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+func (s *InteractorTestSuite) getPositiveAsset3PriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	solUsdPrice, err := s.prices.NextSolUsd()
+	positiveAsset3Price, err := s.prices.NextPositiveAsset3()
 	s.Require().NoError(err)
-	s.Require().NotNil(solUsdPrice)
+	s.Require().NotNil(positiveAsset3Price)
 
-	priceUpdates[s.prices.SolUsdEncodedAssetID()] = *solUsdPrice
+	priceUpdates[s.prices.PositiveAsset3EncodedAssetID()] = *positiveAsset3Price
 
 	return priceUpdates
 }
 
-func (s *InteractorTestSuite) getSuiUsdPriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+func (s *InteractorTestSuite) getPositiveAsset4PriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	suiUsdPrice, err := s.prices.NextSuiUsd()
+	positiveAsset4Price, err := s.prices.NextPositiveAsset4()
 	s.Require().NoError(err)
-	s.Require().NotNil(suiUsdPrice)
+	s.Require().NotNil(positiveAsset4Price)
 
-	priceUpdates[s.prices.SuiUsdEncodedAssetID()] = *suiUsdPrice
+	priceUpdates[s.prices.PositiveAsset4EncodedAssetID()] = *positiveAsset4Price
+
+	return priceUpdates
+}
+
+func (s *InteractorTestSuite) getNegativeAsset1PriceUpdate() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+
+	negativeAsset1Price, err := s.prices.NextNegativeAsset1()
+	s.Require().NoError(err)
+	s.Require().NotNil(negativeAsset1Price)
+
+	priceUpdates[s.prices.NegativeAsset1EncodedAssetID()] = *negativeAsset1Price
 
 	return priceUpdates
 }
@@ -267,31 +305,36 @@ func (s *InteractorTestSuite) getSuiUsdPriceUpdate() map[types.InternalEncodedAs
 func (s *InteractorTestSuite) getAllPriceUpdates() map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
 	priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	btcUsdPrice := s.getBtcUsdPriceUpdate()
-	s.Require().NotNil(btcUsdPrice)
+	positiveAsset1Price := s.getPositiveAsset1PriceUpdate()
+	s.Require().NotNil(positiveAsset1Price)
 
-	ethUsdPrice := s.getEthUsdPriceUpdate()
-	s.Require().NotNil(ethUsdPrice)
+	positiveAsset2Price := s.getPositiveAsset2PriceUpdate()
+	s.Require().NotNil(positiveAsset2Price)
 
-	solUsdPrice := s.getSolUsdPriceUpdate()
-	s.Require().NotNil(solUsdPrice)
+	positiveAsset3Price := s.getPositiveAsset3PriceUpdate()
+	s.Require().NotNil(positiveAsset3Price)
 
-	suiUsdPrice := s.getSuiUsdPriceUpdate()
-	s.Require().NotNil(suiUsdPrice)
+	positiveAsset4Price := s.getPositiveAsset4PriceUpdate()
+	s.Require().NotNil(positiveAsset4Price)
+
+	negativeAsset1Price := s.getNegativeAsset1PriceUpdate()
+	s.Require().NotNil(negativeAsset1Price)
 
 	// Merge the price updates
-	for encodedAssetID, priceUpdate := range btcUsdPrice {
+	for encodedAssetID, priceUpdate := range positiveAsset1Price {
 		priceUpdates[encodedAssetID] = priceUpdate
 	}
-	for encodedAssetID, priceUpdate := range ethUsdPrice {
+	for encodedAssetID, priceUpdate := range positiveAsset2Price {
 		priceUpdates[encodedAssetID] = priceUpdate
 	}
-	for encodedAssetID, priceUpdate := range solUsdPrice {
+	for encodedAssetID, priceUpdate := range positiveAsset3Price {
 		priceUpdates[encodedAssetID] = priceUpdate
 	}
-	for encodedAssetID, priceUpdate := range suiUsdPrice {
+	for encodedAssetID, priceUpdate := range positiveAsset4Price {
 		priceUpdates[encodedAssetID] = priceUpdate
 	}
-
+	for encodedAssetID, priceUpdate := range negativeAsset1Price {
+		priceUpdates[encodedAssetID] = priceUpdate
+	}
 	return priceUpdates
 }

@@ -12,158 +12,205 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 )
 
-// This file allows access to pre-generated valid websocket message for integration testing.
-// These messages were collected from the production websocket at wss://api.jp.stork-oracle.network/evm/subscribe.
-// There are 4 assets: BTCUSD, ETHUSD, SOLUSD, and SUIUSD, all with 50 collected messages.
+// This file allows access to pre-generated signed and valid websocket messages.
+// These messages were collected from a local version of the stork aggregator with pubkey:
+//
+//     "0xC4A02e7D370402F4afC36032076B05e74FF81786"
+//
+// There are 5 assets:
+//
+//     - POSITIVE_ASSET_1
+//     - POSITIVE_ASSET_2
+//     - POSITIVE_ASSET_3
+//     - POSITIVE_ASSET_4
+//     - NEGATIVE_ASSET_1
+//
+// all with 50 collected messages.
+// The assets that contain "POSITIVE" in the name have all positive prices.
+// The assets that contain "NEGATIVE" in the name have all negative prices.
 
 var (
 	ErrFailedToGetPrices = errors.New("failed to get prices")
 	ErrNoMorePrices      = errors.New("no more prices")
 	ErrFailedToGetCaller = errors.New("failed to get caller")
+	ErrNoPricesInFile    = errors.New("no prices in file")
 )
 
-// directory containing the pre-generated websocket message json files.
-const (
-	messagesDir          = "testdata"
-	BtcUsdEncodedAssetID = "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de"
-	EthUsdEncodedAssetID = "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160"
-	SolUsdEncodedAssetID = "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837"
-	SuiUsdEncodedAssetID = "0xa24cc95a4f3d70a0a2f7ac652b67a4a73791631ff06b4ee7f729097311169b81"
-)
+// directory containing the pre-generated signed and valid websocket message json files.
+const messagesDir = "testdata"
 
 type CapturedAssetID string
 
 type SampleAggregatedSignedPrices struct {
-	btcUsd               []types.AggregatedSignedPrice
-	ethUsd               []types.AggregatedSignedPrice
-	solUsd               []types.AggregatedSignedPrice
-	suiUsd               []types.AggregatedSignedPrice
-	btcUsdEncodedAssetID types.InternalEncodedAssetID
-	ethUsdEncodedAssetID types.InternalEncodedAssetID
-	solUsdEncodedAssetID types.InternalEncodedAssetID
-	suiUsdEncodedAssetID types.InternalEncodedAssetID
+	positiveAsset1               []types.AggregatedSignedPrice
+	positiveAsset2               []types.AggregatedSignedPrice
+	positiveAsset3               []types.AggregatedSignedPrice
+	positiveAsset4               []types.AggregatedSignedPrice
+	negativeAsset1               []types.AggregatedSignedPrice
+	positiveAsset1EncodedAssetID types.InternalEncodedAssetID
+	positiveAsset2EncodedAssetID types.InternalEncodedAssetID
+	positiveAsset3EncodedAssetID types.InternalEncodedAssetID
+	positiveAsset4EncodedAssetID types.InternalEncodedAssetID
+	negativeAsset1EncodedAssetID types.InternalEncodedAssetID
 }
 
 func LoadAggregatedSignedPrices() (*SampleAggregatedSignedPrices, error) {
-	// BTCUSD
-	btcPrices, err := loadWsMessages("BTCUSD")
+	positiveAsset1Prices, err := loadWsMessages("POSITIVE_ASSET_1")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read BTCUSD.json: %w", err)
+		return nil, fmt.Errorf("failed to read POSITIVE_ASSET_1.json: %w", err)
 	}
 
-	ethPrices, err := loadWsMessages("ETHUSD")
+	positiveAsset2Prices, err := loadWsMessages("POSITIVE_ASSET_2")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read ETHUSD.json: %w", err)
+		return nil, fmt.Errorf("failed to read POSITIVE_ASSET_2.json: %w", err)
 	}
 
-	solPrices, err := loadWsMessages("SOLUSD")
+	positiveAsset3Prices, err := loadWsMessages("POSITIVE_ASSET_3")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read SOLUSD.json: %w", err)
+		return nil, fmt.Errorf("failed to read POSITIVE_ASSET_3.json: %w", err)
 	}
 
-	suiPrices, err := loadWsMessages("SUIUSD")
+	positiveAsset4Prices, err := loadWsMessages("POSITIVE_ASSET_4")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read SUIUSD.json: %w", err)
+		return nil, fmt.Errorf("failed to read POSITIVE_ASSET_4.json: %w", err)
 	}
 
-	btcUsdEncodedAssetID, err := pusher.HexStringToByte32(BtcUsdEncodedAssetID)
+	negativeAsset1Prices, err := loadWsMessages("NEGATIVE_ASSET_1")
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert BTCUSD encoded asset ID to byte32: %w", err)
+		return nil, fmt.Errorf("failed to read NEGATIVE_ASSET_1.json: %w", err)
 	}
 
-	ethUsdEncodedAssetID, err := pusher.HexStringToByte32(EthUsdEncodedAssetID)
+	positiveAsset1EncodedAssetID, err := pusher.HexStringToByte32(
+		string(positiveAsset1Prices[0].StorkSignedPrice.EncodedAssetID),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert ETHUSD encoded asset ID to byte32: %w", err)
+		return nil, fmt.Errorf("failed to convert POSITIVE_ASSET_1 encoded asset ID to byte32: %w", err)
 	}
 
-	solUsdEncodedAssetID, err := pusher.HexStringToByte32(SolUsdEncodedAssetID)
+	positiveAsset2EncodedAssetID, err := pusher.HexStringToByte32(
+		string(positiveAsset2Prices[0].StorkSignedPrice.EncodedAssetID),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert SOLUSD encoded asset ID to byte32: %w", err)
+		return nil, fmt.Errorf("failed to convert POSITIVE_ASSET_2 encoded asset ID to byte32: %w", err)
 	}
 
-	suiUsdEncodedAssetID, err := pusher.HexStringToByte32(SuiUsdEncodedAssetID)
+	positiveAsset3EncodedAssetID, err := pusher.HexStringToByte32(
+		string(positiveAsset3Prices[0].StorkSignedPrice.EncodedAssetID),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert SUIUSD encoded asset ID to byte32: %w", err)
+		return nil, fmt.Errorf("failed to convert POSITIVE_ASSET_3 encoded asset ID to byte32: %w", err)
+	}
+
+	positiveAsset4EncodedAssetID, err := pusher.HexStringToByte32(
+		string(positiveAsset4Prices[0].StorkSignedPrice.EncodedAssetID),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert POSITIVE_ASSET_4 encoded asset ID to byte32: %w", err)
+	}
+
+	negativeAsset1EncodedAssetID, err := pusher.HexStringToByte32(
+		string(negativeAsset1Prices[0].StorkSignedPrice.EncodedAssetID),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert NEGATIVE_ASSET_1 encoded asset ID to byte32: %w", err)
 	}
 
 	return &SampleAggregatedSignedPrices{
-		btcUsd:               btcPrices,
-		ethUsd:               ethPrices,
-		solUsd:               solPrices,
-		suiUsd:               suiPrices,
-		btcUsdEncodedAssetID: btcUsdEncodedAssetID,
-		ethUsdEncodedAssetID: ethUsdEncodedAssetID,
-		solUsdEncodedAssetID: solUsdEncodedAssetID,
-		suiUsdEncodedAssetID: suiUsdEncodedAssetID,
+		positiveAsset1:               positiveAsset1Prices,
+		positiveAsset2:               positiveAsset2Prices,
+		positiveAsset3:               positiveAsset3Prices,
+		positiveAsset4:               positiveAsset4Prices,
+		negativeAsset1:               negativeAsset1Prices,
+		positiveAsset1EncodedAssetID: positiveAsset1EncodedAssetID,
+		positiveAsset2EncodedAssetID: positiveAsset2EncodedAssetID,
+		positiveAsset3EncodedAssetID: positiveAsset3EncodedAssetID,
+		positiveAsset4EncodedAssetID: positiveAsset4EncodedAssetID,
+		negativeAsset1EncodedAssetID: negativeAsset1EncodedAssetID,
 	}, nil
 }
 
-func (s *SampleAggregatedSignedPrices) NextBtcUsd() (*types.AggregatedSignedPrice, error) {
-	if len(s.btcUsd) == 0 {
+func (s *SampleAggregatedSignedPrices) NextPositiveAsset1() (*types.AggregatedSignedPrice, error) {
+	if len(s.positiveAsset1) == 0 {
 		return nil, ErrNoMorePrices
 	}
 
-	price := s.btcUsd[0]
-	s.btcUsd = s.btcUsd[1:]
+	price := s.positiveAsset1[0]
+	s.positiveAsset1 = s.positiveAsset1[1:]
 
 	return &price, nil
 }
 
-func (s *SampleAggregatedSignedPrices) NextEthUsd() (*types.AggregatedSignedPrice, error) {
-	if len(s.ethUsd) == 0 {
+func (s *SampleAggregatedSignedPrices) NextPositiveAsset2() (*types.AggregatedSignedPrice, error) {
+	if len(s.positiveAsset2) == 0 {
 		return nil, ErrNoMorePrices
 	}
 
-	price := s.ethUsd[0]
-	s.ethUsd = s.ethUsd[1:]
+	price := s.positiveAsset2[0]
+	s.positiveAsset2 = s.positiveAsset2[1:]
 
 	return &price, nil
 }
 
-func (s *SampleAggregatedSignedPrices) NextSolUsd() (*types.AggregatedSignedPrice, error) {
-	if len(s.solUsd) == 0 {
+func (s *SampleAggregatedSignedPrices) NextPositiveAsset3() (*types.AggregatedSignedPrice, error) {
+	if len(s.positiveAsset3) == 0 {
 		return nil, ErrNoMorePrices
 	}
 
-	price := s.solUsd[0]
-	s.solUsd = s.solUsd[1:]
+	price := s.positiveAsset3[0]
+	s.positiveAsset3 = s.positiveAsset3[1:]
 
 	return &price, nil
 }
 
-func (s *SampleAggregatedSignedPrices) NextSuiUsd() (*types.AggregatedSignedPrice, error) {
-	if len(s.suiUsd) == 0 {
+func (s *SampleAggregatedSignedPrices) NextPositiveAsset4() (*types.AggregatedSignedPrice, error) {
+	if len(s.positiveAsset4) == 0 {
 		return nil, ErrNoMorePrices
 	}
 
-	price := s.suiUsd[0]
-	s.suiUsd = s.suiUsd[1:]
+	price := s.positiveAsset4[0]
+	s.positiveAsset4 = s.positiveAsset4[1:]
 
 	return &price, nil
 }
 
-func (s *SampleAggregatedSignedPrices) BtcUsdEncodedAssetID() types.InternalEncodedAssetID {
-	return s.btcUsdEncodedAssetID
+func (s *SampleAggregatedSignedPrices) NextNegativeAsset1() (*types.AggregatedSignedPrice, error) {
+	if len(s.negativeAsset1) == 0 {
+		return nil, ErrNoMorePrices
+	}
+
+	price := s.negativeAsset1[0]
+	s.negativeAsset1 = s.negativeAsset1[1:]
+
+	return &price, nil
 }
 
-func (s *SampleAggregatedSignedPrices) EthUsdEncodedAssetID() types.InternalEncodedAssetID {
-	return s.ethUsdEncodedAssetID
+func (s *SampleAggregatedSignedPrices) PositiveAsset1EncodedAssetID() types.InternalEncodedAssetID {
+	return s.positiveAsset1EncodedAssetID
 }
 
-func (s *SampleAggregatedSignedPrices) SolUsdEncodedAssetID() types.InternalEncodedAssetID {
-	return s.solUsdEncodedAssetID
+func (s *SampleAggregatedSignedPrices) PositiveAsset2EncodedAssetID() types.InternalEncodedAssetID {
+	return s.positiveAsset2EncodedAssetID
 }
 
-func (s *SampleAggregatedSignedPrices) SuiUsdEncodedAssetID() types.InternalEncodedAssetID {
-	return s.suiUsdEncodedAssetID
+func (s *SampleAggregatedSignedPrices) PositiveAsset3EncodedAssetID() types.InternalEncodedAssetID {
+	return s.positiveAsset3EncodedAssetID
+}
+
+func (s *SampleAggregatedSignedPrices) PositiveAsset4EncodedAssetID() types.InternalEncodedAssetID {
+	return s.positiveAsset4EncodedAssetID
+}
+
+func (s *SampleAggregatedSignedPrices) NegativeAsset1EncodedAssetID() types.InternalEncodedAssetID {
+	return s.negativeAsset1EncodedAssetID
 }
 
 func (s *SampleAggregatedSignedPrices) AllEncodedAssetIDs() []types.InternalEncodedAssetID {
 	return []types.InternalEncodedAssetID{
-		s.btcUsdEncodedAssetID,
-		s.ethUsdEncodedAssetID,
-		s.solUsdEncodedAssetID,
-		s.suiUsdEncodedAssetID,
+		s.positiveAsset1EncodedAssetID,
+		s.positiveAsset2EncodedAssetID,
+		s.positiveAsset3EncodedAssetID,
+		s.positiveAsset4EncodedAssetID,
+		s.negativeAsset1EncodedAssetID,
 	}
 }
 
@@ -186,6 +233,10 @@ func loadWsMessages(assetID string) ([]types.AggregatedSignedPrice, error) {
 	err = json.Unmarshal(file, &messages)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal %s.json: %w", assetID, err)
+	}
+
+	if len(messages) == 0 {
+		return nil, ErrNoPricesInFile
 	}
 
 	prices := make([]types.AggregatedSignedPrice, len(messages))
