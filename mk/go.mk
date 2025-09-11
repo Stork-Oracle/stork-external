@@ -57,7 +57,7 @@ data_provider:
 
 generate: 
 	@echo "Installing generate..."
-	@$(GO) install -v ./tools/generate
+	@$(GO) install -v ./utils/generate
 
 .PHONY: install
 ## Aggregate target to install all Go binaries	
