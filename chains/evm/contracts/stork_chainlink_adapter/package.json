@@ -33,7 +33,7 @@
     "hardhat": "^2.24.0"
   },
   "dependencies": {
-    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk",
+    "@storknetwork/stork-evm-sdk": "^1.0.0",
     "ethers": "^6.14.0"
   }
 }
