@@ -35,6 +35,6 @@
   },
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
-    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk"
+    "@storknetwork/stork-evm-sdk": "^1.0.0"
   }
 }
