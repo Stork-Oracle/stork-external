@@ -1,7 +1,7 @@
 {
   "name": "@storknetwork/stork_chainlink_adapter",
   "private": false,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "EVM Solidity contracts to adapt Stork price feeds to Chainlink's AggregatorV3 Interface",
   "files": [
     "contracts/**/*.sol",
@@ -20,7 +20,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/stork-oracle/stork-external.git",
+    "url": "git+https://github.com/stork-oracle/stork-external.git",
     "directory": "chains/evm/contracts/stork_chainlink_adapter"
   },
   "bugs": {
