@@ -1,6 +1,6 @@
 [package]
 name = "stork-cw"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A Stork Protocol contract for the CosmWasm ecosystem"
 license = "Apache-2.0"
