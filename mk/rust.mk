@@ -1,7 +1,7 @@
 # Rust workspace build configuration
 WORKSPACE_ROOT ?= $(CURDIR)
 RUST_TARGET_DIR := $(WORKSPACE_ROOT)/target
-RUST_LIB_DIR := $(WORKSPACE_ROOT)/.lib
+RUST_LIB_DIR ?= $(WORKSPACE_ROOT)/.lib
 
 # Detect platform and set library extensions
 UNAME_S := $(shell uname -s)
@@ -29,6 +29,9 @@ FUEL_HEADER_SRC := $(RUST_TARGET_DIR)/include/fuel_ffi.h
 SIGNER_HEADER_DEST := $(RUST_LIB_DIR)/signer_ffi.h
 FUEL_HEADER_DEST := $(RUST_LIB_DIR)/fuel_ffi.h
 
+# Single formula builds whole rust workspace
+# It's possible to isolate the individual packages, but this is unnecessary and less
+# performant for our current requirements.
 .PHONY: build-rust-workspace
 build-rust-workspace:
 	@echo "Building Rust workspace..."

@@ -4,10 +4,15 @@ linters:
   disable:
     - testpackage
     - wsl
-    - depguard
   settings:
     cyclop:
       max-complexity: 15
+    depguard:
+      rules:
+        blacklist:
+          deny:
+            - pkg: "github.com/go-test/testify"
+              desc: use github.com/stretchr/testify
     errcheck:
       check-type-assertions: true
     exhaustruct:

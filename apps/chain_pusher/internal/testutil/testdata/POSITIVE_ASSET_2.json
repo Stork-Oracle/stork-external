@@ -1,0 +1,2502 @@
+[
+  {
+    "type": "oracle_prices",
+    "trace_id": "d6e2f7b9-d74a-4568-970f-5a4694318ab2",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543111506181844,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x63cb041b28313077fdc51f6eeae4bb780177845b305708568f177583212c38ba",
+              "s": "0x4a4aafdd4bd976df481086b4f5df33bdb94d33998dc6e9d2070cbda8dcb358b9",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543111515515052,
+            "msg_hash": "0x6ff2f994287cdbe9a18a55a1565067b7a9632c9d3a476d2823a82be2e0bd3925"
+          },
+          "publisher_merkle_root": "0xa4e033a8ea8adc798f4aefef08076f2bfa4e6c27de56eab93fb9946abc174eab",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xf2adf8869021a35463818fb1a78f1a8f719f50ac53672325e3e0663c19d9ca1c",
+                "s": "0x76ddc5f97ace6da344502cd5fb6e6ea11f6c31e2b12872744ffcb31eb564ebb9",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543111506181844,
+              "msg_hash": "0xa4e033a8ea8adc798f4aefef08076f2bfa4e6c27de56eab93fb9946abc174eab"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "d0c86730-09d4-4f9a-9a2c-7f1faaee8d1d",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543112004749886,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xb7eb7da4273bd3851cda1c9a8639f72de545eb93883f70d56b50e4f6c8dd7db2",
+              "s": "0x7ad2ea8a6d60bb062c9bc4ff07a9254fb3e338be8af34fa145495b5ce8740066",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543112011079552,
+            "msg_hash": "0x73aa7f14885b09a39e237ca05f12c0c292f1fd4c97ce4e4ad38abd4076aa7763"
+          },
+          "publisher_merkle_root": "0xae1478a21363bad71c721799fc89c81ba2d4f81422ae1158e6cb394276fc9b41",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xda7eacc64cc2286156ad673633c0e77744b5b1e99f6d412c333a8528ff91ca4d",
+                "s": "0x41fe47b7590d9c2f446bb18a7e942e672c689c0626b544b2d7d11c420404037e",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543112004749886,
+              "msg_hash": "0xae1478a21363bad71c721799fc89c81ba2d4f81422ae1158e6cb394276fc9b41"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "009355e5-1a1c-4f26-b9f7-7b2e1dbc897b",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543112505197803,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xf7e26e81e421c5759fd2ecba36768a27b4bf82f5da0f77e1c6e2c71e4c9e8dcf",
+              "s": "0x588fa703c44a6072c208febb0a5ecefcccf9efad39d47db754f4e6596aecc33b",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543112509652553,
+            "msg_hash": "0x05a070eeddae24544b4a0dd6e1e6fbb3c00bdf597858b6b954211ad03ed703af"
+          },
+          "publisher_merkle_root": "0x84aa65c3e727a0ea209ea165f6341cd6631027b11f488e5bb004272cf2378581",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xd708d855273c94e14cbc671014c3b64e859e2e5f78c1606eb44d58334d406dac",
+                "s": "0x4adf5e9db03ab7bad33e535716aaf986695f11c6b95243a4edd41f3c1575e877",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543112505197803,
+              "msg_hash": "0x84aa65c3e727a0ea209ea165f6341cd6631027b11f488e5bb004272cf2378581"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "c67276eb-6297-468f-ac6c-851c95f06024",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543113005288970,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000009999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000009999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x7e0b06f684bf63bb4bce734a2d813decb4fd4d92c4e1d29388c8a2933c2d1cc5",
+              "s": "0x6cac4093cfac2db6b8bdf2e4531a471d8325dcc19445aa4a39bcb75830fe90d5",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543113013177220,
+            "msg_hash": "0x201a61cf8861d525444be63d45c4ae0acb1325a17aea02c70db59ddda7f75d03"
+          },
+          "publisher_merkle_root": "0x31052da5c196846aacc8c0f1322c2a38c1ebd68284f375c83113a39d966878be",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000009999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x4f67e5b575381b078bcbaea0c94d02f028b638878e62560dc959f6463df132d2",
+                "s": "0x37d23c561c484bf43037a96753198bc20be59eb5109799291c4367b3c61c92e2",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543113005288970,
+              "msg_hash": "0x31052da5c196846aacc8c0f1322c2a38c1ebd68284f375c83113a39d966878be"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "b9aa6c85-b4b0-4472-89b5-ca63fb186429",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543113516393970,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x8c78807e387148817347355f49b5aa274026e2ce0a63e90983d99a3b5243f919",
+              "s": "0x6024a0575d9e3e285047125207a55f804747264175ff473b62524b34fcde63a0",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543113549395136,
+            "msg_hash": "0x0d461bc31fc710f84f5bcfc7b286c393aadbf7904b8eecfb137f44010ce89f43"
+          },
+          "publisher_merkle_root": "0x893a0222758e76e74e48834e0ec50ddf89429da52897d247b20887fa0ca8ee78",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xad58e1059e4eed448e974eb4372c2428da95951ac0393b196337d44ece76c650",
+                "s": "0x1919a169e4215ce4a6e21ad0f2f0ceed5ce2c6c84894ef5f862822b41b7549bd",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543113516393970,
+              "msg_hash": "0x893a0222758e76e74e48834e0ec50ddf89429da52897d247b20887fa0ca8ee78"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "ef7dfc4d-5535-4139-8240-150cff8d90ec",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543114008169928,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000003999999999998000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000003999999999998000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x9d1f94f09d6228181bbfadee4c3529a7a274ceb634ee684761dee155a17c50ac",
+              "s": "0x051ddae3e75937d60135a8f3671064554e43038182f5f174d8cdd22ddd15cc93",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543114026900345,
+            "msg_hash": "0x53d4b0142f16ab7afbfd534fbddd02b43fecfcd25f00eaaa900ac5478305eb1a"
+          },
+          "publisher_merkle_root": "0x639851b51f7c469e9b1ff33fc0b6f8c969350195f865cec85b160d371b15cf83",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000003999999999998000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xa39f9645790cbec29116ae7c7fef415417fa16fe14dfff09b3e739a754d1fcbf",
+                "s": "0x5595967a7d4881863ead64279cd48a5637e154ad0e00b1a94ee3003a1056d6ac",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543114008169928,
+              "msg_hash": "0x639851b51f7c469e9b1ff33fc0b6f8c969350195f865cec85b160d371b15cf83"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "fbac019d-b890-4cdf-8a08-1e0a23859b0c",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543114507849970,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000007000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000007000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xa6b240110072793e4b1d82728405d3ab34f8e5955ebd08091d49155fede5a75b",
+              "s": "0x7a896fd0bef1d98d2d4042a32b2a879072bee4a2ddc7ffc79b176d383a02e79c",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543114534278429,
+            "msg_hash": "0x1f4c15c4f65b47b19d0e336b3bc170238049004e02264662a98f6efc5adcd213"
+          },
+          "publisher_merkle_root": "0x9aa8a9f30ace68558abea9d2dc5569e115d53ad8a207eb8fa9431329fba3ef8d",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000007000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x5797c6bc709bc05bc8668daaaafaf18b2233d89925ac3f6bee879ee38757e987",
+                "s": "0x3508c26713b350bfec44db86df1a3a9f03225d10e0651387d2cd27e1620b66e3",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543114507849970,
+              "msg_hash": "0x9aa8a9f30ace68558abea9d2dc5569e115d53ad8a207eb8fa9431329fba3ef8d"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "4c30247d-bb10-400b-8463-313cbbde491e",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543115004782846,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x0285766355e3000493652abe40b30bf554a620fc4d0eb8282ecc59313a1c5c27",
+              "s": "0x3f3245af4be95f885c70b5b7d6854436e60597c4bb9f8993796731bba820d4db",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543115016830762,
+            "msg_hash": "0x23edc8090207f3f7c12e0ec0dbe7a6a1a91b07a9a55c55ad4b5ce963df63c654"
+          },
+          "publisher_merkle_root": "0x06262aeca11b753ab3d94e792ac61a85f11fc3b9387fb7fe7359d953f61de772",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xc3985acbee9fe9212503266b6ddafef299f3bb8dfe9d81a9346892545652c231",
+                "s": "0x7c3d956e1be073a43977dc3d3d5fb1de1c9a6eb1d4b4c73d9cc39db362cf1fc2",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543115004782846,
+              "msg_hash": "0x06262aeca11b753ab3d94e792ac61a85f11fc3b9387fb7fe7359d953f61de772"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "1652957f-3cab-4520-a13b-11b8faef1983",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543115506114429,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x00aa356fb6b1d9240dfe20e2025e2cbb2f99a388c304bfdd201de6c29758a7e9",
+              "s": "0x0cd1645957e1107a8f47316a50ef813fd15d87c67c96bfec36b90b449399d0b3",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543115512720512,
+            "msg_hash": "0xcff2a474bb2ffcfd6c525e51b1c3c0db2beffe8194e4cb902e6ba6a5bcf905b7"
+          },
+          "publisher_merkle_root": "0xdd0f699a81a595818a1a5a965fba2d485283f147999d1f162bf3b4cbe0f9b371",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xa4677976f19de76ae535b77d2bbe8fee76c092ef49972b47e5f1288d00e0a9cb",
+                "s": "0x0034f1f8d219694bcad955fc92af6f90d362fbd4f52edc9ba837c7af5dc08f12",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543115506114429,
+              "msg_hash": "0xdd0f699a81a595818a1a5a965fba2d485283f147999d1f162bf3b4cbe0f9b371"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "0d2029e0-5b2f-4c9d-9dbf-4a7354ca3178",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543116010219304,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xe2ce84a6c9a4a99b71b89689e7b5f1aaa62e9d12c11e7b0df95c09dfe0577daa",
+              "s": "0x3332852a998c48675564ba69e24e7e365d900a1cef4c375ea0d19f0b73507174",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543116039958221,
+            "msg_hash": "0xa4045b71d9d788edfe2ec922d2bf6b3ca2825c897ed7c01a4a79561b8bd5e48e"
+          },
+          "publisher_merkle_root": "0x27e3036c70a9d1b3f185209421b2c44a2635c31e71339ae48b1e8d5b8da1bed0",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x22efa863f97cef925a046e6b8defff4680cfa539b2f52c9fb8e9709679d013ad",
+                "s": "0x7736fca911f688dae8e8c6f740eee9774f6e3c2b8f3e7345e95034bc0a7c1583",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543116010219304,
+              "msg_hash": "0x27e3036c70a9d1b3f185209421b2c44a2635c31e71339ae48b1e8d5b8da1bed0"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "896d205e-0158-4d81-85fc-a46f73e49eb4",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543116533518096,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x75283cf39caa801f9e76c71411db26aa75ad543300b137106a2949c839999cc5",
+              "s": "0x42fa8b6e995bc19b4afbfba1d30e95f671ea0cea851f51d54e12c311c313bb9e",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543116551286471,
+            "msg_hash": "0x1ddee0d50e54bcda57dcb5097d644905c3344d446125199f4725f6732c01b43f"
+          },
+          "publisher_merkle_root": "0x395dffd4c6ef4e503adf29e55c229d0bb2c7366a1696c3f37ece308d3c9e06ae",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x682e1ac612985ea51021779cec3e342d912f143a0c13fcab30f11a1c5605dc04",
+                "s": "0x4cf2142b46643658fb9ed00ce5a8f36337008b344b39bc5894734988093bcbff",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543116533518096,
+              "msg_hash": "0x395dffd4c6ef4e503adf29e55c229d0bb2c7366a1696c3f37ece308d3c9e06ae"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "63df83d2-3c6d-42ef-a605-89a873d7260a",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543117018914555,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x2a6bc904083a1399fe844a45b3d3690092733adf55c439f15b206ff000f4f643",
+              "s": "0x611fd01a7aba800b406b5f1172a344b51637282c31a8fbc0e207dda68c0bfc01",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543117087727055,
+            "msg_hash": "0xaabe06de8d05cbe71c4472ce2344da8b5dabb0ed22cd23f78faf2a945ce73aec"
+          },
+          "publisher_merkle_root": "0x979cfff7adc80ca50e930a822c339f979ceec5d866d1dea68855f232e4f01707",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xa17dd7a6b047f002e6927624d2d08151d1c664dbd22b11a3112064aee051ae51",
+                "s": "0x0329ab0d48ac8b4e1652bdb1e686f14c785157de47d45d8fa2a9922f15baca15",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543117018914555,
+              "msg_hash": "0x979cfff7adc80ca50e930a822c339f979ceec5d866d1dea68855f232e4f01707"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "32bcbe68-c58b-43f5-85c3-275f530b82cb",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543117506989597,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x480c20d2963c1a41b8c52cf95af8fc7aecc3e663043e393b36bc8473000d4ad5",
+              "s": "0x1c15502c94a042d3c33fb23b87dbb4ba1f39570d728e5641b7879c2526c60814",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543117551422638,
+            "msg_hash": "0x6f866fcb18bb140fb2f0532a39c93d2fd73f090556bea01fa963e8c5a9d2d29d"
+          },
+          "publisher_merkle_root": "0x128a490fef9e4069b419ff0cab1b84752cbf621c3af467af22810c2687ba75fa",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x9e9869262c323869015b87079a44ae809f4e7ae86058f957cd20a83914c52dcc",
+                "s": "0x1240dffb0ed0a22051caa5a74f05e633d0a6a80cf8fc10ceb367d2f18c5ee417",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543117506989597,
+              "msg_hash": "0x128a490fef9e4069b419ff0cab1b84752cbf621c3af467af22810c2687ba75fa"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "8b3902a4-dc44-417c-9662-6270ef40faa1",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543118018751722,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000001999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000001999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xa26594e0bbc406c7b0f6fa306c9948bbcb3d37b9dfaf3664d35f8b8dcee043aa",
+              "s": "0x1c38aab26cc63d355c6b9efb0bb5a83ce28c04c28d428fbb914c3770d80dc607",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543118037625180,
+            "msg_hash": "0xcf24e9f22528de57ffb9d4f1f52227450d2794df098d6b2fba0a87d21897a22c"
+          },
+          "publisher_merkle_root": "0x07d356d381c53cd4f82bb524079b5a13e90b0bfa5fc7097232e3d262f321711e",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000001999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xeefcbac4235e1c4751236fc40e81ea89edfa7b1a66f1b9f30d36c69c264b4388",
+                "s": "0x4b7e4052135da4898aad93428f297f91a3a19601811741d58c2451711a4235b5",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543118018751722,
+              "msg_hash": "0x07d356d381c53cd4f82bb524079b5a13e90b0bfa5fc7097232e3d262f321711e"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "a1dda3df-2b17-4fe1-9b20-201c92a1e96a",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543118561575583,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xa38091007c10a42ebb5711bd2c5de127baf585cf3c28c572e8cb5aab455a9372",
+              "s": "0x1703c2aec26434429e93d5610c44555e9912d038e8808af5bdb4866d0f044379",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543118599802625,
+            "msg_hash": "0x520b01692ad02e3605b375f91b7952060530203d14fbed402e18446d9677ec06"
+          },
+          "publisher_merkle_root": "0xb34152177b9ec342d71965837e92e0e038a6405ad870d13e5e9fc6d5102ccc9b",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x9bffba2aa4d95a779b4349f610c568aebe18a4fda5e2bbaa1e7215f544409a76",
+                "s": "0x108075464f90a5637fcf45e48592ea4aafef21330c22a131ac28701a7ca6982d",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543118561575583,
+              "msg_hash": "0xb34152177b9ec342d71965837e92e0e038a6405ad870d13e5e9fc6d5102ccc9b"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "b0a3a9a4-99f3-4570-ac10-12a02397f4a6",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543119005923791,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000007000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000007000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x6cdf73aaee5e0c608f485cc6a6757712831275cb6228a4d07d717293ac129152",
+              "s": "0x5b5cf99694cf2a1f323f9c8a1ab7fe60b4c03b019850c7a1d42b6a03e871b98e",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543119087624916,
+            "msg_hash": "0x48a6a51ba45c62e761cf43ac4f15fe331946069711976439279912d84092f150"
+          },
+          "publisher_merkle_root": "0x851b8d92886aa96ed46a8af6d9cd618a93f9e4291b325eaae1b329df01fc59b5",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000007000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xed83bc57c3a76b508345cd931eb75f54f3203c509b520be1b28c09136ce584b1",
+                "s": "0x2ae9e0533b7e4f96060c913865834cd508be215031ba331a2587d2b4a5b4417d",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543119005923791,
+              "msg_hash": "0x851b8d92886aa96ed46a8af6d9cd618a93f9e4291b325eaae1b329df01fc59b5"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "964f0283-902e-4de9-80b7-eb483b8c684b",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543119521944792,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xc5a57fcda4a354e06326268314ff0b5bc9c0f4c58ead68881ccc19efeb832313",
+              "s": "0x1f7e2578c7c6813241421853a9e8849a545a7053400ee3ba1698196f530a672e",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543119635490250,
+            "msg_hash": "0x03c32e7ddc8919ece2e922e1d56cd6e6f9ab1192b0d65b8d0e728701ea8c6c8c"
+          },
+          "publisher_merkle_root": "0x3bb9ea65bddf5f9bf1ea382371548e906cd7a97253d9fc4102f3a9b550dc66d6",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xcac40231a43754e85ba6993ff6983ab7018f8f775e4f8713d998842fadfeed0b",
+                "s": "0x1e9c869b72f1084ba85c83528add7dd91a1827e5ab2d5e66daa751b754b108fd",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543119521944792,
+              "msg_hash": "0x3bb9ea65bddf5f9bf1ea382371548e906cd7a97253d9fc4102f3a9b550dc66d6"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "ece85a75-0af5-4bb8-a597-677c63578c84",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543120296451000,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xa2aebad34c40e756fe5a56358782305a286445c1883d194edfe28b03549d1294",
+              "s": "0x5148b1dbc62eb4e29dd0dfa01983624855fc7e769fc07fee2e0b3d1c613f47ca",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543120398038709,
+            "msg_hash": "0x11dfb475ffa972806ff44324be355aa08b9fe05719b38e81cfc7a964c969c01b"
+          },
+          "publisher_merkle_root": "0x18b0de913400f24ef082fe1fcd833933609f7c7f8b558a78ccd83d2fd43560af",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x62d9ee9a646db36679dc6aea3676d02aad3d41833675c2ccc5de2ce61470aedf",
+                "s": "0x4d38b824047317b250f825393678235bb947fd0256a26188f137d3008dc91065",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543120296451000,
+              "msg_hash": "0x18b0de913400f24ef082fe1fcd833933609f7c7f8b558a78ccd83d2fd43560af"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "3be69943-1968-4798-852e-356887478710",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543120506911167,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x16cd5c5025795155abec30c4cb5ed09be816e2ff57d5b2a944b10fe4e07e1537",
+              "s": "0x78d20799ea14a323a4a51fa83b31846e43d777a4259134de4effc97c22e94906",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543120550445500,
+            "msg_hash": "0x92a14c2c086b8698dc75682b15c86b6e731338a644016cc6e105643bc078f3a1"
+          },
+          "publisher_merkle_root": "0xeffc51cf67d0d58a05215741c12f7379fcf36e8e447a16cb4728e6ce51f9f032",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xefbe3d4aa8460f62a15ae87752a301735bd3e1e6fd2b1a3c91734d63d3c471c4",
+                "s": "0x613e6d4585f878f48a5b20a7426d45ce4f43a266462a9f4910e955bd05f12941",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543120506911167,
+              "msg_hash": "0xeffc51cf67d0d58a05215741c12f7379fcf36e8e447a16cb4728e6ce51f9f032"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "42aed99f-b557-46af-9fb7-66160f2e20e2",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543121006401501,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x02e084b17d34b3d60fe7c3ac9b9d5143ae762c08498b1815bff82ca882e9c51e",
+              "s": "0x7488f9f1660187df81dc0003bde6ce1f6e5d7b04e17c786b7a064792043c6810",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543121011791334,
+            "msg_hash": "0x7a01fdbe5392d26ad31b4d38c899543f0da0b6df02f70f096016316ac8c8d451"
+          },
+          "publisher_merkle_root": "0xd8bad9e3a2f54aa8a5168ed51ef218207367d12697ec1968c50d99f97499c131",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xd6918ad47bcf849088702094df109a73a54cee3ae481fbcfb57dcc4b5246b8f2",
+                "s": "0x5ffde85fdd5e12b57b0db49a23c3ee206b1e144e247f64cb70ea4d3f56b49911",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543121006401501,
+              "msg_hash": "0xd8bad9e3a2f54aa8a5168ed51ef218207367d12697ec1968c50d99f97499c131"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "0d552d3b-409b-47e5-a054-3096e4fbd590",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543121506503584,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x68824b29890c8ade5006a57e1fd780efec9f354bbe269aa926887ae5c440bb96",
+              "s": "0x49c015653d17a7b4983234df9bd642819cb85f2577b78df54346a58bf9c35479",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543121517578751,
+            "msg_hash": "0xa6f2336fcbd0d6bea3a8f6cca56da0c6d62a16bc9977d1cfb5ada417170b390a"
+          },
+          "publisher_merkle_root": "0x7236e5c4ad9f74f9713fc0becf91e5e7fcb9b9100defa4111b5e803788d46336",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x76d06576b8227b753f769a63af33796aaf230014acc6d409b77500b2c2502449",
+                "s": "0x0e7989b3e495075688555f6196dfce02f6600db6347f881f541f4d12cc08e7ee",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543121506503584,
+              "msg_hash": "0x7236e5c4ad9f74f9713fc0becf91e5e7fcb9b9100defa4111b5e803788d46336"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "5a5dcb89-d5ec-4b36-ad8f-d870fc2f0f28",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543122046027793,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000009999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000009999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x65acfef9ae4b726944d5c0d08d389bc6cbc605b39a1bee6c80631973cd429b4d",
+              "s": "0x611af9d15d149b52e29b7eb0b2065783ca2c521dd72eeeaf8754d7c598ee4cf4",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543122052752501,
+            "msg_hash": "0x14b14f102666fd2f8617e0bfb7a78141cd2307bb23e497d5a7769779c856c63a"
+          },
+          "publisher_merkle_root": "0xfff651a8f924d479573460b698c4ca0faaf01b4807921a5da25d2938db5c1a1c",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000009999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xc6f206a8e29fc9c9c5ce8f8157535b4daa503dccac311cc8014233348251b712",
+                "s": "0x4f5a7cd9b2bede1ef311dd8c1cf780cdaf4625c1f05a1da80634c6ad094ae757",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543122046027793,
+              "msg_hash": "0xfff651a8f924d479573460b698c4ca0faaf01b4807921a5da25d2938db5c1a1c"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "24ff2715-e876-4d85-91af-78876c709ffa",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543122505584835,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000001999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000001999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x8e1cf7aa30713f35732f19f2af300c397b38622b99989d86b0beba9ac13aa6c7",
+              "s": "0x351a10cef2880d12e13ffcbfbe962924d24e293d1e78a9134afb4f41ce7c66f7",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543122509639085,
+            "msg_hash": "0x638a82b008a9e17fa883f6f73c056f369d651509ee4a53f2fbef07409fb7ae0d"
+          },
+          "publisher_merkle_root": "0x0b8b0869bf567313949eb8dba487c231f280c245f91a1bafd4f94e47f17326c0",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000001999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x112ce1e393752be497da68857019bf1a9cd3504160f5c3b86d50cc46fca209d1",
+                "s": "0x1b9287cbd5d28be60845a65802d6cb7e54cf930653e5b3d0071e3340de4bbf39",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543122505584835,
+              "msg_hash": "0x0b8b0869bf567313949eb8dba487c231f280c245f91a1bafd4f94e47f17326c0"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "7c2117f4-de28-480e-ab3b-7b2b263ed62d",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543123006536710,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000003999999999998000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000003999999999998000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x245201a36f78d73a19f0840ac28ce3e4d813e73f0cbf6758bbe0c8c850e949b3",
+              "s": "0x126ace890c8890b67a34a16c255688f43f6d375cecef7d91a0152c4f80a6fc75",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543123010948543,
+            "msg_hash": "0xd582460b014156cb1f8a2cb8045451951770ffa59fbb8ec2b4bab3adf7f83e5a"
+          },
+          "publisher_merkle_root": "0x513a621b33073b636d3d817e77cc4917ddeb4b99a3d3866927def727bbdff2cb",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000003999999999998000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xa8982db7b7def9e38f3d29ea1877d76d4ba1dafd995cd7c5b63e11709d38e017",
+                "s": "0x1ccc9d41cd9dde44dddf79c505040d4354a680ae80b520c53a5cfe4a19f6ec7e",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543123006536710,
+              "msg_hash": "0x513a621b33073b636d3d817e77cc4917ddeb4b99a3d3866927def727bbdff2cb"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "96b8af61-4b81-4afa-b38f-b67b1b89f17b",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543123505020544,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000007000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000007000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xc719d1784a6602a3d89e9e09cefd4b0b6d57863390bda80f45b9d68c4c40017e",
+              "s": "0x214b5726eeb429e9bcc501b88dc7e2e1315261429f2ce347cf0ac8337e558740",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543123507685252,
+            "msg_hash": "0x3d4907edef23afc5fe10821522aad99b6dd03573743ac952a385b1236a952bc8"
+          },
+          "publisher_merkle_root": "0x28651075e223995ac6b8f352b7ee8dfb5e9bacbb4a7df0de98d73314164ba9af",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000007000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x78fc8287b0c61994c3c02c0604f3114e20e46431e6ec0909397ff425555a6eb6",
+                "s": "0x4d7c127f0b7120ef4817fc7a575aa6c080ba6617858ca40e09b304524317f94a",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543123505020544,
+              "msg_hash": "0x28651075e223995ac6b8f352b7ee8dfb5e9bacbb4a7df0de98d73314164ba9af"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "4cfa7649-d2a4-4ef6-a35f-af17fe31eed6",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543124010909502,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xfe06ed5affe87face2ba6012ad908e2588fd817919861bae3f6ce08f91213990",
+              "s": "0x1ae7ee1ba5f8a81c9c03d91219f1ba25eb352177a5c41cec211c9808f2e43c0b",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543124021086544,
+            "msg_hash": "0xab2c2108b99567c3d31179f8a609d52c8ffca52435418cae60669653fdee6724"
+          },
+          "publisher_merkle_root": "0x5a7a0ec3a264f1dc8d28c21e6534a1540936297fd38e77005535cbc47ae7e0e7",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xf8e5fd54248faf3f3110581ec51723f83e345d790aab0824476b3f6b3eb9cdb3",
+                "s": "0x2bd073cd4cdfef0b728149efb1cefa8e5ea1fb3503f3f664e8522bf17c3ab3f5",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543124010909502,
+              "msg_hash": "0x5a7a0ec3a264f1dc8d28c21e6534a1540936297fd38e77005535cbc47ae7e0e7"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "d816b223-d00f-45e7-98b1-c0b3c601c951",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543124504732961,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xc20cb507146751c1fd4c410e75a2bee7310c3e8b97fcf25ca6bd3fe5c92fcedc",
+              "s": "0x4acb515be19defe0443bccfa5ab01336948512108b10492835d62ca02c943ec2",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543124536696586,
+            "msg_hash": "0x5ffd5b26c0544d52f5fb77d1dd93a572333836127bace46cd37ff40bd6c486e3"
+          },
+          "publisher_merkle_root": "0x7f7fdd3653ad4cb67d15c43cbc7e03d99874eaa7871a519f656d57bfea7685de",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xd3f13dc255085b47dffac09254e9009e18da4fcf2a516fe84369231ed374ea55",
+                "s": "0x5d4618b7ecfcaac46dd9801ab13100eb51c81fa5ed0db23382101cdee930cd00",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543124504732961,
+              "msg_hash": "0x7f7fdd3653ad4cb67d15c43cbc7e03d99874eaa7871a519f656d57bfea7685de"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "6f488d14-e99e-4206-b543-3ff66e97ed11",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543125023645003,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x871f92ba3d281c79adb0225f4cd6a1daca90bdad094cba32e413a76a133e563e",
+              "s": "0x1ffd86698c3fea0b5857a5bf7499f0ec82ea09d2fd4b73d9cd9bbc32dcea2dd3",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543125032043586,
+            "msg_hash": "0x910730046d1784b16df2231cd002a8fb852ed2910edae93eb158b8a14d917295"
+          },
+          "publisher_merkle_root": "0xc2bc45e978cfb24da38eb110564867816e1043bcfa4360d75ee6a68b0d395d0e",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x66d41b5869f669ce0c108b5847dab822909931ee07d364fc818645aa06180e8b",
+                "s": "0x4ee0587bfc6ebede509800741171baf46ed770dbba78fa9e2eb6bed80a980a22",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543125023645003,
+              "msg_hash": "0xc2bc45e978cfb24da38eb110564867816e1043bcfa4360d75ee6a68b0d395d0e"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "50f639b1-f976-4c05-b15e-2edcd7de883a",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543125505435045,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000006000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000006000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x35130ede395b02bf4514423d366a0ed4960ad73fda9628baee1bca5654626360",
+              "s": "0x609d2a305eac3ca5260845a61f851ab00b5554a59ded5f0a77fde21f70a321ab",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543125508988128,
+            "msg_hash": "0xc611692d5908e41c0db156399eb51af9829c0ee098f16195cae5a7cdb739cf84"
+          },
+          "publisher_merkle_root": "0x32592a89651c781ff15dc263c78387f595103221b439a3d7b62f9952ccc1c7c2",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000006000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xf0d25e6424276ff73ebe8610f2177b638188bfa35930f238af0eb668be090dd3",
+                "s": "0x12e6d44635aca8006da28b86a8dbc64d7cb08c573c374997bfb6bc7ea60c2973",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543125505435045,
+              "msg_hash": "0x32592a89651c781ff15dc263c78387f595103221b439a3d7b62f9952ccc1c7c2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "0107cd80-0d4f-4f1d-b63f-03735ebee319",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543126005380836,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x6987fdfe1b3a982eea671e1df9d44f7a59b8e334b42c4e5a26ded6641d85b67d",
+              "s": "0x4aa3b8197d93a94ea78c7f687caf34ad36f5a21bb7941b97f3a62746b12418d5",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543126013073836,
+            "msg_hash": "0xd0edb033c425b5cbb456cf201d3195fe616de4cf464fd192113e5742eb84cbf2"
+          },
+          "publisher_merkle_root": "0xe5ee02c38f0f0ccee3cb3b90152193050f04fd0c8ee8ef19c24e41abaec41906",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xd07e74874fe6dafcc4bde9217fe652c4a4262fdac08a5400d1faeea21b5f7b16",
+                "s": "0x76f476d89fdd0d21be2b11ed9fe50f16ed097dce73b61b440fc46a08cf0205de",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543126005380836,
+              "msg_hash": "0xe5ee02c38f0f0ccee3cb3b90152193050f04fd0c8ee8ef19c24e41abaec41906"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "8beeefd7-04a7-4cfd-9c2d-274cc083a3fc",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543126506002628,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x065b4a40466814d7b683659c058fcab97e6015b23c50a85d458de4dcabb188d4",
+              "s": "0x3675444fa9a402ca21cd57ad0492ae409b3da01c2b250caf1b7f06545a96c6c5",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543126511630712,
+            "msg_hash": "0x929e7a1fa969255caffb428c43c485623c593d8139ad13d0b5fff5820e050be4"
+          },
+          "publisher_merkle_root": "0xefd60163ff0c08c384dd6aba517608726e862f281e8e2636d4e6b5e3bcb7ddc1",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x54411cf986dc85ea65355d974d2f74861ed290123500628ae31461a0789ac488",
+                "s": "0x73b95a4e61d7a2b84acebb0bad27ea577c79feeb51a35db7f697743560f0ab6d",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543126506002628,
+              "msg_hash": "0xefd60163ff0c08c384dd6aba517608726e862f281e8e2636d4e6b5e3bcb7ddc1"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "742c35b3-d91c-4753-9d77-c80995afb65c",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543127004833337,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000001999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000001999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xaa75fba3a5615d5dc2c46231bf3e42b872601970deb8d3d444e04bc2865e10f3",
+              "s": "0x395f65180b096ff3a28d2f78ac473ddd05957f601c0da6402055b21274731d14",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543127013813004,
+            "msg_hash": "0x643e3d4da71418c9932a4ac8df0b05bf5cae86fe9d45f09b3e58d353d0dc14a5"
+          },
+          "publisher_merkle_root": "0x39aae72995c911a6f1d9f3e0ba6900813824c9200a665daa01c0d4dce8da83ba",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000001999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x4b8015be441ce98dd5fb0ad8eeb7d74e38c1b50614f15a24a5fcb0742fd32053",
+                "s": "0x62a785cf9c3af98a0dc61a3c003394338e92b3e631ac44e4e40dff88617988fb",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543127004833337,
+              "msg_hash": "0x39aae72995c911a6f1d9f3e0ba6900813824c9200a665daa01c0d4dce8da83ba"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "84c897a8-a4c6-4a2d-8966-180e3f04434f",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543127506662795,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x4f069cf2bbc9fe4cd34e6586edf160b4cd1f9cb9ab94d5d1114bcd1d4d888cc1",
+              "s": "0x31a4028781bee1a5b5a4fc4eac50d5acac203bc1867745e1da3462cc5abccde2",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543127512749837,
+            "msg_hash": "0x5963dd43e48e6eb11947017409b2a2be132af2f4261d5698ac2e88272363fa01"
+          },
+          "publisher_merkle_root": "0x9b6312d56e4167949a2d65679892881581bec7cc03ed9da446d232672dee0603",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xfbc6a0e04a4896a8126807a3f68ac44e1cc5abb950aaaf28fa01d25918fccc3b",
+                "s": "0x064571195e272f25f7442007c5a263f2ac3d662288e0f8883ad918a9d7cca020",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543127506662795,
+              "msg_hash": "0x9b6312d56e4167949a2d65679892881581bec7cc03ed9da446d232672dee0603"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "51dc7874-ebc9-4ed9-b3f7-243379d975e3",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543128004801004,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000007000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000007000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xa6ddd896c22154e9882a113684d5ac69db1c97a91aad543c7c81f31c54ddb35e",
+              "s": "0x71001dbf3a286290848b0ac187b0c868e182097bd6aa773e594d3a7d57d53ffa",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543128010734712,
+            "msg_hash": "0x50868f7e9baad4c97df6ab6c08eb844e0f8b8f5ce17a43de8645acf25e9aa600"
+          },
+          "publisher_merkle_root": "0x1adb665ba44b1bbab2e64f69f0cc9640443cb84f89ffcbc779698fd8e858f79f",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000007000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x1eb6f6c82ffbb73dae0504b84e6bc15e3a0f4ba688a6f8eb905450aa6082cfc7",
+                "s": "0x6a6e46850d1ed9df56484f2d83e2ce4a0795d334e160941fd3dd43def13da443",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543128004801004,
+              "msg_hash": "0x1adb665ba44b1bbab2e64f69f0cc9640443cb84f89ffcbc779698fd8e858f79f"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "d4506154-076c-4967-8b24-eeeb644b3e3f",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543128506580129,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000009999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000009999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x4515ba7ad7177670d8ce06af62d6b7a85bc11911db140baef5f4bf4c62fc8161",
+              "s": "0x687673619d8f5f865ec905edb80e95206acb8c87a552c619b3a68abec0874f18",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543128511896963,
+            "msg_hash": "0x60f5f22a7271665c3d93465d4af8b45b2e22f879cb8de0891999537381d133f7"
+          },
+          "publisher_merkle_root": "0x3b5b53f50eaf7f728f3d223c0bce43cb8aa47c4919ba4804f20a41a3eb8b09bb",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000009999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x6e347902fe78c7d349fe225cdcc3145a2dad083944de55fe4b750218e80dd87d",
+                "s": "0x4f9fb37c83904b91a138f1f77e9ba3b4bda204fc5581da05b94ed37c1b5913a2",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543128506580129,
+              "msg_hash": "0x3b5b53f50eaf7f728f3d223c0bce43cb8aa47c4919ba4804f20a41a3eb8b09bb"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "2fbd5eae-954c-447f-823d-51c1544e4902",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543129005011380,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x36e2fd2d3336f86cde5442ca46f6c21d0cd26e93f542aa1525f13d6b0bf81f1d",
+              "s": "0x57b4c84aca3f5a6bbe76bbe854d66c15e20b53927debfa9f63cb9451a94573e7",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543129010691671,
+            "msg_hash": "0x9ede1f9f368799d70c854acf2bd422beb4e3128741f74d174024da387805bdc9"
+          },
+          "publisher_merkle_root": "0x56cc613ca6f60035428a3d3834d09f1c945044dde4a39c17ad58f359c7b4c621",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x4c939f5bccd9b1521ae40c21c71f725c83cd1c4fafaff64db8f6ccfad6d0e544",
+                "s": "0x2852dc54b3761eb47129014359018b4c0222867213673c97b7892b4f2942c4f8",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543129005011380,
+              "msg_hash": "0x56cc613ca6f60035428a3d3834d09f1c945044dde4a39c17ad58f359c7b4c621"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "7391fb43-4d13-4379-865d-275d39f0877f",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543129505563880,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000003999999999998000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000003999999999998000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x5279dd4236a083a048f251b29e616241b3cc6cc3c3dfa5b519f268b91bc0f994",
+              "s": "0x19feb9246b4987e8ce56a0643aeeb560efe96f97f5e4daa5b0e0232f8ff66cb1",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543129508870963,
+            "msg_hash": "0xab204d95dc0323763834a25cf3d3bb1d996b79349288a327cde9acf0a9e481bb"
+          },
+          "publisher_merkle_root": "0x99ef5d205b6d29ca27fbd30edda29dde0f62d79e995ae41095dc227e3e01e101",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000003999999999998000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x64803a1ff28655f0c233bc6984bb404fe3eb42e1aa082f5a3ca1491904655368",
+                "s": "0x69ac224a0b69a43b5bcc6feb2d72cbef724e899ffdf20f02e008d46fde740477",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543129505563880,
+              "msg_hash": "0x99ef5d205b6d29ca27fbd30edda29dde0f62d79e995ae41095dc227e3e01e101"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "af08f503-656a-4ff8-82e3-b701e96bb72f",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543130007635213,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000006000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000006000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x8dce0ff141b7c554d427101b14993d971b3af138434058c21f7ea629c37d7650",
+              "s": "0x44c724b13cd4378d3aad68df8a807e1d7fe30067291bf415c72a111a9a1d1e33",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543130012840547,
+            "msg_hash": "0x6411cfe44fa2554b9efd077a1083e9e863271197143267227dd18281f1a7cf34"
+          },
+          "publisher_merkle_root": "0xfe8c445ebaf069dd26d99688e55f54fd371285fd9518431fa7e812c09cf6b285",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000006000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x3544bc012c3941996ec0a9150c8f0745ec276b7fee74033cc355a2c4da359fd6",
+                "s": "0x6aa8e6e5274f9412ca1fda9846e1d15bce6e09d6c2045ac42ce4418193c95c0a",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543130007635213,
+              "msg_hash": "0xfe8c445ebaf069dd26d99688e55f54fd371285fd9518431fa7e812c09cf6b285"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "ae62eaa0-03ba-4fe2-873c-9dfe8f87f40c",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543130505585630,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x9a39a41312643bd278efdc17f39f4c39848a349694cc893b72b144ad3d70b0bc",
+              "s": "0x4427c06a6c638e405daa1cc5f6fd6d71a074683def75229c2b1c8492316d50c7",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543130511551172,
+            "msg_hash": "0xd9547dc41c590fd7905588ec5ec776bdaa7ac4e7c6a3aabd1169ca89803e0900"
+          },
+          "publisher_merkle_root": "0x43dd807f031ed64ea693286ba6af48edcc5695f55e71ea0bf1c14e0a891e125f",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xa8848f857393ce792cc34a158c37910fed22ae0c89b25c3f403dc833399181a2",
+                "s": "0x2090bedc751efe948d3929a9ba88078b5c3ff3d354da58042515ca4825c34178",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543130505585630,
+              "msg_hash": "0x43dd807f031ed64ea693286ba6af48edcc5695f55e71ea0bf1c14e0a891e125f"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "9741711b-fab3-4507-8139-8b74f6aa2c1b",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543131039753130,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x43b34f7dc97dc0758bff27495277df4343800d6e1d094d196e16624acd8d594b",
+              "s": "0x1815d9bd422add2e89c7e523ba922ddff1f63a9088c9c70ecf851825cc6b9f8c",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543131045619005,
+            "msg_hash": "0x3304b907b39dffd3927add813566f8b5ae916612c076d1f0772125aed90e1500"
+          },
+          "publisher_merkle_root": "0xe4bb70c2e8244a0d8b39a9f5bf681ae003c438e6bf284627bdd3bdd40b7d3858",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xf7d23d213d06a7d9c6bebb27523b039058f53216ccc654065dac5d21749a74a0",
+                "s": "0x70ed584b072a8972733a9594035403012194c17753998555787f90b417883d58",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543131039753130,
+              "msg_hash": "0xe4bb70c2e8244a0d8b39a9f5bf681ae003c438e6bf284627bdd3bdd40b7d3858"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "195dab82-ed0e-4e0b-85e8-08ac6c272ee2",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543131506288964,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x618f2108859a70ca7abc6ba4a114d9b6fd2d7ba792757e6a1085d4ae2d48da8f",
+              "s": "0x060731bbcd255b1ac835da4cfce52845e2786bfaf0f9079cb1bfcc5e053dbddb",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543131511916714,
+            "msg_hash": "0x046c5ad1d461b3ddab92dba3f6a1ed127ac0b89d48ba9025b6127533d0ffa35e"
+          },
+          "publisher_merkle_root": "0xca95e51a3a7d3ea72d3fcd1e440189a4c52bb1de01453830fe929b2b364a4367",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xb1a526f39b172c8a84136ec404bed69a80e92a4083ec1a481dec20d73c1025cd",
+                "s": "0x55ac9c7c2f48a94476ccd3c45eb9baffd8b0a133a88ee0d87e70e83cc9a77282",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543131506288964,
+              "msg_hash": "0xca95e51a3a7d3ea72d3fcd1e440189a4c52bb1de01453830fe929b2b364a4367"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "8bad60a8-6b56-4da8-877f-98d61a448a61",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543132005793298,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000005000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000005000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xf12d18a2c163eec966c414f6098cbaa0b398c15ac98c38593e85c66085ea9932",
+              "s": "0x63024a75c73d1019c331ad240c73b1a9c8fc28880014515505376fb23155a4e1",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543132012862298,
+            "msg_hash": "0x8446879a7d3d7291a86571291bf71de365f1f7b66f7086c42dfa2e801570f932"
+          },
+          "publisher_merkle_root": "0xf6a6688791ebb2bef40044d9125c8f41c9f51d63eae5ce8d24a7dec9e169601c",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000005000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x0f831572f47ceccc072898b12267a037774b581caf77d755621b6e78ef19bb21",
+                "s": "0x2bffed37984ddc0c4c98feeb1d0251418743add33e427acc68006befaff0c4df",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543132005793298,
+              "msg_hash": "0xf6a6688791ebb2bef40044d9125c8f41c9f51d63eae5ce8d24a7dec9e169601c"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "4be88a5b-ab3b-4a55-8dc0-70a575068705",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543132505447631,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x8f10302a4b08173d1fb3363bac908c79b41d890b2508664f56a99f43476523a1",
+              "s": "0x156148ff62e943df15c642decd7ed1cee37c4fa0be7e16a2b1ea30307e525163",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543132511579256,
+            "msg_hash": "0xfc1a1dea9354eec593bc825b14e15f72bee64ba95c752d1c1310a2656296cb7b"
+          },
+          "publisher_merkle_root": "0x600a63a6705029cc33d526bfc8bd255c1b30b9e170530260414de1746a3ffb8a",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xc182eec09a22a19285c70d0a5d161fbe2471ac8f6c6e5f3de25fa2ba21b32640",
+                "s": "0x2965fa3b2807699c0b40f730b3e76c6f6640af73364e67c86fe0cd903d3921d1",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543132505447631,
+              "msg_hash": "0x600a63a6705029cc33d526bfc8bd255c1b30b9e170530260414de1746a3ffb8a"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "21a5c608-a54d-4260-8b34-14b20dd9d852",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543133005758923,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000009999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000009999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x478db37dcdad6b5442ddbd8d1833de9e52cd011f46e688648e7ec1ca0108a5bc",
+              "s": "0x60353774c5023154f05f1e3fe52cfab59dfbc83ad7758aa4f72dd9925dafc851",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543133012306048,
+            "msg_hash": "0x7b7f5de0dc1c5c490aaf70000ffaa28f02f76f307721fa475ddc7fdadd2baf9c"
+          },
+          "publisher_merkle_root": "0xc26e10f220b9f1ed5ad13b476b5fc8938c56fd54b25bcd1d071e88a4741277c3",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000009999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xd48986a3f3da9943ebc9b6eb497a603005dc6e7364fe2ba4b35582a8df843741",
+                "s": "0x1df52ecdd1d71c34cd28b8ecd43324f126add4fd1132f886d250e6929a4e17d3",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543133005758923,
+              "msg_hash": "0xc26e10f220b9f1ed5ad13b476b5fc8938c56fd54b25bcd1d071e88a4741277c3"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "956519a3-32bb-4805-83a4-c626811be778",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543133505671840,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000001999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000001999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x93ae8b9a844aad9711f1967bb092db09c0ae49406f41f8db333a9d5056458c7f",
+              "s": "0x6651e858bb1e5d256dac69081b593d299b1e049a477b1d5666c41373a7a9064c",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543133512098507,
+            "msg_hash": "0x646a92492ac41b58264bfe8a04ca3fc1c6b83e4add871df7f6659f83461668be"
+          },
+          "publisher_merkle_root": "0x62adbcbb42a0393b9af7650284346ae6e1dd1227a697d233aee597d65695269d",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000001999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xabcf56ba5a50ab5800a5e07717d77d91093df5a9745895f43290f715bc074702",
+                "s": "0x0ae2f95c2b65b021621aec29be7253a990a64db7693ce33e15a209cd18347cff",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543133505671840,
+              "msg_hash": "0x62adbcbb42a0393b9af7650284346ae6e1dd1227a697d233aee597d65695269d"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "23797cea-23d8-4daf-a2ea-b8c92e4e64bd",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543134004692882,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000003999999999998000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000003999999999998000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x3098a752db4dfe6040c9c97a7bac71b1d93cbe7efd39f1aa5c3d7e99b226dcd5",
+              "s": "0x3cce6471aa59ed7e22127f2380e4fe595bea5656b7b97af7751d9590e9253f96",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543134008042924,
+            "msg_hash": "0x397712c226a38ae10535cab1bc5483cfa1f123ad14b1d09f57c82769f6f602bf"
+          },
+          "publisher_merkle_root": "0xb139fd1f38488887df0ffe6dbcffb29be894377ea1c7bcc1f1cff9f654744b50",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000003999999999998000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x3eaca11ebd607d5fa88aea706bbc622fb714c0e8c495891e9f00c8101369c687",
+                "s": "0x0bf973cc85ca11dc593caf0be963e7bbf7c7173c16a4926a7e02cd9a6336f710",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543134004692882,
+              "msg_hash": "0xb139fd1f38488887df0ffe6dbcffb29be894377ea1c7bcc1f1cff9f654744b50"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "c3cfd529-7e5b-44a6-a4de-b528e22ee55c",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543134504714090,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000007000000000000000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000007000000000000000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x54aa281e4e4a516477c2aa5d6a57601e267e31d30ce46fbefdb4c06e940f9372",
+              "s": "0x2560be762f04128ed3bd3d55593298ffcffad81f605105850bfaeabb0bc00203",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543134509080924,
+            "msg_hash": "0x7bb7f3fa0825f8755204fdcff746cfc51551837298768645595bfc8883c663fb"
+          },
+          "publisher_merkle_root": "0x46bb5d853c70514d9195f24c4eb32fde6ddd8ce4a6ac2d87447ef36d6b1bda2c",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000007000000000000000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0xe087d438a4ccf376c3b3b15e5be5618be91068cc5ac9e6cd619a5408a0e595b1",
+                "s": "0x5178fb7f7a546091d0bfc8f2fdde341995a552c11c8177a7d8367079ba055253",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543134504714090,
+              "msg_hash": "0x46bb5d853c70514d9195f24c4eb32fde6ddd8ce4a6ac2d87447ef36d6b1bda2c"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "73b7a1e7-8e33-417d-88ed-ab01e631415d",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543135005248507,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000008999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000008999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x8cf3b587a4f090368dc6778d2f9c6656c30ef5cf179da06f2b9855a916d8dfb0",
+              "s": "0x72cd47b285296220102611db06eb7f8dcd5bb91d56cd10f082a06cb55149e2b4",
+              "v": "0x1c"
+            },
+            "timestamp": 1757543135027916882,
+            "msg_hash": "0xbf2d490506ddd6660e6628f990d3c1ec526aa3aaf4635810565ec5575a9d891c"
+          },
+          "publisher_merkle_root": "0x3c1a613f0c5feeaa7c77efa765a5c6f70da71155466fd38838c8a3507baf26be",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000008999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x5a2571c36e122480eed11879d07885102b158a00336e35992e161e2e4aa925db",
+                "s": "0x2b3e5a584a26b2f72e1b425ac7f8fc8d81fcc11b93877f26202f4689ed2578b6",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543135005248507,
+              "msg_hash": "0x3c1a613f0c5feeaa7c77efa765a5c6f70da71155466fd38838c8a3507baf26be"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "5e5b0ffe-baf9-4d1a-afd2-7f1c26e6b6b9",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543135505644966,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000000999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000000999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0xcc901c40236c8f122851bd6eb5807991633be96f6cb218962403b7d70a54d513",
+              "s": "0x0bd7fdd001457de5061d8e1e6457f96a2cd83074ca46f979c91812152fa2faf1",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543135510674383,
+            "msg_hash": "0x2c7ce513c00ab812b85b0737644e54a1d877e691effaf38e3934e97b1f039b0a"
+          },
+          "publisher_merkle_root": "0x55c0fdecb756b869dd57476756c37c938f6830f800784bf99e128168f2946c1a",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000000999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x45b82c23652de6ddcf229f9605c16431660fca66262025029119ef63f5115909",
+                "s": "0x074d31f43d16168e34d9309b642f907e9510a9e81e5348b444421e497fe40730",
+                "v": "0x1c"
+              },
+              "timestamp": 1757543135505644966,
+              "msg_hash": "0x55c0fdecb756b869dd57476756c37c938f6830f800784bf99e128168f2946c1a"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "oracle_prices",
+    "trace_id": "4b846925-b590-40d3-ba73-0685b588b2ed",
+    "data": {
+      "POSITIVE_ASSET_2": {
+        "timestamp": 1757543136006483341,
+        "asset_id": "POSITIVE_ASSET_2",
+        "signature_type": "evm",
+        "trigger": "unspecified",
+        "price": "20000002999999999999000000",
+        "stork_signed_price": {
+          "public_key": "0xC4A02e7D370402F4afC36032076B05e74FF81786",
+          "encoded_asset_id": "0xc4667b76759b9712094e1ff4fb729ebc88b73dc297217375f5db651d45647036",
+          "price": "20000002999999999999000000",
+          "timestamped_signature": {
+            "signature": {
+              "r": "0x16b12875a009d63e93f938e457e603ec10bde23691e12404de124e5e832661aa",
+              "s": "0x7c1a16cb885648d927f6c76dcd412d43cead2d96826ebbfb39a3fc5826dfe92c",
+              "v": "0x1b"
+            },
+            "timestamp": 1757543136011579258,
+            "msg_hash": "0xd305b6fef7bc214988e6b3f0bdea0637d8da76807934117d2bb4014d5386c1a8"
+          },
+          "publisher_merkle_root": "0xa5fa3ea3a1cb450646d1c00b5febc66a2e1b4ccd636634f83a9c3c31670bddbd",
+          "calculation_alg": {
+            "type": "median",
+            "version": "v1",
+            "checksum": "9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba"
+          }
+        },
+        "signed_prices": [
+          {
+            "publisher_key": "0x99e295e85cb07C16B7BB62A44dF532A7F2620237",
+            "external_asset_id": "POSITIVE_ASSET_2",
+            "signature_type": "evm",
+            "price": "20000002999999999999000000",
+            "timestamped_signature": {
+              "signature": {
+                "r": "0x4224ece7e94c1348cb8051d890fe92214de7364ab08936546b5e954dbe448ef1",
+                "s": "0x0948548f28df37116e554817e60607e0b880df55b242bf1b3ec2cf1ae391ffa0",
+                "v": "0x1b"
+              },
+              "timestamp": 1757543136006483341,
+              "msg_hash": "0xa5fa3ea3a1cb450646d1c00b5febc66a2e1b4ccd636634f83a9c3c31670bddbd"
+            }
+          }
+        ]
+      }
+    }
+  }
+]

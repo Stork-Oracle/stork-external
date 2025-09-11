@@ -52,8 +52,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Run Docker Compose Integration Profile
+        run: docker compose --profile integration up -d --build --quiet-pull
+
       - name: Run tests
-        run: make test
+        run: make integration-test
         env:
           TARGETPLATFORM: linux/amd64
           
@@ -71,7 +74,7 @@ jobs:
 
     - name: Install CLI directly
       run: |
-        go build -o $(go env GOPATH)/bin/stork-generate ./tools/generate/cmd
+        go build -o $(go env GOPATH)/bin/stork-generate ./tools/generate
 
     - name: Run update command
       run: stork-generate update
