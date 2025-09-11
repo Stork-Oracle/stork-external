@@ -1922,9 +1922,9 @@ dependencies = [
 
 [[package]]
 name = "stork-solana-sdk"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "048000f0139d6f2acb3785596f8dc45f2bbf779734cd9644ff48add530a6a28b"
+checksum = "da881c9f8df4724099d32a45c25c7a775398c03c82aaf38775a2f5d4e8ba7591"
 dependencies = [
  "anchor-lang",
 ]
