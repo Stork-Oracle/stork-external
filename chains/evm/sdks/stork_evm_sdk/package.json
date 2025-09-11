@@ -20,5 +20,8 @@
         "type": "git",
         "url": "git+https://github.com/stork-oracle/stork-external.git",
         "directory": "chains/evm/sdks/stork-evm-sdk"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }
