@@ -18,5 +18,5 @@ idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
 anchor-lang = "0.31.1"
-stork-solana-sdk = "0.0.6"
+stork-solana-sdk = "0.0.7"
 hex = "0.4.3"
