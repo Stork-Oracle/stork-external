@@ -1,0 +1,15 @@
+[package]
+name = "stork-solana-sdk"
+version = "0.0.7"
+edition = "2021"
+description = "A Solana SDK for Stork Protocol"
+license = "Apache-2.0"
+repository = "https://github.com/Stork-Oracle/stork-external"
+
+
+[lib]
+crate-type = ["lib"]
+name = "stork_solana_sdk"
+
+[dependencies]
+anchor-lang = "0.31.1"

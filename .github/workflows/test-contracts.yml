@@ -1,0 +1,312 @@
+name: Test Contracts 
+
+on:
+  push:
+
+jobs:
+  test-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js for Stork
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/stork/package-lock.json'
+
+      - name: Install dependencies for Stork
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork
+
+      - name: Run hardhat tests for Stork
+        run: |
+          # Generate a random 32-byte (64 character) hex string prefixed with 0x
+          RANDOM_KEY=$(openssl rand -hex 32)
+          echo "Using generated private key: $RANDOM_KEY"
+          npx hardhat vars set PRIVATE_KEY $RANDOM_KEY
+          npx hardhat vars set ARBISCAN_API_KEY fake
+          npx hardhat vars set POLYGON_API_KEY fake
+          npx hardhat vars set ETHERSCAN_API_KEY fake
+          npx hardhat vars set CORE_TESTNET_API_KEY fake
+          npx hardhat vars set CORE_MAINNET_API_KEY fake
+          npx hardhat vars set ROOTSTOCK_TESTNET_API_KEY fake
+          npx hardhat vars set SCROLL_MAINNET_API_KEY fake
+          npx hardhat vars set SONEIUM_MAINNET_RPC_URL fake
+          npx hardhat vars set ETHERSCAN_SOPHON_API_KEY fake
+          npx hardhat vars set SONEIUM_MAINNET_BLOCKSCOUT_URL fake
+          npx hardhat vars set CRONOS_L2_API_KEY fake
+
+          npx hardhat --network hardhat test
+        working-directory: ./chains/evm/contracts/stork
+
+      - name: Set up Node.js for StorkPythAdapter
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/stork_pyth_adapter/package-lock.json'
+
+      - name: Install dependencies for StorkPythAdapter
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork_pyth_adapter
+
+      - name: Run hardhat tests for StorkPythAdapter
+        run: |
+          npx hardhat --network hardhat test
+        working-directory: ./chains/evm/contracts/stork_pyth_adapter
+
+      - name: Set up Node.js for StorkChainlinkAdapter
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/stork_chainlink_adapter/package-lock.json'
+
+      - name: Install dependencies for StorkChainlinkAdapter
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork_chainlink_adapter
+
+      - name: Run hardhat tests for StorkChainlinkAdapter
+        run: |
+          npx hardhat --network hardhat test
+        working-directory: ./chains/evm/contracts/stork_chainlink_adapter
+
+  test-solana:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './chains/solana/contracts/package-lock.json'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./chains/solana/contracts
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+          toolchain: 1.88.0
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            chains/solana/contracts/stork/target/
+            chains/solana/contracts/target/
+          key: ${{ runner.os }}-cargo-solana-${{ hashFiles('chains/solana/contracts/stork/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-solana-
+
+      - name: Cache Solana CLI
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/solana/install
+            ~/.config/solana/id.json
+          key: ${{ runner.os }}-solana-2.1.2
+
+      - name: Install Solana CLI
+        run: |
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Setup Solana
+        run: |
+          [ -f ~/.config/solana/id.json ] || solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
+      - name: Cache Anchor CLI
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/anchor
+          key: ${{ runner.os }}-anchor-0.31.1
+
+      - name: Install system dependencies for Anchor CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+
+      - name: Install Anchor CLI
+        run: |
+          if ! command -v anchor &> /dev/null; then
+            cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
+          fi
+
+      - name: Run rust tests
+        run: |
+          cargo test
+        working-directory: ./chains/solana/contracts/
+
+      - name: Run anchor tests
+        run: |
+          anchor test
+        working-directory: ./chains/solana/contracts/
+
+  test-sui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-sui-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-sui-
+
+      - name: Cache Sui CLI
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/sui
+          key: ${{ runner.os }}-sui-cli
+
+      - name: Install Sui
+        run: |
+          if ! command -v sui &> /dev/null; then
+            cargo install --locked --git https://github.com/MystenLabs/sui.git sui --features tracing
+          fi
+          sui --version
+
+      - name: Run Sui tests
+        run: |
+          sui move test
+        working-directory: ./chains/sui/contracts
+
+  test-cosmwasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            chains/cosmwasm/contracts/target/
+          key: ${{ runner.os }}-cargo-cosmwasm-${{ hashFiles('chains/cosmwasm/contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cosmwasm-
+
+      - name: Run tests
+        run: |
+          cargo test --locked
+        working-directory: ./chains/cosmwasm/contracts
+
+  test-aptos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: '**/requirements.txt'
+          
+      - name: Install pip dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install packaging
+          
+      - name: Cache Aptos CLI
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.aptos
+            ~/.local/bin/aptos
+          key: ${{ runner.os }}-aptos-cli
+          
+      - name: Install Aptos CLI
+        run: |
+          if ! command -v aptos &> /dev/null; then
+            mkdir -p ~/.local/bin
+            wget "https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.2.0/aptos-cli-6.2.0-Linux-x86_64.zip"
+            unzip aptos-cli-6.2.0-Linux-x86_64.zip
+            chmod +x aptos
+            mv aptos ~/.local/bin/
+          fi
+          aptos --version
+
+      - name: Run Aptos tests
+        run: |
+          aptos move test --move-2 --dev
+        working-directory: ./chains/aptos/contracts
+  
+  test-fuel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-fuel-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fuel-
+
+      - name: Install Fuel Toolchain
+        run: |
+          yes | curl https://install.fuel.network | sh
+          echo "${HOME}/.fuelup/bin" >> $GITHUB_PATH
+
+      - name: Pin Forc Version
+        run: |
+          fuelup toolchain new pinned-forc
+          fuelup component add forc@0.69.1
+          fuelup component add fuel-core@0.44.0
+
+      - name: Run Unit Tests
+        run: |
+          forc test
+        working-directory: ./chains/fuel/contracts/stork/
+
+      - name: Run integration tests
+        run: |
+          cargo test
+        working-directory: ./chains/fuel/contracts/stork/
+        

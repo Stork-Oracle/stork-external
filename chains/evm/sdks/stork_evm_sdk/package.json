@@ -1,0 +1,27 @@
+{
+    "name": "@storknetwork/stork-evm-sdk",
+    "version": "1.0.0",
+    "description": "An EVM Solidity SDK for Stork Protocol",
+    "files": [
+        "*.sol",
+        "README.md"
+    ],
+    "keywords": [
+        "stork",
+        "oracle",
+        "solidity",
+        "evm",
+        "smart-contracts",
+        "price-feeds"
+    ],
+    "author": "Stork Labs",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stork-oracle/stork-external.git",
+        "directory": "chains/evm/sdks/stork-evm-sdk"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

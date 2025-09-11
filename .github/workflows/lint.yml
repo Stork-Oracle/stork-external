@@ -21,3 +21,100 @@ jobs:
                 reviewdog_flags: -tee
             env:
                 CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+    check-rust-formatting:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Check Rust formatting
+            run: cargo fmt --all -- --check
+
+    lint-rust:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Setup Rust
+            uses: dtolnay/rust-toolchain@stable
+            with:
+                components: clippy, rustfmt
+
+          - name: Cache Rust dependencies and build artifacts
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+              key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
+
+          - name: Setup reviewdog
+            uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+
+          - name: Cache clippy-reviewdog-filter
+            id: cache-filter
+            uses: actions/cache@v4
+            with:
+              path: ~/.cargo/bin/clippy-reviewdog-filter
+              key: ${{ runner.os }}-clippy-reviewdog-filter
+
+          - name: Install clippy-reviewdog-filter
+            if: steps.cache-filter.outputs.cache-hit != 'true'
+            run: cargo install clippy-reviewdog-filter
+
+          - name: Run Clippy with reviewdog
+            env:
+              REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+              cargo clippy --all-targets --all-features --message-format json -- -D warnings 2>&1 | \
+                clippy-reviewdog-filter | \
+                reviewdog -f=checkstyle -name="lint-rust" -reporter=github-pr-check
+
+    # Runs golangci-lint with formatter checks enabled. No separate check-go-formatting job needed.
+    # Currently only lints the chain_pusher package.
+    lint-go:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Setup Go
+            uses: actions/setup-go@v5
+            with:
+              go-version: stable
+          
+          - name: Cache Rust dependencies and build artifacts
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+              key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
+
+          - name: Build Rust Dependencies
+            run: make rust
+
+          - name: Setup reviewdog
+            uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+
+          - name: Run golangci-lint with reviewdog
+            uses: reviewdog/action-golangci-lint@v2
+            with:
+              github_token: ${{ secrets.GITHUB_TOKEN }}
+              golangci_lint_flags: "--config=.golangci.yml ./apps/chain_pusher/..."
+              reporter: github-pr-check
+              filter_mode: nofilter
+              fail_level: error

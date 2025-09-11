@@ -20,26 +20,49 @@ mocks: $(GOBIN)/mockery
 # TODO: Add race checker
 .PHONY: test
 ## Run all Go tests
-test: $(LIBSTORK) $(LIBFUEL_FFI)
+test: signer_ffi fuel_ffi
 	@$(GO) test -v ./...
+
+.PHONY: integration-test
+## Run all Go integration tests
+integration-test: signer_ffi fuel_ffi
+	@echo "Running Go integration tests..."
+	@set -e; \
+	for pkg in $$($(GO) list ./... | grep -v "/integration$$"); do \
+	    $(GO) test -v -tags integration $$pkg; \
+	done
 
 .PHONY: install-cosmwasm-libs
 install-cosmwasm-libs:
-	@mkdir -p .lib
-	@if [ ! -f ".lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
+	@if [ ! -f "$(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
 		echo "Installing CosmWasm libraries..."; \
-		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o .lib/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
-		echo "Successfully installed CosmWasm libraries to .lib/"; \
+		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o $(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
+		echo "Successfully installed CosmWasm libraries to $(RUST_LIB_DIR)/"; \
 	else \
 		echo "CosmWasm libraries already installed"; \
 	fi
 
-.PHONY: install
+# Individual Go Targets
+chain_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
+	@echo "Installing chain pusher..."
+	@$(GO) install -v ./apps/chain_pusher
 
-## Aggregate target to install all Go binaries
-install: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
-	@$(GO) install -v ./apps/cmd/...
-	@echo "All Go binaries have been installed successfully."
+publisher_agent: signer_ffi
+	@echo "Installing publisher agent..."
+	@$(GO) install -v ./apps/publisher_agent
+
+data_provider: 
+	@echo "Installing data provider..."
+	@$(GO) install -v ./apps/data_provider
+
+generate: 
+	@echo "Installing generate..."
+	@$(GO) install -v ./utils/generate
+
+.PHONY: install
+## Aggregate target to install all Go binaries	
+install: chain_pusher publisher_agent data_provider generate install-cosmwasm-libs
+	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean
 ## Clean up the project
@@ -48,5 +71,17 @@ clean: clean-rust
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: $(LIBSTORK) install-cosmwasm-libs $(LIBFUEL_FFI)
-	@$(GO) run ./apps/cmd/$(target) $(args)
+run-local: signer_ffi fuel_ffi install-cosmwasm-libs
+	@$(GO) run ./apps/$(target)/cmd $(args)
+
+# Lint Go code using golangci-lint
+.PHONY: lint-go
+lint-go:
+	@echo "Linting Go code..."
+	@golangci-lint run
+
+# Format Go code using golangci-lint formatters
+.PHONY: format-go
+format-go:
+	@echo "Formatting Go code..."
+	@golangci-lint fmt

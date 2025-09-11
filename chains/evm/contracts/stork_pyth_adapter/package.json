@@ -1,0 +1,40 @@
+{
+  "name": "@storknetwork/stork_pyth_adapter",
+  "private": false,
+  "version": "1.0.1",
+  "description": "EVM Solidity contracts to adapt Stork price feeds to Pyth's IPyth interface",
+  "files": [
+    "contracts/**/*.sol",
+    "README.md"
+  ],
+  "keywords": [
+    "stork",
+    "oracle",
+    "pyth",
+    "solidity",
+    "evm",
+    "smart-contracts",
+    "price-feeds"
+  ],
+  "author": "Stork Labs",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stork-oracle/stork-external.git",
+    "directory": "chains/evm/contracts/stork_pyth_adapter"
+  },
+  "bugs": {
+    "url": "https://github.com/Stork-Oracle/stork-external/issues"
+  },
+  "homepage": "https://github.com/Stork-Oracle/stork-external#readme",
+  "main": "index.js",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.11",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.24.0"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
+    "@storknetwork/stork-evm-sdk": "^1.0.0"
+  }
+}

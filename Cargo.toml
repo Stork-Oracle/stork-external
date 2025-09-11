@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/chain_pusher/pkg/fuel/bindings/fuel_ffi",
+    "shared/signer/signer_ffi",
+]
+exclude = [
+    # Contracts
+    # Solana
+    "chains/solana",
+    # Cosmwasm
+    "chains/cosmwasm",
+    # Fuel
+    "chains/fuel",
+]

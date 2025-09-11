@@ -1,0 +1,18 @@
+[project]
+authors = [
+  "Georgios Delkos <georgios.delkos@ourovoros.io>",
+  "Henry Baldwin <henry@stork.network>",
+]
+entry = "main.sw"
+license = "Apache-2.0"
+name = "stork"
+
+[dependencies]
+stork_sway_sdk = { path = "../../sdks/stork_sway_sdk" }
+signed_int = "0.26.1"
+src5 = "0.8.1"
+std = "0.69.1"
+
+[proxy]
+enabled = true
+address = "0x9c118ae13927dd51ba59c0370dc8c272a3b64ccd675950750c8840a649c81149"

@@ -1,16 +1,14 @@
 {
     "solidity.compileUsingRemoteVersion": "v0.8.24+commit.e11b9ed9",
     "rust-analyzer.linkedProjects": [
-        "./contracts/solana/programs/stork/Cargo.toml",
-        "./examples/solana/programs/example/Cargo.toml",
-        "./sdks/solana/stork-solana-sdk/Cargo.toml",
-        "./contracts/cosmwasm/contracts/Cargo.toml",
-        "./examples/cosmwasm/sylvia/Cargo.toml",
-        "./examples/cosmwasm/cosmwasm_core/Cargo.toml",
-        "./examples/cosmwasm/cosmwasm_core_no_dep/Cargo.toml",
-        "./contracts/fuel/contracts/stork/Cargo.toml",
-        "./apps/lib/signer/rust/stork/Cargo.toml",
-        "./apps/lib/chain_pusher/contract_bindings/fuel/fuel_ffi/Cargo.toml",
+        "./Cargo.toml",
+        "./chains/solana/Cargo.toml",
+        "./chains/solana/examples/Cargo.toml",
+        "./chains/cosmwasm/contracts/Cargo.toml",
+        "./chains/cosmwasm/examples/sylvia/Cargo.toml",
+        "./chains/cosmwasm/examples/cosmwasm_core/Cargo.toml",
+        "./chains/cosmwasm/examples/cosmwasm_core_no_dep/Cargo.toml",
+        "./chains/fuel/contracts/stork/Cargo.toml"
     ],
     "files.insertFinalNewline": true,
 
