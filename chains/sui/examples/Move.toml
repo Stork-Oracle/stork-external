@@ -1,0 +1,16 @@
+[package]
+name = "example"
+edition = "2024.beta"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.44.3" }
+stork = { git = "https://github.com/stork-oracle/stork-external.git", subdir = "chains/sui/contracts", rev = "main" }
+
+[addresses]
+example = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]
+
+
