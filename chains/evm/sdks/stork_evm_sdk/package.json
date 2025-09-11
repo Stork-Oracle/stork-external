@@ -5,10 +5,10 @@
     "files": [
         "*.sol",
         "README.md"
-        ],
+    ],
     "keywords": [
         "stork",
-        "oracle", 
+        "oracle",
         "solidity",
         "evm",
         "smart-contracts",
@@ -18,7 +18,7 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/stork-oracle/stork-external.git",
+        "url": "git+https://github.com/stork-oracle/stork-external.git",
         "directory": "chains/evm/sdks/stork-evm-sdk"
     }
 }
