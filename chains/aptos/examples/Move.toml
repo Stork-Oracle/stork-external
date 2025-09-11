@@ -18,7 +18,7 @@ subdir = "aptos-framework"
 
 [dependencies.stork]
 git = "https://github.com/stork-oracle/stork-external.git"
-rev = "henry/sto-617-aptos-contract-implementation"
-subdir = "contracts/aptos/contracts"
+rev = "main"
+subdir = "chains/aptos/contracts"
 
 [dev-dependencies]

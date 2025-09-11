@@ -4,7 +4,7 @@ edition = "2024.beta"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
-stork = { git = "https://github.com/stork-oracle/stork-external.git", subdir = "contracts/sui/contracts", rev = "main" }
+stork = { git = "https://github.com/stork-oracle/stork-external.git", subdir = "chains/sui/contracts", rev = "main" }
 
 [addresses]
 example = "0x0"

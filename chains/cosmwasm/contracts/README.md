@@ -1,21 +1,72 @@
 # Stork CosmWasm Contract
 
-This is the Stork CosmWasm compatible contract. This crate is maintained by [Stork Labs](https://stork.network).
+This directory contains the Stork compatible contract in the form of a [Sylvia](https://github.com/CosmWasm/sylvia) project, as well as a CLI tool used to manage the Stork CosmWasm compatible contract.
 
-It is available on [crates.io](https://crates.io/crates/stork-cw).
+This contract can be used as an SDK with the `library` feature, and is available on [crates.io](https://crates.io/crates/stork-cw).
 
-This crate can be used as an SDK to build contracts that interact with the Stork Contract by including it as a dependency and enabling the `library` feature.
+### Getting started
 
-## Pull Model
+As there is no core CosmWasm chain, but rather a multitude of chains built on top of CosmWasm, the specifics of development will vary depending on the chain.
 
-The Stork CosmWasm Contract allows users to consume Stork price updates on a pull basis. This puts the responsibility of submitting the price updates on-chain to the user whenever they want to interact with an app that consumes Stork price feeds. Stork Labs maintains a [Chain Pusher](https://github.com/Stork-Oracle/stork-external/blob/main/apps/chain_pusher/README.md) in order to do this.
+For specific chain development, please refer to the chain's documentation.
 
-## Stork Feeds
+For general purpose development and testing, we recommend using the Osmosis testnet, though the contract is compatible with any CosmWasm chain.
 
-On CosmWasm, Stork feeds exist inside a table stored on-chain. This table associates a given encoded asset id (keccak256 of the plaintext asset id) with a [`TemporalNumericValue`](./src/temporal_numeric_value.rs) instance.
+### Development
 
-## Sylvia
+ensure you have the correct target installed for the chain you are developing on. This is typically `wasm32-unknown-unknown`. 
 
-This contract is built using the [Sylvia Framework](https://github.com/CosmWasm/sylvia). This heavily reduces the amount of boilerplate needed to create a CosmWasm contract while remaining fully compatible with the CosmWasm SDK. This generates the `sv` and `entry_points` modules, in the `contract` module.
+```bash
+rustup target add wasm32-unknown-unknown
+```
 
-Examples of using this crate as an SDK in both Sylvia and Non-Sylvia contracts to consume Stork data can be found in the [stork-external github repo](https://github.com/stork-oracle/stork-external/tree/main/chains/cosmwasm/examples).
+#### Build
+
+```bash
+cargo wasm 
+```
+
+#### Test
+
+```bash
+cargo test
+```
+
+#### Optimized Build
+
+The contract can be built with optimizations using the CosmWasm optimizer. This is recommended for production builds. The latest version of the optimizer can be found [here](https://github.com/CosmWasm/optimizer).
+
+*The following command may not reflect the latest version of the optimizer.*
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/optimizer:0.16.0
+```
+
+#### Deploy
+
+This will vary chain to chain, but typically looks something like this Osmosis Testnet example:
+
+```bash
+osmosisd tx wasm store artifacts/stork.wasm --from wallet --chain-id=osmo-test-5 --gas-prices=0.1uosmo --gas=auto --gas-adjustment 1.3 -y --output json -b sync 
+```
+#### Generate JSON Schema
+
+```bash
+cargo run schema
+```
+
+#### Generate Typescript Types
+
+This step is only necessary if you update or add entrypoints in the contract and need to update the CLI tool.
+
+```bash
+npm install @cosmwasm/ts-codegen
+npx @cosmwasm/ts-codegen generate --plugin client --schema ./schema --out ../cli/client/ --name Stork --no-bundle
+```
+
+### Note
+
+Though this contract is built with Sylvia, it is compatible with any CosmWasm contract.
