@@ -1,0 +1,91 @@
+services:
+  publisher-agent:
+    profiles:
+      - services
+    build:
+      context: .
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "publisher_agent"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/pull_config.json",
+        "-k",
+        "/etc/keys.json",
+      ]
+    volumes:
+      - "./path-to-pull-config.json:/etc/pull_config.json"
+      - "./path-to-keys.json:/etc/keys.json"
+
+  data-provider:
+    profiles:
+      - services
+    build:
+      context: .
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "data_provider"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/data_provider_config.json",
+        "--verbose"
+      ]
+    volumes:
+      - "./sample.data-provider.config.json:/etc/data_provider_config.json"
+
+  evm-pusher:
+    profiles:
+      - services
+    build:
+      context: .
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "chain_pusher"
+    command:
+      [
+        "evm",
+        "-w",
+        "wss://api.jp.stork-oracle.network",
+        "-a",
+        "your-stork-api-key",
+        "-c",
+        "https://test-rpc.plumenetwork.xyz",
+        "-x",
+        "0xacc0a0cf13571d30b4b8637996f5d6d774d4fd62",
+        "-f",
+        "/etc/asset-config.yaml",
+        "-m",
+        "/etc/private-key.secret",
+        "-b",
+        "5",
+      ]
+    volumes:
+      - "./path-to-asset-config.yaml:/etc/asset-config.yaml"
+      - "./path-to-private-key.secret:/etc/private-key.secret"
+
+  evm-contract:
+    profiles:
+      - integration
+    build:
+      context: .
+      dockerfile: docker/images/evm.Dockerfile
+      args:
+        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xC4A02e7D370402F4afC36032076B05e74FF81786}
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result"
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 2s

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "apps/chain_pusher/lib/contract_bindings/fuel/fuel_ffi",
+    "apps/chain_pusher/pkg/fuel/bindings/fuel_ffi",
     "shared/signer/signer_ffi",
 ]
 exclude = [

@@ -3,7 +3,6 @@
 .idea/
 **/*.DS_Store
 **/__pycache__
-docker/
 **/node_modules
 .env.local
 **/*.bin

@@ -3,10 +3,7 @@
 
 use {
     crate::error::GetTemporalNumericValueError,
-    anchor_lang::prelude::{
-        borsh::BorshSchema,
-        *,
-    },
+    anchor_lang::prelude::{borsh::BorshSchema, *},
 };
 
 pub type FeedId = [u8; 32];
@@ -52,7 +49,6 @@ impl TemporalNumericValueFeed {
         );
         Ok(self.latest_value.clone())
     }
-
 }
 
 /// Implements the [`TryFrom`] trait for [`AccountInfo`] to convert a reference to an [`AccountInfo`] representing a [`TemporalNumericValueFeed`] into a [`TemporalNumericValueFeed`] struct.
@@ -60,11 +56,10 @@ impl<'info> TryFrom<&AccountInfo<'info>> for TemporalNumericValueFeed {
     type Error = anchor_lang::error::Error;
     fn try_from(info: &AccountInfo<'info>) -> Result<Self> {
         let data: &[u8] = &info.data.borrow();
-        Self::try_deserialize(&mut data.as_ref())
-            .map_err(|e| {
-                msg!("Failed to deserialize TemporalNumericValueFeed: {}", e);
-                GetTemporalNumericValueError::DeserializationError.into()
-            })
+        Self::try_deserialize(&mut data.as_ref()).map_err(|e| {
+            msg!("Failed to deserialize TemporalNumericValueFeed: {}", e);
+            GetTemporalNumericValueError::DeserializationError.into()
+        })
     }
 }
 
@@ -73,10 +68,9 @@ impl<'info> TryFrom<AccountInfo<'info>> for TemporalNumericValueFeed {
     type Error = anchor_lang::error::Error;
     fn try_from(info: AccountInfo<'info>) -> Result<Self> {
         let data: &[u8] = &info.data.borrow();
-        Self::try_deserialize(&mut data.as_ref())
-            .map_err(|e| {
-                msg!("Failed to deserialize TemporalNumericValueFeed: {}", e);
-                GetTemporalNumericValueError::DeserializationError.into()
-            })
+        Self::try_deserialize(&mut data.as_ref()).map_err(|e| {
+            msg!("Failed to deserialize TemporalNumericValueFeed: {}", e);
+            GetTemporalNumericValueError::DeserializationError.into()
+        })
     }
 }

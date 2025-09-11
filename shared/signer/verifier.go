@@ -1,7 +1,7 @@
 package signer
 
 /*
-#include "signing.h"
+#include "signer_ffi.h"
 */
 import "C"
 
@@ -46,7 +46,13 @@ func VerifyAuth(timestampNano int64, publicKey PublisherKey, signatureType Signa
 			R: r,
 			S: s,
 		}
-		err := VerifyStarkPublisherPrice(timestampNano, StarkEncodedStorkAuthAssetId, StorkMagicNumber, publicKey, starkSignature)
+		err := VerifyStarkPublisherPrice(
+			timestampNano,
+			StarkEncodedStorkAuthAssetId,
+			StorkMagicNumber,
+			publicKey,
+			starkSignature,
+		)
 		if err != nil {
 			return fmt.Errorf("invalid stark auth signature: %w", err)
 		}
@@ -56,7 +62,14 @@ func VerifyAuth(timestampNano int64, publicKey PublisherKey, signatureType Signa
 	}
 }
 
-func VerifyPublisherPrice(publishTimestampNano int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signatureType SignatureType, signature any) error {
+func VerifyPublisherPrice(
+	publishTimestampNano int64,
+	externalAssetId string,
+	quantizedValue string,
+	publisherKey PublisherKey,
+	signatureType SignatureType,
+	signature any,
+) error {
 	switch signatureType {
 	case EvmSignatureType:
 		return VerifyEvmPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, signature)
@@ -67,7 +80,13 @@ func VerifyPublisherPrice(publishTimestampNano int64, externalAssetId string, qu
 	}
 }
 
-func VerifyEvmPublisherPrice(publishTimestampNano int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature any) error {
+func VerifyEvmPublisherPrice(
+	publishTimestampNano int64,
+	externalAssetId string,
+	quantizedValue string,
+	publisherKey PublisherKey,
+	signature any,
+) error {
 	evmSignature := signature.(EvmSignature)
 	publisherAddress := common.HexToAddress(string(publisherKey))
 	payload := getPublisherEvmPricePayload(
@@ -107,7 +126,13 @@ func VerifyEvmSignature(publisherAddress common.Address, payload [][]byte, signa
 	return address == publisherAddress, nil
 }
 
-func VerifyStarkPublisherPrice(publishTimestampNano int64, externalAssetId string, quantizedValue string, publisherKey PublisherKey, signature any) error {
+func VerifyStarkPublisherPrice(
+	publishTimestampNano int64,
+	externalAssetId string,
+	quantizedValue string,
+	publisherKey PublisherKey,
+	signature any,
+) error {
 	xInt, yInt := getPublisherPriceStarkXY(publishTimestampNano, externalAssetId, quantizedValue)
 	isValid := verifyStarkSignature(xInt, yInt, publisherKey, signature)
 	if !isValid {

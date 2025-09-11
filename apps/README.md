@@ -8,7 +8,7 @@ Stork signed data feeds are delivered off-chain from publishers to subscribers v
 
 Stork does not write this data to the chain directly by default, but any subscriber can choose to write the data to the chain if they so choose. This tool can be used to facilitate that process.
 
-See [Stork Pusher Docs](docs/chain_pusher.md).
+See [Stork Pusher Docs](chain_pusher/README.md).
 
 ## Publisher Agent
 
@@ -16,7 +16,7 @@ The Stork Network receives signed data feeds from publishers and aggregates them
 
 The easiest way to become a Stork Publisher is to run the Stork Publisher Agent docker container on your infrastructure and send price updates to the Agent through a local websocket. The Stork Publisher Agent will sign your price updates with your private key and send them to the Stork Network.
 
-See [Stork Publisher Agent Docs](docs/publisher_agent.md).
+See [Stork Publisher Agent Docs](publisher_agent/README.md).
 
 ## Data Provider
 
@@ -26,4 +26,4 @@ The Stork Data Provider is an app that lets users configure a list of data feeds
 
 It is also an open source framework where users can easily contribute to a collection of data integrations.
 
-See [Stork Data Provider Docs](docs/data_provider.md).
+See [Stork Data Provider Docs](data_provider/README.md).

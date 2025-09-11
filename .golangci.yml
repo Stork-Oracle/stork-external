@@ -5,6 +5,14 @@ linters:
     - testpackage
     - wsl
   settings:
+    cyclop:
+      max-complexity: 15
+    depguard:
+      rules:
+        blacklist:
+          deny:
+            - pkg: "github.com/go-test/testify"
+              desc: use github.com/stretchr/testify
     errcheck:
       check-type-assertions: true
     exhaustruct:
@@ -32,12 +40,24 @@ linters:
         - ^golang.org/x/tools/go/analysis.Analyzer$
         - ^google.golang.org/protobuf/.+Options$
         - ^gopkg.in/yaml.v3.Node$
+        - ^github.com/gorilla/websocket.Dialer$
+        - ^github.com/gorilla/websocket.Conn$
+        - ^github.com/coming-chat/go-sui/v2/types.+$
+        - ^github.com/coming-chat/go-sui/v2/sui_types.+$
+        - ^github.com/gagliardetto/binary.Int128$
+        - ^github.com/ethereum/go-ethereum/accounts/abi/bind.WatchOpts$
+        - ^github.com/cosmos/cosmos-sdk/client.Context$
+        - ^github.com/aptos-labs/aptos-go-sdk/crypto.Ed25519PrivateKey$
+        # generated internal libs
+        - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings.+$
     embeddedstructfieldcheck:
       forbid-mutex: true
     exhaustive:
       check:
         - switch
         - map
+    funlen:
+      lines: 100
     gocritic:
       settings:
         ifElseChain:
@@ -76,12 +96,21 @@ linters:
     reassign:
       patterns:
         - ".*"
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - ["RPC", "URL"]
+            - []
+            - - skip-package-name-checks: true
     staticcheck:
       checks:
         - all
         - -ST1000
         - -ST1016
         - -QF1008
+        # Taken care of by revive var-naming
+        - -ST1003
     tagliatelle:
       case:
         rules:
@@ -110,6 +139,7 @@ linters:
         - t testing.T
         - e error
         - i int
+        - j int
         - T any
         - m map[string]int
   exclusions:
@@ -120,15 +150,22 @@ linters:
     rules:
       - linters:
           - funlen
+          - maintidx
         source: ^func Test
       - linters:
           - exhaustruct
+          - lll
         path: _test.go
       - linters:
           - dupl
           - gochecknoglobals
           - paralleltest
         path: lib/service
+      - linters:
+          - mnd
+          - funlen
+          - exhaustruct
+        path: testutil/*
     paths:
       - mock_*.go
       - third_party$
@@ -140,6 +177,11 @@ formatters:
     - gofmt
     - gofumpt
     - goimports
+    - golines
+  settings:
+    golines:
+      max-len: 120
+      reformat-tags: false
   exclusions:
     generated: lax
     paths:

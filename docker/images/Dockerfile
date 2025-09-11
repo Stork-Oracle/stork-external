@@ -11,6 +11,11 @@ RUN apt-get update && apt-get install -y \
     libc6-dev-amd64-cross \
     build-essential
 
+
+# mount cache for incremental rust builds
+
+
+
 # Rust installation layer
 ENV RUST_VERSION=1.88.0
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
@@ -48,7 +53,7 @@ RUN apt-get update && \
 
 # Copy libraries from builder stage
 COPY --from=builder /app/.lib/libwasmvm.*.so /usr/local/lib/
-COPY --from=builder /app/.lib/libstork.so /usr/local/lib/
+COPY --from=builder /app/.lib/libsigner_ffi.so /usr/local/lib/
 COPY --from=builder /app/.lib/libfuel_ffi.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
@@ -59,7 +64,7 @@ RUN if [ -z "$SERVICE" ]; then echo "SERVICE argument is not defined"; exit 1; f
 
 COPY --from=builder /app/.bin/${SERVICE} /app/
 
-COPY docker-entrypoint.sh /app/
+COPY docker/scripts/docker-entrypoint.sh /app/
 COPY version.txt /app/
 RUN chmod +x /app/docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
