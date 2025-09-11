@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "@storknetwork/stork-evm-sdk": "file:../../sdks/stork_evm_sdk",
-    "@storknetwork/stork_chainlink_adapter": "file:../../contracts/stork_chainlink_adapter"
+    "@storknetwork/stork-evm-sdk": "^1.0.0",
+    "@storknetwork/stork_chainlink_adapter": "^1.0.6"
   }
 }
