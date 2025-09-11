@@ -17,7 +17,7 @@ Here we open a websocket at `ws://localhost:5216/publish` to receive price updat
 }
 ```
 
-You can use the [generate_keys.py](../../tools/python/src/generate_keys/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
+You can use the [generate_keys.py](../../utils/python/src/generate_keys/generate_keys.py) script to generate your EVM and/or Stork keys and to build the `keys.json` file. Make sure not to check this file into version control or share it in any way. 
 
 You can also generate your own keys and build your own `keys.json` file - it follows the structure of the [Keys struct](pkg/config.go):
 ```json
