@@ -15,6 +15,7 @@ type Pusher struct {
 	storkWsEndpoint string
 	storkAuth       string
 	chainRpcUrl     string
+	chainWsRpcUrl   string
 	contractAddress string
 	assetConfigFile string
 	batchingWindow  int
@@ -25,7 +26,7 @@ type Pusher struct {
 
 // NewPusher creates a new Pusher with the given parameters.
 func NewPusher(
-	storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string,
+	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile string,
 	batchingWindow, pollingPeriod int,
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
@@ -34,6 +35,7 @@ func NewPusher(
 		storkWsEndpoint: storkWsEndpoint,
 		storkAuth:       storkAuth,
 		chainRpcUrl:     chainRpcUrl,
+		chainWsRpcUrl:   chainWsRpcUrl,
 		contractAddress: contractAddress,
 		assetConfigFile: assetConfigFile,
 		batchingWindow:  batchingWindow,
@@ -45,6 +47,16 @@ func NewPusher(
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
+	err := p.interactor.ConnectRest(p.chainRpcUrl)
+	if err != nil {
+		p.logger.Fatal().Err(err).Msg("failed to connect to rest RPC")
+	}
+
+	err = p.interactor.ConnectWs(p.chainRpcUrl)
+	if err != nil {
+		p.logger.Error().Err(err).Msg("failed to connect to ws RPC")
+	}
+
 	priceConfig, assetIDs, encodedAssetIDs, err := p.initializeAssets()
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("Failed to initialize assets")

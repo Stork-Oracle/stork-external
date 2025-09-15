@@ -66,8 +66,6 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	}
 
 	interactor, err := NewContractInteractor(
-		chainRpcUrl,
-		chainWsUrl,
 		contractAddress,
 		payer,
 		assetConfigFile,
@@ -85,6 +83,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 		storkWsEndpoint,
 		storkAuth,
 		chainRpcUrl,
+		chainWsUrl,
 		contractAddress,
 		assetConfigFile,
 		batchingWindow,

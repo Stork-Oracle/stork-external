@@ -17,14 +17,22 @@ import (
 var ErrFailedToConvertBigInt = errors.New("failed to convert Uint128 string to big.Int")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger zerolog.Logger
 
 	pollingPeriodSec int
+	batchingWindow   int
+	mnemonic         string
+	contractAddress  string
+	gasPrice         float64
+	gasAdjustment    float64
+	denom            string
+	chainID          string
+	chainPrefix      string
+
+	contract *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	chainGrpcUrl string,
 	contractAddress string,
 	mnemonic []byte,
 	batchingWindow int,
@@ -40,25 +48,42 @@ func NewContractInteractor(
 
 	mnemonicString := strings.TrimSpace(string(mnemonic))
 
-	contract, err := bindings.NewStorkContract(
-		chainGrpcUrl,
-		contractAddress,
-		mnemonicString,
-		gasPrice,
-		gasAdjustment,
-		denom,
-		chainID,
-		chainPrefix,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract: %w", err)
-	}
-
 	return &ContractInteractor{
 		logger:           logger,
-		contract:         contract,
+		contractAddress:  contractAddress,
+		mnemonic:         mnemonicString,
+		batchingWindow:   batchingWindow,
+		gasPrice:         gasPrice,
+		gasAdjustment:    gasAdjustment,
+		denom:            denom,
+		chainID:          chainID,
+		chainPrefix:      chainPrefix,
 		pollingPeriodSec: pollingPeriod,
 	}, nil
+}
+
+func (sci *ContractInteractor) ConnectRest(url string) error {
+	contract, err := bindings.NewStorkContract(
+		url,
+		sci.contractAddress,
+		sci.mnemonic,
+		sci.gasPrice,
+		sci.gasAdjustment,
+		sci.denom,
+		sci.chainID,
+		sci.chainPrefix,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create stork contract: %w", err)
+	}
+
+	sci.contract = contract
+	return nil
+}
+
+func (sci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 // ListenContractEvents is a placeholder function for the contract interactor.

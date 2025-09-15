@@ -18,12 +18,13 @@ import (
 var ErrPrivateKeyEmpty = errors.New("private key cannot be empty")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger          zerolog.Logger
+	privateKey      string
+	contractAddress string
+	contract        *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	rpcUrl string,
 	contractAddress string,
 	keyFileContent []byte,
 	logger zerolog.Logger,
@@ -35,21 +36,31 @@ func NewContractInteractor(
 		return nil, fmt.Errorf("failed to load private key: %w", err)
 	}
 
+	return &ContractInteractor{
+		logger:          logger,
+		privateKey:      privateKey,
+		contractAddress: contractAddress,
+	}, nil
+}
+
+func (fci *ContractInteractor) ConnectRest(url string) error {
 	config := bindings.Config{
-		RpcUrl:          rpcUrl,
-		ContractAddress: contractAddress,
-		PrivateKey:      privateKey,
+		RpcUrl:          url,
+		ContractAddress: fci.contractAddress,
+		PrivateKey:      fci.privateKey,
 	}
 
 	contract, err := bindings.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
+		return fmt.Errorf("failed to create stork contract client: %w", err)
 	}
+	fci.contract = contract
+	return nil
+}
 
-	return &ContractInteractor{
-		logger:   logger,
-		contract: contract,
-	}, nil
+func (fci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 func (fci *ContractInteractor) ListenContractEvents(

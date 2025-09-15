@@ -31,9 +31,10 @@ var (
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	contract   *bindings.StorkContract
-	wsContract *bindings.StorkContract
-	client     *ethclient.Client
+	contractAddress common.Address
+	contract        *bindings.StorkContract
+	wsContract      *bindings.StorkContract
+	client          *ethclient.Client
 
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
@@ -50,8 +51,6 @@ const (
 )
 
 func NewContractInteractor(
-	rpcUrl string,
-	wsUrl string,
 	contractAddr string,
 	keyFileContent []byte,
 	verifyPublishers bool,
@@ -63,53 +62,61 @@ func NewContractInteractor(
 		return nil, err
 	}
 
-	client, err := ethclient.Dial(rpcUrl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to RPC: %w", err)
-	}
+	return &ContractInteractor{
+		logger: logger,
 
-	var wsClient *ethclient.Client
-	if wsUrl != "" {
-		wsClient, err = ethclient.Dial(wsUrl)
-		if err != nil {
-			logger.Warn().Err(err).Msg("Failed to connect to WebSocket endpoint")
-		} else {
-			logger.Info().Msg("Connected to WebSocket endpoint")
-		}
+		contractAddress: common.HexToAddress(contractAddr),
+		privateKey:      privateKey,
+		gasLimit:        gasLimit,
+
+		verifyPublishers: verifyPublishers,
+	}, nil
+}
+
+func (eci *ContractInteractor) ConnectRest(url string) error {
+	client, err := ethclient.Dial(url)
+	if err != nil {
+		return fmt.Errorf("failed to connect to RPC: %w", err)
 	}
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get network ID: %w", err)
+		return fmt.Errorf("failed to get network ID: %w", err)
 	}
 
-	contractAddress := common.HexToAddress(contractAddr)
-
-	contract, err := bindings.NewStorkContract(contractAddress, client)
+	contract, err := bindings.NewStorkContract(eci.contractAddress, client)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create contract instance: %w", err)
+		return fmt.Errorf("failed to create contract instance: %w", err)
+	}
+
+	eci.contract = contract
+	eci.client = client
+	eci.chainID = chainID
+	return nil
+}
+
+func (eci *ContractInteractor) ConnectWs(url string) error {
+	var wsClient *ethclient.Client
+	var err error
+	if url != "" {
+		wsClient, err = ethclient.Dial(url)
+		if err != nil {
+			return fmt.Errorf("failed to connect to WS: %w", err)
+		} else {
+			eci.logger.Info().Msg("Connected to WebSocket endpoint")
+		}
 	}
 
 	var wsContract *bindings.StorkContract
 	if wsClient != nil {
-		wsContract, err = bindings.NewStorkContract(contractAddress, wsClient)
+		wsContract, err = bindings.NewStorkContract(eci.contractAddress, wsClient)
 		if err != nil {
-			logger.Warn().Err(err).Msg("Failed to create WebSocket contract instance")
+			return fmt.Errorf("Failed to create WebSocket contract instance: %w", err)
 		}
 	}
 
-	return &ContractInteractor{
-		logger: logger,
-
-		contract:   contract,
-		wsContract: wsContract,
-		client:     client,
-		privateKey: privateKey,
-		chainID:    chainID,
-		gasLimit:   gasLimit,
-
-		verifyPublishers: verifyPublishers,
-	}, nil
+	eci.wsContract = wsContract
+	return nil
 }
 
 func (eci *ContractInteractor) ListenContractEvents(

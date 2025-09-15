@@ -49,8 +49,6 @@ const MaxBatchSize = 4
 const NumConfirmationWorkers = 10
 
 func NewContractInteractor(
-	rpcUrl string,
-	wsUrl string,
 	contractAddr string,
 	payer []byte,
 	assetConfigFile string,
@@ -64,14 +62,6 @@ func NewContractInteractor(
 	// calculate the time between requests bases on limitPerSecond
 	timeBetweenRequests := time.Second / time.Duration(limitPerSecond)
 	limiter := rate.NewLimiter(rate.Every(timeBetweenRequests), burstLimit)
-	client := rpc.New(rpcUrl)
-
-	wsClient, err := ws.Connect(context.Background(), wsUrl)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to connect to Solana WebSocket client")
-
-		return nil, fmt.Errorf("failed to connect to Solana WebSocket client: %w", err)
-	}
 
 	contractPubKey, err := solana.PublicKeyFromBase58(contractAddr)
 	if err != nil {
@@ -111,8 +101,6 @@ func NewContractInteractor(
 	bindings.SetProgramID(contractPubKey)
 	sci := &ContractInteractor{
 		logger:             logger,
-		client:             client,
-		wsClient:           wsClient,
 		contractAddr:       contractPubKey,
 		feedAccounts:       feedAccounts,
 		treasuryAccounts:   treasuryAccounts,
@@ -129,6 +117,21 @@ func NewContractInteractor(
 	sci.startConfirmationWorkers(confirmationOutChan, NumConfirmationWorkers)
 
 	return sci, nil
+}
+
+func (sci *ContractInteractor) ConnectRest(url string) error {
+	client := rpc.New(url)
+	sci.client = client
+	return nil
+}
+
+func (sci *ContractInteractor) ConnectWs(url string) error {
+	wsClient, err := ws.Connect(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("failed to connect to Solana WebSocket client: %w", err)
+	}
+	sci.wsClient = wsClient
+	return nil
 }
 
 func (sci *ContractInteractor) ListenContractEvents(

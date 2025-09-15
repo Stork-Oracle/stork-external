@@ -17,14 +17,16 @@ import (
 var ErrFailedToConvertQuantizedPriceToBigInt = errors.New("failed to convert quantized price to big int")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger zerolog.Logger
 
 	pollingPeriodSec int
+	privateKey       *crypto.Ed25519PrivateKey
+	contractAddress  string
+
+	contract *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	rpcUrl string,
 	contractAddr string,
 	keyFileContent []byte,
 	pollingPeriodSec int,
@@ -37,16 +39,26 @@ func NewContractInteractor(
 		return nil, err
 	}
 
-	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, privateKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract: %w", err)
-	}
-
 	return &ContractInteractor{
 		logger:           logger,
-		contract:         contract,
 		pollingPeriodSec: pollingPeriodSec,
+		privateKey:       privateKey,
+		contractAddress:  contractAddr,
 	}, nil
+}
+
+func (aci *ContractInteractor) ConnectRest(url string) error {
+	contract, err := bindings.NewStorkContract(url, aci.contractAddress, aci.privateKey)
+	if err != nil {
+		return fmt.Errorf("failed to create stork contract: %w", err)
+	}
+	aci.contract = contract
+	return nil
+}
+
+func (aci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 // ListenContractEvents is a placeholder function for the contract interactor.
