@@ -59,14 +59,11 @@ $(FUEL_HEADER_DEST): build-rust-workspace
 	@cp $(FUEL_HEADER_SRC) $(FUEL_HEADER_DEST)
 
 # Individual FFI targets
-.PHONY: signer_ffi
 signer_ffi: $(SIGNER_LIB_DEST) $(SIGNER_HEADER_DEST)
 
-.PHONY: fuel_ffi  
 fuel_ffi: $(FUEL_LIB_DEST) $(FUEL_HEADER_DEST)
 
 # Main target
-.PHONY: rust
 rust: signer_ffi fuel_ffi
 
 # Clean targets
