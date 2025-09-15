@@ -63,20 +63,10 @@ func NewEvmContractInteractor(
 	}, nil
 }
 
-func (eci *EvmContractInteractor) Connect(restRpcUrl string, wsRpcUrl string) error {
+func (eci *EvmContractInteractor) ConnectRest(restRpcUrl string) error {
 	client, err := ethclient.Dial(restRpcUrl)
 	if err != nil {
 		return err
-	}
-
-	var wsClient *ethclient.Client
-	if wsRpcUrl != "" {
-		wsClient, err = ethclient.Dial(wsRpcUrl)
-		if err != nil {
-			eci.logger.Warn().Err(err).Msg("Failed to connect to WebSocket endpoint")
-		} else {
-			eci.logger.Info().Msg("Connected to WebSocket endpoint")
-		}
 	}
 
 	chainID, err := client.NetworkID(context.Background())
@@ -89,19 +79,34 @@ func (eci *EvmContractInteractor) Connect(restRpcUrl string, wsRpcUrl string) er
 		return err
 	}
 
+	eci.client = client
+	eci.chainID = chainID
+	eci.contract = contract
+
+	return nil
+}
+
+func (eci *EvmContractInteractor) ConnectWs(wsRpcUrl string) error {
+	var wsClient *ethclient.Client
+	var err error
+	if wsRpcUrl != "" {
+		wsClient, err = ethclient.Dial(wsRpcUrl)
+		if err != nil {
+			return fmt.Errorf("failed to connect to ws server: %w", err)
+		} else {
+			eci.logger.Info().Msg("Connected to WebSocket endpoint")
+		}
+	}
+
 	var wsContract *contract_bindings.StorkContract
 	if wsClient != nil {
 		wsContract, err = contract_bindings.NewStorkContract(eci.contractAddress, wsClient)
 		if err != nil {
-			eci.logger.Warn().Err(err).Msg("Failed to create WebSocket contract instance")
+			return fmt.Errorf("failed to connect to ws server: %w", err)
 		}
 	}
 
-	eci.client = client
-	eci.chainID = chainID
-	eci.contract = contract
 	eci.wsContract = wsContract
-
 	return nil
 }
 
