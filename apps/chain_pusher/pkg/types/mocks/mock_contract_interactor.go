@@ -89,6 +89,108 @@ func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func
 	return _c
 }
 
+// ConnectRest provides a mock function for the type MockContractInteractor
+func (_mock *MockContractInteractor) ConnectRest(url string) error {
+	ret := _mock.Called(url)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ConnectRest")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
+		r0 = returnFunc(url)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockContractInteractor_ConnectRest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectRest'
+type MockContractInteractor_ConnectRest_Call struct {
+	*mock.Call
+}
+
+// ConnectRest is a helper method to define mock.On call
+//   - url string
+func (_e *MockContractInteractor_Expecter) ConnectRest(url interface{}) *MockContractInteractor_ConnectRest_Call {
+	return &MockContractInteractor_ConnectRest_Call{Call: _e.mock.On("ConnectRest", url)}
+}
+
+func (_c *MockContractInteractor_ConnectRest_Call) Run(run func(url string)) *MockContractInteractor_ConnectRest_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContractInteractor_ConnectRest_Call) Return(err error) *MockContractInteractor_ConnectRest_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockContractInteractor_ConnectRest_Call) RunAndReturn(run func(url string) error) *MockContractInteractor_ConnectRest_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ConnectWs provides a mock function for the type MockContractInteractor
+func (_mock *MockContractInteractor) ConnectWs(url string) error {
+	ret := _mock.Called(url)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ConnectWs")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
+		r0 = returnFunc(url)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockContractInteractor_ConnectWs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectWs'
+type MockContractInteractor_ConnectWs_Call struct {
+	*mock.Call
+}
+
+// ConnectWs is a helper method to define mock.On call
+//   - url string
+func (_e *MockContractInteractor_Expecter) ConnectWs(url interface{}) *MockContractInteractor_ConnectWs_Call {
+	return &MockContractInteractor_ConnectWs_Call{Call: _e.mock.On("ConnectWs", url)}
+}
+
+func (_c *MockContractInteractor_ConnectWs_Call) Run(run func(url string)) *MockContractInteractor_ConnectWs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContractInteractor_ConnectWs_Call) Return(err error) *MockContractInteractor_ConnectWs_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockContractInteractor_ConnectWs_Call) RunAndReturn(run func(url string) error) *MockContractInteractor_ConnectWs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetWalletBalance provides a mock function for the type MockContractInteractor
 func (_mock *MockContractInteractor) GetWalletBalance() (float64, error) {
 	ret := _mock.Called()
