@@ -7,9 +7,12 @@ GO := GOBIN=$(GOBIN) CGO_ENABLED=1 CGO_LDFLAGS=$(CGO_LDFLAGS) LD_LIBRARY_PATH=$(
 $(GOBIN):
 	@mkdir -p $(GOBIN)
 
+MOCKERY_MAJOR_VERSION := 3
+MOCKERY_VERSION := v3.5.0
+
 $(GOBIN)/mockery: $(GOBIN)
-	@echo "Installing mockery..."
-	@$(GO) install github.com/vektra/mockery/v2@v2.46.3
+	@echo "Installing mockery $(MOCKERY_VERSION)..."
+	@$(GO) install github.com/vektra/mockery/v$(MOCKERY_MAJOR_VERSION)@$(MOCKERY_VERSION)
 
 .PHONY: mocks
 ## Generate mocks for the project using mockery
