@@ -16,32 +16,28 @@ import (
 )
 
 type EvmSelfServeRunner struct {
-	config             *EvmSelfServeConfig
-	logger             zerolog.Logger
-	websocketServer    *WebsocketServer
-	contractInteractor *SelfServeContractInteractor
-	signedPriceUpdateCh      chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
-	assetStates        map[string]*AssetPushState
-	assetStatesMutex   sync.RWMutex
-	ctx                context.Context
-	cancel             context.CancelFunc
+	config              *EvmSelfServeConfig
+	logger              zerolog.Logger
+	websocketServer     *WebsocketServer
+	contractInteractor  *SelfServeContractInteractor
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
+	assetStates         map[string]*AssetPushState
+	assetStatesMutex    sync.RWMutex
+	cancel              context.CancelFunc
 }
 
-func NewEvmSelfServeRunner(config *EvmSelfServeConfig) *EvmSelfServeRunner {
-	ctx, cancel := context.WithCancel(context.Background())
-
+func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc) *EvmSelfServeRunner {
 	return &EvmSelfServeRunner{
-		config:           config,
-		logger:           log.With().Str("component", "evm_runner").Logger(),
-		signedPriceUpdateCh:    make(chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature], 1000),
-		assetStates:      make(map[string]*AssetPushState),
-		assetStatesMutex: sync.RWMutex{},
-		ctx:              ctx,
-		cancel:           cancel,
+		config:              config,
+		logger:              log.With().Str("component", "evm_runner").Logger(),
+		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature], 1000),
+		assetStates:         make(map[string]*AssetPushState),
+		assetStatesMutex:    sync.RWMutex{},
+		cancel:              cancel,
 	}
 }
 
-func (r *EvmSelfServeRunner) Run() {
+func (r *EvmSelfServeRunner) Run(ctx context.Context) {
 	r.logger.Info().Msg("Starting EVM Self-Serve Chain Pusher")
 
 	// Initialize asset states
@@ -53,7 +49,7 @@ func (r *EvmSelfServeRunner) Run() {
 		r.config.ChainRpcUrl,
 		r.config.ChainWsUrl,
 		r.config.ContractAddress,
-		r.config.privateKey,
+		r.config.PrivateKey,
 		r.config.GasLimit,
 		r.logger,
 	)
@@ -67,8 +63,8 @@ func (r *EvmSelfServeRunner) Run() {
 	r.websocketServer = NewWebsocketServer(r.config.WebsocketPort, r.signedPriceUpdateCh)
 
 	// Start processing goroutines
-	go r.processValueUpdates()
-	go r.processPushTriggers()
+	go r.processValueUpdates(ctx)
+	go r.processPushTriggers(ctx)
 
 	// Start websocket server (blocking)
 	r.logger.Info().Str("port", r.config.WebsocketPort).Msg("Starting WebSocket server")
@@ -92,12 +88,12 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 
 	for assetId, assetConfig := range r.config.AssetConfig.Assets {
 		r.assetStates[assetId] = &AssetPushState{
-			AssetID:      assetId,
-			Config:       assetConfig,
-			LastPrice:    nil,
-			LastPushTime: time.Time{},
+			AssetID:                  assetId,
+			Config:                   assetConfig,
+			LastPrice:                nil,
+			LastPushTime:             time.Time{},
 			PendingSignedPriceUpdate: nil,
-			NextPushTime: time.Now().Add(time.Duration(assetConfig.PushIntervalSec) * time.Second),
+			NextPushTime:             time.Now().Add(time.Duration(assetConfig.PushIntervalSec) * time.Second),
 		}
 
 		r.logger.Info().
@@ -108,22 +104,22 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 	}
 }
 
-func (r *EvmSelfServeRunner) processValueUpdates() {
+func (r *EvmSelfServeRunner) processValueUpdates(ctx context.Context) {
 	r.logger.Info().Msg("Starting value update processor")
 
 	for {
 		select {
-		case <-r.ctx.Done():
+		case <-ctx.Done():
 			r.logger.Info().Msg("Value update processor stopped")
 			return
 
 		case signedPriceUpdate := <-r.signedPriceUpdateCh:
-			r.handleSignedPriceUpdate(signedPriceUpdate)
+			r.handleSignedPriceUpdate(ctx, signedPriceUpdate)
 		}
 	}
 }
 
-func (r *EvmSelfServeRunner) handleSignedPriceUpdate(signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) {
+func (r *EvmSelfServeRunner) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
@@ -157,7 +153,7 @@ func (r *EvmSelfServeRunner) handleSignedPriceUpdate(signedPriceUpdate publisher
 			Str("new_price", priceValue.Text('f', 6)).
 			Msg("Triggering push due to price delta threshold")
 
-		r.triggerPush(assetState)
+		r.triggerPush(ctx, assetState)
 	}
 }
 
@@ -177,7 +173,7 @@ func (r *EvmSelfServeRunner) shouldPushBasedOnDelta(state *AssetPushState, newPr
 	return absPercentChange.Cmp(threshold) >= 0
 }
 
-func (r *EvmSelfServeRunner) processPushTriggers() {
+func (r *EvmSelfServeRunner) processPushTriggers(ctx context.Context) {
 	r.logger.Info().Msg("Starting push trigger processor")
 
 	ticker := time.NewTicker(1 * time.Second) // Check every second
@@ -185,17 +181,17 @@ func (r *EvmSelfServeRunner) processPushTriggers() {
 
 	for {
 		select {
-		case <-r.ctx.Done():
+		case <-ctx.Done():
 			r.logger.Info().Msg("Push trigger processor stopped")
 			return
 
 		case <-ticker.C:
-			r.checkTimerTriggers()
+			r.checkTimerTriggers(ctx)
 		}
 	}
 }
 
-func (r *EvmSelfServeRunner) checkTimerTriggers() {
+func (r *EvmSelfServeRunner) checkTimerTriggers(ctx context.Context) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
@@ -207,19 +203,19 @@ func (r *EvmSelfServeRunner) checkTimerTriggers() {
 				Time("next_push_time", state.NextPushTime).
 				Msg("Triggering push due to time interval")
 
-			r.triggerPush(state)
+			r.triggerPush(ctx, state)
 		}
 	}
 }
 
-func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
+func (r *EvmSelfServeRunner) triggerPush(parentCtx context.Context, state *AssetPushState) {
 	if state.PendingSignedPriceUpdate == nil {
 		return
 	}
 
 	// Push to contract
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(parentCtx, 30*time.Second)
 		defer cancel()
 
 		err := r.contractInteractor.PushSignedPriceUpdate(ctx, state.Config, *state.PendingSignedPriceUpdate)
@@ -231,7 +227,7 @@ func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
 			return
 		}
 
-		// Update state after successful push  
+		// Update state after successful push
 		r.assetStatesMutex.Lock()
 		priceValue, _ := r.convertQuantizedPriceToBigFloat(string(state.PendingSignedPriceUpdate.SignedPrice.QuantizedPrice))
 		state.LastPrice = priceValue

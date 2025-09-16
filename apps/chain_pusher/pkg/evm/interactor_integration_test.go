@@ -20,7 +20,7 @@ type InteractorTestConfig struct {
 	RpcUrl          string `env:"EVM_RPC_URL" envDefault:"http://localhost:8545"`
 	WsUrl           string `env:"EVM_WS_URL" envDefault:"ws://localhost:8545"`
 	ContractAddress string `env:"EVM_CONTRACT_ADDRESS" envDefault:"0xe7f1725e7734ce288f8367e1bb143e90bb3f0512"`
-	privateKey      string `env:"EVM_PRIVATE_KEY" envDefault:"ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"`
+	PrivateKey      string `env:"EVM_PRIVATE_KEY" envDefault:"ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"`
 }
 type InteractorTestSuite struct {
 	suite.Suite
@@ -40,12 +40,12 @@ func (s *InteractorTestSuite) SetupSuite() {
 	fmt.Println("RpcUrl: ", s.config.RpcUrl)
 	fmt.Println("WsUrl: ", s.config.WsUrl)
 	fmt.Println("ContractAddress: ", s.config.ContractAddress)
-	fmt.Println("PrivateKey: ", s.config.privateKey)
+	fmt.Println("PrivateKey: ", s.config.PrivateKey)
 
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
 	var err error
-	s.interactor, err = NewContractInteractor(s.config.RpcUrl, s.config.WsUrl, s.config.ContractAddress, []byte(s.config.privateKey), false, s.logger, 0)
+	s.interactor, err = NewContractInteractor(s.config.RpcUrl, s.config.WsUrl, s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
 	s.Require().NoError(err)
 
 	s.prices, err = testutil.LoadAggregatedSignedPrices()

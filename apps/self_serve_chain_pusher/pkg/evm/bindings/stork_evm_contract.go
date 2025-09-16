@@ -53,7 +53,7 @@ type SelfServeStorkStructsTemporalNumericValue struct {
 
 // SelfServeStorkContractMetaData contains all meta data concerning the SelfServeStorkContract contract.
 var SelfServeStorkContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"storeHistoric\",\"type\":\"bool\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"storeHistoric\",\"type\":\"bool\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // SelfServeStorkContractABI is the input ABI used to generate the binding from.
@@ -202,12 +202,12 @@ func (_SelfServeStorkContract *SelfServeStorkContractTransactorRaw) Transact(opt
 	return _SelfServeStorkContract.Contract.contract.Transact(opts, method, params...)
 }
 
-// GetCurrentRoundId is a free data retrieval call binding the contract method 0x264b8ccf.
+// GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
-// Solidity: function getCurrentRoundId(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetCurrentRoundId(opts *bind.CallOpts, pubKey common.Address, assetId [32]byte) (*big.Int, error) {
+// Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetCurrentRoundId(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getCurrentRoundId", pubKey, assetId)
+	err := _SelfServeStorkContract.contract.Call(opts, &out, "getCurrentRoundId", pubKey, assetPairId)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -219,26 +219,26 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetCurrentRoundId(o
 
 }
 
-// GetCurrentRoundId is a free data retrieval call binding the contract method 0x264b8ccf.
+// GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
-// Solidity: function getCurrentRoundId(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetCurrentRoundId(pubKey common.Address, assetId [32]byte) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
-// GetCurrentRoundId is a free data retrieval call binding the contract method 0x264b8ccf.
+// GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
-// Solidity: function getCurrentRoundId(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetCurrentRoundId(pubKey common.Address, assetId [32]byte) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
-// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0xf9febca6.
+// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
-// Solidity: function getHistoricalRecordsCount(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalRecordsCount(opts *bind.CallOpts, pubKey common.Address, assetId [32]byte) (*big.Int, error) {
+// Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalRecordsCount(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalRecordsCount", pubKey, assetId)
+	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalRecordsCount", pubKey, assetPairId)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -250,26 +250,26 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalRecord
 
 }
 
-// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0xf9febca6.
+// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
-// Solidity: function getHistoricalRecordsCount(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalRecordsCount(pubKey common.Address, assetId [32]byte) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
-// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0xf9febca6.
+// GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
-// Solidity: function getHistoricalRecordsCount(address pubKey, bytes32 assetId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalRecordsCount(pubKey common.Address, assetId [32]byte) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
+func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
-// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x164c6d79.
+// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
-// Solidity: function getHistoricalTemporalNumericValue(address pubKey, bytes32 assetId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetId [32]byte, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
+// Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
+func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalTemporalNumericValue", pubKey, assetId, roundId)
+	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalTemporalNumericValue", pubKey, assetPairId, roundId)
 
 	if err != nil {
 		return *new(SelfServeStorkStructsTemporalNumericValue), err
@@ -281,26 +281,26 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalTempor
 
 }
 
-// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x164c6d79.
+// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
-// Solidity: function getHistoricalTemporalNumericValue(address pubKey, bytes32 assetId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetId [32]byte, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetId, roundId)
+// Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
+func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
+	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId, roundId)
 }
 
-// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x164c6d79.
+// GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
-// Solidity: function getHistoricalTemporalNumericValue(address pubKey, bytes32 assetId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetId [32]byte, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetId, roundId)
+// Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
+func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
+	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId, roundId)
 }
 
-// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0x7d8c8722.
+// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
-// Solidity: function getLatestTemporalNumericValue(address pubKey, bytes32 assetId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetLatestTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetId [32]byte) (SelfServeStorkStructsTemporalNumericValue, error) {
+// Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
+func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetLatestTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getLatestTemporalNumericValue", pubKey, assetId)
+	err := _SelfServeStorkContract.contract.Call(opts, &out, "getLatestTemporalNumericValue", pubKey, assetPairId)
 
 	if err != nil {
 		return *new(SelfServeStorkStructsTemporalNumericValue), err
@@ -312,18 +312,18 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetLatestTemporalNu
 
 }
 
-// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0x7d8c8722.
+// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
-// Solidity: function getLatestTemporalNumericValue(address pubKey, bytes32 assetId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetLatestTemporalNumericValue(pubKey common.Address, assetId [32]byte) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
+func (_SelfServeStorkContract *SelfServeStorkContractSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
+	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
-// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0x7d8c8722.
+// GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
-// Solidity: function getLatestTemporalNumericValue(address pubKey, bytes32 assetId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetLatestTemporalNumericValue(pubKey common.Address, assetId [32]byte) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetId)
+// Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
+func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
+	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetPublisherUser is a free data retrieval call binding the contract method 0x3d57a294.
@@ -355,37 +355,6 @@ func (_SelfServeStorkContract *SelfServeStorkContractSession) GetPublisherUser(p
 // Solidity: function getPublisherUser(address pubKey) view returns((address,uint256))
 func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetPublisherUser(pubKey common.Address) (SelfServeStorkStructsPublisherUser, error) {
 	return _SelfServeStorkContract.Contract.GetPublisherUser(&_SelfServeStorkContract.CallOpts, pubKey)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "owner")
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) Owner() (common.Address, error) {
-	return _SelfServeStorkContract.Contract.Owner(&_SelfServeStorkContract.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) Owner() (common.Address, error) {
-	return _SelfServeStorkContract.Contract.Owner(&_SelfServeStorkContract.CallOpts)
 }
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0x9bccd2d5.
@@ -459,48 +428,6 @@ func (_SelfServeStorkContract *SelfServeStorkContractSession) DeletePublisherUse
 // Solidity: function deletePublisherUser(address pubKey) returns()
 func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) DeletePublisherUser(pubKey common.Address) (*types.Transaction, error) {
 	return _SelfServeStorkContract.Contract.DeletePublisherUser(&_SelfServeStorkContract.TransactOpts, pubKey)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SelfServeStorkContract.contract.Transact(opts, "renounceOwnership")
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_SelfServeStorkContract *SelfServeStorkContractSession) RenounceOwnership() (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.RenounceOwnership(&_SelfServeStorkContract.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.RenounceOwnership(&_SelfServeStorkContract.TransactOpts)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.TransferOwnership(&_SelfServeStorkContract.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.TransferOwnership(&_SelfServeStorkContract.TransactOpts, newOwner)
 }
 
 // UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x25ae409f.
@@ -594,17 +521,17 @@ func (it *SelfServeStorkContractHistoricalValueStoredIterator) Close() error {
 // SelfServeStorkContractHistoricalValueStored represents a HistoricalValueStored event raised by the SelfServeStorkContract contract.
 type SelfServeStorkContractHistoricalValueStored struct {
 	PubKey         common.Address
-	AssetId        [32]byte
+	AssetId        common.Hash
 	TimestampNs    uint64
 	QuantizedValue *big.Int
 	RoundId        *big.Int
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// FilterHistoricalValueStored is a free log retrieval operation binding the contract event 0xe85b7dbefe3804ae78abe2347a8bb99a6bc30b36897fd759f44ecff9e027abc9.
+// FilterHistoricalValueStored is a free log retrieval operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
-// Solidity: event HistoricalValueStored(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterHistoricalValueStored(opts *bind.FilterOpts, pubKey []common.Address, assetId [][32]byte) (*SelfServeStorkContractHistoricalValueStoredIterator, error) {
+// Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
+func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterHistoricalValueStored(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*SelfServeStorkContractHistoricalValueStoredIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -622,10 +549,10 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterHistoricalV
 	return &SelfServeStorkContractHistoricalValueStoredIterator{contract: _SelfServeStorkContract.contract, event: "HistoricalValueStored", logs: logs, sub: sub}, nil
 }
 
-// WatchHistoricalValueStored is a free log subscription operation binding the contract event 0xe85b7dbefe3804ae78abe2347a8bb99a6bc30b36897fd759f44ecff9e027abc9.
+// WatchHistoricalValueStored is a free log subscription operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
-// Solidity: event HistoricalValueStored(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalValueStored(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractHistoricalValueStored, pubKey []common.Address, assetId [][32]byte) (event.Subscription, error) {
+// Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
+func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalValueStored(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractHistoricalValueStored, pubKey []common.Address, assetId []string) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -668,165 +595,12 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalVa
 	}), nil
 }
 
-// ParseHistoricalValueStored is a log parse operation binding the contract event 0xe85b7dbefe3804ae78abe2347a8bb99a6bc30b36897fd759f44ecff9e027abc9.
+// ParseHistoricalValueStored is a log parse operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
-// Solidity: event HistoricalValueStored(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
+// Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
 func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParseHistoricalValueStored(log types.Log) (*SelfServeStorkContractHistoricalValueStored, error) {
 	event := new(SelfServeStorkContractHistoricalValueStored)
 	if err := _SelfServeStorkContract.contract.UnpackLog(event, "HistoricalValueStored", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
-}
-
-// SelfServeStorkContractOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractOwnershipTransferredIterator struct {
-	Event *SelfServeStorkContractOwnershipTransferred // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *SelfServeStorkContractOwnershipTransferredIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(SelfServeStorkContractOwnershipTransferred)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(SelfServeStorkContractOwnershipTransferred)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *SelfServeStorkContractOwnershipTransferredIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *SelfServeStorkContractOwnershipTransferredIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// SelfServeStorkContractOwnershipTransferred represents a OwnershipTransferred event raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractOwnershipTransferred struct {
-	PreviousOwner common.Address
-	NewOwner      common.Address
-	Raw           types.Log // Blockchain specific contextual infos
-}
-
-// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*SelfServeStorkContractOwnershipTransferredIterator, error) {
-
-	var previousOwnerRule []interface{}
-	for _, previousOwnerItem := range previousOwner {
-		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
-	}
-	var newOwnerRule []interface{}
-	for _, newOwnerItem := range newOwner {
-		newOwnerRule = append(newOwnerRule, newOwnerItem)
-	}
-
-	logs, sub, err := _SelfServeStorkContract.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
-	if err != nil {
-		return nil, err
-	}
-	return &SelfServeStorkContractOwnershipTransferredIterator{contract: _SelfServeStorkContract.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
-}
-
-// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
-
-	var previousOwnerRule []interface{}
-	for _, previousOwnerItem := range previousOwner {
-		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
-	}
-	var newOwnerRule []interface{}
-	for _, newOwnerItem := range newOwner {
-		newOwnerRule = append(newOwnerRule, newOwnerItem)
-	}
-
-	logs, sub, err := _SelfServeStorkContract.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(SelfServeStorkContractOwnershipTransferred)
-				if err := _SelfServeStorkContract.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParseOwnershipTransferred(log types.Log) (*SelfServeStorkContractOwnershipTransferred, error) {
-	event := new(SelfServeStorkContractOwnershipTransferred)
-	if err := _SelfServeStorkContract.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -1192,16 +966,16 @@ func (it *SelfServeStorkContractValueUpdateIterator) Close() error {
 // SelfServeStorkContractValueUpdate represents a ValueUpdate event raised by the SelfServeStorkContract contract.
 type SelfServeStorkContractValueUpdate struct {
 	PubKey         common.Address
-	AssetId        [32]byte
+	AssetId        common.Hash
 	TimestampNs    uint64
 	QuantizedValue *big.Int
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// FilterValueUpdate is a free log retrieval operation binding the contract event 0x11cf59cde7d5e72d27621ff45df3a2339e63697115b2227cd1a8964e1c6c1c53.
+// FilterValueUpdate is a free log retrieval operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
-// Solidity: event ValueUpdate(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterValueUpdate(opts *bind.FilterOpts, pubKey []common.Address, assetId [][32]byte) (*SelfServeStorkContractValueUpdateIterator, error) {
+// Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
+func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterValueUpdate(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*SelfServeStorkContractValueUpdateIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -1219,10 +993,10 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterValueUpdate
 	return &SelfServeStorkContractValueUpdateIterator{contract: _SelfServeStorkContract.contract, event: "ValueUpdate", logs: logs, sub: sub}, nil
 }
 
-// WatchValueUpdate is a free log subscription operation binding the contract event 0x11cf59cde7d5e72d27621ff45df3a2339e63697115b2227cd1a8964e1c6c1c53.
+// WatchValueUpdate is a free log subscription operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
-// Solidity: event ValueUpdate(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractValueUpdate, pubKey []common.Address, assetId [][32]byte) (event.Subscription, error) {
+// Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
+func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractValueUpdate, pubKey []common.Address, assetId []string) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -1265,9 +1039,9 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(
 	}), nil
 }
 
-// ParseValueUpdate is a log parse operation binding the contract event 0x11cf59cde7d5e72d27621ff45df3a2339e63697115b2227cd1a8964e1c6c1c53.
+// ParseValueUpdate is a log parse operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
-// Solidity: event ValueUpdate(address indexed pubKey, bytes32 indexed assetId, uint64 timestampNs, int192 quantizedValue)
+// Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
 func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParseValueUpdate(log types.Log) (*SelfServeStorkContractValueUpdate, error) {
 	event := new(SelfServeStorkContractValueUpdate)
 	if err := _SelfServeStorkContract.contract.UnpackLog(event, "ValueUpdate", log); err != nil {

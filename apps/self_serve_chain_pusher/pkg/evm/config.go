@@ -34,19 +34,18 @@ type EvmSelfServeConfig struct {
 	ChainWsUrl      string
 	ContractAddress string
 	AssetConfig     *AssetConfigFile
-	privateKey      *ecdsa.PrivateKey
+	PrivateKey      *ecdsa.PrivateKey
 	GasLimit        uint64
 }
 
 type AssetPushState struct {
-	AssetID                    string
-	Config                     AssetPushConfig
-	LastPrice                  *big.Float
-	LastPushTime               time.Time
-	PendingSignedPriceUpdate   *publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
-	NextPushTime               time.Time
+	AssetID                  string
+	Config                   AssetPushConfig
+	LastPrice                *big.Float
+	LastPushTime             time.Time
+	PendingSignedPriceUpdate *publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
+	NextPushTime             time.Time
 }
-
 
 func LoadAssetConfig(filename string) (*AssetConfigFile, error) {
 	data, err := os.ReadFile(filename)
