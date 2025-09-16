@@ -39,7 +39,7 @@ func NewFallbackContractInteractor(
 	}
 }
 
-func (f *FallbackContractInteractor) ConnectRest(restRpcUrl string) error {
+func (f *FallbackContractInteractor) ConnectRest(_ string) error {
 	var err error
 	for _, restRpcUrl := range f.restRpcUrls {
 		f.logger.Info().Msgf("attempting connection to Rest rpc url %s", restRpcUrl)
@@ -53,7 +53,7 @@ func (f *FallbackContractInteractor) ConnectRest(restRpcUrl string) error {
 	return err
 }
 
-func (f *FallbackContractInteractor) ConnectWs(wsRpcUrl string) error {
+func (f *FallbackContractInteractor) ConnectWs(_ string) error {
 	var err error
 	for _, wsRpcUrl := range f.wsRpcUrls {
 		f.logger.Info().Msgf("attempting connection to WS rpc url %s", wsRpcUrl)
