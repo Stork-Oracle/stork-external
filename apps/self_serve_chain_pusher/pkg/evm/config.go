@@ -18,8 +18,8 @@ import (
 )
 
 type AssetPushConfig struct {
-	AssetId                string  `yaml:"asset_id"`
-	EncodedAssetId         string  `yaml:"encoded_asset_id"`
+	AssetID                string  `yaml:"asset_id"`
+	EncodedAssetID         string  `yaml:"encoded_asset_id"`
 	PushIntervalSec        int     `yaml:"push_interval_sec"`
 	PercentChangeThreshold float64 `yaml:"percent_change_threshold"`
 }
@@ -34,12 +34,12 @@ type EvmSelfServeConfig struct {
 	ChainWsUrl      string
 	ContractAddress string
 	AssetConfig     *AssetConfigFile
-	PrivateKey      *ecdsa.PrivateKey
+	privateKey      *ecdsa.PrivateKey
 	GasLimit        uint64
 }
 
 type AssetPushState struct {
-	AssetId                    string
+	AssetID                    string
 	Config                     AssetPushConfig
 	LastPrice                  *big.Float
 	LastPushTime               time.Time

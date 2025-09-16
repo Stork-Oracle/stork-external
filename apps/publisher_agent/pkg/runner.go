@@ -16,7 +16,8 @@ type PublisherAgentRunner[T signer.Signature] struct {
 	ValueUpdateCh               chan ValueUpdate
 	signedPriceBatchCh          chan SignedPriceUpdateBatch[T]
 	registryClient              *RegistryClient
-	assetsByBroker              map[BrokerPublishUrl]map[AssetId]struct{}
+	seededBrokers               map[BrokerPublishUrl]map[AssetID]struct{}
+	assetsByBroker              map[BrokerPublishUrl]map[AssetID]struct{}
 	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock     sync.RWMutex
 	signer                      signer.Signer[T]
@@ -47,6 +48,16 @@ func NewPublisherAgentRunner[T signer.Signature](
 		config,
 	)
 
+	seededBrokers := make(map[BrokerPublishUrl]map[AssetID]struct{})
+	for _, broker := range config.SeededBrokers {
+		assetIDs := make(map[AssetID]struct{})
+		for _, asset := range broker.AssetIDs {
+			assetIDs[asset] = struct{}{}
+		}
+
+		seededBrokers[broker.PublishUrl] = assetIDs
+	}
+
 	return &PublisherAgentRunner[T]{
 		config:                      config,
 		signatureType:               signatureType,
@@ -54,7 +65,8 @@ func NewPublisherAgentRunner[T signer.Signature](
 		ValueUpdateCh:               make(chan ValueUpdate, 4096),
 		signedPriceBatchCh:          make(chan SignedPriceUpdateBatch[T], 4096),
 		registryClient:              registryClient,
-		assetsByBroker:              make(map[BrokerPublishUrl]map[AssetId]struct{}),
+		seededBrokers:               seededBrokers,
+		assetsByBroker:              make(map[BrokerPublishUrl]map[AssetID]struct{}),
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
 		signer:                      signer,
@@ -75,23 +87,38 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 		return
 	}
 
+	// merge seeded brokers with registry brokers
+	for brokerUrl, assetIDs := range r.seededBrokers {
+		_, exists := newBrokerMap[brokerUrl]
+		if !exists {
+			newBrokerMap[brokerUrl] = assetIDs
+		} else {
+			for assetID := range assetIDs {
+				newBrokerMap[brokerUrl][assetID] = struct{}{}
+			}
+		}
+	}
+
 	// add or update desired connections
 	r.outgoingConnectionsLock.RLock()
-	for brokerUrl, newAssetIdMap := range newBrokerMap {
+
+	for brokerUrl, newAssetIDMap := range newBrokerMap {
 		outgoingConnection, outgoingConnectionExists := r.outgoingConnectionsByBroker[brokerUrl]
 		if outgoingConnectionExists {
 			// update connection
-			outgoingConnection.assets.UpdateAssets(newAssetIdMap)
+			outgoingConnection.assets.UpdateAssets(newAssetIDMap)
 		} else {
 			// create connection
-			go r.RunOutgoingConnection(brokerUrl, newAssetIdMap)
+			go r.RunOutgoingConnection(brokerUrl, newAssetIDMap)
 		}
-		r.assetsByBroker[brokerUrl] = newAssetIdMap
+		r.assetsByBroker[brokerUrl] = newAssetIDMap
 	}
+
 	r.outgoingConnectionsLock.RUnlock()
 
 	// remove undesired connections
 	r.outgoingConnectionsLock.Lock()
+
 	for url := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
@@ -99,6 +126,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			delete(r.assetsByBroker, url)
 		}
 	}
+
 	r.outgoingConnectionsLock.Unlock()
 
 	r.logger.Debug().Msg("Broker connection updater finished")
@@ -106,6 +134,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 
 func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 	r.UpdateBrokerConnections()
+
 	for range time.Tick(r.config.StorkRegistryRefreshInterval) {
 		r.UpdateBrokerConnections()
 	}
@@ -114,7 +143,7 @@ func (r *PublisherAgentRunner[T]) RunBrokerConnectionUpdater() {
 func (r *PublisherAgentRunner[T]) Run() {
 	processor := NewPriceUpdateProcessor(
 		r.signer,
-		r.config.OracleId,
+		r.config.OracleID,
 		len(r.config.SignatureTypes),
 		r.config.ClockPeriod,
 		r.config.DeltaCheckPeriod,
@@ -145,7 +174,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 	processor.Run()
 }
 
-func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetId]struct{}) {
+func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetID]struct{}) {
 	assets := NewOutgoingWebsocketConnectionAssets[T](assetIds)
 
 	for {

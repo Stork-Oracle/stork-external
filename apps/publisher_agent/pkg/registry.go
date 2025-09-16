@@ -25,7 +25,7 @@ func NewRegistryClient(baseUrl string, storkAuthSigner signer.StorkAuthSigner, l
 
 func (c *RegistryClient) GetBrokersForPublisher(
 	publisherKey signer.PublisherKey,
-) (map[BrokerPublishUrl]map[AssetId]struct{}, error) {
+) (map[BrokerPublishUrl]map[AssetID]struct{}, error) {
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))
@@ -54,7 +54,7 @@ func (c *RegistryClient) GetBrokersForPublisher(
 		return nil, fmt.Errorf("failed to unmarshal response from Stork Registry: %s", string(response))
 	}
 
-	brokerMap := make(map[BrokerPublishUrl]map[AssetId]struct{})
+	brokerMap := make(map[BrokerPublishUrl]map[AssetID]struct{})
 
 	if len(brokers) == 0 {
 		c.logger.Warn().
@@ -64,15 +64,15 @@ func (c *RegistryClient) GetBrokersForPublisher(
 
 	// combine all configs into a single asset map per url
 	for _, broker := range brokers {
-		assetIds, exists := brokerMap[broker.PublishUrl]
+		assetIDs, exists := brokerMap[broker.PublishUrl]
 
 		if !exists {
-			assetIds = make(map[AssetId]struct{})
-			brokerMap[broker.PublishUrl] = assetIds
+			assetIDs = make(map[AssetID]struct{})
+			brokerMap[broker.PublishUrl] = assetIDs
 		}
 
-		for _, asset := range broker.AssetIds {
-			assetIds[asset] = struct{}{}
+		for _, asset := range broker.AssetIDs {
+			assetIDs[asset] = struct{}{}
 		}
 	}
 

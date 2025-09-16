@@ -11,15 +11,14 @@ type MessageType string
 const WildcardSubscriptionAsset = "*"
 
 type (
-	ConnectionId string
+	ConnectionID string
 	AuthToken    string
 )
 
 type WebsocketMessage[T any] struct {
-	connId  ConnectionId
 	Type    string `json:"type"`
 	Error   string `json:"error,omitempty"`
-	TraceId string `json:"trace_id,omitempty"`
+	TraceID string `json:"trace_id,omitempty"`
 	Data    T      `json:"data,omitempty"`
 }
 
@@ -28,8 +27,8 @@ type ErrorMessage struct {
 }
 
 type (
-	OracleId       string
-	AssetId        string
+	OracleID       string
+	AssetID        string
 	QuantizedPrice string
 )
 
@@ -43,7 +42,7 @@ type (
 	Metadata                 map[string]any
 	PriceUpdatePullWebsocket struct {
 		PublishTimestampNano int64    `json:"t"`
-		Asset                AssetId  `json:"a"`
+		Asset                AssetID  `json:"a"`
 		Price                float64  `json:"p"`
 		Metadata             Metadata `json:"m,omitempty"`
 	}
@@ -51,7 +50,7 @@ type (
 
 type ValueUpdatePushWebsocket struct {
 	PublishTimestampNano int64    `json:"t"`
-	Asset                AssetId  `json:"a"`
+	Asset                AssetID  `json:"a"`
 	Value                any      `json:"v"`
 	Metadata             Metadata `json:"m,omitempty"`
 }
@@ -67,7 +66,7 @@ const (
 
 type ValueUpdate struct {
 	PublishTimestampNano int64
-	Asset                AssetId
+	Asset                AssetID
 	Value                *big.Float
 	Metadata             Metadata
 }
@@ -80,7 +79,7 @@ type ValueUpdateWithTrigger struct {
 // Outgoing
 type SignedPrice[T signer.Signature] struct {
 	PublisherKey         signer.PublisherKey            `json:"publisher_key"`
-	ExternalAssetId      string                         `json:"external_asset_id"`
+	ExternalAssetID      string                         `json:"external_asset_id"`
 	SignatureType        signer.SignatureType           `json:"signature_type"`
 	QuantizedPrice       QuantizedPrice                 `json:"price"`
 	TimestampedSignature signer.TimestampedSignature[T] `json:"timestamped_signature"`
@@ -89,23 +88,23 @@ type SignedPrice[T signer.Signature] struct {
 
 // SignedPriceUpdate represents a signed price from a publisher
 type SignedPriceUpdate[T signer.Signature] struct {
-	OracleId    OracleId       `json:"oracle_id"`
-	AssetId     AssetId        `json:"asset_id"`
+	OracleID    OracleID       `json:"oracle_id"`
+	AssetID     AssetID        `json:"asset_id"`
 	Trigger     TriggerType    `json:"trigger"`
 	SignedPrice SignedPrice[T] `json:"signed_price"`
 }
 
-type SignedPriceUpdateBatch[T signer.Signature] map[AssetId]SignedPriceUpdate[T]
+type SignedPriceUpdateBatch[T signer.Signature] map[AssetID]SignedPriceUpdate[T]
 
 type SubscriptionRequest struct {
-	Assets []AssetId `json:"assets"`
+	Assets []AssetID `json:"assets"`
 }
 
 type (
 	BrokerPublishUrl       string
 	BrokerConnectionConfig struct {
 		PublishUrl BrokerPublishUrl `json:"publish_url"`
-		AssetIds   []AssetId        `json:"asset_ids"`
+		AssetIDs   []AssetID        `json:"asset_ids"`
 	}
 )
 

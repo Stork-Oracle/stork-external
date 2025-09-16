@@ -19,7 +19,7 @@ const (
 	storkAuth       = "fake_auth"
 )
 
-const assetId = "fakeAsset"
+const assetID = "fakeAsset"
 
 func getNextSignedOutput[T signer.Signature](
 	ch chan SignedPriceUpdateBatch[T],
@@ -54,6 +54,7 @@ func TestDeltaOnly(t *testing.T) {
 		time.Duration(0),
 		false,
 		0,
+		[]BrokerConnectionConfig{},
 	)
 
 	evmSigner, err := signer.NewEvmSigner(evmPrivateKey, logger)
@@ -65,7 +66,7 @@ func TestDeltaOnly(t *testing.T) {
 	outputCh := make(chan SignedPriceUpdateBatch[*signer.EvmSignature])
 	processor := NewPriceUpdateProcessor[*signer.EvmSignature](
 		evmSigner,
-		config.OracleId,
+		config.OracleID,
 		1,
 		config.ClockPeriod,
 		config.DeltaCheckPeriod,
@@ -81,7 +82,7 @@ func TestDeltaOnly(t *testing.T) {
 	// initial update gets sent out
 	initialUpdate := ValueUpdate{
 		PublishTimestampNano: 10000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(1.0),
 	}
 	inputCh <- initialUpdate
@@ -89,13 +90,13 @@ func TestDeltaOnly(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(10000000), firstResult[assetId].SignedPrice.TimestampedSignature.TimestampNano)
-	assert.Equal(t, QuantizedPrice("1000000000000000000"), firstResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, int64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, QuantizedPrice("1000000000000000000"), firstResult[assetID].SignedPrice.QuantizedPrice)
 
 	// subsequent updates with no change don't get sent out
 	noDeltaUpdate := ValueUpdate{
 		PublishTimestampNano: 20000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(1.0),
 	}
 	inputCh <- noDeltaUpdate
@@ -107,7 +108,7 @@ func TestDeltaOnly(t *testing.T) {
 	// updates with a large change get sent out
 	changeUpdate := ValueUpdate{
 		PublishTimestampNano: 30000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(2.0),
 	}
 	inputCh <- changeUpdate
@@ -115,8 +116,8 @@ func TestDeltaOnly(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.TimestampNano)
-	assert.Equal(t, QuantizedPrice("2000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, int64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, QuantizedPrice("2000000000000000000"), nextResult[assetID].SignedPrice.QuantizedPrice)
 }
 
 func TestZeroPrice(t *testing.T) {
@@ -140,6 +141,7 @@ func TestZeroPrice(t *testing.T) {
 		time.Duration(0),
 		false,
 		0,
+		[]BrokerConnectionConfig{},
 	)
 
 	evmSigner, err := signer.NewEvmSigner(evmPrivateKey, logger)
@@ -151,7 +153,7 @@ func TestZeroPrice(t *testing.T) {
 	outputCh := make(chan SignedPriceUpdateBatch[*signer.EvmSignature])
 	processor := NewPriceUpdateProcessor[*signer.EvmSignature](
 		evmSigner,
-		config.OracleId,
+		config.OracleID,
 		1,
 		config.ClockPeriod,
 		config.DeltaCheckPeriod,
@@ -167,7 +169,7 @@ func TestZeroPrice(t *testing.T) {
 	// initial zero update gets sent out
 	zeroUpdate := ValueUpdate{
 		PublishTimestampNano: 10000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(0.0),
 	}
 
@@ -176,13 +178,13 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(10000000), firstResult[assetId].SignedPrice.TimestampedSignature.TimestampNano)
-	assert.Equal(t, QuantizedPrice("0"), firstResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, int64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, QuantizedPrice("0"), firstResult[assetID].SignedPrice.QuantizedPrice)
 
 	// subsequent zero updates have no delta, so nothing is sent out
 	subsequentZeroUpdate := ValueUpdate{
 		PublishTimestampNano: 20000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(0.0),
 	}
 
@@ -195,7 +197,7 @@ func TestZeroPrice(t *testing.T) {
 	// any nonzero value has infinite delta, so gets sent out
 	nonzeroUpdate := ValueUpdate{
 		PublishTimestampNano: 30000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(1.0),
 	}
 	inputCh <- nonzeroUpdate
@@ -203,13 +205,13 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(30000000), nextResult[assetId].SignedPrice.TimestampedSignature.TimestampNano)
-	assert.Equal(t, QuantizedPrice("1000000000000000000"), nextResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, int64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, QuantizedPrice("1000000000000000000"), nextResult[assetID].SignedPrice.QuantizedPrice)
 
 	// updating price back to zero gets sent out
 	returnToZeroUpdate := ValueUpdate{
 		PublishTimestampNano: 40000000,
-		Asset:                assetId,
+		Asset:                assetID,
 		Value:                big.NewFloat(0.0),
 	}
 
@@ -218,6 +220,6 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(40000000), returnToZeroResult[assetId].SignedPrice.TimestampedSignature.TimestampNano)
-	assert.Equal(t, QuantizedPrice("0"), returnToZeroResult[assetId].SignedPrice.QuantizedPrice)
+	assert.Equal(t, int64(40000000), returnToZeroResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, QuantizedPrice("0"), returnToZeroResult[assetID].SignedPrice.QuantizedPrice)
 }

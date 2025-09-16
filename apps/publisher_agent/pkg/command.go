@@ -22,10 +22,12 @@ const ConfigFilePathFlag = "config-file-path"
 
 // not required
 const KeysFilePathFlag = "keys-file-path"
+const BrokerFilePathFlag = "broker-file-path" // TODO: should this be required?
 
 func init() {
 	PublisherAgentCmd.Flags().StringP(ConfigFilePathFlag, "c", "", "the path of your config json file")
 	PublisherAgentCmd.Flags().StringP(KeysFilePathFlag, "k", "", "the path of your keys json file")
+	PublisherAgentCmd.Flags().StringP(BrokerFilePathFlag, "b", "", "the path of your broker json file")
 
 	PublisherAgentCmd.MarkFlagRequired(ConfigFilePathFlag)
 }
@@ -33,8 +35,9 @@ func init() {
 func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	configFilePath, _ := cmd.Flags().GetString(ConfigFilePathFlag)
 	keysFilePath, _ := cmd.Flags().GetString(KeysFilePathFlag)
+	brokerFilePath, _ := cmd.Flags().GetString(BrokerFilePathFlag)
 
-	config, secrets, err := LoadConfig(configFilePath, keysFilePath)
+	config, secrets, err := LoadConfig(configFilePath, keysFilePath, brokerFilePath)
 	if err != nil {
 		return fmt.Errorf("error loading config: %v", err)
 	}
@@ -77,7 +80,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			thisSigner, err := signer.NewStarkSigner(
 				secrets.StarkPrivateKey,
 				string(config.StarkPublicKey),
-				string(config.OracleId),
+				string(config.OracleID),
 				logger,
 			)
 			if err != nil {

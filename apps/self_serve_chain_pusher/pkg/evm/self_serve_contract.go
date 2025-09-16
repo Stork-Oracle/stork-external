@@ -93,9 +93,9 @@ func NewSelfServeContractInteractor(
 
 func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset AssetPushConfig, value *big.Float, nonce *big.Int) error {
 	ci.logger.Info().
-		Str("asset", asset.AssetId).
+		Str("asset", asset.AssetID).
 		Str("value", value.Text('f', 6)).
-		Str("encoded_asset_id", asset.EncodedAssetId).
+		Str("encoded_asset_id", asset.EncodedAssetID).
 		Msg("Pushing value to self-serve contract")
 
 	// Quantize the value (assuming 18 decimal places for int192)
@@ -138,7 +138,7 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 		}
 
 		ci.logger.Info().
-			Str("asset", asset.AssetId).
+			Str("asset", asset.AssetID).
 			Str("tx_hash", txHash.Hex()).
 			Msg("Successfully submitted push value transaction")
 		return nil
@@ -149,9 +149,9 @@ func (ci *SelfServeContractInteractor) PushValue(ctx context.Context, asset Asse
 
 func (ci *SelfServeContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset AssetPushConfig, signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) error {
 	ci.logger.Info().
-		Str("asset", string(signedPriceUpdate.AssetId)).
+		Str("asset", string(signedPriceUpdate.AssetID)).
 		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
-		Str("encoded_asset_id", asset.EncodedAssetId).
+		Str("encoded_asset_id", asset.EncodedAssetID).
 		Msg("Pushing signed price update to self-serve contract")
 
 	// Convert the signed price update to contract input
@@ -182,7 +182,7 @@ func (ci *SelfServeContractInteractor) PushSignedPriceUpdate(ctx context.Context
 		}
 
 		ci.logger.Info().
-			Str("asset", string(signedPriceUpdate.AssetId)).
+			Str("asset", string(signedPriceUpdate.AssetID)).
 			Str("tx_hash", txHash.Hex()).
 			Msg("Successfully submitted signed price update transaction")
 		return nil
@@ -244,7 +244,7 @@ func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
 	return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{
 		TemporalNumericValue: temporalValue,
 		PubKey:               pubKeyAddress,
-		AssetPairId:          asset.AssetId,
+		AssetPairId:          asset.AssetID,
 		R:                    r,
 		S:                    s,
 		V:                    v,
@@ -261,7 +261,7 @@ func (ci *SelfServeContractInteractor) createUpdateInput(
 
 	// Create the message hash for signing
 	// This should match the contract's expected signing format
-	messageHash, err := ci.createMessageHash(temporalValue, asset.AssetId, nonce)
+	messageHash, err := ci.createMessageHash(temporalValue, asset.AssetID, nonce)
 	if err != nil {
 		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, fmt.Errorf("failed to create message hash: %w", err)
 	}
@@ -282,7 +282,7 @@ func (ci *SelfServeContractInteractor) createUpdateInput(
 	return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{
 		TemporalNumericValue: temporalValue,
 		PubKey:               pubKeyAddress,
-		AssetPairId:          asset.AssetId,
+		AssetPairId:          asset.AssetID,
 		R:                    r,
 		S:                    s,
 		V:                    v,

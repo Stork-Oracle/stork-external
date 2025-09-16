@@ -53,7 +53,7 @@ func (r *EvmSelfServeRunner) Run() {
 		r.config.ChainRpcUrl,
 		r.config.ChainWsUrl,
 		r.config.ContractAddress,
-		r.config.PrivateKey,
+		r.config.privateKey,
 		r.config.GasLimit,
 		r.logger,
 	)
@@ -92,7 +92,7 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 
 	for assetId, assetConfig := range r.config.AssetConfig.Assets {
 		r.assetStates[assetId] = &AssetPushState{
-			AssetId:      assetId,
+			AssetID:      assetId,
 			Config:       assetConfig,
 			LastPrice:    nil,
 			LastPushTime: time.Time{},
@@ -127,7 +127,7 @@ func (r *EvmSelfServeRunner) handleSignedPriceUpdate(signedPriceUpdate publisher
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
-	assetId := string(signedPriceUpdate.AssetId)
+	assetId := string(signedPriceUpdate.AssetID)
 	assetState, exists := r.assetStates[assetId]
 	if !exists {
 		r.logger.Debug().Str("asset", assetId).Msg("Received update for unconfigured asset")
@@ -226,7 +226,7 @@ func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
 		if err != nil {
 			r.logger.Error().
 				Err(err).
-				Str("asset", state.AssetId).
+				Str("asset", state.AssetID).
 				Msg("Failed to push value to contract")
 			return
 		}
@@ -241,7 +241,7 @@ func (r *EvmSelfServeRunner) triggerPush(state *AssetPushState) {
 		r.assetStatesMutex.Unlock()
 
 		r.logger.Info().
-			Str("asset", state.AssetId).
+			Str("asset", state.AssetID).
 			Str("value", state.LastPrice.Text('f', 6)).
 			Msg("Successfully pushed value to contract")
 	}()

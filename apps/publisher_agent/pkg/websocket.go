@@ -173,12 +173,12 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 }
 
 type OutgoingWebsocketConnectionAssets[T signer.Signature] struct {
-	assetIds     map[AssetId]struct{}
+	assetIds     map[AssetID]struct{}
 	assetIdsLock sync.RWMutex
 }
 
 func NewOutgoingWebsocketConnectionAssets[T signer.Signature](
-	assetIds map[AssetId]struct{},
+	assetIds map[AssetID]struct{},
 ) *OutgoingWebsocketConnectionAssets[T] {
 	return &OutgoingWebsocketConnectionAssets[T]{
 		assetIds:     assetIds,
@@ -206,7 +206,7 @@ func (a *OutgoingWebsocketConnectionAssets[T]) filterSignedPriceUpdateBatch(
 	return filteredPriceUpdates
 }
 
-func (a *OutgoingWebsocketConnectionAssets[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
+func (a *OutgoingWebsocketConnectionAssets[T]) UpdateAssets(assetIds map[AssetID]struct{}) {
 	a.assetIdsLock.Lock()
 	a.assetIds = assetIds
 	a.assetIdsLock.Unlock()
@@ -346,7 +346,7 @@ func SendWebsocketMsg[T any](
 	// create a new websocket message
 	msg := WebsocketMessage[T]{
 		Type:    msgType,
-		TraceId: traceId,
+		TraceID: traceId,
 		Error:   errMsg,
 		Data:    data,
 	}
@@ -487,15 +487,15 @@ func HandleNewIncomingWsConnection(
 		return
 	}
 
-	connId := ConnectionId(uuid.New().String())
+	connID := ConnectionID(uuid.New().String())
 
-	logger.Debug().Str("conn_id", string(connId)).Msg("adding publisher websocket")
+	logger.Debug().Str("conn_id", string(connID)).Msg("adding publisher websocket")
 
 	websocketConn := *NewWebsocketConnection(
 		conn,
 		logger,
 		func() {
-			logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
+			logger.Info().Str("conn_id", string(connID)).Msg("removing publisher websocket")
 		},
 	)
 	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger)

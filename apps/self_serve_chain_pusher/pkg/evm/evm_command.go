@@ -1,8 +1,8 @@
 package self_serve_evm
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/pusher"
+	"github.com/spf13/cobra"
 )
 
 var EvmSelfServeCmd = &cobra.Command{
@@ -63,7 +63,7 @@ func buildEvmConfigFromFlags(cmd *cobra.Command) (*EvmSelfServeConfig, error) {
 		ChainWsUrl:      chainWsUrl,
 		ContractAddress: contractAddress,
 		AssetConfig:     assetConfig,
-		PrivateKey:      privateKey,
+		privateKey:      privateKey,
 		GasLimit:        gasLimit,
 	}, nil
 }

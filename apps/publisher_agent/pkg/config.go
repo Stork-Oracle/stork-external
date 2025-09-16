@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"time"
@@ -50,7 +50,7 @@ type Keys struct {
 	EvmPublicKey    signer.EvmPublisherKey
 	StarkPrivateKey signer.StarkPrivateKey
 	StarkPublicKey  signer.StarkPublisherKey
-	OracleId        OracleId
+	OracleID        OracleID
 	PullBasedAuth   AuthToken
 }
 
@@ -72,9 +72,9 @@ func (k *Keys) updateFromEnvVars() {
 	if starkPublicKey != "" {
 		k.StarkPublicKey = signer.StarkPublisherKey(starkPublicKey)
 	}
-	oracleId := os.Getenv("STORK_ORACLE_ID")
-	if oracleId != "" {
-		k.OracleId = OracleId(oracleId)
+	oracleID := os.Getenv("STORK_ORACLE_ID")
+	if oracleID != "" {
+		k.OracleID = OracleID(oracleID)
 	}
 
 	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
@@ -85,12 +85,13 @@ func (k *Keys) updateFromEnvVars() {
 
 func readFile(path string) ([]byte, error) {
 	file, err := os.Open(path)
-	defer file.Close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
-	data, err := ioutil.ReadAll(file)
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
@@ -101,6 +102,7 @@ func readFile(path string) ([]byte, error) {
 func LoadConfig(
 	configFilePath string,
 	keysFilePath string,
+	brokerFilePath string,
 ) (*StorkPublisherAgentConfig, *StorkPublisherAgentSecrets, error) {
 	configFileData, err := readFile(configFilePath)
 	if err != nil {
@@ -153,7 +155,7 @@ func LoadConfig(
 		}
 	}
 
-	if len(keys.OracleId) != 5 {
+	if len(keys.OracleID) != 5 {
 		return nil, nil, errors.New("oracle id length must be 5")
 	}
 
@@ -260,6 +262,15 @@ func LoadConfig(
 		publisherMetadataBaseUrl = DefaultPublisherMetadataBaseUrl
 	}
 
+	var seededBrokers []BrokerConnectionConfig
+	brokerFileData, brokerFileReadErr := readFile(brokerFilePath)
+	if brokerFileReadErr == nil {
+		err = json.Unmarshal(brokerFileData, &seededBrokers)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to unmarshal broker file: %w", err)
+		}
+	}
+
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
 		keys.EvmPublicKey,
@@ -267,7 +278,7 @@ func LoadConfig(
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
 		changeThresholdPercent,
-		keys.OracleId,
+		keys.OracleID,
 		storkRegistryBaseUrl,
 		storkRegistryRefreshDuration,
 		brokerReconnectDelayDuration,
@@ -279,6 +290,7 @@ func LoadConfig(
 		pullBasedWsReadTimeout,
 		configFile.SignEveryUpdate,
 		configFile.IncomingWsPort,
+		seededBrokers,
 	)
 
 	secrets := NewStorkPublisherAgentSecrets(
@@ -315,7 +327,7 @@ type StorkPublisherAgentConfig struct {
 	ClockPeriod                     time.Duration
 	DeltaCheckPeriod                time.Duration
 	ChangeThresholdProportion       float64 // 0-1
-	OracleId                        OracleId
+	OracleID                        OracleID
 	StorkRegistryBaseUrl            string
 	StorkRegistryRefreshInterval    time.Duration
 	BrokerReconnectDelay            time.Duration
@@ -327,6 +339,7 @@ type StorkPublisherAgentConfig struct {
 	PullBasedWsReadTimeout          time.Duration
 	SignEveryUpdate                 bool
 	IncomingWsPort                  int
+	SeededBrokers                   []BrokerConnectionConfig
 }
 
 func NewStorkPublisherAgentConfig(
@@ -336,7 +349,7 @@ func NewStorkPublisherAgentConfig(
 	clockPeriod time.Duration,
 	deltaPeriod time.Duration,
 	changeThresholdPercentage float64,
-	oracleId OracleId,
+	oracleID OracleID,
 	storkRegistryBaseUrl string,
 	storkRegistryRefreshInterval time.Duration,
 	brokerReconnectDelay time.Duration,
@@ -348,6 +361,7 @@ func NewStorkPublisherAgentConfig(
 	pullBasedWsReadTimeout time.Duration,
 	signEveryUpdate bool,
 	incomingWsPort int,
+	seededBrokers []BrokerConnectionConfig,
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
 		SignatureTypes:                  signatureTypes,
@@ -356,7 +370,7 @@ func NewStorkPublisherAgentConfig(
 		ClockPeriod:                     clockPeriod,
 		DeltaCheckPeriod:                deltaPeriod,
 		ChangeThresholdProportion:       changeThresholdPercentage / 100.0,
-		OracleId:                        oracleId,
+		OracleID:                        oracleID,
 		StorkRegistryBaseUrl:            storkRegistryBaseUrl,
 		StorkRegistryRefreshInterval:    storkRegistryRefreshInterval,
 		BrokerReconnectDelay:            brokerReconnectDelay,
@@ -368,5 +382,6 @@ func NewStorkPublisherAgentConfig(
 		PullBasedWsReadTimeout:          pullBasedWsReadTimeout,
 		SignEveryUpdate:                 signEveryUpdate,
 		IncomingWsPort:                  incomingWsPort,
+		SeededBrokers:                   seededBrokers,
 	}
 }

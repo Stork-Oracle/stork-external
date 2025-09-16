@@ -20,10 +20,10 @@ type ValueUpdateProcessor[T signer.Signature] struct {
 	valueUpdateCh             chan ValueUpdate
 	signedPriceUpdateBatchCh  chan SignedPriceUpdateBatch[T]
 	signer                    signer.Signer[T]
-	oracleId                  OracleId
+	oracleId                  OracleID
 	numRunners                int
-	valueUpdates              map[AssetId]ValueUpdate
-	lastReportedPrice         map[AssetId]float64
+	valueUpdates              map[AssetID]ValueUpdate
+	lastReportedPrice         map[AssetID]float64
 	clockPeriod               time.Duration
 	deltaCheckPeriod          time.Duration
 	changeThresholdProportion float64 // 0-1
@@ -36,7 +36,7 @@ type ValueUpdateProcessor[T signer.Signature] struct {
 
 func NewPriceUpdateProcessor[T signer.Signature](
 	signer signer.Signer[T],
-	oracleId OracleId,
+	oracleId OracleID,
 	numRunners int,
 	clockPeriod time.Duration,
 	deltaCheckPeriod time.Duration,
@@ -52,8 +52,8 @@ func NewPriceUpdateProcessor[T signer.Signature](
 		signer:                    signer,
 		oracleId:                  oracleId,
 		numRunners:                numRunners,
-		valueUpdates:              make(map[AssetId]ValueUpdate),
-		lastReportedPrice:         make(map[AssetId]float64),
+		valueUpdates:              make(map[AssetID]ValueUpdate),
+		lastReportedPrice:         make(map[AssetID]float64),
 		clockPeriod:               clockPeriod,
 		deltaCheckPeriod:          deltaCheckPeriod,
 		changeThresholdProportion: changeThresholdProportion,
@@ -164,12 +164,12 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 				}
 
 				priceUpdate := SignedPriceUpdate[T]{
-					OracleId: vup.oracleId,
-					AssetId:  update.ValueUpdate.Asset,
+					OracleID: vup.oracleId,
+					AssetID:  update.ValueUpdate.Asset,
 					Trigger:  update.TriggerType,
 					SignedPrice: SignedPrice[T]{
 						PublisherKey:         signer.PublisherKey(vup.signer.GetPublisherKey()),
-						ExternalAssetId:      externalAssetId,
+						ExternalAssetID:      externalAssetId,
 						SignatureType:        signer.SignatureType(vup.signer.GetSignatureType()),
 						QuantizedPrice:       quantizedPrice,
 						TimestampedSignature: *timestampedSig,
@@ -195,7 +195,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 			select {
 			// add incoming signed updates into a map
 			case signedUpdate := <-signedUpdates:
-				signedPriceUpdateBatch[signedUpdate.AssetId] = signedUpdate
+				signedPriceUpdateBatch[signedUpdate.AssetID] = signedUpdate
 			case <-ticker.C:
 				{
 					if len(signedPriceUpdateBatch) > 0 {
