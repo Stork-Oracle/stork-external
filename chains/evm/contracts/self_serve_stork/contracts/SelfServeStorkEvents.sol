@@ -12,14 +12,14 @@ interface ISelfServeStorkEvents {
     /// @param quantizedValue Value of the given update
     event ValueUpdate(
         address indexed pubKey,
-        bytes32 indexed assetId,
+        string indexed assetId,
         uint64 timestampNs,
         int192 quantizedValue
     );
 
     event HistoricalValueStored(
         address indexed pubKey,
-        bytes32 indexed assetId,
+        string indexed assetId,
         uint64 timestampNs,
         int192 quantizedValue,
         uint256 roundId

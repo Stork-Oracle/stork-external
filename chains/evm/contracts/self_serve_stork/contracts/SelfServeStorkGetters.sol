@@ -10,39 +10,39 @@ import "./SelfServeStorkErrors.sol";
 contract SelfServeStorkGetters is SelfServeStorkState {
     function getLatestTemporalNumericValue(
         address pubKey,
-        bytes32 assetId
+        string memory assetPairId
     ) public view returns (SelfServeStorkStructs.TemporalNumericValue memory value) {
-        if (_state.latestValues[pubKey][assetId].timestampNs == 0) {
+        if (_state.latestValues[pubKey][assetPairId].timestampNs == 0) {
             revert SelfServeStorkErrors.NotFound();
         }
 
-        return _state.latestValues[pubKey][assetId];
+        return _state.latestValues[pubKey][assetPairId];
     }
 
     function getHistoricalTemporalNumericValue(
         address pubKey,
-        bytes32 assetId,
+        string memory assetPairId,
         uint256 roundId
     ) public view returns (SelfServeStorkStructs.TemporalNumericValue memory) {
-        if (roundId >= _state.historicalValues[pubKey][assetId].length) {
+        if (roundId >= _state.historicalValues[pubKey][assetPairId].length) {
             revert SelfServeStorkErrors.NotFound();
         }
 
-        return _state.historicalValues[pubKey][assetId][roundId];
+        return _state.historicalValues[pubKey][assetPairId][roundId];
     }
 
     function getHistoricalRecordsCount(
         address pubKey,
-        bytes32 assetId
+        string memory assetPairId
     ) public view returns (uint256) {
-        return _state.historicalValues[pubKey][assetId].length;
+        return _state.historicalValues[pubKey][assetPairId].length;
     }
 
     function getCurrentRoundId(
         address pubKey,
-        bytes32 assetId
+        string memory assetPairId
     ) public view returns (uint256) {
-        return _state.currentRoundId[pubKey][assetId];
+        return _state.currentRoundId[pubKey][assetPairId];
     }
 
     function getPublisherUser(

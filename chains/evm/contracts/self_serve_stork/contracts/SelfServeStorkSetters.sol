@@ -12,17 +12,16 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
         address pubKey,
         SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
-        bytes32 assetId = getAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][assetId].timestampNs;
+        .latestValues[pubKey][input.assetPairId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
             return false;
         }
 
-        _state.latestValues[pubKey][assetId] = input.temporalNumericValue;
+        _state.latestValues[pubKey][input.assetPairId] = input.temporalNumericValue;
         emit ValueUpdate(
             pubKey,
-            assetId,
+            input.assetPairId,
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue
         );
@@ -33,26 +32,25 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
         address pubKey,
         SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
-        bytes32 assetId = getAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][assetId].timestampNs;
+        .latestValues[pubKey][input.assetPairId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
             return false;
         }
 
-        _state.historicalValues[pubKey][assetId].push(
+        _state.historicalValues[pubKey][input.assetPairId].push(
             SelfServeStorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
                 input.temporalNumericValue.quantizedValue
             )
         );
-        _state.currentRoundId[pubKey][assetId]++;
+        _state.currentRoundId[pubKey][input.assetPairId]++;
         emit HistoricalValueStored(
             pubKey,
-            assetId,
+            input.assetPairId,
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue,
-            _state.currentRoundId[pubKey][assetId]
+            _state.currentRoundId[pubKey][input.assetPairId]
         );
         return true;
     }
@@ -71,9 +69,5 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
     function removePublisherUser(address pubKey) internal {
         delete _state.publisherUsers[pubKey];
         emit PublisherUserRemoved(pubKey);
-    }
-
-    function getAssetId(string memory assetPairId) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(assetPairId));
     }
 }

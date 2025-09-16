@@ -7,9 +7,9 @@ import "./SelfServeStorkStructs.sol";
 
 contract SelfServeStorkStorage {
     struct State {
-        mapping(address => mapping(bytes32 => SelfServeStorkStructs.TemporalNumericValue)) latestValues;
-        mapping(address => mapping(bytes32 => SelfServeStorkStructs.TemporalNumericValue[])) historicalValues;
-        mapping(address => mapping(bytes32 => uint256)) currentRoundId;
+        mapping(address => mapping(string => SelfServeStorkStructs.TemporalNumericValue)) latestValues;
+        mapping(address => mapping(string => SelfServeStorkStructs.TemporalNumericValue[])) historicalValues;
+        mapping(address => mapping(string => uint256)) currentRoundId;
         mapping(address => SelfServeStorkStructs.PublisherUser) publisherUsers;
     }
 }
