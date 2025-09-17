@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"fmt"
 
@@ -15,28 +16,24 @@ import (
 )
 
 type EvmSelfServeRunner struct {
-	config             *EvmSelfServeConfig
-	contractInteractor *SelfServeContractInteractor
-	websocketServer    *WebsocketServer
-
+	config              *EvmSelfServeConfig
+	logger              zerolog.Logger
+	websocketServer     *WebsocketServer
+	contractInteractor  *SelfServeContractInteractor
 	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
 	assetStates         map[shared.AssetID]*AssetPushState
 	assetStatesMutex    sync.RWMutex
-
-	cancel context.CancelFunc
-	logger zerolog.Logger
+	cancel              context.CancelFunc
 }
 
-func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc, logger zerolog.Logger) *EvmSelfServeRunner {
+func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc) *EvmSelfServeRunner {
 	return &EvmSelfServeRunner{
 		config:              config,
-		contractInteractor:  nil,
-		websocketServer:     nil,
+		logger:              log.With().Str("component", "evm_runner").Logger(),
 		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature], 1000),
 		assetStates:         make(map[shared.AssetID]*AssetPushState),
 		assetStatesMutex:    sync.RWMutex{},
 		cancel:              cancel,
-		logger:              logger.With().Str("component", "evm_runner").Logger(),
 	}
 }
 

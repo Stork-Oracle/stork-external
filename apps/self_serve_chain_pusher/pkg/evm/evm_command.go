@@ -7,30 +7,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func EvmSelfServeCmd() *cobra.Command {
-	evmSelfServeCmd := &cobra.Command{
-		Use:   "evm",
-		Short: "Start EVM self-serve chain pusher",
-		Run:   runPush,
-	}
+var EvmSelfServeCmd = &cobra.Command{
+	Use:   "evm",
+	Short: "Start EVM self-serve chain pusher",
+	Run: func(cmd *cobra.Command, args []string) {
+		config, err := buildEvmConfigFromFlags(cmd)
+		if err != nil {
+			panic(err)
+		}
 
-	evmSelfServeCmd.Flags().String(pusher.WebsocketPortFlag, "8080", pusher.WebsocketPortDesc)
-	evmSelfServeCmd.Flags().String(pusher.ChainRpcUrlFlag, "", pusher.ChainRpcUrlDesc)
-	evmSelfServeCmd.Flags().String(pusher.ChainWsUrlFlag, "", pusher.ChainWsUrlDesc)
-	evmSelfServeCmd.Flags().String(pusher.ContractAddressFlag, "", pusher.ContractAddressDesc)
-	evmSelfServeCmd.Flags().String(pusher.AssetConfigFileFlag, "", pusher.AssetConfigFileDesc)
-	evmSelfServeCmd.Flags().String(pusher.PrivateKeyFileFlag, "", pusher.PrivateKeyFileDesc)
-	evmSelfServeCmd.Flags().Uint64(pusher.GasLimitFlag, 0, pusher.GasLimitDesc)
-
-	_ = evmSelfServeCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
-	_ = evmSelfServeCmd.MarkFlagRequired(pusher.ContractAddressFlag)
-	_ = evmSelfServeCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
-	_ = evmSelfServeCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
-
-	return evmSelfServeCmd
+		ctx, cancel := context.WithCancel(context.Background())
+		runner := NewEvmSelfServeRunner(config, cancel)
+		runner.Run(ctx)
+	},
 }
 
-func runPush(cmd *cobra.Command, args []string) {
+func init() {
+	addEvmFlags(EvmSelfServeCmd)
+}
+
+func addEvmFlags(cmd *cobra.Command) {
+	cmd.Flags().String(pusher.WebsocketPortFlag, "8080", pusher.WebsocketPortDesc)
+	cmd.Flags().String(pusher.ChainRpcUrlFlag, "", pusher.ChainRpcUrlDesc)
+	cmd.Flags().String(pusher.ChainWsUrlFlag, "", pusher.ChainWsUrlDesc)
+	cmd.Flags().String(pusher.ContractAddressFlag, "", pusher.ContractAddressDesc)
+	cmd.Flags().String(pusher.AssetConfigFileFlag, "", pusher.AssetConfigFileDesc)
+	cmd.Flags().String(pusher.PrivateKeyFileFlag, "", pusher.PrivateKeyFileDesc)
+	cmd.Flags().Uint64(pusher.GasLimitFlag, 0, pusher.GasLimitDesc)
+
+	cmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
+	cmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	cmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
+	cmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
+}
+
+func buildEvmConfigFromFlags(cmd *cobra.Command) (*EvmSelfServeConfig, error) {
 	websocketPort, _ := cmd.Flags().GetString(pusher.WebsocketPortFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(pusher.ChainRpcUrlFlag)
 	chainWsUrl, _ := cmd.Flags().GetString(pusher.ChainWsUrlFlag)
@@ -39,19 +50,17 @@ func runPush(cmd *cobra.Command, args []string) {
 	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
 
-	logger := pusher.PusherLogger("evm", chainRpcUrl, contractAddress)
-
 	assetConfig, err := LoadAssetConfig(assetConfigFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to load asset config")
+		return nil, err
 	}
 
 	privateKey, err := LoadPrivateKey(privateKeyFile)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to load private key")
+		return nil, err
 	}
 
-	config := &EvmSelfServeConfig{
+	return &EvmSelfServeConfig{
 		WebsocketPort:   websocketPort,
 		ChainRpcUrl:     chainRpcUrl,
 		ChainWsUrl:      chainWsUrl,
@@ -59,9 +68,5 @@ func runPush(cmd *cobra.Command, args []string) {
 		AssetConfig:     assetConfig,
 		PrivateKey:      privateKey,
 		GasLimit:        gasLimit,
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	runner := NewEvmSelfServeRunner(config, cancel, logger)
-	runner.Run(ctx)
+	}, nil
 }
