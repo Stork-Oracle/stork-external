@@ -91,7 +91,7 @@ func TestDeltaOnly(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, uint64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
 	assert.Equal(t, shared.QuantizedPrice("1000000000000000000"), firstResult[assetID].SignedPrice.QuantizedPrice)
 
 	// subsequent updates with no change don't get sent out
@@ -117,7 +117,7 @@ func TestDeltaOnly(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, uint64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
 	assert.Equal(t, shared.QuantizedPrice("2000000000000000000"), nextResult[assetID].SignedPrice.QuantizedPrice)
 }
 
@@ -179,7 +179,7 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, uint64(10000000), firstResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
 	assert.Equal(t, shared.QuantizedPrice("0"), firstResult[assetID].SignedPrice.QuantizedPrice)
 
 	// subsequent zero updates have no delta, so nothing is sent out
@@ -206,7 +206,7 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, uint64(30000000), nextResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
 	assert.Equal(t, shared.QuantizedPrice("1000000000000000000"), nextResult[assetID].SignedPrice.QuantizedPrice)
 
 	// updating price back to zero gets sent out
@@ -221,6 +221,6 @@ func TestZeroPrice(t *testing.T) {
 	if !success {
 		t.Fatalf("getNextSignedOutput timed out")
 	}
-	assert.Equal(t, int64(40000000), returnToZeroResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
+	assert.Equal(t, uint64(40000000), returnToZeroResult[assetID].SignedPrice.TimestampedSignature.TimestampNano)
 	assert.Equal(t, shared.QuantizedPrice("0"), returnToZeroResult[assetID].SignedPrice.QuantizedPrice)
 }
