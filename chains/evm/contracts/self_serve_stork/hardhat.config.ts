@@ -6,6 +6,10 @@ import { configVariable } from "hardhat/config";
 const config: HardhatUserConfig = {
   plugins: [hardhatToolboxViemPlugin],
   solidity: {
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol",
+      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+    ],
     profiles: {
       default: {
         version: "0.8.28",
