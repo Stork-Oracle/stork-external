@@ -6,12 +6,12 @@ import (
 	"github.com/Stork-Oracle/stork-external/shared"
 )
 
-type MessageType string
-
 const WildcardSubscriptionAsset = "*"
 
 type (
+	MessageType  string
 	ConnectionID string
+	OracleID     string
 )
 
 type WebsocketMessage[T any] struct {
@@ -24,10 +24,6 @@ type WebsocketMessage[T any] struct {
 type ErrorMessage struct {
 	Error string `json:"error"`
 }
-
-type (
-	OracleID string
-)
 
 // Incoming
 type (
