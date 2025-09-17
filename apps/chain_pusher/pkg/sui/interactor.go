@@ -15,9 +15,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var (
-	ErrPrivateKeyEmpty = errors.New("private key is empty")
-)
+var ErrPrivateKeyEmpty = errors.New("private key is empty")
 
 type ContractInteractor struct {
 	logger   zerolog.Logger
