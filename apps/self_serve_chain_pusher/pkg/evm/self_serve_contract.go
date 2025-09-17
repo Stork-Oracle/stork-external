@@ -198,7 +198,7 @@ func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
 	// Convert quantized price to big.Int
 	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
 	if !success {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to convert quantized price to big.Int: %s", signedPriceUpdate.SignedPrice.QuantizedPrice)
 	}
 
@@ -211,7 +211,7 @@ func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
 	// Parse the publisher key
 	pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(string(signedPriceUpdate.SignedPrice.PublisherKey), "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode publisher key: %w", err)
 	}
 	var pubKeyAddress common.Address
@@ -220,17 +220,17 @@ func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
 	// Parse the signature components
 	rBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature R: %w", err)
 	}
 	sBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature S: %w", err)
 	}
 	vBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{}, 
+		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature V: %w", err)
 	}
 
