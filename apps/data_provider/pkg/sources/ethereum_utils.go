@@ -54,7 +54,7 @@ func GetEthereumContract(
 func CallEthereumFunction(
 	contract *bind.BoundContract,
 	functionName string,
-	valueId types.ValueId,
+	valueId types.ValueID,
 	logger zerolog.Logger,
 ) ([]any, error) {
 	// retry with exponential backoff

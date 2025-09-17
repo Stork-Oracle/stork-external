@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var RaydiumCLMMDataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var RaydiumCLMMDataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type raydiumCLMMDataSourceFactory struct{}
 

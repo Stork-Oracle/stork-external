@@ -32,7 +32,7 @@ func TestValidRandomConfig(t *testing.T) {
 	assert.Equal(t, 1, len(config.Sources))
 
 	sourceConfig := config.Sources[0]
-	assert.Equal(t, types.ValueId("MY_RANDOM_VALUE"), sourceConfig.Id)
+	assert.Equal(t, types.ValueID("MY_RANDOM_VALUE"), sourceConfig.ID)
 
 	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
 	assert.NoError(t, err)
@@ -41,7 +41,7 @@ func TestValidRandomConfig(t *testing.T) {
 	randomConfig, err := random.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
 
-	assert.Equal(t, types.DataSourceId("random"), randomConfig.DataSource)
+	assert.Equal(t, types.DataSourceID("random"), randomConfig.DataSource)
 	assert.Equal(t, "1s", randomConfig.UpdateFrequency)
 	assert.Equal(t, 2500.0, randomConfig.MinValue)
 	assert.Equal(t, 3000.0, randomConfig.MaxValue)

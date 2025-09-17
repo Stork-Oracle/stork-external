@@ -14,7 +14,7 @@ import (
 
 func TestRaydiumCLMMDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "SOL_USDC",
+		ID: "SOL_USDC",
 		Config: RaydiumCLMMConfig{
 			DataSource:      RaydiumCLMMDataSourceId,
 			UpdateFrequency: "5s",

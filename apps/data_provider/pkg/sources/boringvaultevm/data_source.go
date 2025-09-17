@@ -31,7 +31,7 @@ type boringVaultEvmDataSource struct {
 	logger               zerolog.Logger
 	boringVaultEvmConfig BoringVaultEvmConfig
 	updateFrequency      time.Duration
-	valueId              types.ValueId
+	valueId              types.ValueID
 	contract             *bind.BoundContract
 	decimals             int8
 }
@@ -49,7 +49,7 @@ func newBoringVaultEvmDataSource(sourceConfig types.DataProviderSourceConfig) *b
 
 	return &boringVaultEvmDataSource{
 		boringVaultEvmConfig: boringVaultEvmConfig,
-		valueId:              sourceConfig.Id,
+		valueId:              sourceConfig.ID,
 		updateFrequency:      updateFrequency,
 		logger:               utils.DataSourceLogger(BoringVaultEvmDataSourceId),
 	}
@@ -83,9 +83,9 @@ func (r boringVaultEvmDataSource) getUpdate() (types.DataSourceUpdateMap, error)
 	updateTime := time.Now().UTC().UnixMilli()
 	updates[r.valueId] = types.DataSourceValueUpdate{
 		Time:         time.UnixMilli(updateTime),
-		ValueId:      r.valueId,
+		ValueID:      r.valueId,
 		Value:        updateValue,
-		DataSourceId: BoringVaultEvmDataSourceId,
+		DataSourceID: BoringVaultEvmDataSourceId,
 	}
 
 	return updates, nil

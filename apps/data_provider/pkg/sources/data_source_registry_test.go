@@ -14,7 +14,7 @@ func (*fakeDataSourceFactory) Build(config types.DataProviderSourceConfig) types
 }
 
 func TestDuplicateDataSourceId(t *testing.T) {
-	fakeDataSourceId := types.DataSourceId("fake_data_source_1")
+	fakeDataSourceId := types.DataSourceID("fake_data_source_1")
 	err := tryRegisterDataSourceFactory(fakeDataSourceId, nil)
 	assert.NoError(t, err)
 	err = tryRegisterDataSourceFactory(fakeDataSourceId, nil)
@@ -24,16 +24,16 @@ func TestDuplicateDataSourceId(t *testing.T) {
 func TestDuplicateValueId(t *testing.T) {
 	fakeDataSourceId := "fake_data_source_2"
 
-	RegisterDataSourceFactory(types.DataSourceId(fakeDataSourceId), &fakeDataSourceFactory{})
+	RegisterDataSourceFactory(types.DataSourceID(fakeDataSourceId), &fakeDataSourceFactory{})
 	_, _, err := BuildDataSources([]types.DataProviderSourceConfig{
 		{
-			Id: "fake1",
+			ID: "fake1",
 			Config: map[string]any{
 				"dataSource": fakeDataSourceId,
 			},
 		},
 		{
-			Id: "fake1",
+			ID: "fake1",
 			Config: map[string]any{
 				"dataSource": fakeDataSourceId,
 			},

@@ -10,7 +10,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var BoringVaultEvmDataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var BoringVaultEvmDataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type boringVaultEvmDataSourceFactory struct{}
 

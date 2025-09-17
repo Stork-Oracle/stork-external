@@ -55,15 +55,15 @@ func TestValidConfig(t *testing.T) {
 	assert.Equal(t, 3, len(schema.Sources))
 
 	config1 := schema.Sources[0]
-	assert.Equal(t, types.ValueId("WETHUSDT"), config1.Id)
+	assert.Equal(t, types.ValueID("WETHUSDT"), config1.ID)
 	assert.NotNil(t, config1.Config)
 
 	config2 := schema.Sources[1]
-	assert.Equal(t, types.ValueId("PEPEWETH"), config2.Id)
+	assert.Equal(t, types.ValueID("PEPEWETH"), config2.ID)
 	assert.NotNil(t, config2.Config)
 
 	config3 := schema.Sources[2]
-	assert.Equal(t, types.ValueId("MY_RANDOM_VALUE"), config3.Id)
+	assert.Equal(t, types.ValueID("MY_RANDOM_VALUE"), config3.ID)
 	assert.NotNil(t, config3.Config)
 }
 

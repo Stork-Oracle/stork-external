@@ -14,7 +14,7 @@ import (
 
 func TestUniswapDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "WETHUSDT",
+		ID: "WETHUSDT",
 		Config: UniswapV2Config{
 			DataSource:         UniswapV2DataSourceId,
 			UpdateFrequency:    "5s",

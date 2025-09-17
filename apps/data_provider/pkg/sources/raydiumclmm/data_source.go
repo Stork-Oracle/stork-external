@@ -19,7 +19,7 @@ import (
 
 type raydiumCLMMDataSource struct {
 	raydiumCLMMConfig RaydiumCLMMConfig
-	valueId           types.ValueId
+	valueId           types.ValueID
 	updateFrequency   time.Duration
 	rpcClient         *rpc.Client
 	logger            zerolog.Logger
@@ -98,7 +98,7 @@ func newRaydiumCLMMDataSource(sourceConfig types.DataProviderSourceConfig) *rayd
 
 	return &raydiumCLMMDataSource{
 		raydiumCLMMConfig: raydiumCLMMConfig,
-		valueId:           sourceConfig.Id,
+		valueId:           sourceConfig.ID,
 		updateFrequency:   updateFrequency,
 		rpcClient:         rpcClient,
 		logger:            utils.DataSourceLogger(RaydiumCLMMDataSourceId),
@@ -142,8 +142,8 @@ func (r raydiumCLMMDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 
 	updateTime := time.Now().UTC().UnixMilli()
 	updates[r.valueId] = types.DataSourceValueUpdate{
-		ValueId:      r.valueId,
-		DataSourceId: RaydiumCLMMDataSourceId,
+		ValueID:      r.valueId,
+		DataSourceID: RaydiumCLMMDataSourceId,
 		Time:         time.UnixMilli(updateTime),
 		Value:        calculatePrice(poolState),
 	}

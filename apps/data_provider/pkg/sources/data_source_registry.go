@@ -7,10 +7,10 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/utils"
 )
 
-var dataSourceFactories = map[types.DataSourceId]types.DataSourceFactory{}
+var dataSourceFactories = map[types.DataSourceID]types.DataSourceFactory{}
 
 // Register a new factory for a specific DataSource type.
-func RegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types.DataSourceFactory) {
+func RegisterDataSourceFactory(dataSourceId types.DataSourceID, factory types.DataSourceFactory) {
 	err := tryRegisterDataSourceFactory(dataSourceId, factory)
 	if err != nil {
 		panic(err)
@@ -18,7 +18,7 @@ func RegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types.Da
 }
 
 // exposed for testing
-func tryRegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types.DataSourceFactory) error {
+func tryRegisterDataSourceFactory(dataSourceId types.DataSourceID, factory types.DataSourceFactory) error {
 	if _, exists := dataSourceFactories[dataSourceId]; exists {
 		return fmt.Errorf("DataSourceFactory already registered for: %s", dataSourceId)
 	}
@@ -27,7 +27,7 @@ func tryRegisterDataSourceFactory(dataSourceId types.DataSourceId, factory types
 }
 
 // Get a factory by dataSourceId.
-func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFactory, error) {
+func GetDataSourceFactory(dataSourceId types.DataSourceID) (types.DataSourceFactory, error) {
 	factory, exists := dataSourceFactories[dataSourceId]
 	if !exists {
 		return nil, fmt.Errorf("no factory registered for: %s", dataSourceId)
@@ -37,19 +37,19 @@ func GetDataSourceFactory(dataSourceId types.DataSourceId) (types.DataSourceFact
 
 func BuildDataSources(
 	sourceConfigs []types.DataProviderSourceConfig,
-) ([]types.DataSource, map[types.ValueId]any, error) {
+) ([]types.DataSource, map[types.ValueID]any, error) {
 	dataSources := make([]types.DataSource, 0)
-	valueIds := make(map[types.ValueId]any)
+	valueIds := make(map[types.ValueID]any)
 	for _, source := range sourceConfigs {
-		_, exists := valueIds[source.Id]
+		_, exists := valueIds[source.ID]
 		if exists {
-			return nil, nil, fmt.Errorf("duplicate value id in config: %s", source.Id)
+			return nil, nil, fmt.Errorf("duplicate value id in config: %s", source.ID)
 		}
-		valueIds[source.Id] = nil
+		valueIds[source.ID] = nil
 
 		dataSourceId, err := utils.GetDataSourceId(source.Config)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to get data source id from source config %s: %v", source.Id, err)
+			return nil, nil, fmt.Errorf("unable to get data source id from source config %s: %v", source.ID, err)
 		}
 		factory, err := GetDataSourceFactory(dataSourceId)
 		if err != nil {

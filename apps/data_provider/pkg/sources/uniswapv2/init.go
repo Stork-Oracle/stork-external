@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var UniswapV2DataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var UniswapV2DataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type uniswapV2DataSourceFactory struct{}
 

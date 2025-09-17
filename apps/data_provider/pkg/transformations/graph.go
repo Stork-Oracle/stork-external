@@ -11,23 +11,23 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
-const TransformationDataSourceId = types.DataSourceId("transformation")
+const TransformationDataSourceId = types.DataSourceID("transformation")
 
 type TransformationGraph struct {
 	dependencyGraph       *simple.DirectedGraph
 	orderedNodes          []graph.Node
-	nodeToValueId         map[graph.Node]types.ValueId
-	valueIdToNode         map[types.ValueId]graph.Node
-	parsedTransformations map[types.ValueId]*Expression
+	nodeToValueId         map[graph.Node]types.ValueID
+	valueIdToNode         map[types.ValueID]graph.Node
+	parsedTransformations map[types.ValueID]*Expression
 	currentVals           map[string]types.DataSourceValueUpdate
 }
 
 func NewTransformationGraph(
 	dependencyGraph *simple.DirectedGraph,
 	orderedNodes []graph.Node,
-	nodeToValueId map[graph.Node]types.ValueId,
-	valueIdToNode map[types.ValueId]graph.Node,
-	parsedTransformations map[types.ValueId]*Expression,
+	nodeToValueId map[graph.Node]types.ValueID,
+	valueIdToNode map[types.ValueID]graph.Node,
+	parsedTransformations map[types.ValueID]*Expression,
 ) *TransformationGraph {
 	return &TransformationGraph{
 		dependencyGraph:       dependencyGraph,
@@ -78,8 +78,8 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 			}
 
 			computed := types.DataSourceValueUpdate{
-				ValueId:      transformationValueId,
-				DataSourceId: TransformationDataSourceId,
+				ValueID:      transformationValueId,
+				DataSourceID: TransformationDataSourceId,
 				Time:         updateTime,
 				Value:        transformationValue,
 			}
@@ -93,29 +93,29 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 
 func BuildTransformationGraph(
 	transformations []types.DataProviderTransformationConfig,
-	sourceIds map[types.ValueId]any,
+	sourceIds map[types.ValueID]any,
 ) (*TransformationGraph, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> value id
-	nodeToValueId := make(map[graph.Node]types.ValueId)
-	valueIdToNode := make(map[types.ValueId]graph.Node)
+	nodeToValueId := make(map[graph.Node]types.ValueID)
+	valueIdToNode := make(map[types.ValueID]graph.Node)
 
-	parsedTransformations := make(map[types.ValueId]*Expression)
+	parsedTransformations := make(map[types.ValueID]*Expression)
 	for _, transformation := range transformations {
 		expr, err := parse(transformation.Formula)
 		if err != nil {
 			return nil, err
 		}
-		parsedTransformations[transformation.Id] = expr
+		parsedTransformations[transformation.ID] = expr
 
 		node := g.NewNode()
 		g.AddNode(node)
-		nodeToValueId[node] = transformation.Id
-		if _, exists := valueIdToNode[transformation.Id]; exists {
-			return nil, fmt.Errorf("duplicate value id: %v", transformation.Id)
+		nodeToValueId[node] = transformation.ID
+		if _, exists := valueIdToNode[transformation.ID]; exists {
+			return nil, fmt.Errorf("duplicate value id: %v", transformation.ID)
 		}
-		valueIdToNode[transformation.Id] = node
+		valueIdToNode[transformation.ID] = node
 	}
 
 	for sourceId := range sourceIds {
@@ -129,22 +129,22 @@ func BuildTransformationGraph(
 	}
 
 	for _, transformation := range transformations {
-		expr, ok := parsedTransformations[transformation.Id]
+		expr, ok := parsedTransformations[transformation.ID]
 		if !ok {
-			return nil, fmt.Errorf("no such transformation: %s", transformation.Id)
+			return nil, fmt.Errorf("no such transformation: %s", transformation.ID)
 		}
 
 		deps := expr.getDependencies()
 		for _, dep := range deps {
-			_, sourcePriceExists := sourceIds[types.ValueId(dep)]
+			_, sourcePriceExists := sourceIds[types.ValueID(dep)]
 			if !sourcePriceExists {
-				_, transformationExists := valueIdToNode[types.ValueId(dep)]
+				_, transformationExists := valueIdToNode[types.ValueID(dep)]
 				if !transformationExists {
 					return nil, fmt.Errorf("no such source or transformation id: %s", dep)
 				}
 			}
 
-			g.SetEdge(g.NewEdge(valueIdToNode[types.ValueId(dep)], valueIdToNode[transformation.Id]))
+			g.SetEdge(g.NewEdge(valueIdToNode[types.ValueID(dep)], valueIdToNode[transformation.ID]))
 		}
 	}
 

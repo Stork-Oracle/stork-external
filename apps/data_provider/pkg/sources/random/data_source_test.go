@@ -11,10 +11,10 @@ import (
 func TestRandomDataSource_getUpdate(t *testing.T) {
 	minValue := 101.0
 	maxValue := 105.0
-	valueId := types.ValueId("TEST_RANDOM")
+	valueId := types.ValueID("TEST_RANDOM")
 
 	config := types.DataProviderSourceConfig{
-		Id: valueId,
+		ID: valueId,
 		Config: RandomConfig{
 			DataSource:      RandomDataSourceId,
 			UpdateFrequency: "50ms",
@@ -31,8 +31,8 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	update1, exists := updateMap1[valueId]
 	assert.True(t, exists)
-	assert.Equal(t, RandomDataSourceId, update1.DataSourceId)
-	assert.Equal(t, valueId, update1.ValueId)
+	assert.Equal(t, RandomDataSourceId, update1.DataSourceID)
+	assert.Equal(t, valueId, update1.ValueID)
 	time1 := update1.Time
 	assert.Greater(t, time1, now)
 	value1 := update1.Value
@@ -44,8 +44,8 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	update2, exists := updateMap2[valueId]
 	assert.True(t, exists)
-	assert.Equal(t, RandomDataSourceId, update2.DataSourceId)
-	assert.Equal(t, valueId, update2.ValueId)
+	assert.Equal(t, RandomDataSourceId, update2.DataSourceID)
+	assert.Equal(t, valueId, update2.ValueID)
 	time2 := update2.Time
 	assert.Greater(t, time2, time1)
 	value2 := update2.Value

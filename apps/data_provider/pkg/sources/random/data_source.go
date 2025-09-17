@@ -13,7 +13,7 @@ import (
 
 type randomDataSource struct {
 	randomConfig    RandomConfig
-	valueId         types.ValueId
+	valueId         types.ValueID
 	updateFrequency time.Duration
 	logger          zerolog.Logger
 }
@@ -31,7 +31,7 @@ func newRandomDataSource(sourceConfig types.DataProviderSourceConfig) *randomDat
 
 	return &randomDataSource{
 		randomConfig:    randomConfig,
-		valueId:         sourceConfig.Id,
+		valueId:         sourceConfig.ID,
 		updateFrequency: updateFrequency,
 		logger:          utils.DataSourceLogger(RandomDataSourceId),
 	}
@@ -52,8 +52,8 @@ func (r randomDataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 
 	updateMap := types.DataSourceUpdateMap{
 		r.valueId: types.DataSourceValueUpdate{
-			ValueId:      r.valueId,
-			DataSourceId: RandomDataSourceId,
+			ValueID:      r.valueId,
+			DataSourceID: RandomDataSourceId,
 			Time:         time.Now(),
 			Value:        randValue,
 		},

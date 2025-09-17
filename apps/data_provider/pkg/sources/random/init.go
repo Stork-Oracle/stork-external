@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var RandomDataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var RandomDataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type randomDataSourceFactory struct{}
 

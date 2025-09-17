@@ -25,7 +25,7 @@ var resourcesFS embed.FS
 
 type uniswapV2DataSource struct {
 	uniswapConfig   UniswapV2Config
-	valueId         types.ValueId
+	valueId         types.ValueID
 	updateFrequency time.Duration
 	contract        *bind.BoundContract
 	logger          zerolog.Logger
@@ -44,7 +44,7 @@ func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswa
 
 	return &uniswapV2DataSource{
 		uniswapConfig:   uniswapConfig,
-		valueId:         sourceConfig.Id,
+		valueId:         sourceConfig.ID,
 		updateFrequency: updateFrequency,
 		logger:          utils.DataSourceLogger(UniswapV2DataSourceId),
 	}
@@ -77,9 +77,9 @@ func (c *uniswapV2DataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 	updateTime := time.Now().UTC().UnixMilli()
 	updates[c.valueId] = types.DataSourceValueUpdate{
 		Time:         time.UnixMilli(updateTime),
-		ValueId:      c.valueId,
+		ValueID:      c.valueId,
 		Value:        updateValue,
-		DataSourceId: UniswapV2DataSourceId,
+		DataSourceID: UniswapV2DataSourceId,
 	}
 
 	return updates, nil

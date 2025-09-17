@@ -17,7 +17,7 @@ import (
 // This test will hit real external data sources. It's meant to be run manually so you can manually examine the results.
 func TestBoringVaultEvmDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "MY_TEST_VALUE_ID",
+		ID: "MY_TEST_VALUE_ID",
 		Config: BoringVaultEvmConfig{
 			DataSource:      BoringVaultEvmDataSourceId,
 			UpdateFrequency: "1s",

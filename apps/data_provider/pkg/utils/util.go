@@ -16,7 +16,7 @@ func GetCurrentDirName() string {
 	return filepath.Base(filepath.Dir(file))
 }
 
-func GetDataSourceId(config any) (types.DataSourceId, error) {
+func GetDataSourceId(config any) (types.DataSourceID, error) {
 	configMap, ok := config.(map[string]any)
 	if !ok {
 		return "", fmt.Errorf("config field is not interpretable as a map")
@@ -27,5 +27,5 @@ func GetDataSourceId(config any) (types.DataSourceId, error) {
 		return "", fmt.Errorf("no dataSource field in config map")
 	}
 
-	return types.DataSourceId(dataSourceId.(string)), nil
+	return types.DataSourceID(dataSourceId.(string)), nil
 }
