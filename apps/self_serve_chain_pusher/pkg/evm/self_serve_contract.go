@@ -199,7 +199,7 @@ func (ci *SelfServeContractInteractor) convertSignedPriceUpdateToInput(
 	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
 	if !success {
 		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
-			fmt.Errorf("failed to convert quantized price to big.Int: %s", signedPriceUpdate.SignedPrice.QuantizedPrice)
+			fmt.Errorf("%w: %s", shared.ErrFailedToConvertQuantizedPriceToBigInt, signedPriceUpdate.SignedPrice.QuantizedPrice)
 	}
 
 	// Create the temporal numeric value using the signed data timestamp

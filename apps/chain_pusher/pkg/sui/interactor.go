@@ -10,13 +10,13 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/coming-chat/go-sui/v2/account"
 	"github.com/rs/zerolog"
 )
 
 var (
-	ErrPrivateKeyEmpty       = errors.New("private key is empty")
-	ErrInvalidQuantizedPrice = errors.New("failed to convert quantized price to big int")
+	ErrPrivateKeyEmpty = errors.New("private key is empty")
 )
 
 type ContractInteractor struct {
@@ -161,7 +161,7 @@ func aggregatedSignedPriceToUpdateData(
 	//nolint:mnd // Base number
 	magnitude, ok := new(big.Int).SetString(magnitudeString, 10)
 	if !ok {
-		return bindings.UpdateData{}, ErrInvalidQuantizedPrice
+		return bindings.UpdateData{}, shared.ErrFailedToConvertQuantizedPriceToBigInt
 	}
 
 	negative := magnitude.Sign() == -1
