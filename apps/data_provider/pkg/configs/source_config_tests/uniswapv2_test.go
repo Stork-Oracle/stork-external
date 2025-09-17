@@ -38,9 +38,9 @@ func TestValidUniswapV2Config(t *testing.T) {
 	sourceConfig := config.Sources[0]
 	assert.Equal(t, types.ValueID("WETHUSDT"), sourceConfig.ID)
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, uniswapv2.UniswapV2DataSourceId, dataSourceId)
+	assert.Equal(t, uniswapv2.UniswapV2DataSourceID, dataSourceID)
 
 	uniswapConfig, err := uniswapv2.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)

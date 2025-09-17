@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var RandomDataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
+var RandomDataSourceID types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type randomDataSourceFactory struct{}
 
@@ -16,7 +16,7 @@ func (f *randomDataSourceFactory) Build(sourceConfig types.DataProviderSourceCon
 }
 
 func init() {
-	sources.RegisterDataSourceFactory(RandomDataSourceId, &randomDataSourceFactory{})
+	sources.RegisterDataSourceFactory(RandomDataSourceID, &randomDataSourceFactory{})
 }
 
 // assert we're satisfying our interfaces

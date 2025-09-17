@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var UniswapV2DataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
+var UniswapV2DataSourceID types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type uniswapV2DataSourceFactory struct{}
 
@@ -16,7 +16,7 @@ func (f *uniswapV2DataSourceFactory) Build(sourceConfig types.DataProviderSource
 }
 
 func init() {
-	sources.RegisterDataSourceFactory(UniswapV2DataSourceId, &uniswapV2DataSourceFactory{})
+	sources.RegisterDataSourceFactory(UniswapV2DataSourceID, &uniswapV2DataSourceFactory{})
 }
 
 var (

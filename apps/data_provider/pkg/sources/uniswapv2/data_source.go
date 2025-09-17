@@ -25,7 +25,7 @@ var resourcesFS embed.FS
 
 type uniswapV2DataSource struct {
 	uniswapConfig   UniswapV2Config
-	valueId         types.ValueID
+	valueID         types.ValueID
 	updateFrequency time.Duration
 	contract        *bind.BoundContract
 	logger          zerolog.Logger
@@ -44,9 +44,9 @@ func newUniswapV2DataSource(sourceConfig types.DataProviderSourceConfig) *uniswa
 
 	return &uniswapV2DataSource{
 		uniswapConfig:   uniswapConfig,
-		valueId:         sourceConfig.ID,
+		valueID:         sourceConfig.ID,
 		updateFrequency: updateFrequency,
-		logger:          utils.DataSourceLogger(UniswapV2DataSourceId),
+		logger:          utils.DataSourceLogger(UniswapV2DataSourceID),
 	}
 }
 
@@ -75,11 +75,11 @@ func (c *uniswapV2DataSource) getUpdate() (types.DataSourceUpdateMap, error) {
 	updates := make(types.DataSourceUpdateMap)
 
 	updateTime := time.Now().UTC().UnixMilli()
-	updates[c.valueId] = types.DataSourceValueUpdate{
+	updates[c.valueID] = types.DataSourceValueUpdate{
 		Time:         time.UnixMilli(updateTime),
-		ValueID:      c.valueId,
+		ValueID:      c.valueID,
 		Value:        updateValue,
-		DataSourceID: UniswapV2DataSourceId,
+		DataSourceID: UniswapV2DataSourceID,
 	}
 
 	return updates, nil
@@ -105,7 +105,7 @@ func (c *uniswapV2DataSource) getPrice() (float64, error) {
 	result, err := sources.CallEthereumFunction(
 		c.contract,
 		getUniswapV2ContractFunction,
-		c.valueId,
+		c.valueID,
 		c.logger,
 	)
 	if err != nil {

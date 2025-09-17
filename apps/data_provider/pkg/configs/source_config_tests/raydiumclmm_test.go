@@ -35,9 +35,9 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 	sourceConfig := config.Sources[0]
 	assert.Equal(t, types.ValueID("SOL_USDC"), sourceConfig.ID)
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, raydiumclmm.RaydiumCLMMDataSourceId, dataSourceId)
+	assert.Equal(t, raydiumclmm.RaydiumCLMMDataSourceID, dataSourceID)
 
 	sourceSpecificConfig, err := raydiumclmm.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)

@@ -18,6 +18,6 @@ func WriterLogger() zerolog.Logger {
 	return baseAppLogger().With().Str("service", "writer").Logger()
 }
 
-func DataSourceLogger(dataSourceId types.DataSourceID) zerolog.Logger {
-	return baseAppLogger().With().Str("service", "data_source").Str("data_source_id", string(dataSourceId)).Logger()
+func DataSourceLogger(dataSourceID types.DataSourceID) zerolog.Logger {
+	return baseAppLogger().With().Str("service", "data_source").Str("data_source_id", string(dataSourceID)).Logger()
 }

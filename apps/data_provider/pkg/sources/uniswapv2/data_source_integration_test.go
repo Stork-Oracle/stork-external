@@ -16,7 +16,7 @@ func TestUniswapDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
 		ID: "WETHUSDT",
 		Config: UniswapV2Config{
-			DataSource:         UniswapV2DataSourceId,
+			DataSource:         UniswapV2DataSourceID,
 			UpdateFrequency:    "5s",
 			HttpProviderUrl:    "https://ethereum-rpc.publicnode.com",
 			ContractAddress:    "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",

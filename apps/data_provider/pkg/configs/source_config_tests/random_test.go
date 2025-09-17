@@ -34,9 +34,9 @@ func TestValidRandomConfig(t *testing.T) {
 	sourceConfig := config.Sources[0]
 	assert.Equal(t, types.ValueID("MY_RANDOM_VALUE"), sourceConfig.ID)
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, random.RandomDataSourceId, dataSourceId)
+	assert.Equal(t, random.RandomDataSourceID, dataSourceID)
 
 	randomConfig, err := random.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)

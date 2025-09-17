@@ -16,7 +16,7 @@ func TestRaydiumCLMMDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
 		ID: "SOL_USDC",
 		Config: RaydiumCLMMConfig{
-			DataSource:      RaydiumCLMMDataSourceId,
+			DataSource:      RaydiumCLMMDataSourceID,
 			UpdateFrequency: "5s",
 			HttpProviderUrl: "https://api.mainnet-beta.solana.com",
 			ContractAddress: "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",

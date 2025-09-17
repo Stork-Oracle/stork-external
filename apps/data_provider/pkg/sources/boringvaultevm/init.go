@@ -10,7 +10,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var BoringVaultEvmDataSourceId types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
+var BoringVaultEvmDataSourceID types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type boringVaultEvmDataSourceFactory struct{}
 
@@ -19,7 +19,7 @@ func (f *boringVaultEvmDataSourceFactory) Build(sourceConfig types.DataProviderS
 }
 
 func init() {
-	sources.RegisterDataSourceFactory(BoringVaultEvmDataSourceId, &boringVaultEvmDataSourceFactory{})
+	sources.RegisterDataSourceFactory(BoringVaultEvmDataSourceID, &boringVaultEvmDataSourceFactory{})
 }
 
 // assert we're satisfying our interfaces

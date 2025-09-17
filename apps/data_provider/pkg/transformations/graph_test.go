@@ -56,8 +56,8 @@ func TestBuildTransformations(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, len(test.expectedOrder), len(transformationGraph.orderedNodes))
 			for i, expected := range test.expectedOrder {
-				actualValueId := transformationGraph.nodeToValueId[transformationGraph.orderedNodes[i]]
-				require.Equal(t, expected, actualValueId)
+				actualValueID := transformationGraph.nodeToValueID[transformationGraph.orderedNodes[i]]
+				require.Equal(t, expected, actualValueID)
 			}
 		})
 	}
@@ -139,13 +139,13 @@ func TestProcessSourceUpdates(t *testing.T) {
 		},
 	}
 
-	knownSourceIds := map[types.ValueID]any{
+	knownSourceIDs := map[types.ValueID]any{
 		"test1": nil,
 		"test2": nil,
 		"test3": nil,
 	}
 
-	transformationGraph, err := BuildTransformationGraph(transformationConfigs, knownSourceIds)
+	transformationGraph, err := BuildTransformationGraph(transformationConfigs, knownSourceIDs)
 	assert.NoError(t, err)
 
 	// source update that's enough info for some but not all affected transformations
@@ -268,12 +268,12 @@ func BenchmarkTransformationGraph_ProcessSourceUpdates(b *testing.B) {
 		})
 	}
 
-	knownSourceIds := map[types.ValueID]any{
+	knownSourceIDs := map[types.ValueID]any{
 		"test_source_a": nil,
 		"test_source_b": nil,
 	}
 
-	transformationGraph, err := BuildTransformationGraph(transformationConfigs, knownSourceIds)
+	transformationGraph, err := BuildTransformationGraph(transformationConfigs, knownSourceIDs)
 	assert.NoError(b, err)
 
 	now := time.Now()

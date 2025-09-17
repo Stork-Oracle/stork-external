@@ -19,7 +19,7 @@ func TestBoringVaultEvmDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
 		ID: "MY_TEST_VALUE_ID",
 		Config: BoringVaultEvmConfig{
-			DataSource:      BoringVaultEvmDataSourceId,
+			DataSource:      BoringVaultEvmDataSourceID,
 			UpdateFrequency: "1s",
 			HttpProviderUrl: "https://rpc.plumenetwork.xyz",
 			ContractAddress: "0xbB2fAA1e1D6183EE3c4177476ce0d70CBd55A388",

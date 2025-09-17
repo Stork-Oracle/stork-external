@@ -11,7 +11,7 @@ To add a new source:
    1. TODOs [data_source_test.go](./pkg/sources/random/data_source_test.go): write unit tests for your data source.
    1. TODOs [config.go](./pkg/sources/random/config.go): add necessary parameters to your configuration object.
    1. TODOs [JSON Schema](https://json-schema.org/) [config](./pkg/configs/resources/source_config_schemas/random.json): make sure this reflects the structure of the configuration object in [config.go](./pkg/sources/random/config.go)
-   1. TODOs [source test](./pkg/configs/source_config_tests/random_test.go): write a test to ensure that your config can be deserialized correctly and that the DataSourceId can be extracted using `GetSourceSpecificConfig`.
+   1. TODOs [source test](./pkg/configs/source_config_tests/random_test.go): write a test to ensure that your config can be deserialized correctly and that the DataSourceID can be extracted using `GetSourceSpecificConfig`.
 1. Submit a Pull Request so other developers can use your new data source!
 
 ## Configuration
