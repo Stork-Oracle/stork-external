@@ -7,33 +7,36 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"fmt"
 
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 )
 
 type EvmSelfServeRunner struct {
-	config              *EvmSelfServeConfig
-	logger              zerolog.Logger
-	websocketServer     *WebsocketServer
-	contractInteractor  *SelfServeContractInteractor
-	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
-	assetStates         map[string]*AssetPushState
+	config             *EvmSelfServeConfig
+	contractInteractor *SelfServeContractInteractor
+	websocketServer    *WebsocketServer
+
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
+	assetStates         map[shared.AssetID]*AssetPushState
 	assetStatesMutex    sync.RWMutex
-	cancel              context.CancelFunc
+
+	cancel context.CancelFunc
+	logger zerolog.Logger
 }
 
-func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc) *EvmSelfServeRunner {
+func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc, logger zerolog.Logger) *EvmSelfServeRunner {
 	return &EvmSelfServeRunner{
 		config:              config,
-		logger:              log.With().Str("component", "evm_runner").Logger(),
-		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature], 1000),
-		assetStates:         make(map[string]*AssetPushState),
+		contractInteractor:  nil,
+		websocketServer:     nil,
+		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature], 1000),
+		assetStates:         make(map[shared.AssetID]*AssetPushState),
 		assetStatesMutex:    sync.RWMutex{},
 		cancel:              cancel,
+		logger:              logger.With().Str("component", "evm_runner").Logger(),
 	}
 }
 
@@ -86,9 +89,9 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
-	for assetId, assetConfig := range r.config.AssetConfig.Assets {
-		r.assetStates[assetId] = &AssetPushState{
-			AssetID:                  assetId,
+	for assetID, assetConfig := range r.config.AssetConfig.Assets {
+		r.assetStates[assetID] = &AssetPushState{
+			AssetID:                  assetID,
 			Config:                   assetConfig,
 			LastPrice:                nil,
 			LastPushTime:             time.Time{},
@@ -97,7 +100,7 @@ func (r *EvmSelfServeRunner) initializeAssetStates() {
 		}
 
 		r.logger.Info().
-			Str("asset", assetId).
+			Str("assetID", string(assetID)).
 			Int("push_interval_sec", assetConfig.PushIntervalSec).
 			Float64("percent_threshold", assetConfig.PercentChangeThreshold).
 			Msg("Initialized asset push state")
@@ -119,26 +122,26 @@ func (r *EvmSelfServeRunner) processValueUpdates(ctx context.Context) {
 	}
 }
 
-func (r *EvmSelfServeRunner) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) {
+func (r *EvmSelfServeRunner) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature]) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
-	assetId := string(signedPriceUpdate.AssetID)
-	assetState, exists := r.assetStates[assetId]
+	assetID := signedPriceUpdate.AssetID
+	assetState, exists := r.assetStates[assetID]
 	if !exists {
-		r.logger.Debug().Str("asset", assetId).Msg("Received update for unconfigured asset")
+		r.logger.Debug().Str("asset", string(assetID)).Msg("Received update for unconfigured asset")
 		return
 	}
 
 	// Convert quantized price to big.Float for comparison
 	priceValue, err := r.convertQuantizedPriceToBigFloat(string(signedPriceUpdate.SignedPrice.QuantizedPrice))
 	if err != nil {
-		r.logger.Error().Err(err).Str("asset", assetId).Msg("Failed to convert quantized price")
+		r.logger.Error().Err(err).Str("asset", string(assetID)).Msg("Failed to convert quantized price")
 		return
 	}
 
 	r.logger.Debug().
-		Str("asset", assetId).
+		Str("asset", string(assetID)).
 		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
 		Msg("Processing signed price update")
 
@@ -148,7 +151,7 @@ func (r *EvmSelfServeRunner) handleSignedPriceUpdate(ctx context.Context, signed
 	// Check if we should trigger a push based on price change
 	if r.shouldPushBasedOnDelta(assetState, priceValue) {
 		r.logger.Info().
-			Str("asset", assetId).
+			Str("asset", string(assetID)).
 			Str("old_price", assetState.LastPrice.Text('f', 6)).
 			Str("new_price", priceValue.Text('f', 6)).
 			Msg("Triggering push due to price delta threshold")
@@ -196,10 +199,10 @@ func (r *EvmSelfServeRunner) checkTimerTriggers(ctx context.Context) {
 	defer r.assetStatesMutex.Unlock()
 
 	now := time.Now()
-	for assetId, state := range r.assetStates {
+	for assetID, state := range r.assetStates {
 		if now.After(state.NextPushTime) && state.PendingSignedPriceUpdate != nil {
 			r.logger.Info().
-				Str("asset", assetId).
+				Str("asset", string(assetID)).
 				Time("next_push_time", state.NextPushTime).
 				Msg("Triggering push due to time interval")
 
@@ -222,7 +225,7 @@ func (r *EvmSelfServeRunner) triggerPush(parentCtx context.Context, state *Asset
 		if err != nil {
 			r.logger.Error().
 				Err(err).
-				Str("asset", state.AssetID).
+				Str("asset", string(state.AssetID)).
 				Msg("Failed to push value to contract")
 			return
 		}
@@ -237,7 +240,7 @@ func (r *EvmSelfServeRunner) triggerPush(parentCtx context.Context, state *Asset
 		r.assetStatesMutex.Unlock()
 
 		r.logger.Info().
-			Str("asset", state.AssetID).
+			Str("asset", string(state.AssetID)).
 			Str("value", state.LastPrice.Text('f', 6)).
 			Msg("Successfully pushed value to contract")
 	}()

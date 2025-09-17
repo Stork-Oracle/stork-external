@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
 
 	self_serve_evm "github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/evm"
@@ -37,10 +36,10 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(self_serve_evm.EvmSelfServeCmd)
+	rootCmd.AddCommand(self_serve_evm.EvmSelfServeCmd())
 
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 }

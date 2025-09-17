@@ -14,18 +14,18 @@ import (
 	"gopkg.in/yaml.v2"
 
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 )
 
 type AssetPushConfig struct {
-	AssetID                string  `yaml:"asset_id"`
-	EncodedAssetID         string  `yaml:"encoded_asset_id"`
-	PushIntervalSec        int     `yaml:"push_interval_sec"`
-	PercentChangeThreshold float64 `yaml:"percent_change_threshold"`
+	AssetID                shared.AssetID        `yaml:"asset_id"`
+	EncodedAssetID         shared.EncodedAssetID `yaml:"encoded_asset_id"`
+	PushIntervalSec        int                   `yaml:"push_interval_sec"`
+	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
 }
 
 type AssetConfigFile struct {
-	Assets map[string]AssetPushConfig `yaml:"assets"`
+	Assets map[shared.AssetID]AssetPushConfig `yaml:"assets"`
 }
 
 type EvmSelfServeConfig struct {
@@ -39,11 +39,11 @@ type EvmSelfServeConfig struct {
 }
 
 type AssetPushState struct {
-	AssetID                  string
+	AssetID                  shared.AssetID
 	Config                   AssetPushConfig
 	LastPrice                *big.Float
 	LastPushTime             time.Time
-	PendingSignedPriceUpdate *publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
+	PendingSignedPriceUpdate *publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
 	NextPushTime             time.Time
 }
 

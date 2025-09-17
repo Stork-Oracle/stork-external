@@ -4,20 +4,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
 
-type PublisherAgentRunner[T signer.Signature] struct {
+type PublisherAgentRunner[T shared.Signature] struct {
 	config                      StorkPublisherAgentConfig
-	signatureType               signer.SignatureType
+	signatureType               shared.SignatureType
 	logger                      zerolog.Logger
 	ValueUpdateCh               chan ValueUpdate
 	signedPriceBatchCh          chan SignedPriceUpdateBatch[T]
 	registryClient              *RegistryClient
-	seededBrokers               map[BrokerPublishUrl]map[AssetID]struct{}
-	assetsByBroker              map[BrokerPublishUrl]map[AssetID]struct{}
+	seededBrokers               map[BrokerPublishUrl]map[shared.AssetID]struct{}
+	assetsByBroker              map[BrokerPublishUrl]map[shared.AssetID]struct{}
 	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
 	outgoingConnectionsLock     sync.RWMutex
 	signer                      signer.Signer[T]
@@ -25,11 +26,11 @@ type PublisherAgentRunner[T signer.Signature] struct {
 	publisherMetadataReporter   *PublisherMetadataReporter
 }
 
-func NewPublisherAgentRunner[T signer.Signature](
+func NewPublisherAgentRunner[T shared.Signature](
 	config StorkPublisherAgentConfig,
 	signer signer.Signer[T],
 	storkAuthSigner signer.StorkAuthSigner,
-	signatureType signer.SignatureType,
+	signatureType shared.SignatureType,
 	logger zerolog.Logger,
 ) *PublisherAgentRunner[T] {
 	registryClient := NewRegistryClient(
@@ -48,9 +49,9 @@ func NewPublisherAgentRunner[T signer.Signature](
 		config,
 	)
 
-	seededBrokers := make(map[BrokerPublishUrl]map[AssetID]struct{})
+	seededBrokers := make(map[BrokerPublishUrl]map[shared.AssetID]struct{})
 	for _, broker := range config.SeededBrokers {
-		assetIDs := make(map[AssetID]struct{})
+		assetIDs := make(map[shared.AssetID]struct{})
 		for _, asset := range broker.AssetIDs {
 			assetIDs[asset] = struct{}{}
 		}
@@ -66,7 +67,7 @@ func NewPublisherAgentRunner[T signer.Signature](
 		signedPriceBatchCh:          make(chan SignedPriceUpdateBatch[T], 4096),
 		registryClient:              registryClient,
 		seededBrokers:               seededBrokers,
-		assetsByBroker:              make(map[BrokerPublishUrl]map[AssetID]struct{}),
+		assetsByBroker:              make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
 		signer:                      signer,
@@ -174,7 +175,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 	processor.Run()
 }
 
-func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[AssetID]struct{}) {
+func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[shared.AssetID]struct{}) {
 	assets := NewOutgoingWebsocketConnectionAssets[T](assetIds)
 
 	for {

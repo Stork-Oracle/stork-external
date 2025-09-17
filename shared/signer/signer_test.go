@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,10 +15,10 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
-	expectedTimestampedSig := &TimestampedSignature[*EvmSignature]{
+	expectedTimestampedSig := &shared.TimestampedSignature[*shared.EvmSignature]{
 		TimestampNano: 1710191092123456789,
 		MsgHash:       "0x4a8e2a9c736a3a2e315facf28ba95e126e37b57646481078e4f0809262c6560b",
-		Signature: &EvmSignature{
+		Signature: &shared.EvmSignature{
 			R: "0x14e378dcf486b15c157fb6af80fc275b895bd1cae818fc4597a6b4a1571a831e",
 			S: "0x79b4823a159988c04576ff71bc3ca168a631ac666094b0f4157e59b2892f6490",
 			V: "0x1b",
@@ -33,10 +34,10 @@ func TestSigner_SignPublisherPrice_Evm(t *testing.T) {
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 
 	// negative test
-	expectedTimestampedSig = &TimestampedSignature[*EvmSignature]{
+	expectedTimestampedSig = &shared.TimestampedSignature[*shared.EvmSignature]{
 		TimestampNano: 1710191092123456789,
 		MsgHash:       "0x73355dda199a6c0d3e18538067a5e9a87b4442322b374ff5bb34dda618071dc9",
-		Signature: &EvmSignature{
+		Signature: &shared.EvmSignature{
 			R: "0x663b3662c8ee3de785341c9844b9a001a1270b9502b6896f4bbb237f41a65daa",
 			S: "0x58537b09639fc399745cd9c5d6dbeb21fccc385d5c6d661e48bc3b84cd36b0c6",
 			V: "0x1c",
@@ -64,10 +65,10 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating signer: %v", err)
 	}
-	expectedTimestampedSig := &TimestampedSignature[*StarkSignature]{
+	expectedTimestampedSig := &shared.TimestampedSignature[*shared.StarkSignature]{
 		TimestampNano: 1708940577123456789,
 		MsgHash:       "0x7cc1cf795d076cfff8b5920adb2dcc0d13813ed4519220a36d693e6084abe1c",
-		Signature: &StarkSignature{
+		Signature: &shared.StarkSignature{
 			R: "0x60bbbb4142bca69a5278ecccb59964e3449e43915b02e5c729b9752a16309ac",
 			S: "0x4cdbe54b985f6fb4495398f94554883ead7cbb983597dc7ea8b9e32dfe95c27",
 		},
@@ -83,10 +84,10 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	// this is not a guarantee that payloads with negative prices are signed correctly.
 	// Testing against starknet should be done with negative prices in order to confirm that the stark signer can
 	// properly handle negative prices.
-	expectedNegativeTimestampedSig := &TimestampedSignature[*StarkSignature]{
+	expectedNegativeTimestampedSig := &shared.TimestampedSignature[*shared.StarkSignature]{
 		TimestampNano: 1708940577123456789,
 		MsgHash:       "0x223b3bf417894341325c99275acb14714f3f94caf7386f434dafd496443eb1",
-		Signature: &StarkSignature{
+		Signature: &shared.StarkSignature{
 			R: "0x9dffaea089d280d45180cbbddde9336a4e2c926234ae4d58ae9be8878821e6",
 			S: "0x6777f741610f8ebe69707ab12bda9c6efc03cf6aafe919b187d226ac8ece6b8",
 		},
@@ -102,10 +103,10 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.Equal(t, expectedNegativeTimestampedSig, signedNegativePriceUpdate)
 
 	// long asset name
-	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
+	expectedTimestampedSig = &shared.TimestampedSignature[*shared.StarkSignature]{
 		TimestampNano: 1708940577123456789,
 		MsgHash:       "0x7acab52851a7b006dbf5d350f8dda7438f843204a3612030b7b0178ff93b37b",
-		Signature: &StarkSignature{
+		Signature: &shared.StarkSignature{
 			R: "0x3fbe61ab618ed32e4d7a9cb3e9c9be8f4a64128eba6ddd12cd6058bdae546c4",
 			S: "0x31a930c2989244043c86b138ea75ba2bbb18f51012c6b00fe8e4d93ce03c030",
 		},

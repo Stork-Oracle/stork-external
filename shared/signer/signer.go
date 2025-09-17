@@ -17,6 +17,7 @@ import (
 	"unsafe"
 
 	"github.com/NethermindEth/juno/core/felt"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -38,14 +39,14 @@ const (
 	signatureTypeHeader = "X-Signature-Type"
 )
 
-type Signer[T Signature] interface {
+type Signer[T shared.Signature] interface {
 	SignPublisherPrice(
 		publishTimestamp int64,
 		asset string,
 		quantizedValue string,
-	) (timestampedSig *TimestampedSignature[T], encodedAssetId string, err error)
-	GetPublisherKey() PublisherKey
-	GetSignatureType() SignatureType
+	) (timestampedSig *shared.TimestampedSignature[T], encodedAssetId string, err error)
+	GetPublisherKey() shared.PublisherKey
+	GetSignatureType() shared.SignatureType
 }
 
 type EvmSigner struct {
@@ -106,7 +107,7 @@ func (s *EvmSigner) SignPublisherPrice(
 	publishTimestamp int64,
 	asset string,
 	quantizedValue string,
-) (timestampedSig *TimestampedSignature[*EvmSignature], encodedAssetId string, err error) {
+) (timestampedSig *shared.TimestampedSignature[*shared.EvmSignature], encodedAssetId string, err error) {
 	timestampBigInt := big.NewInt(publishTimestamp / 1_000_000_000)
 
 	quantizedPriceBigInt := new(big.Int)
@@ -131,27 +132,27 @@ func (s *EvmSigner) SignPublisherPrice(
 		return nil, "", err
 	}
 
-	timestampedSignature := TimestampedSignature[*EvmSignature]{
+	timestampedSignature := shared.TimestampedSignature[*shared.EvmSignature]{
 		Signature:     rsv,
-		TimestampNano: publishTimestamp,
+		TimestampNano: uint64(publishTimestamp),
 		MsgHash:       msgHash,
 	}
 	return &timestampedSignature, asset, nil
 }
 
-func (s *EvmSigner) GetPublisherKey() PublisherKey {
-	return PublisherKey(s.publicKeyAddress.Hex())
+func (s *EvmSigner) GetPublisherKey() shared.PublisherKey {
+	return shared.PublisherKey(s.publicKeyAddress.Hex())
 }
 
-func (s *EvmSigner) GetSignatureType() SignatureType {
-	return EvmSignatureType
+func (s *EvmSigner) GetSignatureType() shared.SignatureType {
+	return shared.EvmSignatureType
 }
 
 func (s *StarkSigner) SignPublisherPrice(
 	publishTimestamp int64,
 	asset string,
 	quantizedValue string,
-) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
+) (timestampedSig *shared.TimestampedSignature[*shared.StarkSignature], encodedAssetId string, err error) {
 	// Convert asset to hex string
 	assetHex := hex.EncodeToString([]byte(asset))
 	assetHexPadded := assetHex
@@ -195,15 +196,15 @@ func (s *StarkSigner) SignPublisherPrice(
 		return nil, "", err
 	}
 
-	starkSignature := &StarkSignature{
+	starkSignature := &shared.StarkSignature{
 		R: "0" + trimLeadingZeros(sigRFelt.String()),
 		S: "0" + trimLeadingZeros(sigSFelt.String()),
 	}
 	// trim leading 0s
 	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHashFelt.String())))
-	timestampedSignature := TimestampedSignature[*StarkSignature]{
+	timestampedSignature := shared.TimestampedSignature[*shared.StarkSignature]{
 		Signature:     starkSignature,
-		TimestampNano: publishTimestamp,
+		TimestampNano: uint64(publishTimestamp),
 		MsgHash:       msgHash,
 	}
 	externalAssetId := "0x" + assetHexPadded + s.oracleNameInt.Text(16)
@@ -211,12 +212,12 @@ func (s *StarkSigner) SignPublisherPrice(
 	return &timestampedSignature, externalAssetId, nil
 }
 
-func (s *StarkSigner) GetPublisherKey() PublisherKey {
-	return PublisherKey(s.publicKey)
+func (s *StarkSigner) GetPublisherKey() shared.PublisherKey {
+	return shared.PublisherKey(s.publicKey)
 }
 
-func (s *StarkSigner) GetSignatureType() SignatureType {
-	return StarkSignatureType
+func (s *StarkSigner) GetSignatureType() shared.SignatureType {
+	return shared.StarkSignatureType
 }
 
 type StorkAuthSigner interface {
@@ -347,12 +348,12 @@ func signData(privateKey *ecdsa.PrivateKey, payload [][]byte) (string, []byte, e
 	return payloadHash.String(), signature, nil
 }
 
-func bytesToRsvSignature(signature []byte) (rsv *EvmSignature, err error) {
+func bytesToRsvSignature(signature []byte) (rsv *shared.EvmSignature, err error) {
 	r := hex.EncodeToString(signature[:32])
 	s := hex.EncodeToString(signature[32:64])
 	v := hex.EncodeToString([]byte{signature[64] + 27})
 
-	return &EvmSignature{R: "0x" + r, S: "0x" + s, V: "0x" + v}, nil
+	return &shared.EvmSignature{R: "0x" + r, S: "0x" + s, V: "0x" + v}, nil
 }
 
 func bytesToFieldElement(b []byte) (*felt.Felt, error) {

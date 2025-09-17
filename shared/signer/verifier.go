@@ -11,22 +11,23 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyAuth(timestampNano int64, publicKey PublisherKey, signatureType SignatureType, signature string) error {
+func VerifyAuth(timestampNano int64, publicKey shared.PublisherKey, signatureType shared.SignatureType, signature string) error {
 	strippedSignature := strip0x(signature)
 
 	switch signatureType {
-	case EvmSignatureType:
+	case shared.EvmSignatureType:
 		if len(strippedSignature) != 130 {
 			return errors.New("invalid EVM signature length")
 		}
 		r := "0x" + strippedSignature[:64]
 		s := "0x" + strippedSignature[64:128]
 		v := "0x" + strippedSignature[128:]
-		evmSignature := EvmSignature{
+		evmSignature := shared.EvmSignature{
 			R: r,
 			S: s,
 			V: v,
@@ -36,13 +37,13 @@ func VerifyAuth(timestampNano int64, publicKey PublisherKey, signatureType Signa
 			return fmt.Errorf("invalid evm auth signature: %w", err)
 		}
 		return nil
-	case StarkSignatureType:
+	case shared.StarkSignatureType:
 		if len(strippedSignature) != 128 {
 			return errors.New("invalid Stark signature length")
 		}
 		r := "0x" + strippedSignature[:64]
 		s := "0x" + strippedSignature[64:128]
-		starkSignature := StarkSignature{
+		starkSignature := shared.StarkSignature{
 			R: r,
 			S: s,
 		}
@@ -66,14 +67,14 @@ func VerifyPublisherPrice(
 	publishTimestampNano int64,
 	externalAssetId string,
 	quantizedValue string,
-	publisherKey PublisherKey,
-	signatureType SignatureType,
+	publisherKey shared.PublisherKey,
+	signatureType shared.SignatureType,
 	signature any,
 ) error {
 	switch signatureType {
-	case EvmSignatureType:
+	case shared.EvmSignatureType:
 		return VerifyEvmPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, signature)
-	case StarkSignatureType:
+	case shared.StarkSignatureType:
 		return VerifyStarkPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, signature)
 	default:
 		return fmt.Errorf("invalid signature type: %s", signatureType)
@@ -84,10 +85,10 @@ func VerifyEvmPublisherPrice(
 	publishTimestampNano int64,
 	externalAssetId string,
 	quantizedValue string,
-	publisherKey PublisherKey,
+	publisherKey shared.PublisherKey,
 	signature any,
 ) error {
-	evmSignature := signature.(EvmSignature)
+	evmSignature := signature.(shared.EvmSignature)
 	publisherAddress := common.HexToAddress(string(publisherKey))
 	payload := getPublisherEvmPricePayload(
 		publishTimestampNano,
@@ -105,7 +106,7 @@ func VerifyEvmPublisherPrice(
 	return nil
 }
 
-func VerifyEvmSignature(publisherAddress common.Address, payload [][]byte, signature EvmSignature) (bool, error) {
+func VerifyEvmSignature(publisherAddress common.Address, payload [][]byte, signature shared.EvmSignature) (bool, error) {
 	_, prefixedHash := getEvmHashes(payload)
 	storkSignatureBytes, err := evmSignatureToBytes(signature)
 	if err != nil {
@@ -130,7 +131,7 @@ func VerifyStarkPublisherPrice(
 	publishTimestampNano int64,
 	externalAssetId string,
 	quantizedValue string,
-	publisherKey PublisherKey,
+	publisherKey shared.PublisherKey,
 	signature any,
 ) error {
 	xInt, yInt := getPublisherPriceStarkXY(publishTimestampNano, externalAssetId, quantizedValue)
@@ -142,8 +143,8 @@ func VerifyStarkPublisherPrice(
 	}
 }
 
-func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey PublisherKey, signature any) bool {
-	starkSignature := signature.(StarkSignature)
+func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey shared.PublisherKey, signature any) bool {
+	starkSignature := signature.(shared.StarkSignature)
 	publicKeyStr, _ := strings.CutPrefix(string(publicKey), "0x")
 	pubKeyInt := new(big.Int)
 	pubKeyInt.SetString(publicKeyStr, 16)
