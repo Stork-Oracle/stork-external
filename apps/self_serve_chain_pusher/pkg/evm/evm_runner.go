@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"fmt"
 
@@ -22,7 +23,7 @@ type EvmSelfServeRunner struct {
 	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
 	assetStates         map[shared.AssetID]*AssetPushState
 	assetStatesMutex    sync.RWMutex
-	cancel context.CancelFunc
+	cancel              context.CancelFunc
 }
 
 func NewEvmSelfServeRunner(config *EvmSelfServeConfig, cancel context.CancelFunc, logger zerolog.Logger) *EvmSelfServeRunner {
