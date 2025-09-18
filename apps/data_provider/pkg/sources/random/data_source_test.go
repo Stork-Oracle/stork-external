@@ -11,12 +11,12 @@ import (
 func TestRandomDataSource_getUpdate(t *testing.T) {
 	minValue := 101.0
 	maxValue := 105.0
-	valueId := types.ValueId("TEST_RANDOM")
+	valueID := types.ValueID("TEST_RANDOM")
 
 	config := types.DataProviderSourceConfig{
-		Id: valueId,
+		ID: valueID,
 		Config: RandomConfig{
-			DataSource:      RandomDataSourceId,
+			DataSource:      RandomDataSourceID,
 			UpdateFrequency: "50ms",
 			MinValue:        minValue,
 			MaxValue:        maxValue,
@@ -29,10 +29,10 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	// update has a valid value, valid timestamp, and expected data source id and value id
 	updateMap1, err := dataSource.getUpdate()
 	assert.NoError(t, err)
-	update1, exists := updateMap1[valueId]
+	update1, exists := updateMap1[valueID]
 	assert.True(t, exists)
-	assert.Equal(t, RandomDataSourceId, update1.DataSourceId)
-	assert.Equal(t, valueId, update1.ValueId)
+	assert.Equal(t, RandomDataSourceID, update1.DataSourceID)
+	assert.Equal(t, valueID, update1.ValueID)
 	time1 := update1.Time
 	assert.Greater(t, time1, now)
 	value1 := update1.Value
@@ -42,10 +42,10 @@ func TestRandomDataSource_getUpdate(t *testing.T) {
 	// second update has greater timestamp than first and not exactly the same value
 	updateMap2, err := dataSource.getUpdate()
 	assert.NoError(t, err)
-	update2, exists := updateMap2[valueId]
+	update2, exists := updateMap2[valueID]
 	assert.True(t, exists)
-	assert.Equal(t, RandomDataSourceId, update2.DataSourceId)
-	assert.Equal(t, valueId, update2.ValueId)
+	assert.Equal(t, RandomDataSourceID, update2.DataSourceID)
+	assert.Equal(t, valueID, update2.ValueID)
 	time2 := update2.Time
 	assert.Greater(t, time2, time1)
 	value2 := update2.Value
