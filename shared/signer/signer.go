@@ -23,6 +23,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var ErrBigIntTooLarge = errors.New("big int is too large to fit in 32 bytes")
+
 // gmorkworld in ascii
 const (
 	StorkMagicNumber             = "103109111114107119111114108100"
@@ -152,6 +154,7 @@ func (s *StarkSigner) SignPublisherPrice(
 	asset string,
 	quantizedValue string,
 ) (timestampedSig *TimestampedSignature[*StarkSignature], encodedAssetId string, err error) {
+
 	// Convert asset to hex string
 	assetHex := hex.EncodeToString([]byte(asset))
 	assetHexPadded := assetHex
@@ -170,9 +173,17 @@ func (s *StarkSigner) SignPublisherPrice(
 	sigRBuf := make([]byte, 32)
 	sigSBuf := make([]byte, 32)
 
+	xIntBuf, err := createStarkBufferFromBigIntAbs(xInt)
+	if err != nil {
+		return nil, "", err
+	}
+	yIntBuf, err := createStarkBufferFromBigIntAbs(yInt)
+	if err != nil {
+		return nil, "", err
+	}
 	hashAndSignStatus := C.hash_and_sign(
-		createBufferFromBigInt(xInt),
-		createBufferFromBigInt(yInt),
+		xIntBuf,
+		yIntBuf,
 		createBufferFromBytes(s.pkBytes),
 		createBufferFromBytes(pedersonHashBuf),
 		createBufferFromBytes(sigRBuf),
@@ -376,10 +387,19 @@ func createBufferFromBytes(buf []byte) *C.uint8_t {
 	return (*C.uint8_t)(unsafe.Pointer(&buf[0]))
 }
 
-func createBufferFromBigInt(i *big.Int) *C.uint8_t {
+// createStarkBufferFromBigIntAbs creates a 32-byte buffer from a big.Int and returns a pointer to the buffer in the form of a C uint8_t.
+// We enforce only use 251 bits of the buffer in order to fit into the finite field of the Stark curve.
+// However, we use 32 bytes as it's the minimum number of bytes that can hold the full 251 bits.
+// Returns an error if the big.Int is too large to fit in 251 bits.
+// This function assumes the big.Int is positive, and uses the absolute value of the big.Int regardless of sign.
+func createStarkBufferFromBigIntAbs(i *big.Int) (*C.uint8_t, error) {
+	//nolint:mnd // 251 is a magic number that is tied to the Stark curve.
+	if i.BitLen() > 251 {
+		return nil, ErrBigIntTooLarge
+	}
 	bytes := make([]byte, 32)
 	i.FillBytes(bytes)
-	return (*C.uint8_t)(unsafe.Pointer(&bytes[0]))
+	return (*C.uint8_t)(unsafe.Pointer(&bytes[0])), nil
 }
 
 // bigIntToTwosComplement32 converts a big.Int to a 32-byte two's complement representation.
