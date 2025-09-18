@@ -21,5 +21,7 @@
     "[sway]": {
         "editor.defaultFormatter": "FuelLabs.sway-vscode-plugin"
     },
-    "makefile.configureOnOpen": false
+    "cSpell.words": [
+        "interactor"
+    ]
 }

@@ -33,17 +33,17 @@ func TestValidRaydiumCLMMConfig(t *testing.T) {
 	assert.Equal(t, 1, len(config.Sources))
 
 	sourceConfig := config.Sources[0]
-	assert.Equal(t, types.ValueId("SOL_USDC"), sourceConfig.Id)
+	assert.Equal(t, types.ValueID("SOL_USDC"), sourceConfig.ID)
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, raydiumclmm.RaydiumCLMMDataSourceId, dataSourceId)
+	assert.Equal(t, raydiumclmm.RaydiumCLMMDataSourceID, dataSourceID)
 
 	sourceSpecificConfig, err := raydiumclmm.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
 	assert.NotNil(t, sourceSpecificConfig)
 
-	assert.Equal(t, types.DataSourceId("raydiumclmm"), sourceSpecificConfig.DataSource)
+	assert.Equal(t, types.DataSourceID("raydiumclmm"), sourceSpecificConfig.DataSource)
 	assert.Equal(t, "5s", sourceSpecificConfig.UpdateFrequency)
 	assert.Equal(t, "https://eclipse.helius-rpc.com/", sourceSpecificConfig.HttpProviderUrl)
 	assert.Equal(t, "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj", sourceSpecificConfig.ContractAddress)

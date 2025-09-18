@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/rs/zerolog"
 )
@@ -20,8 +21,8 @@ const (
 )
 
 type PublisherMetadata struct {
-	PublisherKey          signer.PublisherKey       `json:"publisher_key"`
-	SignatureType         signer.SignatureType      `json:"signature_type"`
+	PublisherKey          shared.PublisherKey       `json:"publisher_key"`
+	SignatureType         shared.SignatureType      `json:"signature_type"`
 	PublisherAgentVersion string                    `json:"publisher_agent_version"`
 	Architecture          string                    `json:"architecture"`
 	PublicIp              string                    `json:"public_ip"`
@@ -36,8 +37,8 @@ type AwsMetadata struct {
 }
 
 type PublisherMetadataReporter struct {
-	publicKey                signer.PublisherKey
-	signatureType            signer.SignatureType
+	publicKey                shared.PublisherKey
+	signatureType            shared.SignatureType
 	reportPeriod             time.Duration
 	publisherMetadataBaseUrl string
 	storkAuthSigner          signer.StorkAuthSigner
@@ -46,8 +47,8 @@ type PublisherMetadataReporter struct {
 }
 
 func NewPublisherMetadataReporter(
-	publicKey signer.PublisherKey,
-	signatureType signer.SignatureType,
+	publicKey shared.PublisherKey,
+	signatureType shared.SignatureType,
 	reportPeriod time.Duration,
 	publisherMetadataBaseUrl string,
 	storkAuthSigner signer.StorkAuthSigner,

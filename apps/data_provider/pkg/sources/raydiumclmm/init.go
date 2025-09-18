@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var RaydiumCLMMDataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var RaydiumCLMMDataSourceID types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type raydiumCLMMDataSourceFactory struct{}
 
@@ -18,7 +18,7 @@ func (f *raydiumCLMMDataSourceFactory) Build(sourceConfig types.DataProviderSour
 }
 
 func init() {
-	sources.RegisterDataSourceFactory(RaydiumCLMMDataSourceId, &raydiumCLMMDataSourceFactory{})
+	sources.RegisterDataSourceFactory(RaydiumCLMMDataSourceID, &raydiumCLMMDataSourceFactory{})
 }
 
 var (

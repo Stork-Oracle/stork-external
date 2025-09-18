@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -193,7 +194,7 @@ func TestShouldUpdateAsset(t *testing.T) {
 			latestStorkPrice := types.AggregatedSignedPrice{
 				TimestampNano: tt.storkTimestampNano,
 				StorkSignedPrice: &types.StorkSignedPrice{
-					QuantizedPrice: types.QuantizedPrice(tt.storkPriceStr),
+					QuantizedPrice: shared.QuantizedPrice(tt.storkPriceStr),
 				},
 			}
 
@@ -210,7 +211,7 @@ func TestInitializeAssets(t *testing.T) {
 	tests := []struct {
 		name            string
 		configContent   string
-		expectedAssets  []types.AssetID
+		expectedAssets  []shared.AssetID
 		expectedEncoded []types.InternalEncodedAssetID
 		wantError       bool
 		errorContains   string
@@ -228,7 +229,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160"
     percent_change_threshold: 2.0
     fallback_period_sec: 600`,
-			expectedAssets: []types.AssetID{"BTCUSD", "ETHUSD"},
+			expectedAssets: []shared.AssetID{"BTCUSD", "ETHUSD"},
 			expectedEncoded: []types.InternalEncodedAssetID{
 				{
 					0x74,
@@ -309,7 +310,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837"
     percent_change_threshold: 0.5
     fallback_period_sec: 120`,
-			expectedAssets: []types.AssetID{"SOLUSD"},
+			expectedAssets: []shared.AssetID{"SOLUSD"},
 			expectedEncoded: []types.InternalEncodedAssetID{
 				{
 					0x1d,
@@ -351,7 +352,7 @@ func TestInitializeAssets(t *testing.T) {
 		{
 			name:            "empty config",
 			configContent:   `assets: {}`,
-			expectedAssets:  []types.AssetID{},
+			expectedAssets:  []shared.AssetID{},
 			expectedEncoded: []types.InternalEncodedAssetID{},
 			wantError:       false,
 		},
@@ -363,7 +364,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0xINVALID_HEX"
     percent_change_threshold: 1.0
     fallback_period_sec: 300`,
-			expectedAssets:  []types.AssetID{},
+			expectedAssets:  []shared.AssetID{},
 			expectedEncoded: []types.InternalEncodedAssetID{},
 			wantError:       true,
 			errorContains:   "failed to decode hex string",
@@ -376,7 +377,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0x1234567890123456789012345678901234567890123456789012345678901234"
     percent_change_threshold: 1.0
     fallback_period_sec: 300`,
-			expectedAssets: []types.AssetID{"TEST"},
+			expectedAssets: []shared.AssetID{"TEST"},
 			expectedEncoded: []types.InternalEncodedAssetID{
 				{
 					0x12,
@@ -584,7 +585,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 				found := false
 
 				for _, value := range latestStorkValueMap {
-					if value.AssetID == types.AssetID(tt.expectedAssetID) {
+					if value.AssetID == shared.AssetID(tt.expectedAssetID) {
 						found = true
 
 						assert.Equal(t, tt.valueUpdate.TimestampNano, value.TimestampNano)

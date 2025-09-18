@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
@@ -24,7 +25,7 @@ type StorkAggregatorWebsocketClient struct {
 	logger       zerolog.Logger
 	baseEndpoint string
 	authToken    string
-	assetIDs     []types.AssetID
+	assetIDs     []shared.AssetID
 	// Default values for conn and reconnAttempts. Call connect() to set them properly.
 	conn           *websocket.Conn
 	reconnAttempts int
@@ -33,7 +34,7 @@ type StorkAggregatorWebsocketClient struct {
 // NewStorkAggregatorWebsocketClient creates a new StorkAggregatorWebsocketClient with the given parameters.
 func NewStorkAggregatorWebsocketClient(
 	baseEndpoint, authToken string,
-	assetIDs []types.AssetID,
+	assetIDs []shared.AssetID,
 	logger *zerolog.Logger,
 ) StorkAggregatorWebsocketClient {
 	return StorkAggregatorWebsocketClient{
@@ -62,8 +63,8 @@ func (c *StorkAggregatorWebsocketClient) Run(priceChan chan types.AggregatedSign
 
 // SubscriberMessage is a message to subscribe to one or more feeds.
 type SubscriberMessage struct {
-	Type string          `json:"type"`
-	Data []types.AssetID `json:"data"`
+	Type string           `json:"type"`
+	Data []shared.AssetID `json:"data"`
 }
 
 func (c *StorkAggregatorWebsocketClient) readLoop(priceChan chan types.AggregatedSignedPrice) {

@@ -31,7 +31,7 @@ type boringVaultEvmDataSource struct {
 	logger               zerolog.Logger
 	boringVaultEvmConfig BoringVaultEvmConfig
 	updateFrequency      time.Duration
-	valueId              types.ValueId
+	valueID              types.ValueID
 	contract             *bind.BoundContract
 	decimals             int8
 }
@@ -49,9 +49,9 @@ func newBoringVaultEvmDataSource(sourceConfig types.DataProviderSourceConfig) *b
 
 	return &boringVaultEvmDataSource{
 		boringVaultEvmConfig: boringVaultEvmConfig,
-		valueId:              sourceConfig.Id,
+		valueID:              sourceConfig.ID,
 		updateFrequency:      updateFrequency,
-		logger:               utils.DataSourceLogger(BoringVaultEvmDataSourceId),
+		logger:               utils.DataSourceLogger(BoringVaultEvmDataSourceID),
 	}
 }
 
@@ -81,11 +81,11 @@ func (r boringVaultEvmDataSource) getUpdate() (types.DataSourceUpdateMap, error)
 	updates := make(types.DataSourceUpdateMap)
 
 	updateTime := time.Now().UTC().UnixMilli()
-	updates[r.valueId] = types.DataSourceValueUpdate{
+	updates[r.valueID] = types.DataSourceValueUpdate{
 		Time:         time.UnixMilli(updateTime),
-		ValueId:      r.valueId,
+		ValueID:      r.valueID,
 		Value:        updateValue,
-		DataSourceId: BoringVaultEvmDataSourceId,
+		DataSourceID: BoringVaultEvmDataSourceID,
 	}
 
 	return updates, nil
@@ -105,7 +105,7 @@ func (r *boringVaultEvmDataSource) initializeBoundContract() error {
 	decimals, err := sources.CallEthereumFunction(
 		contract,
 		getDecimalsContractFunction,
-		r.valueId,
+		r.valueID,
 		r.logger,
 	)
 	if err != nil {
@@ -122,7 +122,7 @@ func (r *boringVaultEvmDataSource) getPrice() (float64, error) {
 	result, err := sources.CallEthereumFunction(
 		r.contract,
 		getBoringVaultEvmContractFunction,
-		r.valueId,
+		r.valueID,
 		r.logger,
 	)
 	if err != nil {

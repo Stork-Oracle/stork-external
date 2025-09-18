@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 )
 
 const (
@@ -24,23 +24,22 @@ const (
 	WriteTimeout     = 10 * time.Second
 )
 
-
 type WebsocketServer struct {
-	port           string
-	upgrader       websocket.Upgrader
-	signedPriceUpdateCh  chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]
-	logger         zerolog.Logger
-	server         *http.Server
-	mutex          sync.RWMutex
-	connections    map[*websocket.Conn]bool
+	port                string
+	upgrader            websocket.Upgrader
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
+	logger              zerolog.Logger
+	server              *http.Server
+	mutex               sync.RWMutex
+	connections         map[*websocket.Conn]bool
 }
 
-func NewWebsocketServer(port string, signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*signer.EvmSignature]) *WebsocketServer {
+func NewWebsocketServer(port string, signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]) *WebsocketServer {
 	return &WebsocketServer{
-		port:          port,
+		port:                port,
 		signedPriceUpdateCh: signedPriceUpdateCh,
-		logger:        log.With().Str("component", "websocket_server").Logger(),
-		connections:   make(map[*websocket.Conn]bool),
+		logger:              log.With().Str("component", "websocket_server").Logger(),
+		connections:         make(map[*websocket.Conn]bool),
 		upgrader: websocket.Upgrader{
 			HandshakeTimeout:  HandshakeTimeout,
 			ReadBufferSize:    ReadBufferSize,
@@ -128,7 +127,7 @@ func (ws *WebsocketServer) handleConnection(conn *websocket.Conn) {
 }
 
 func (ws *WebsocketServer) processMessage(data []byte) error {
-	var msg publisher_agent.WebsocketMessage[publisher_agent.SignedPriceUpdateBatch[*signer.EvmSignature]]
+	var msg publisher_agent.WebsocketMessage[publisher_agent.SignedPriceUpdateBatch[*shared.EvmSignature]]
 	if err := json.Unmarshal(data, &msg); err != nil {
 		return fmt.Errorf("failed to unmarshal message: %w", err)
 	}
@@ -143,7 +142,7 @@ func (ws *WebsocketServer) processMessage(data []byte) error {
 			ws.logger.Debug().
 				Str("asset", string(assetId)).
 				Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
-				Int64("timestamp", signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano).
+				Uint64("timestamp", signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano).
 				Msg("Received signed price update")
 		default:
 			ws.logger.Warn().Str("asset", string(assetId)).Msg("Signed price update channel full, dropping message")
@@ -152,7 +151,6 @@ func (ws *WebsocketServer) processMessage(data []byte) error {
 
 	return nil
 }
-
 
 func (ws *WebsocketServer) getBigFloatValue(value any) (*big.Float, error) {
 	switch v := value.(type) {

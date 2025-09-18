@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 )
 
@@ -28,7 +29,7 @@ const (
 )
 
 type Config struct {
-	SignatureTypes                   []signer.SignatureType
+	SignatureTypes                   []shared.SignatureType
 	ClockPeriod                      string
 	DeltaCheckPeriod                 string
 	ChangeThresholdPercent           float64 // 0-100
@@ -50,8 +51,8 @@ type Keys struct {
 	EvmPublicKey    signer.EvmPublisherKey
 	StarkPrivateKey signer.StarkPrivateKey
 	StarkPublicKey  signer.StarkPublisherKey
-	OracleID        OracleID
-	PullBasedAuth   AuthToken
+	OracleID        OracleID `json:"OracleId"` //nolint:tagliatelle // Backwards compatibility
+	PullBasedAuth   shared.AuthToken
 }
 
 // this overwrites
@@ -79,7 +80,7 @@ func (k *Keys) updateFromEnvVars() {
 
 	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
 	if pullBasedAuth != "" {
-		k.PullBasedAuth = AuthToken(pullBasedAuth)
+		k.PullBasedAuth = shared.AuthToken(pullBasedAuth)
 	}
 }
 
@@ -136,14 +137,14 @@ func LoadConfig(
 
 	for _, signatureType := range configFile.SignatureTypes {
 		switch signatureType {
-		case EvmSignatureType:
+		case shared.EvmSignatureType:
 			if !Hex32Regex.MatchString(string(keys.EvmPrivateKey)) {
 				return nil, nil, errors.New("must pass a valid EVM private key")
 			}
 			if !Hex32Regex.MatchString(string(keys.EvmPublicKey)) {
 				return nil, nil, errors.New("must pass a valid EVM public key")
 			}
-		case StarkSignatureType:
+		case shared.StarkSignatureType:
 			if !Hex32Regex.MatchString(string(keys.StarkPrivateKey)) {
 				return nil, nil, errors.New("must pass a valid Stark private key")
 			}
@@ -305,13 +306,13 @@ func LoadConfig(
 type StorkPublisherAgentSecrets struct {
 	EvmPrivateKey   signer.EvmPrivateKey
 	StarkPrivateKey signer.StarkPrivateKey
-	PullBasedAuth   AuthToken
+	PullBasedAuth   shared.AuthToken
 }
 
 func NewStorkPublisherAgentSecrets(
 	evmPrivateKey signer.EvmPrivateKey,
 	starkPrivateKey signer.StarkPrivateKey,
-	pullBasedAuth AuthToken,
+	pullBasedAuth shared.AuthToken,
 ) *StorkPublisherAgentSecrets {
 	return &StorkPublisherAgentSecrets{
 		EvmPrivateKey:   evmPrivateKey,
@@ -321,7 +322,7 @@ func NewStorkPublisherAgentSecrets(
 }
 
 type StorkPublisherAgentConfig struct {
-	SignatureTypes                  []signer.SignatureType
+	SignatureTypes                  []shared.SignatureType
 	EvmPublicKey                    signer.EvmPublisherKey
 	StarkPublicKey                  signer.StarkPublisherKey
 	ClockPeriod                     time.Duration
@@ -343,7 +344,7 @@ type StorkPublisherAgentConfig struct {
 }
 
 func NewStorkPublisherAgentConfig(
-	signatureTypes []signer.SignatureType,
+	signatureTypes []shared.SignatureType,
 	evmPublisherKey signer.EvmPublisherKey,
 	starkPublisherKey signer.StarkPublisherKey,
 	clockPeriod time.Duration,
