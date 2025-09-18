@@ -1,12 +1,12 @@
-# Self-Serve Chain Pusher
+# First Party Chain Pusher
 
-The Self-Serve Chain Pusher is a standalone application that receives price update messages from publisher agents via WebSocket and pushes them to self-serve Stork contracts based on configurable cadence and delta tolerance settings.
+The First Party Chain Pusher is a standalone application that receives price update messages from publisher agents via WebSocket and pushes them to First Party Stork contracts based on configurable cadence and delta tolerance settings.
 
 ## Features
 
 - **WebSocket Server**: Receives price updates from publisher agents in the same format as the main Stork system
 - **Configurable Push Logic**: Supports both time-based (cadence) and price-change-based (delta tolerance) push triggers
-- **Chain Support**: Currently supports EVM-based chains with the self-serve Stork contract
+- **Chain Support**: Currently supports EVM-based chains with the First Party Stork contract
 - **Rate Limiting**: Built-in rate limiting for blockchain RPC calls
 - **Robust Error Handling**: Retry logic and comprehensive error handling for contract interactions
 
@@ -16,10 +16,10 @@ The Self-Serve Chain Pusher is a standalone application that receives price upda
 
 ```bash
 # Build the application
-go build -o self-serve-chain-pusher ./cmd
+go build -o first-party-chain-pusher ./cmd
 
 # Run with EVM chain
-./self-serve-chain-pusher evm \
+./first-party-chain-pusher evm \
   --chain-rpc-url https://your-rpc-endpoint.com \
   --contract-address 0x1234567890abcdef1234567890abcdef12345678 \
   --asset-config-file sample.asset-config.yaml \
@@ -66,7 +66,7 @@ Or without the `0x` prefix:
 - `--websocket-port`: WebSocket server port (default: 8080)
 - `--chain-rpc-url`: Chain RPC URL (required)
 - `--chain-ws-url`: Chain WebSocket URL (optional)
-- `--contract-address`: Self-serve Stork contract address (required)
+- `--contract-address`: First Party Stork contract address (required)
 - `--asset-config-file`: Asset configuration file path (required)
 - `--private-key-file`: Private key file path (required)
 - `--gas-limit`: Gas limit for transactions (0 to use estimate)
@@ -143,5 +143,5 @@ The application includes comprehensive logging to help with debugging and monito
 From the root of the repo, run:
 
 ```bash
-abigen --abi <(jq -r '.abi' ./chains/evm/contracts/self_serve_stork/artifacts/contracts/SelfServeStork.sol/SelfServeStork.json) --pkg bindings --type SelfServeStorkContract --out ./apps/self_serve_chain_pusher/pkg/evm/bindings/stork_evm_contract.go
+abigen --abi <(jq -r '.abi' ./chains/evm/contracts/first_party_stork/artifacts/contracts/FirstPartyStork.sol/FirstPartyStork.json) --pkg bindings --type FirstPartyStorkContract --out ./apps/first_party_pusher/pkg/evm/bindings/stork_evm_contract.go
 ```

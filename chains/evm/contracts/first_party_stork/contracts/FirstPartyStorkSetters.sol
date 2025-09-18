@@ -3,14 +3,14 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./SelfServeStorkEvents.sol";
-import "./SelfServeStorkStructs.sol";
-import "./SelfServeStorkState.sol";
+import "./FirstPartyStorkEvents.sol";
+import "./FirstPartyStorkStructs.sol";
+import "./FirstPartyStorkState.sol";
 
-contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
+contract FirstPartyStorkSetters is FirstPartyStorkState, IFirstPartyStorkEvents {
     function updateLatestValueIfNecessary(
         address pubKey,
-        SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         uint64 latestReceiveTime = _state
         .latestValues[pubKey][input.assetPairId].timestampNs;
@@ -30,7 +30,7 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
 
     function storeHistoricalValue(
         address pubKey,
-        SelfServeStorkStructs.PublisherTemporalNumericValueInput memory input
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         uint64 latestReceiveTime = _state
         .latestValues[pubKey][input.assetPairId].timestampNs;
@@ -39,7 +39,7 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
         }
 
         _state.historicalValues[pubKey][input.assetPairId].push(
-            SelfServeStorkStructs.TemporalNumericValue(
+            FirstPartyStorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
                 input.temporalNumericValue.quantizedValue
             )
@@ -59,7 +59,7 @@ contract SelfServeStorkSetters is SelfServeStorkState, ISelfServeStorkEvents {
         address pubKey,
         uint256 singleUpdateFee
     ) internal {
-        _state.publisherUsers[pubKey] = SelfServeStorkStructs.PublisherUser(
+        _state.publisherUsers[pubKey] = FirstPartyStorkStructs.PublisherUser(
             pubKey,
             singleUpdateFee
         );

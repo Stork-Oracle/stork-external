@@ -3,7 +3,7 @@ pragma solidity >=0.8.24 <0.9.0;
 
 /// @title StorkStructs
 /// @notice Data structures used by the Stork protocol
-library SelfServeStorkStructs {
+library FirstPartyStorkStructs {
     /// @notice Represents a temporal numeric value with timestamp and quantized value
     struct TemporalNumericValue {
         /// @dev Nanosecond level precision timestamp of latest publisher update in batch

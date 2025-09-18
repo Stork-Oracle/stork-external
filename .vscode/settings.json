@@ -24,6 +24,7 @@
     "cSpell.words": [
         "ethclient",
         "Interactor",
+        "nolint",
         "zerolog"
     ]
 }

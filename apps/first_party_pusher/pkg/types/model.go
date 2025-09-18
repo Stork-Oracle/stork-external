@@ -21,7 +21,7 @@ type AssetConfigFile struct {
 	Assets map[shared.AssetID]AssetPushConfig `yaml:"assets"`
 }
 
-type SelfServeConfig struct {
+type FirstPartyConfig struct {
 	WebsocketPort   string
 	ChainRpcUrl     string
 	ChainWsUrl      string

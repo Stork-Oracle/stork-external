@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/yaml.v2"
 )

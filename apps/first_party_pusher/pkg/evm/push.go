@@ -1,17 +1,17 @@
-package self_serve_evm
+package first_party_evm
 
 import (
 	"context"
 
-	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/runner"
-	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/runner"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	"github.com/spf13/cobra"
 )
 
 func NewPushCmd() *cobra.Command {
 	pushCmd := &cobra.Command{
 		Use:   "evm",
-		Short: "Start EVM self-serve chain pusher",
+		Short: "Start EVM First Party Chain Pusher",
 		Run:   runPush,
 	}
 
@@ -51,7 +51,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to load private key")
 	}
-	
+
 	interactor, err := NewContractInteractor(
 		chainRpcUrl,
 		chainWsUrl,
@@ -63,8 +63,9 @@ func runPush(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
 	}
+	defer interactor.Close()
 
-	config := &types.SelfServeConfig{
+	config := &types.FirstPartyConfig{
 		WebsocketPort:   websocketPort,
 		ChainRpcUrl:     chainRpcUrl,
 		ChainWsUrl:      chainWsUrl,
@@ -75,6 +76,6 @@ func runPush(cmd *cobra.Command, args []string) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	runner := runner.NewSelfServeRunner(config, interactor, cancel, logger)
+	runner := runner.NewFirstPartyRunner(config, interactor, cancel, logger)
 	runner.Run(ctx)
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Simple WebSocket test client for the self-serve chain pusher
+// Simple WebSocket test client for the first party chain pusher
 // Requirements: npm install ws
 
 const WebSocket = require('ws');

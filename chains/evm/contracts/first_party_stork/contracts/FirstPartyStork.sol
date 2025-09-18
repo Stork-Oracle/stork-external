@@ -2,31 +2,31 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./SelfServeStorkEvents.sol";
-import "./SelfServeStorkStructs.sol";
-import "./SelfServeStorkErrors.sol";
+import "./FirstPartyStorkEvents.sol";
+import "./FirstPartyStorkStructs.sol";
+import "./FirstPartyStorkErrors.sol";
 
-import "./SelfServeStorkGetters.sol";
-import "./SelfServeStorkSetters.sol";
-import "./SelfServeStorkVerify.sol";
+import "./FirstPartyStorkGetters.sol";
+import "./FirstPartyStorkSetters.sol";
+import "./FirstPartyStorkVerify.sol";
 
 
-abstract contract SelfServeStork is
-    SelfServeStorkGetters,
-    SelfServeStorkSetters,
-    SelfServeStorkVerify
+abstract contract FirstPartyStork is
+    FirstPartyStorkGetters,
+    FirstPartyStorkSetters,
+    FirstPartyStorkVerify
 {
     function updateTemporalNumericValues(
-        SelfServeStorkStructs.PublisherTemporalNumericValueInput[]
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
             calldata updateData,
         bool storeHistoric
     ) public payable {
         uint16 numUpdates = 0;
         uint256 requiredFee = 0;
         for (uint i = 0; i < updateData.length; i++) {
-            SelfServeStorkStructs.PublisherTemporalNumericValueInput
+            FirstPartyStorkStructs.PublisherTemporalNumericValueInput
                 memory input = updateData[i];
-            SelfServeStorkStructs.PublisherUser
+            FirstPartyStorkStructs.PublisherUser
                 memory publisherUser = getPublisherUser(input.pubKey);
 
             bool verified = verifyPublisherSignatureV1(
@@ -39,7 +39,7 @@ abstract contract SelfServeStork is
                 input.v
             );
 
-            if (!verified) revert SelfServeStorkErrors.InvalidSignature();
+            if (!verified) revert FirstPartyStorkErrors.InvalidSignature();
 
             bool updated = updateLatestValueIfNecessary(input.pubKey, input);
             if (updated) {
@@ -53,11 +53,11 @@ abstract contract SelfServeStork is
         }
 
         if (numUpdates == 0) {
-            revert SelfServeStorkErrors.NoFreshUpdate();
+            revert FirstPartyStorkErrors.NoFreshUpdate();
         }
 
         if (msg.value < requiredFee)
-            revert SelfServeStorkErrors.InsufficientFee();
+            revert FirstPartyStorkErrors.InsufficientFee();
     }
 
     function createPublisherUser(

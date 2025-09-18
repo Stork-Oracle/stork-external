@@ -6,7 +6,7 @@ pragma solidity >=0.8.24 <0.9.0;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-contract SelfServeStorkVerify {
+contract FirstPartyStorkVerify {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 

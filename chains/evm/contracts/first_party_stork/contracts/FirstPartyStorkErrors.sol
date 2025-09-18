@@ -3,7 +3,7 @@ pragma solidity >=0.8.24 <0.9.0;
 
 /// @title StorkErrors
 /// @notice Error definitions for the Stork protocol
-library SelfServeStorkErrors {
+library FirstPartyStorkErrors {
     /// @notice Insufficient fee is paid to the method
     /// @dev Error code: 0x025dbdd4
     error InsufficientFee();

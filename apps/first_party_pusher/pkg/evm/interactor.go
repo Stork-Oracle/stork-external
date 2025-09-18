@@ -1,4 +1,4 @@
-package self_serve_evm
+package first_party_evm
 
 import (
 	"context"
@@ -16,9 +16,9 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/evm/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
-	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/evm/bindings"
-	"github.com/Stork-Oracle/stork-external/apps/self_serve_chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/shared"
 )
 
@@ -31,8 +31,8 @@ const (
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	contract   *bindings.SelfServeStorkContract
-	wsContract *bindings.SelfServeStorkContract
+	contract   *bindings.FirstPartyStorkContract
+	wsContract *bindings.FirstPartyStorkContract
 	client     *ethclient.Client
 	wsClient   *ethclient.Client
 
@@ -71,14 +71,14 @@ func NewContractInteractor(
 
 	contractAddress := common.HexToAddress(contractAddr)
 
-	contract, err := bindings.NewSelfServeStorkContract(contractAddress, client)
+	contract, err := bindings.NewFirstPartyStorkContract(contractAddress, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create contract instance: %w", err)
 	}
 
-	var wsContract *bindings.SelfServeStorkContract
+	var wsContract *bindings.FirstPartyStorkContract
 	if wsClient != nil {
-		wsContract, err = bindings.NewSelfServeStorkContract(contractAddress, wsClient)
+		wsContract, err = bindings.NewFirstPartyStorkContract(contractAddress, wsClient)
 		if err != nil {
 			logger.Warn().Err(err).Msg("Failed to create WebSocket contract instance")
 		}
@@ -102,7 +102,7 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset t
 		Str("asset", string(signedPriceUpdate.AssetID)).
 		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
 		Str("encoded_asset_id", string(asset.EncodedAssetID)).
-		Msg("Pushing signed price update to self-serve contract")
+		Msg("Pushing signed price update to first party contract")
 
 	// Convert the signed price update to contract input
 	updateInput, err := ci.convertSignedPriceUpdateToInput(signedPriceUpdate, asset)
@@ -126,7 +126,7 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset t
 			backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
 		}
 
-		txHash, err := ci.submitPushValueTransaction(ctx, []bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{updateInput})
+		txHash, err := ci.submitPushValueTransaction(ctx, []bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{updateInput})
 		if err != nil {
 			lastErr = err
 
@@ -143,7 +143,6 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset t
 	return fmt.Errorf("failed to push signed price update after %d attempts: %w", maxRetryAttempts, lastErr)
 }
 
-// TODO: this is not in our existing pushers
 func (ci *ContractInteractor) Close() {
 	if ci.client != nil {
 		ci.client.Close()
@@ -157,16 +156,16 @@ func (ci *ContractInteractor) Close() {
 func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
 	asset types.AssetPushConfig,
-) (bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput, error) {
+) (bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, error) {
 	// Convert quantized price to big.Int
 	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
 	if !success {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
+		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("%w: %s", shared.ErrFailedToConvertQuantizedPriceToBigInt, signedPriceUpdate.SignedPrice.QuantizedPrice)
 	}
 
 	// Create the temporal numeric value using the signed data timestamp
-	temporalValue := bindings.SelfServeStorkStructsTemporalNumericValue{
+	temporalValue := bindings.FirstPartyStorkStructsTemporalNumericValue{
 		TimestampNs:    signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano,
 		QuantizedValue: quantizedValue,
 	}
@@ -174,7 +173,7 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	// Parse the publisher key
 	pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(string(signedPriceUpdate.SignedPrice.PublisherKey), "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
+		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode publisher key: %w", err)
 	}
 
@@ -184,17 +183,17 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	// Parse the signature components
 	rBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
+		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature R: %w", err)
 	}
 	sBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
+		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature S: %w", err)
 	}
 	vBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V, "0x"))
 	if err != nil {
-		return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{},
+		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature V: %w", err)
 	}
 
@@ -206,7 +205,7 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 
 	v := vBytes[0] // V is a single byte
 
-	return bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput{
+	return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{
 		TemporalNumericValue: temporalValue,
 		PubKey:               pubKeyAddress,
 		AssetPairId:          string(asset.AssetID),
@@ -218,7 +217,7 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 
 func (ci *ContractInteractor) submitPushValueTransaction(
 	ctx context.Context,
-	updateData []bindings.SelfServeStorkStructsPublisherTemporalNumericValueInput,
+	updateData []bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput,
 ) (*common.Hash, error) {
 	// Get transaction options
 	auth, err := ci.getTransactionOptions(ctx)

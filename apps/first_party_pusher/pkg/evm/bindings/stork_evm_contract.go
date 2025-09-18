@@ -29,9 +29,9 @@ var (
 	_ = abi.ConvertType
 )
 
-// SelfServeStorkStructsPublisherTemporalNumericValueInput is an auto generated low-level Go binding around an user-defined struct.
-type SelfServeStorkStructsPublisherTemporalNumericValueInput struct {
-	TemporalNumericValue SelfServeStorkStructsTemporalNumericValue
+// FirstPartyStorkStructsPublisherTemporalNumericValueInput is an auto generated low-level Go binding around an user-defined struct.
+type FirstPartyStorkStructsPublisherTemporalNumericValueInput struct {
+	TemporalNumericValue FirstPartyStorkStructsTemporalNumericValue
 	PubKey               common.Address
 	AssetPairId          string
 	R                    [32]byte
@@ -39,125 +39,125 @@ type SelfServeStorkStructsPublisherTemporalNumericValueInput struct {
 	V                    uint8
 }
 
-// SelfServeStorkStructsPublisherUser is an auto generated low-level Go binding around an user-defined struct.
-type SelfServeStorkStructsPublisherUser struct {
+// FirstPartyStorkStructsPublisherUser is an auto generated low-level Go binding around an user-defined struct.
+type FirstPartyStorkStructsPublisherUser struct {
 	PubKey          common.Address
 	SingleUpdateFee *big.Int
 }
 
-// SelfServeStorkStructsTemporalNumericValue is an auto generated low-level Go binding around an user-defined struct.
-type SelfServeStorkStructsTemporalNumericValue struct {
+// FirstPartyStorkStructsTemporalNumericValue is an auto generated low-level Go binding around an user-defined struct.
+type FirstPartyStorkStructsTemporalNumericValue struct {
 	TimestampNs    uint64
 	QuantizedValue *big.Int
 }
 
-// SelfServeStorkContractMetaData contains all meta data concerning the SelfServeStorkContract contract.
-var SelfServeStorkContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structSelfServeStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structSelfServeStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"storeHistoric\",\"type\":\"bool\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+// FirstPartyStorkContractMetaData contains all meta data concerning the FirstPartyStorkContract contract.
+var FirstPartyStorkContractMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"storeHistoric\",\"type\":\"bool\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
-// SelfServeStorkContractABI is the input ABI used to generate the binding from.
-// Deprecated: Use SelfServeStorkContractMetaData.ABI instead.
-var SelfServeStorkContractABI = SelfServeStorkContractMetaData.ABI
+// FirstPartyStorkContractABI is the input ABI used to generate the binding from.
+// Deprecated: Use FirstPartyStorkContractMetaData.ABI instead.
+var FirstPartyStorkContractABI = FirstPartyStorkContractMetaData.ABI
 
-// SelfServeStorkContract is an auto generated Go binding around an Ethereum contract.
-type SelfServeStorkContract struct {
-	SelfServeStorkContractCaller     // Read-only binding to the contract
-	SelfServeStorkContractTransactor // Write-only binding to the contract
-	SelfServeStorkContractFilterer   // Log filterer for contract events
+// FirstPartyStorkContract is an auto generated Go binding around an Ethereum contract.
+type FirstPartyStorkContract struct {
+	FirstPartyStorkContractCaller     // Read-only binding to the contract
+	FirstPartyStorkContractTransactor // Write-only binding to the contract
+	FirstPartyStorkContractFilterer   // Log filterer for contract events
 }
 
-// SelfServeStorkContractCaller is an auto generated read-only Go binding around an Ethereum contract.
-type SelfServeStorkContractCaller struct {
+// FirstPartyStorkContractCaller is an auto generated read-only Go binding around an Ethereum contract.
+type FirstPartyStorkContractCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SelfServeStorkContractTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type SelfServeStorkContractTransactor struct {
+// FirstPartyStorkContractTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type FirstPartyStorkContractTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SelfServeStorkContractFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type SelfServeStorkContractFilterer struct {
+// FirstPartyStorkContractFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type FirstPartyStorkContractFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SelfServeStorkContractSession is an auto generated Go binding around an Ethereum contract,
+// FirstPartyStorkContractSession is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
-type SelfServeStorkContractSession struct {
-	Contract     *SelfServeStorkContract // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts           // Call options to use throughout this session
-	TransactOpts bind.TransactOpts       // Transaction auth options to use throughout this session
+type FirstPartyStorkContractSession struct {
+	Contract     *FirstPartyStorkContract // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts            // Call options to use throughout this session
+	TransactOpts bind.TransactOpts        // Transaction auth options to use throughout this session
 }
 
-// SelfServeStorkContractCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// FirstPartyStorkContractCallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
-type SelfServeStorkContractCallerSession struct {
-	Contract *SelfServeStorkContractCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                 // Call options to use throughout this session
+type FirstPartyStorkContractCallerSession struct {
+	Contract *FirstPartyStorkContractCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts                  // Call options to use throughout this session
 }
 
-// SelfServeStorkContractTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// FirstPartyStorkContractTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
-type SelfServeStorkContractTransactorSession struct {
-	Contract     *SelfServeStorkContractTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                 // Transaction auth options to use throughout this session
+type FirstPartyStorkContractTransactorSession struct {
+	Contract     *FirstPartyStorkContractTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts                  // Transaction auth options to use throughout this session
 }
 
-// SelfServeStorkContractRaw is an auto generated low-level Go binding around an Ethereum contract.
-type SelfServeStorkContractRaw struct {
-	Contract *SelfServeStorkContract // Generic contract binding to access the raw methods on
+// FirstPartyStorkContractRaw is an auto generated low-level Go binding around an Ethereum contract.
+type FirstPartyStorkContractRaw struct {
+	Contract *FirstPartyStorkContract // Generic contract binding to access the raw methods on
 }
 
-// SelfServeStorkContractCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type SelfServeStorkContractCallerRaw struct {
-	Contract *SelfServeStorkContractCaller // Generic read-only contract binding to access the raw methods on
+// FirstPartyStorkContractCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type FirstPartyStorkContractCallerRaw struct {
+	Contract *FirstPartyStorkContractCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// SelfServeStorkContractTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type SelfServeStorkContractTransactorRaw struct {
-	Contract *SelfServeStorkContractTransactor // Generic write-only contract binding to access the raw methods on
+// FirstPartyStorkContractTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type FirstPartyStorkContractTransactorRaw struct {
+	Contract *FirstPartyStorkContractTransactor // Generic write-only contract binding to access the raw methods on
 }
 
-// NewSelfServeStorkContract creates a new instance of SelfServeStorkContract, bound to a specific deployed contract.
-func NewSelfServeStorkContract(address common.Address, backend bind.ContractBackend) (*SelfServeStorkContract, error) {
-	contract, err := bindSelfServeStorkContract(address, backend, backend, backend)
+// NewFirstPartyStorkContract creates a new instance of FirstPartyStorkContract, bound to a specific deployed contract.
+func NewFirstPartyStorkContract(address common.Address, backend bind.ContractBackend) (*FirstPartyStorkContract, error) {
+	contract, err := bindFirstPartyStorkContract(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContract{SelfServeStorkContractCaller: SelfServeStorkContractCaller{contract: contract}, SelfServeStorkContractTransactor: SelfServeStorkContractTransactor{contract: contract}, SelfServeStorkContractFilterer: SelfServeStorkContractFilterer{contract: contract}}, nil
+	return &FirstPartyStorkContract{FirstPartyStorkContractCaller: FirstPartyStorkContractCaller{contract: contract}, FirstPartyStorkContractTransactor: FirstPartyStorkContractTransactor{contract: contract}, FirstPartyStorkContractFilterer: FirstPartyStorkContractFilterer{contract: contract}}, nil
 }
 
-// NewSelfServeStorkContractCaller creates a new read-only instance of SelfServeStorkContract, bound to a specific deployed contract.
-func NewSelfServeStorkContractCaller(address common.Address, caller bind.ContractCaller) (*SelfServeStorkContractCaller, error) {
-	contract, err := bindSelfServeStorkContract(address, caller, nil, nil)
+// NewFirstPartyStorkContractCaller creates a new read-only instance of FirstPartyStorkContract, bound to a specific deployed contract.
+func NewFirstPartyStorkContractCaller(address common.Address, caller bind.ContractCaller) (*FirstPartyStorkContractCaller, error) {
+	contract, err := bindFirstPartyStorkContract(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractCaller{contract: contract}, nil
+	return &FirstPartyStorkContractCaller{contract: contract}, nil
 }
 
-// NewSelfServeStorkContractTransactor creates a new write-only instance of SelfServeStorkContract, bound to a specific deployed contract.
-func NewSelfServeStorkContractTransactor(address common.Address, transactor bind.ContractTransactor) (*SelfServeStorkContractTransactor, error) {
-	contract, err := bindSelfServeStorkContract(address, nil, transactor, nil)
+// NewFirstPartyStorkContractTransactor creates a new write-only instance of FirstPartyStorkContract, bound to a specific deployed contract.
+func NewFirstPartyStorkContractTransactor(address common.Address, transactor bind.ContractTransactor) (*FirstPartyStorkContractTransactor, error) {
+	contract, err := bindFirstPartyStorkContract(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractTransactor{contract: contract}, nil
+	return &FirstPartyStorkContractTransactor{contract: contract}, nil
 }
 
-// NewSelfServeStorkContractFilterer creates a new log filterer instance of SelfServeStorkContract, bound to a specific deployed contract.
-func NewSelfServeStorkContractFilterer(address common.Address, filterer bind.ContractFilterer) (*SelfServeStorkContractFilterer, error) {
-	contract, err := bindSelfServeStorkContract(address, nil, nil, filterer)
+// NewFirstPartyStorkContractFilterer creates a new log filterer instance of FirstPartyStorkContract, bound to a specific deployed contract.
+func NewFirstPartyStorkContractFilterer(address common.Address, filterer bind.ContractFilterer) (*FirstPartyStorkContractFilterer, error) {
+	contract, err := bindFirstPartyStorkContract(address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractFilterer{contract: contract}, nil
+	return &FirstPartyStorkContractFilterer{contract: contract}, nil
 }
 
-// bindSelfServeStorkContract binds a generic wrapper to an already deployed contract.
-func bindSelfServeStorkContract(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := SelfServeStorkContractMetaData.GetAbi()
+// bindFirstPartyStorkContract binds a generic wrapper to an already deployed contract.
+func bindFirstPartyStorkContract(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := FirstPartyStorkContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -168,46 +168,46 @@ func bindSelfServeStorkContract(address common.Address, caller bind.ContractCall
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_SelfServeStorkContract *SelfServeStorkContractRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _SelfServeStorkContract.Contract.SelfServeStorkContractCaller.contract.Call(opts, result, method, params...)
+func (_FirstPartyStorkContract *FirstPartyStorkContractRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _FirstPartyStorkContract.Contract.FirstPartyStorkContractCaller.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_SelfServeStorkContract *SelfServeStorkContractRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.SelfServeStorkContractTransactor.contract.Transfer(opts)
+func (_FirstPartyStorkContract *FirstPartyStorkContractRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.FirstPartyStorkContractTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_SelfServeStorkContract *SelfServeStorkContractRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.SelfServeStorkContractTransactor.contract.Transact(opts, method, params...)
+func (_FirstPartyStorkContract *FirstPartyStorkContractRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.FirstPartyStorkContractTransactor.contract.Transact(opts, method, params...)
 }
 
 // Call invokes the (constant) contract method with params as input values and
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_SelfServeStorkContract *SelfServeStorkContractCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _SelfServeStorkContract.Contract.contract.Call(opts, result, method, params...)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _FirstPartyStorkContract.Contract.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.contract.Transfer(opts)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.contract.Transact(opts, method, params...)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.contract.Transact(opts, method, params...)
 }
 
 // GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
 // Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetCurrentRoundId(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetCurrentRoundId(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getCurrentRoundId", pubKey, assetPairId)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getCurrentRoundId", pubKey, assetPairId)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -222,23 +222,23 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetCurrentRoundId(o
 // GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
 // Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetCurrentRoundId(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetCurrentRoundId is a free data retrieval call binding the contract method 0xb7f16567.
 //
 // Solidity: function getCurrentRoundId(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetCurrentRoundId(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetCurrentRoundId(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetCurrentRoundId(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
 // Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalRecordsCount(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetHistoricalRecordsCount(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (*big.Int, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalRecordsCount", pubKey, assetPairId)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getHistoricalRecordsCount", pubKey, assetPairId)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -253,29 +253,29 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalRecord
 // GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
 // Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetHistoricalRecordsCount(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetHistoricalRecordsCount is a free data retrieval call binding the contract method 0x543b2fc1.
 //
 // Solidity: function getHistoricalRecordsCount(address pubKey, string assetPairId) view returns(uint256)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalRecordsCount(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetHistoricalRecordsCount(pubKey common.Address, assetPairId string) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetHistoricalRecordsCount(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
 // Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetHistoricalTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string, roundId *big.Int) (FirstPartyStorkStructsTemporalNumericValue, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getHistoricalTemporalNumericValue", pubKey, assetPairId, roundId)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getHistoricalTemporalNumericValue", pubKey, assetPairId, roundId)
 
 	if err != nil {
-		return *new(SelfServeStorkStructsTemporalNumericValue), err
+		return *new(FirstPartyStorkStructsTemporalNumericValue), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(SelfServeStorkStructsTemporalNumericValue)).(*SelfServeStorkStructsTemporalNumericValue)
+	out0 := *abi.ConvertType(out[0], new(FirstPartyStorkStructsTemporalNumericValue)).(*FirstPartyStorkStructsTemporalNumericValue)
 
 	return out0, err
 
@@ -284,29 +284,29 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetHistoricalTempor
 // GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
 // Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId, roundId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (FirstPartyStorkStructsTemporalNumericValue, error) {
+	return _FirstPartyStorkContract.Contract.GetHistoricalTemporalNumericValue(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId, roundId)
 }
 
 // GetHistoricalTemporalNumericValue is a free data retrieval call binding the contract method 0x2651ad06.
 //
 // Solidity: function getHistoricalTemporalNumericValue(address pubKey, string assetPairId, uint256 roundId) view returns((uint64,int192))
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetHistoricalTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId, roundId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetHistoricalTemporalNumericValue(pubKey common.Address, assetPairId string, roundId *big.Int) (FirstPartyStorkStructsTemporalNumericValue, error) {
+	return _FirstPartyStorkContract.Contract.GetHistoricalTemporalNumericValue(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId, roundId)
 }
 
 // GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
 // Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetLatestTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetLatestTemporalNumericValue(opts *bind.CallOpts, pubKey common.Address, assetPairId string) (FirstPartyStorkStructsTemporalNumericValue, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getLatestTemporalNumericValue", pubKey, assetPairId)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getLatestTemporalNumericValue", pubKey, assetPairId)
 
 	if err != nil {
-		return *new(SelfServeStorkStructsTemporalNumericValue), err
+		return *new(FirstPartyStorkStructsTemporalNumericValue), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(SelfServeStorkStructsTemporalNumericValue)).(*SelfServeStorkStructsTemporalNumericValue)
+	out0 := *abi.ConvertType(out[0], new(FirstPartyStorkStructsTemporalNumericValue)).(*FirstPartyStorkStructsTemporalNumericValue)
 
 	return out0, err
 
@@ -315,29 +315,29 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetLatestTemporalNu
 // GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
 // Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (FirstPartyStorkStructsTemporalNumericValue, error) {
+	return _FirstPartyStorkContract.Contract.GetLatestTemporalNumericValue(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetLatestTemporalNumericValue is a free data retrieval call binding the contract method 0xea419887.
 //
 // Solidity: function getLatestTemporalNumericValue(address pubKey, string assetPairId) view returns((uint64,int192) value)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (SelfServeStorkStructsTemporalNumericValue, error) {
-	return _SelfServeStorkContract.Contract.GetLatestTemporalNumericValue(&_SelfServeStorkContract.CallOpts, pubKey, assetPairId)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetLatestTemporalNumericValue(pubKey common.Address, assetPairId string) (FirstPartyStorkStructsTemporalNumericValue, error) {
+	return _FirstPartyStorkContract.Contract.GetLatestTemporalNumericValue(&_FirstPartyStorkContract.CallOpts, pubKey, assetPairId)
 }
 
 // GetPublisherUser is a free data retrieval call binding the contract method 0x3d57a294.
 //
 // Solidity: function getPublisherUser(address pubKey) view returns((address,uint256))
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetPublisherUser(opts *bind.CallOpts, pubKey common.Address) (SelfServeStorkStructsPublisherUser, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetPublisherUser(opts *bind.CallOpts, pubKey common.Address) (FirstPartyStorkStructsPublisherUser, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "getPublisherUser", pubKey)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getPublisherUser", pubKey)
 
 	if err != nil {
-		return *new(SelfServeStorkStructsPublisherUser), err
+		return *new(FirstPartyStorkStructsPublisherUser), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(SelfServeStorkStructsPublisherUser)).(*SelfServeStorkStructsPublisherUser)
+	out0 := *abi.ConvertType(out[0], new(FirstPartyStorkStructsPublisherUser)).(*FirstPartyStorkStructsPublisherUser)
 
 	return out0, err
 
@@ -346,23 +346,23 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) GetPublisherUser(op
 // GetPublisherUser is a free data retrieval call binding the contract method 0x3d57a294.
 //
 // Solidity: function getPublisherUser(address pubKey) view returns((address,uint256))
-func (_SelfServeStorkContract *SelfServeStorkContractSession) GetPublisherUser(pubKey common.Address) (SelfServeStorkStructsPublisherUser, error) {
-	return _SelfServeStorkContract.Contract.GetPublisherUser(&_SelfServeStorkContract.CallOpts, pubKey)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetPublisherUser(pubKey common.Address) (FirstPartyStorkStructsPublisherUser, error) {
+	return _FirstPartyStorkContract.Contract.GetPublisherUser(&_FirstPartyStorkContract.CallOpts, pubKey)
 }
 
 // GetPublisherUser is a free data retrieval call binding the contract method 0x3d57a294.
 //
 // Solidity: function getPublisherUser(address pubKey) view returns((address,uint256))
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) GetPublisherUser(pubKey common.Address) (SelfServeStorkStructsPublisherUser, error) {
-	return _SelfServeStorkContract.Contract.GetPublisherUser(&_SelfServeStorkContract.CallOpts, pubKey)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetPublisherUser(pubKey common.Address) (FirstPartyStorkStructsPublisherUser, error) {
+	return _FirstPartyStorkContract.Contract.GetPublisherUser(&_FirstPartyStorkContract.CallOpts, pubKey)
 }
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0x9bccd2d5.
 //
 // Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, int256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_SelfServeStorkContract *SelfServeStorkContractCaller) VerifyPublisherSignatureV1(opts *bind.CallOpts, oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) VerifyPublisherSignatureV1(opts *bind.CallOpts, oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
 	var out []interface{}
-	err := _SelfServeStorkContract.contract.Call(opts, &out, "verifyPublisherSignatureV1", oraclePubKey, assetPairId, timestamp, value, r, s, v)
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "verifyPublisherSignatureV1", oraclePubKey, assetPairId, timestamp, value, r, s, v)
 
 	if err != nil {
 		return *new(bool), err
@@ -377,83 +377,83 @@ func (_SelfServeStorkContract *SelfServeStorkContractCaller) VerifyPublisherSign
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0x9bccd2d5.
 //
 // Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, int256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_SelfServeStorkContract *SelfServeStorkContractSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _SelfServeStorkContract.Contract.VerifyPublisherSignatureV1(&_SelfServeStorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _FirstPartyStorkContract.Contract.VerifyPublisherSignatureV1(&_FirstPartyStorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
 }
 
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0x9bccd2d5.
 //
 // Solidity: function verifyPublisherSignatureV1(address oraclePubKey, string assetPairId, uint256 timestamp, int256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
-func (_SelfServeStorkContract *SelfServeStorkContractCallerSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
-	return _SelfServeStorkContract.Contract.VerifyPublisherSignatureV1(&_SelfServeStorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) VerifyPublisherSignatureV1(oraclePubKey common.Address, assetPairId string, timestamp *big.Int, value *big.Int, r [32]byte, s [32]byte, v uint8) (bool, error) {
+	return _FirstPartyStorkContract.Contract.VerifyPublisherSignatureV1(&_FirstPartyStorkContract.CallOpts, oraclePubKey, assetPairId, timestamp, value, r, s, v)
 }
 
 // CreatePublisherUser is a paid mutator transaction binding the contract method 0x714fbcad.
 //
 // Solidity: function createPublisherUser(address pubKey, uint256 singleUpdateFee) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactor) CreatePublisherUser(opts *bind.TransactOpts, pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
-	return _SelfServeStorkContract.contract.Transact(opts, "createPublisherUser", pubKey, singleUpdateFee)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactor) CreatePublisherUser(opts *bind.TransactOpts, pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.contract.Transact(opts, "createPublisherUser", pubKey, singleUpdateFee)
 }
 
 // CreatePublisherUser is a paid mutator transaction binding the contract method 0x714fbcad.
 //
 // Solidity: function createPublisherUser(address pubKey, uint256 singleUpdateFee) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractSession) CreatePublisherUser(pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.CreatePublisherUser(&_SelfServeStorkContract.TransactOpts, pubKey, singleUpdateFee)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) CreatePublisherUser(pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.CreatePublisherUser(&_FirstPartyStorkContract.TransactOpts, pubKey, singleUpdateFee)
 }
 
 // CreatePublisherUser is a paid mutator transaction binding the contract method 0x714fbcad.
 //
 // Solidity: function createPublisherUser(address pubKey, uint256 singleUpdateFee) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) CreatePublisherUser(pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.CreatePublisherUser(&_SelfServeStorkContract.TransactOpts, pubKey, singleUpdateFee)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) CreatePublisherUser(pubKey common.Address, singleUpdateFee *big.Int) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.CreatePublisherUser(&_FirstPartyStorkContract.TransactOpts, pubKey, singleUpdateFee)
 }
 
 // DeletePublisherUser is a paid mutator transaction binding the contract method 0x488487a9.
 //
 // Solidity: function deletePublisherUser(address pubKey) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactor) DeletePublisherUser(opts *bind.TransactOpts, pubKey common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.contract.Transact(opts, "deletePublisherUser", pubKey)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactor) DeletePublisherUser(opts *bind.TransactOpts, pubKey common.Address) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.contract.Transact(opts, "deletePublisherUser", pubKey)
 }
 
 // DeletePublisherUser is a paid mutator transaction binding the contract method 0x488487a9.
 //
 // Solidity: function deletePublisherUser(address pubKey) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractSession) DeletePublisherUser(pubKey common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.DeletePublisherUser(&_SelfServeStorkContract.TransactOpts, pubKey)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) DeletePublisherUser(pubKey common.Address) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.DeletePublisherUser(&_FirstPartyStorkContract.TransactOpts, pubKey)
 }
 
 // DeletePublisherUser is a paid mutator transaction binding the contract method 0x488487a9.
 //
 // Solidity: function deletePublisherUser(address pubKey) returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) DeletePublisherUser(pubKey common.Address) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.DeletePublisherUser(&_SelfServeStorkContract.TransactOpts, pubKey)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) DeletePublisherUser(pubKey common.Address) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.DeletePublisherUser(&_FirstPartyStorkContract.TransactOpts, pubKey)
 }
 
 // UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x25ae409f.
 //
 // Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool storeHistoric) payable returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactor) UpdateTemporalNumericValues(opts *bind.TransactOpts, updateData []SelfServeStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
-	return _SelfServeStorkContract.contract.Transact(opts, "updateTemporalNumericValues", updateData, storeHistoric)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactor) UpdateTemporalNumericValues(opts *bind.TransactOpts, updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.contract.Transact(opts, "updateTemporalNumericValues", updateData, storeHistoric)
 }
 
 // UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x25ae409f.
 //
 // Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool storeHistoric) payable returns()
-func (_SelfServeStorkContract *SelfServeStorkContractSession) UpdateTemporalNumericValues(updateData []SelfServeStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.UpdateTemporalNumericValues(&_SelfServeStorkContract.TransactOpts, updateData, storeHistoric)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData, storeHistoric)
 }
 
 // UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x25ae409f.
 //
 // Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool storeHistoric) payable returns()
-func (_SelfServeStorkContract *SelfServeStorkContractTransactorSession) UpdateTemporalNumericValues(updateData []SelfServeStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
-	return _SelfServeStorkContract.Contract.UpdateTemporalNumericValues(&_SelfServeStorkContract.TransactOpts, updateData, storeHistoric)
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric bool) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData, storeHistoric)
 }
 
-// SelfServeStorkContractHistoricalValueStoredIterator is returned from FilterHistoricalValueStored and is used to iterate over the raw logs and unpacked data for HistoricalValueStored events raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractHistoricalValueStoredIterator struct {
-	Event *SelfServeStorkContractHistoricalValueStored // Event containing the contract specifics and raw log
+// FirstPartyStorkContractHistoricalValueStoredIterator is returned from FilterHistoricalValueStored and is used to iterate over the raw logs and unpacked data for HistoricalValueStored events raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractHistoricalValueStoredIterator struct {
+	Event *FirstPartyStorkContractHistoricalValueStored // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -467,7 +467,7 @@ type SelfServeStorkContractHistoricalValueStoredIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *SelfServeStorkContractHistoricalValueStoredIterator) Next() bool {
+func (it *FirstPartyStorkContractHistoricalValueStoredIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -476,7 +476,7 @@ func (it *SelfServeStorkContractHistoricalValueStoredIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(SelfServeStorkContractHistoricalValueStored)
+			it.Event = new(FirstPartyStorkContractHistoricalValueStored)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -491,7 +491,7 @@ func (it *SelfServeStorkContractHistoricalValueStoredIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(SelfServeStorkContractHistoricalValueStored)
+		it.Event = new(FirstPartyStorkContractHistoricalValueStored)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -507,19 +507,19 @@ func (it *SelfServeStorkContractHistoricalValueStoredIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *SelfServeStorkContractHistoricalValueStoredIterator) Error() error {
+func (it *FirstPartyStorkContractHistoricalValueStoredIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *SelfServeStorkContractHistoricalValueStoredIterator) Close() error {
+func (it *FirstPartyStorkContractHistoricalValueStoredIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// SelfServeStorkContractHistoricalValueStored represents a HistoricalValueStored event raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractHistoricalValueStored struct {
+// FirstPartyStorkContractHistoricalValueStored represents a HistoricalValueStored event raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractHistoricalValueStored struct {
 	PubKey         common.Address
 	AssetId        common.Hash
 	TimestampNs    uint64
@@ -531,7 +531,7 @@ type SelfServeStorkContractHistoricalValueStored struct {
 // FilterHistoricalValueStored is a free log retrieval operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
 // Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterHistoricalValueStored(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*SelfServeStorkContractHistoricalValueStoredIterator, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) FilterHistoricalValueStored(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*FirstPartyStorkContractHistoricalValueStoredIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -542,17 +542,17 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterHistoricalV
 		assetIdRule = append(assetIdRule, assetIdItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.FilterLogs(opts, "HistoricalValueStored", pubKeyRule, assetIdRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.FilterLogs(opts, "HistoricalValueStored", pubKeyRule, assetIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractHistoricalValueStoredIterator{contract: _SelfServeStorkContract.contract, event: "HistoricalValueStored", logs: logs, sub: sub}, nil
+	return &FirstPartyStorkContractHistoricalValueStoredIterator{contract: _FirstPartyStorkContract.contract, event: "HistoricalValueStored", logs: logs, sub: sub}, nil
 }
 
 // WatchHistoricalValueStored is a free log subscription operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
 // Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalValueStored(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractHistoricalValueStored, pubKey []common.Address, assetId []string) (event.Subscription, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) WatchHistoricalValueStored(opts *bind.WatchOpts, sink chan<- *FirstPartyStorkContractHistoricalValueStored, pubKey []common.Address, assetId []string) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -563,7 +563,7 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalVa
 		assetIdRule = append(assetIdRule, assetIdItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.WatchLogs(opts, "HistoricalValueStored", pubKeyRule, assetIdRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.WatchLogs(opts, "HistoricalValueStored", pubKeyRule, assetIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -573,8 +573,8 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalVa
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(SelfServeStorkContractHistoricalValueStored)
-				if err := _SelfServeStorkContract.contract.UnpackLog(event, "HistoricalValueStored", log); err != nil {
+				event := new(FirstPartyStorkContractHistoricalValueStored)
+				if err := _FirstPartyStorkContract.contract.UnpackLog(event, "HistoricalValueStored", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -598,18 +598,18 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchHistoricalVa
 // ParseHistoricalValueStored is a log parse operation binding the contract event 0xfbb8f1bb7c4b5b8719a0357ba08c979650b113503c79ae1415088c0d6e429a8c.
 //
 // Solidity: event HistoricalValueStored(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue, uint256 roundId)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParseHistoricalValueStored(log types.Log) (*SelfServeStorkContractHistoricalValueStored, error) {
-	event := new(SelfServeStorkContractHistoricalValueStored)
-	if err := _SelfServeStorkContract.contract.UnpackLog(event, "HistoricalValueStored", log); err != nil {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) ParseHistoricalValueStored(log types.Log) (*FirstPartyStorkContractHistoricalValueStored, error) {
+	event := new(FirstPartyStorkContractHistoricalValueStored)
+	if err := _FirstPartyStorkContract.contract.UnpackLog(event, "HistoricalValueStored", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// SelfServeStorkContractPublisherUserAddedIterator is returned from FilterPublisherUserAdded and is used to iterate over the raw logs and unpacked data for PublisherUserAdded events raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractPublisherUserAddedIterator struct {
-	Event *SelfServeStorkContractPublisherUserAdded // Event containing the contract specifics and raw log
+// FirstPartyStorkContractPublisherUserAddedIterator is returned from FilterPublisherUserAdded and is used to iterate over the raw logs and unpacked data for PublisherUserAdded events raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractPublisherUserAddedIterator struct {
+	Event *FirstPartyStorkContractPublisherUserAdded // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -623,7 +623,7 @@ type SelfServeStorkContractPublisherUserAddedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *SelfServeStorkContractPublisherUserAddedIterator) Next() bool {
+func (it *FirstPartyStorkContractPublisherUserAddedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -632,7 +632,7 @@ func (it *SelfServeStorkContractPublisherUserAddedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(SelfServeStorkContractPublisherUserAdded)
+			it.Event = new(FirstPartyStorkContractPublisherUserAdded)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -647,7 +647,7 @@ func (it *SelfServeStorkContractPublisherUserAddedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(SelfServeStorkContractPublisherUserAdded)
+		it.Event = new(FirstPartyStorkContractPublisherUserAdded)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -663,19 +663,19 @@ func (it *SelfServeStorkContractPublisherUserAddedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *SelfServeStorkContractPublisherUserAddedIterator) Error() error {
+func (it *FirstPartyStorkContractPublisherUserAddedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *SelfServeStorkContractPublisherUserAddedIterator) Close() error {
+func (it *FirstPartyStorkContractPublisherUserAddedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// SelfServeStorkContractPublisherUserAdded represents a PublisherUserAdded event raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractPublisherUserAdded struct {
+// FirstPartyStorkContractPublisherUserAdded represents a PublisherUserAdded event raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractPublisherUserAdded struct {
 	PubKey          common.Address
 	SingleUpdateFee *big.Int
 	Raw             types.Log // Blockchain specific contextual infos
@@ -684,31 +684,31 @@ type SelfServeStorkContractPublisherUserAdded struct {
 // FilterPublisherUserAdded is a free log retrieval operation binding the contract event 0x99d8764b5ae5766702a4ec20b7a7c9afdb8827250795c8937679c91f91696ffd.
 //
 // Solidity: event PublisherUserAdded(address indexed pubKey, uint256 singleUpdateFee)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterPublisherUserAdded(opts *bind.FilterOpts, pubKey []common.Address) (*SelfServeStorkContractPublisherUserAddedIterator, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) FilterPublisherUserAdded(opts *bind.FilterOpts, pubKey []common.Address) (*FirstPartyStorkContractPublisherUserAddedIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
 		pubKeyRule = append(pubKeyRule, pubKeyItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.FilterLogs(opts, "PublisherUserAdded", pubKeyRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.FilterLogs(opts, "PublisherUserAdded", pubKeyRule)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractPublisherUserAddedIterator{contract: _SelfServeStorkContract.contract, event: "PublisherUserAdded", logs: logs, sub: sub}, nil
+	return &FirstPartyStorkContractPublisherUserAddedIterator{contract: _FirstPartyStorkContract.contract, event: "PublisherUserAdded", logs: logs, sub: sub}, nil
 }
 
 // WatchPublisherUserAdded is a free log subscription operation binding the contract event 0x99d8764b5ae5766702a4ec20b7a7c9afdb8827250795c8937679c91f91696ffd.
 //
 // Solidity: event PublisherUserAdded(address indexed pubKey, uint256 singleUpdateFee)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUserAdded(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractPublisherUserAdded, pubKey []common.Address) (event.Subscription, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) WatchPublisherUserAdded(opts *bind.WatchOpts, sink chan<- *FirstPartyStorkContractPublisherUserAdded, pubKey []common.Address) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
 		pubKeyRule = append(pubKeyRule, pubKeyItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.WatchLogs(opts, "PublisherUserAdded", pubKeyRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.WatchLogs(opts, "PublisherUserAdded", pubKeyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -718,8 +718,8 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUse
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(SelfServeStorkContractPublisherUserAdded)
-				if err := _SelfServeStorkContract.contract.UnpackLog(event, "PublisherUserAdded", log); err != nil {
+				event := new(FirstPartyStorkContractPublisherUserAdded)
+				if err := _FirstPartyStorkContract.contract.UnpackLog(event, "PublisherUserAdded", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -743,18 +743,18 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUse
 // ParsePublisherUserAdded is a log parse operation binding the contract event 0x99d8764b5ae5766702a4ec20b7a7c9afdb8827250795c8937679c91f91696ffd.
 //
 // Solidity: event PublisherUserAdded(address indexed pubKey, uint256 singleUpdateFee)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParsePublisherUserAdded(log types.Log) (*SelfServeStorkContractPublisherUserAdded, error) {
-	event := new(SelfServeStorkContractPublisherUserAdded)
-	if err := _SelfServeStorkContract.contract.UnpackLog(event, "PublisherUserAdded", log); err != nil {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) ParsePublisherUserAdded(log types.Log) (*FirstPartyStorkContractPublisherUserAdded, error) {
+	event := new(FirstPartyStorkContractPublisherUserAdded)
+	if err := _FirstPartyStorkContract.contract.UnpackLog(event, "PublisherUserAdded", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// SelfServeStorkContractPublisherUserRemovedIterator is returned from FilterPublisherUserRemoved and is used to iterate over the raw logs and unpacked data for PublisherUserRemoved events raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractPublisherUserRemovedIterator struct {
-	Event *SelfServeStorkContractPublisherUserRemoved // Event containing the contract specifics and raw log
+// FirstPartyStorkContractPublisherUserRemovedIterator is returned from FilterPublisherUserRemoved and is used to iterate over the raw logs and unpacked data for PublisherUserRemoved events raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractPublisherUserRemovedIterator struct {
+	Event *FirstPartyStorkContractPublisherUserRemoved // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -768,7 +768,7 @@ type SelfServeStorkContractPublisherUserRemovedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *SelfServeStorkContractPublisherUserRemovedIterator) Next() bool {
+func (it *FirstPartyStorkContractPublisherUserRemovedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -777,7 +777,7 @@ func (it *SelfServeStorkContractPublisherUserRemovedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(SelfServeStorkContractPublisherUserRemoved)
+			it.Event = new(FirstPartyStorkContractPublisherUserRemoved)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -792,7 +792,7 @@ func (it *SelfServeStorkContractPublisherUserRemovedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(SelfServeStorkContractPublisherUserRemoved)
+		it.Event = new(FirstPartyStorkContractPublisherUserRemoved)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -808,19 +808,19 @@ func (it *SelfServeStorkContractPublisherUserRemovedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *SelfServeStorkContractPublisherUserRemovedIterator) Error() error {
+func (it *FirstPartyStorkContractPublisherUserRemovedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *SelfServeStorkContractPublisherUserRemovedIterator) Close() error {
+func (it *FirstPartyStorkContractPublisherUserRemovedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// SelfServeStorkContractPublisherUserRemoved represents a PublisherUserRemoved event raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractPublisherUserRemoved struct {
+// FirstPartyStorkContractPublisherUserRemoved represents a PublisherUserRemoved event raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractPublisherUserRemoved struct {
 	PubKey common.Address
 	Raw    types.Log // Blockchain specific contextual infos
 }
@@ -828,31 +828,31 @@ type SelfServeStorkContractPublisherUserRemoved struct {
 // FilterPublisherUserRemoved is a free log retrieval operation binding the contract event 0xde37507a2967feaf95649773534bddc03d153af2b26b9ea17cdb9b62c5bbf18e.
 //
 // Solidity: event PublisherUserRemoved(address indexed pubKey)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterPublisherUserRemoved(opts *bind.FilterOpts, pubKey []common.Address) (*SelfServeStorkContractPublisherUserRemovedIterator, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) FilterPublisherUserRemoved(opts *bind.FilterOpts, pubKey []common.Address) (*FirstPartyStorkContractPublisherUserRemovedIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
 		pubKeyRule = append(pubKeyRule, pubKeyItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.FilterLogs(opts, "PublisherUserRemoved", pubKeyRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.FilterLogs(opts, "PublisherUserRemoved", pubKeyRule)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractPublisherUserRemovedIterator{contract: _SelfServeStorkContract.contract, event: "PublisherUserRemoved", logs: logs, sub: sub}, nil
+	return &FirstPartyStorkContractPublisherUserRemovedIterator{contract: _FirstPartyStorkContract.contract, event: "PublisherUserRemoved", logs: logs, sub: sub}, nil
 }
 
 // WatchPublisherUserRemoved is a free log subscription operation binding the contract event 0xde37507a2967feaf95649773534bddc03d153af2b26b9ea17cdb9b62c5bbf18e.
 //
 // Solidity: event PublisherUserRemoved(address indexed pubKey)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUserRemoved(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractPublisherUserRemoved, pubKey []common.Address) (event.Subscription, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) WatchPublisherUserRemoved(opts *bind.WatchOpts, sink chan<- *FirstPartyStorkContractPublisherUserRemoved, pubKey []common.Address) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
 		pubKeyRule = append(pubKeyRule, pubKeyItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.WatchLogs(opts, "PublisherUserRemoved", pubKeyRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.WatchLogs(opts, "PublisherUserRemoved", pubKeyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -862,8 +862,8 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUse
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(SelfServeStorkContractPublisherUserRemoved)
-				if err := _SelfServeStorkContract.contract.UnpackLog(event, "PublisherUserRemoved", log); err != nil {
+				event := new(FirstPartyStorkContractPublisherUserRemoved)
+				if err := _FirstPartyStorkContract.contract.UnpackLog(event, "PublisherUserRemoved", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -887,18 +887,18 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchPublisherUse
 // ParsePublisherUserRemoved is a log parse operation binding the contract event 0xde37507a2967feaf95649773534bddc03d153af2b26b9ea17cdb9b62c5bbf18e.
 //
 // Solidity: event PublisherUserRemoved(address indexed pubKey)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParsePublisherUserRemoved(log types.Log) (*SelfServeStorkContractPublisherUserRemoved, error) {
-	event := new(SelfServeStorkContractPublisherUserRemoved)
-	if err := _SelfServeStorkContract.contract.UnpackLog(event, "PublisherUserRemoved", log); err != nil {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) ParsePublisherUserRemoved(log types.Log) (*FirstPartyStorkContractPublisherUserRemoved, error) {
+	event := new(FirstPartyStorkContractPublisherUserRemoved)
+	if err := _FirstPartyStorkContract.contract.UnpackLog(event, "PublisherUserRemoved", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// SelfServeStorkContractValueUpdateIterator is returned from FilterValueUpdate and is used to iterate over the raw logs and unpacked data for ValueUpdate events raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractValueUpdateIterator struct {
-	Event *SelfServeStorkContractValueUpdate // Event containing the contract specifics and raw log
+// FirstPartyStorkContractValueUpdateIterator is returned from FilterValueUpdate and is used to iterate over the raw logs and unpacked data for ValueUpdate events raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractValueUpdateIterator struct {
+	Event *FirstPartyStorkContractValueUpdate // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -912,7 +912,7 @@ type SelfServeStorkContractValueUpdateIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *SelfServeStorkContractValueUpdateIterator) Next() bool {
+func (it *FirstPartyStorkContractValueUpdateIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -921,7 +921,7 @@ func (it *SelfServeStorkContractValueUpdateIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(SelfServeStorkContractValueUpdate)
+			it.Event = new(FirstPartyStorkContractValueUpdate)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -936,7 +936,7 @@ func (it *SelfServeStorkContractValueUpdateIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(SelfServeStorkContractValueUpdate)
+		it.Event = new(FirstPartyStorkContractValueUpdate)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -952,19 +952,19 @@ func (it *SelfServeStorkContractValueUpdateIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *SelfServeStorkContractValueUpdateIterator) Error() error {
+func (it *FirstPartyStorkContractValueUpdateIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *SelfServeStorkContractValueUpdateIterator) Close() error {
+func (it *FirstPartyStorkContractValueUpdateIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// SelfServeStorkContractValueUpdate represents a ValueUpdate event raised by the SelfServeStorkContract contract.
-type SelfServeStorkContractValueUpdate struct {
+// FirstPartyStorkContractValueUpdate represents a ValueUpdate event raised by the FirstPartyStorkContract contract.
+type FirstPartyStorkContractValueUpdate struct {
 	PubKey         common.Address
 	AssetId        common.Hash
 	TimestampNs    uint64
@@ -975,7 +975,7 @@ type SelfServeStorkContractValueUpdate struct {
 // FilterValueUpdate is a free log retrieval operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
 // Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterValueUpdate(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*SelfServeStorkContractValueUpdateIterator, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) FilterValueUpdate(opts *bind.FilterOpts, pubKey []common.Address, assetId []string) (*FirstPartyStorkContractValueUpdateIterator, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -986,17 +986,17 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) FilterValueUpdate
 		assetIdRule = append(assetIdRule, assetIdItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.FilterLogs(opts, "ValueUpdate", pubKeyRule, assetIdRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.FilterLogs(opts, "ValueUpdate", pubKeyRule, assetIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &SelfServeStorkContractValueUpdateIterator{contract: _SelfServeStorkContract.contract, event: "ValueUpdate", logs: logs, sub: sub}, nil
+	return &FirstPartyStorkContractValueUpdateIterator{contract: _FirstPartyStorkContract.contract, event: "ValueUpdate", logs: logs, sub: sub}, nil
 }
 
 // WatchValueUpdate is a free log subscription operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
 // Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(opts *bind.WatchOpts, sink chan<- *SelfServeStorkContractValueUpdate, pubKey []common.Address, assetId []string) (event.Subscription, error) {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) WatchValueUpdate(opts *bind.WatchOpts, sink chan<- *FirstPartyStorkContractValueUpdate, pubKey []common.Address, assetId []string) (event.Subscription, error) {
 
 	var pubKeyRule []interface{}
 	for _, pubKeyItem := range pubKey {
@@ -1007,7 +1007,7 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(
 		assetIdRule = append(assetIdRule, assetIdItem)
 	}
 
-	logs, sub, err := _SelfServeStorkContract.contract.WatchLogs(opts, "ValueUpdate", pubKeyRule, assetIdRule)
+	logs, sub, err := _FirstPartyStorkContract.contract.WatchLogs(opts, "ValueUpdate", pubKeyRule, assetIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1017,8 +1017,8 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(SelfServeStorkContractValueUpdate)
-				if err := _SelfServeStorkContract.contract.UnpackLog(event, "ValueUpdate", log); err != nil {
+				event := new(FirstPartyStorkContractValueUpdate)
+				if err := _FirstPartyStorkContract.contract.UnpackLog(event, "ValueUpdate", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1042,9 +1042,9 @@ func (_SelfServeStorkContract *SelfServeStorkContractFilterer) WatchValueUpdate(
 // ParseValueUpdate is a log parse operation binding the contract event 0x0596010914c581c18e615a5b0d097d78728eb775f2412d8bedd4dbc808f4f855.
 //
 // Solidity: event ValueUpdate(address indexed pubKey, string indexed assetId, uint64 timestampNs, int192 quantizedValue)
-func (_SelfServeStorkContract *SelfServeStorkContractFilterer) ParseValueUpdate(log types.Log) (*SelfServeStorkContractValueUpdate, error) {
-	event := new(SelfServeStorkContractValueUpdate)
-	if err := _SelfServeStorkContract.contract.UnpackLog(event, "ValueUpdate", log); err != nil {
+func (_FirstPartyStorkContract *FirstPartyStorkContractFilterer) ParseValueUpdate(log types.Log) (*FirstPartyStorkContractValueUpdate, error) {
+	event := new(FirstPartyStorkContractValueUpdate)
+	if err := _FirstPartyStorkContract.contract.UnpackLog(event, "ValueUpdate", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

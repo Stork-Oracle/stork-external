@@ -46,7 +46,7 @@ func NewWebsocketServer(port string, signedPriceUpdateCh chan publisher_agent.Si
 			WriteBufferSize:   WriteBufferSize,
 			EnableCompression: true,
 			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins for self-serve
+				return true // Allow all origins for first party chain pusher
 			},
 		},
 	}

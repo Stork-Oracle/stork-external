@@ -6,9 +6,9 @@ pragma solidity >=0.8.24 <0.9.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "./SelfServeStork.sol";
+import "./FirstPartyStork.sol";
 
-contract UpgradeableSelfServeStork is Initializable, UUPSUpgradeable, Ownable2StepUpgradeable, SelfServeStork {
+contract UpgradeableFirstPartyStork is Initializable, UUPSUpgradeable, Ownable2StepUpgradeable, FirstPartyStork {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();

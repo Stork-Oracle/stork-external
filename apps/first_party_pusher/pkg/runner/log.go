@@ -18,7 +18,7 @@ func BaseLogger(application string) zerolog.Logger {
 
 // AppLogger is a base logger configured for the chain pusher.
 func AppLogger(command string) zerolog.Logger {
-	return BaseLogger("self-serve-chain-pusher").With().Str("command", command).Logger()
+	return BaseLogger("first-party-chain-pusher").With().Str("command", command).Logger()
 }
 
 func PusherLogger(

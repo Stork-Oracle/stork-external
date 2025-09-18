@@ -3,17 +3,17 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./SelfServeStorkStructs.sol";
-import "./SelfServeStorkState.sol";
-import "./SelfServeStorkErrors.sol";
+import "./FirstPartyStorkStructs.sol";
+import "./FirstPartyStorkState.sol";
+import "./FirstPartyStorkErrors.sol";
 
-contract SelfServeStorkGetters is SelfServeStorkState {
+contract FirstPartyStorkGetters is FirstPartyStorkState {
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId
-    ) public view returns (SelfServeStorkStructs.TemporalNumericValue memory value) {
+    ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory value) {
         if (_state.latestValues[pubKey][assetPairId].timestampNs == 0) {
-            revert SelfServeStorkErrors.NotFound();
+            revert FirstPartyStorkErrors.NotFound();
         }
 
         return _state.latestValues[pubKey][assetPairId];
@@ -23,9 +23,9 @@ contract SelfServeStorkGetters is SelfServeStorkState {
         address pubKey,
         string memory assetPairId,
         uint256 roundId
-    ) public view returns (SelfServeStorkStructs.TemporalNumericValue memory) {
+    ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory) {
         if (roundId >= _state.historicalValues[pubKey][assetPairId].length) {
-            revert SelfServeStorkErrors.NotFound();
+            revert FirstPartyStorkErrors.NotFound();
         }
 
         return _state.historicalValues[pubKey][assetPairId][roundId];
@@ -47,9 +47,9 @@ contract SelfServeStorkGetters is SelfServeStorkState {
 
     function getPublisherUser(
         address pubKey
-    ) public view returns (SelfServeStorkStructs.PublisherUser memory) {
+    ) public view returns (FirstPartyStorkStructs.PublisherUser memory) {
         if (_state.publisherUsers[pubKey].pubKey == address(0)) {
-            revert SelfServeStorkErrors.NotFound();
+            revert FirstPartyStorkErrors.NotFound();
         }
 
         return _state.publisherUsers[pubKey];

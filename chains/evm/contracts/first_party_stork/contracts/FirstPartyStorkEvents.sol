@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.24 <0.9.0;
 
-/// @title ISelfServeStorkEvents
-/// @notice Events emitted by the SelfServeStork contract
+/// @title IFirstPartyStorkEvents
+/// @notice Events emitted by the FirstPartyStork contract
 /// @dev This interface can be used for listening to updates for off-chain and testing purposes
-interface ISelfServeStorkEvents {
+interface IFirstPartyStorkEvents {
     /// @notice Emitted when the latest value with `assetId` has received a fresh update
     /// @param pubKey The publisher's public key
     /// @param assetId The asset ID
