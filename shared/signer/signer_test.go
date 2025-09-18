@@ -278,7 +278,7 @@ func TestCreateStarkBufferFromBigIntAbs(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			// derefernce the resulting c pointer to a byte array
+			// deref the resulting c pointer to a byte array
 			resultBytes := (*[32]byte)(unsafe.Pointer(result))
 			assert.Equal(t, tt.expectedBytes, *resultBytes)
 		})
