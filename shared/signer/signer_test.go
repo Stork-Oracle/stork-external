@@ -6,6 +6,7 @@ import (
 	"testing"
 	"unsafe"
 
+	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
@@ -255,13 +256,13 @@ func TestCreateStarkBufferFromBigIntAbs(t *testing.T) {
 			expectedBytes: [32]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		},
 		{
-			name:          "positive max",
-			intBigInt:     new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 251), big.NewInt(1)),
-			expectedBytes: [32]byte{0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+			name:          "max value",
+			intBigInt:     new(big.Int).Sub(fp.Modulus(), big.NewInt(1)),
+			expectedBytes: [32]byte{0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			name:          "too large",
-			intBigInt:     new(big.Int).SetInt64(1).Lsh(new(big.Int).SetInt64(1), 251),
+			intBigInt:     fp.Modulus(),
 			expectedBytes: [32]byte{},
 			expectedError: ErrBigIntTooLarge,
 		},

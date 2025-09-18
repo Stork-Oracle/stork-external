@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var ErrBigIntTooLarge = errors.New("big int is too large to fit in 251 bits")
+var ErrBigIntTooLarge = errors.New("big int is larger than the modulus of the Stark curve")
 
 // gmorkworld in ascii
 const (
@@ -388,13 +388,11 @@ func createBufferFromBytes(buf []byte) *C.uint8_t {
 }
 
 // createStarkBufferFromBigIntAbs creates a 32-byte buffer from a big.Int and returns a pointer to the buffer in the form of a C uint8_t.
-// We enforce only use 251 bits of the buffer in order to fit into the finite field of the Stark curve.
-// However, we use 32 bytes as it's the minimum number of bytes that can hold the full 251 bits.
-// Returns an error if the big.Int is too large to fit in 251 bits.
+// We enforce that the big.Int is less than the modulus of the Stark curve (a 251-bit prime).
+// Returns an error if the big.Int is too large to fit in the Stark curve.
 // This function assumes the big.Int is positive, and uses the absolute value of the big.Int regardless of sign.
 func createStarkBufferFromBigIntAbs(i *big.Int) (*C.uint8_t, error) {
-	//nolint:mnd // 251 is a magic number that is tied to the Stark curve.
-	if i.BitLen() > 251 {
+	if i.Cmp(fp.Modulus()) >= 0 {
 		return nil, ErrBigIntTooLarge
 	}
 	bytes := make([]byte, 32)
