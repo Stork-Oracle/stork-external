@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var ErrBigIntTooLarge = errors.New("big int is too large to fit in 32 bytes")
+var ErrBigIntTooLarge = errors.New("big int is too large to fit in 251 bits")
 
 // gmorkworld in ascii
 const (
