@@ -156,12 +156,32 @@ func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey PublisherKey, 
 	sInt := new(big.Int)
 	sInt.SetString(sStr, 16)
 
+	xIntBuf, err := createStarkBufferFromBigIntAbs(xInt)
+	if err != nil {
+		return false
+	}
+	yIntBuf, err := createStarkBufferFromBigIntAbs(yInt)
+	if err != nil {
+		return false
+	}
+	pubKeyIntBuf, err := createStarkBufferFromBigIntAbs(pubKeyInt)
+	if err != nil {
+		return false
+	}
+	rIntBuf, err := createStarkBufferFromBigIntAbs(rInt)
+	if err != nil {
+		return false
+	}
+	sIntBuf, err := createStarkBufferFromBigIntAbs(sInt)
+	if err != nil {
+		return false
+	}
 	isValidInt := C.validate_stark_signature(
-		createBufferFromBigInt(xInt),
-		createBufferFromBigInt(yInt),
-		createBufferFromBigInt(pubKeyInt),
-		createBufferFromBigInt(rInt),
-		createBufferFromBigInt(sInt),
+		xIntBuf,
+		yIntBuf,
+		pubKeyIntBuf,
+		rIntBuf,
+		sIntBuf,
 	)
 	isValid := isValidInt != 0
 
