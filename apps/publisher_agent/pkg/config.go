@@ -51,7 +51,7 @@ type Keys struct {
 	EvmPublicKey    signer.EvmPublisherKey
 	StarkPrivateKey signer.StarkPrivateKey
 	StarkPublicKey  signer.StarkPublisherKey
-	OracleID        OracleID
+	OracleID        OracleID `json:"OracleId"` //nolint:tagliatelle // Backwards compatibility
 	PullBasedAuth   shared.AuthToken
 }
 

@@ -45,7 +45,7 @@ def main():
         parser.error("oracle id  must be exactly 5 characters long")
 
     keys_dict = {
-        "OracleID": args.oracle_id,
+        "OracleId": args.oracle_id,
     }
     if args.pull_based_auth:
         keys_dict["PullBasedAuth"] = args.pull_based_auth
