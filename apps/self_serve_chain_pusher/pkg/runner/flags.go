@@ -1,4 +1,4 @@
-package pusher
+package runner
 
 const (
 	WebsocketPortFlag   = "websocket-port"

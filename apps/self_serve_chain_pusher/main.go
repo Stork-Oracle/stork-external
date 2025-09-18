@@ -36,7 +36,7 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose logging")
 
-	rootCmd.AddCommand(self_serve_evm.EvmSelfServeCmd())
+	rootCmd.AddCommand(self_serve_evm.NewPushCmd())
 
 	err := rootCmd.Execute()
 	if err != nil {

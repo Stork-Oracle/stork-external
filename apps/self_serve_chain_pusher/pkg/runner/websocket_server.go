@@ -1,4 +1,4 @@
-package self_serve_evm
+package runner
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ const (
 type WebsocketServer struct {
 	port                string
 	upgrader            websocket.Upgrader
-	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature] // TODO: make generic
 	logger              zerolog.Logger
 	server              *http.Server
 	mutex               sync.RWMutex

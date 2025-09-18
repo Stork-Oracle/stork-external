@@ -22,6 +22,8 @@
         "editor.defaultFormatter": "FuelLabs.sway-vscode-plugin"
     },
     "cSpell.words": [
-        "interactor"
+        "ethclient",
+        "Interactor",
+        "zerolog"
     ]
 }
