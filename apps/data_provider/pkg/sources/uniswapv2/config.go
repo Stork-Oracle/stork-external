@@ -3,7 +3,7 @@ package uniswapv2
 import "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/types"
 
 type UniswapV2Config struct {
-	DataSource         types.DataSourceId `json:"dataSource"`
+	DataSource         types.DataSourceID `json:"dataSource"`
 	UpdateFrequency    string             `json:"updateFrequency"`
 	HttpProviderUrl    string             `json:"httpProviderUrl"`
 	ContractAddress    string             `json:"contractAddress"`

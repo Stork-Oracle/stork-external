@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
 
 type IncomingWebsocketPuller struct {
-	Auth                AuthToken
+	Auth                shared.AuthToken
 	Url                 string
 	SubscriptionRequest string
 	ReconnectDelay      time.Duration

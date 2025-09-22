@@ -5,16 +5,17 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfig(t *testing.T) {
-	config, secrets, err := LoadConfig("./resources/push_config.json", "./resources/example_keys.json")
+	config, secrets, err := LoadConfig("./resources/push_config.json", "./resources/example_keys.json", "./resources/brokers_seed.json")
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
-	assert.Equal(t, []signer.SignatureType{"evm", "stark"}, config.SignatureTypes)
+	assert.Equal(t, []shared.SignatureType{"evm", "stark"}, config.SignatureTypes)
 	assert.Equal(
 		t,
 		signer.EvmPrivateKey("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de"),
@@ -34,6 +35,8 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, "", config.PullBasedWsUrl)
 	assert.Equal(t, 5216, config.IncomingWsPort)
+
+	// TODO: test seeded brokers
 }
 
 func TestLoadKeys(t *testing.T) {

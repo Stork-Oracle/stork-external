@@ -1,0 +1,6 @@
+[
+    {
+        "publish_url": "ws://localhost:9999",
+        "asset_ids": ["BTCUSD", "ETHUSD"]
+    }
+]

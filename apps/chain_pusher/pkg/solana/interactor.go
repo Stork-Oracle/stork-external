@@ -13,6 +13,7 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -258,7 +259,7 @@ func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
 }
 
 func getFeedAccountsFromAssets(
-	assets map[types.AssetID]types.AssetEntry,
+	assets map[shared.AssetID]types.AssetEntry,
 	contractPubKey solana.PublicKey,
 	logger zerolog.Logger,
 ) (map[types.InternalEncodedAssetID]solana.PublicKey, error) {
@@ -611,7 +612,7 @@ func (sci *ContractInteractor) priceUpdateToTemporalNumericValueEvmInput(
 }
 
 //nolint:mnd // twos compliment conversions contain magic numbers
-func quantizedPriceToInt128(quantizedPrice types.QuantizedPrice) bin.Int128 {
+func quantizedPriceToInt128(quantizedPrice shared.QuantizedPrice) bin.Int128 {
 	quantizedPriceBigInt := new(big.Int)
 	quantizedPriceBigInt.SetString(string(quantizedPrice), 10)
 

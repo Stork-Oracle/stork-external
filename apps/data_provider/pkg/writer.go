@@ -64,7 +64,7 @@ func (w *WebsocketWriter) runWriteLoop(updateCh chan types.DataSourceUpdateMap) 
 		for _, update := range updateMap {
 			valueUpdate := types.ValueUpdate{
 				PublishTimestampNano: update.Time.UnixNano(),
-				ValueId:              update.ValueId,
+				ValueID:              update.ValueID,
 				Value:                fmt.Sprintf(`%.18f`, update.Value),
 			}
 			valueUpdates = append(valueUpdates, valueUpdate)
