@@ -21,3 +21,5 @@ debug/
 **/*.rs.bk
 .idea/
 *.iml
+
+.pc-history
