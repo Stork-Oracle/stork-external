@@ -1,0 +1,14 @@
+{
+    "sources": [
+      {
+        "id": "MY_RANDOM_VALUE",
+        "config": {
+          "dataSource": "random",
+          "updateFrequency": "3s",
+          "minValue": 2999,
+          "maxValue": 3000
+        }
+      }
+    ]
+  }
+  

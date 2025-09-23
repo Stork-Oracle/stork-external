@@ -62,4 +62,4 @@ start-data-provider: rebuild-data-provider
 		exit 1; \
 	fi
 	@echo "Starting data provider with arguments: $(ARGS)"
-	@data-provider start $(ARGS)
+	@$(shell go env GOPATH)/bin/data-provider start $(ARGS)

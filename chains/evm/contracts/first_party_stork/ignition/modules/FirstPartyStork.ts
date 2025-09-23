@@ -1,22 +1,27 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const ProxyModule = buildModule("ProxyModule", (m) => {
-  const UpgradeableSelfServeStork = m.contract("UpgradeableSelfServeStork");
+  const UpgradeableFirstPartyStork = m.contract("UpgradeableFirstPartyStork");
 
-  const proxy = m.contract("ERC1967Proxy", [
-    UpgradeableSelfServeStork,
-    "0x",
+  const proxyAdminOwner = m.getAccount(0);
+  
+  const initializeCalldata = m.encodeFunctionCall(UpgradeableFirstPartyStork, "initialize", [proxyAdminOwner]);
+
+  const proxy = m.contract("TransparentUpgradeableProxy", [
+    UpgradeableFirstPartyStork,
+    proxyAdminOwner,
+    initializeCalldata,
   ]);
 
   return { proxy };
 });
   
-const SelfServeStorkModule = buildModule("SelfServeStorkModule", (m) => {
+const FirstPartyStorkModule = buildModule("FirstPartyStorkModule", (m) => {
   const { proxy } = m.useModule(ProxyModule);
 
-  const SelfServeStork = m.contractAt("SelfServeStork", proxy);
+  const FirstPartyStork = m.contractAt("UpgradeableFirstPartyStork", proxy);
 
-  return { SelfServeStork, proxy };
+  return { FirstPartyStork, proxy };
 });
 
-export default SelfServeStorkModule;
+export default FirstPartyStorkModule;

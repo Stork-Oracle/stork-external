@@ -85,7 +85,6 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(publicKey)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
-		return
 	}
 
 	// merge seeded brokers with registry brokers
@@ -159,6 +158,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 	go func(signedPriceBatchCh chan SignedPriceUpdateBatch[T]) {
 		for signedPriceUpdateBatch := range signedPriceBatchCh {
 			r.outgoingConnectionsLock.RLock()
+
 			for _, outgoingConnection := range r.outgoingConnectionsByBroker {
 				outgoingConnection.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
 			}

@@ -50,7 +50,7 @@ contract FirstPartyStorkVerify {
         bytes32 msgHash = getPublisherMessageHash(
             oraclePubKey,
             assetPairId,
-            timestamp,
+            timestamp / 1_000_000_000,
             value
         );
         bytes32 signedMessageHash = getEthSignedMessageHash32(msgHash);

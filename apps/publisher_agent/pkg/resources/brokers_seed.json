@@ -1,6 +1,6 @@
 [
     {
-        "publish_url": "ws://localhost:9999",
-        "asset_ids": ["BTCUSD", "ETHUSD"]
+        "publish_url": "ws://localhost:8080/ws",
+        "asset_ids": ["MY_RANDOM_VALUE"]
     }
 ]

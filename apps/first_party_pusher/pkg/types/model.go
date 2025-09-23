@@ -5,37 +5,26 @@ import (
 	"math/big"
 	"time"
 
+	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
 )
-
-// TODO: copy chain_pusher/pkg/types/model.go structs
-type AssetPushConfig struct {
-	AssetID                shared.AssetID        `yaml:"asset_id"`
-	EncodedAssetID         shared.EncodedAssetID `yaml:"encoded_asset_id"`
-	PushIntervalSec        int                   `yaml:"push_interval_sec"`
-	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
-}
-
-type AssetConfigFile struct {
-	Assets map[shared.AssetID]AssetPushConfig `yaml:"assets"`
-}
 
 type FirstPartyConfig struct {
 	WebsocketPort   string
 	ChainRpcUrl     string
 	ChainWsUrl      string
 	ContractAddress string
-	AssetConfig     *AssetConfigFile
+	AssetConfig     *chain_pusher_types.AssetConfig
 	PrivateKey      *ecdsa.PrivateKey
 	GasLimit        uint64
 }
 
-type AssetPushState struct {
+type AssetPushState[T shared.Signature] struct {
 	AssetID                  shared.AssetID
-	Config                   AssetPushConfig
+	Config                   chain_pusher_types.AssetEntry
 	LastPrice                *big.Float
 	LastPushTime             time.Time
-	PendingSignedPriceUpdate *publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
+	PendingSignedPriceUpdate *publisher_agent.SignedPriceUpdate[T]
 	NextPushTime             time.Time
 }

@@ -59,9 +59,13 @@ generate:
 	@echo "Installing generate..."
 	@$(GO) install -v ./utils/generate
 
+first_party_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
+	@echo "Installing first party pusher..."
+	@$(GO) install -v ./apps/first_party_pusher
+
 .PHONY: install
 ## Aggregate target to install all Go binaries	
-install: chain_pusher publisher_agent data_provider generate install-cosmwasm-libs
+install: chain_pusher publisher_agent data_provider generate first_party_pusher install-cosmwasm-libs
 	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean

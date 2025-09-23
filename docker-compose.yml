@@ -32,10 +32,11 @@ services:
         "start",
         "-c",
         "/etc/data_provider_config.json",
-        "--verbose"
+        "-o",
+        "ws://host.docker.internal:5216/publish",
       ]
     volumes:
-      - "./sample.data-provider.config.json:/etc/data_provider_config.json"
+      - "./apps/data_provider/pkg/configs/random_config.json:/etc/data_provider_config.json"
 
   evm-pusher:
     profiles:
@@ -66,6 +67,52 @@ services:
     volumes:
       - "./path-to-asset-config.yaml:/etc/asset-config.yaml"
       - "./path-to-private-key.secret:/etc/private-key.secret"
+  
+  first-party-pusher:
+    profiles:
+      - services
+    build:
+      context: .
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "http://host.docker.internal:8545",
+        "-x", "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "-f", "/etc/asset-config.yaml",
+        "-k", "/etc/private-key.secret",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./apps/first_party_pusher/random.asset-config.yaml:/etc/asset-config.yaml"
+      - "./apps/first_party_pusher/sample.private-key.txt:/etc/private-key.secret"
+
+  first-party-contract:
+    profiles:
+      - integration
+    build:
+      context: .
+      dockerfile: docker/images/evm.Dockerfile
+      args:
+        STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xC4A02e7D370402F4afC36032076B05e74FF81786}
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result"
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 2s
 
   evm-contract:
     profiles:

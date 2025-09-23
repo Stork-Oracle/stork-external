@@ -2,15 +2,15 @@ assets:
   BTCUSD:
     asset_id: BTCUSD
     encoded_asset_id: 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de
-    push_interval_sec: 60
     percent_change_threshold: 1.0
+    fallback_period_sec: 60
   ETHUSD:
     asset_id: ETHUSD
     encoded_asset_id: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-    push_interval_sec: 30
     percent_change_threshold: 0.5
+    fallback_period_sec: 30
   SOLUSD:
     asset_id: SOLUSD
     encoded_asset_id: 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890
-    push_interval_sec: 45
     percent_change_threshold: 2.0
+    fallback_period_sec: 45

@@ -16,8 +16,8 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/evm/bindings"
-	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
 )
@@ -97,7 +97,11 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset types.AssetPushConfig, signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature]) error {
+func (ci *ContractInteractor) PushSignedPriceUpdate(
+	ctx context.Context,
+	asset chain_pusher_types.AssetEntry,
+	signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
+) error {
 	ci.logger.Info().
 		Str("asset", string(signedPriceUpdate.AssetID)).
 		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
@@ -126,7 +130,11 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset t
 			backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
 		}
 
-		txHash, err := ci.submitPushValueTransaction(ctx, []bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{updateInput})
+		txHash, err := ci.submitPushValueTransaction(
+			ctx,
+			[]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{updateInput},
+			asset.Historic,
+		)
 		if err != nil {
 			lastErr = err
 
@@ -137,6 +145,7 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(ctx context.Context, asset t
 			Str("asset", string(signedPriceUpdate.AssetID)).
 			Str("tx_hash", txHash.Hex()).
 			Msg("Successfully submitted signed price update transaction")
+
 		return nil
 	}
 
@@ -155,7 +164,7 @@ func (ci *ContractInteractor) Close() {
 
 func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
-	asset types.AssetPushConfig,
+	asset chain_pusher_types.AssetEntry,
 ) (bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, error) {
 	// Convert quantized price to big.Int
 	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
@@ -218,6 +227,7 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 func (ci *ContractInteractor) submitPushValueTransaction(
 	ctx context.Context,
 	updateData []bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput,
+	storeHistoric bool,
 ) (*common.Hash, error) {
 	// Get transaction options
 	auth, err := ci.getTransactionOptions(ctx)
@@ -227,7 +237,7 @@ func (ci *ContractInteractor) submitPushValueTransaction(
 
 	// Call the contract's UpdateTemporalNumericValues method
 	// storeHistoric is set to false for basic functionality
-	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updateData, false)
+	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updateData, storeHistoric)
 	if err != nil {
 		return nil, fmt.Errorf("failed to call UpdateTemporalNumericValues: %w", err)
 	}

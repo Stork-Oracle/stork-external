@@ -7,8 +7,8 @@ const config: HardhatUserConfig = {
   plugins: [hardhatToolboxViemPlugin],
   solidity: {
     npmFilesToBuild: [
-      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol",
-      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
     ],
     profiles: {
       default: {

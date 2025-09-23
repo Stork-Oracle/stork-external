@@ -15,38 +15,38 @@ import (
 	"github.com/Stork-Oracle/stork-external/shared"
 )
 
-type FirstPartyRunner struct {
+type FirstPartyRunner[T shared.Signature] struct {
 	config             *types.FirstPartyConfig
-	contractInteractor types.ContractInteractor
-	websocketServer    *WebsocketServer
+	contractInteractor types.ContractInteractor[T]
+	websocketServer    *WebsocketServer[T]
 
-	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature]
-	assetStates         map[shared.AssetID]*types.AssetPushState
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[T]
+	assetStates         map[shared.AssetID]*types.AssetPushState[T]
 	assetStatesMutex    sync.RWMutex
 
 	cancel context.CancelFunc
 	logger zerolog.Logger
 }
 
-func NewFirstPartyRunner(
+func NewFirstPartyRunner[T shared.Signature](
 	config *types.FirstPartyConfig,
-	contractInteractor types.ContractInteractor,
+	contractInteractor types.ContractInteractor[T],
 	cancel context.CancelFunc,
 	logger zerolog.Logger,
-) *FirstPartyRunner {
-	return &FirstPartyRunner{
+) *FirstPartyRunner[T] {
+	return &FirstPartyRunner[T]{
 		config:              config,
 		contractInteractor:  contractInteractor,
 		websocketServer:     nil,
-		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[*shared.EvmSignature], 1000),
-		assetStates:         make(map[shared.AssetID]*types.AssetPushState),
+		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[T], 1000),
+		assetStates:         make(map[shared.AssetID]*types.AssetPushState[T]),
 		assetStatesMutex:    sync.RWMutex{},
 		cancel:              cancel,
 		logger:              logger.With().Str("component", "first_party_runner").Logger(),
 	}
 }
 
-func (r *FirstPartyRunner) Run(ctx context.Context) {
+func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 	r.logger.Info().Msg("Starting EVM First Party Chain Pusher")
 
 	// Initialize asset states
@@ -61,49 +61,52 @@ func (r *FirstPartyRunner) Run(ctx context.Context) {
 
 	// Start websocket server (blocking)
 	r.logger.Info().Str("port", r.config.WebsocketPort).Msg("Starting WebSocket server")
-	if err := r.websocketServer.Start(); err != nil {
+
+	err := r.websocketServer.Start()
+	if err != nil {
 		r.logger.Fatal().Err(err).Msg("WebSocket server failed")
 	}
 }
 
-func (r *FirstPartyRunner) Stop() {
+func (r *FirstPartyRunner[T]) Stop() {
 	r.logger.Info().Msg("Stopping EVM First Party Chain Pusher")
 	r.cancel()
 
 	if r.websocketServer != nil {
-		r.websocketServer.Stop()
+		_ = r.websocketServer.Stop()
 	}
 }
 
-func (r *FirstPartyRunner) initializeAssetStates() {
+func (r *FirstPartyRunner[T]) initializeAssetStates() {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
 	for assetID, assetConfig := range r.config.AssetConfig.Assets {
-		r.assetStates[assetID] = &types.AssetPushState{
+		r.assetStates[assetID] = &types.AssetPushState[T]{
 			AssetID:                  assetID,
 			Config:                   assetConfig,
 			LastPrice:                nil,
 			LastPushTime:             time.Time{},
 			PendingSignedPriceUpdate: nil,
-			NextPushTime:             time.Now().Add(time.Duration(assetConfig.PushIntervalSec) * time.Second),
+			NextPushTime:             time.Now().Add(time.Duration(assetConfig.FallbackPeriodSecs) * time.Second),
 		}
 
 		r.logger.Info().
 			Str("asset", string(assetID)).
-			Int("push_interval_sec", assetConfig.PushIntervalSec).
 			Float64("percent_threshold", assetConfig.PercentChangeThreshold).
+			Uint64("fallback_period_sec", assetConfig.FallbackPeriodSecs).
 			Msg("Initialized asset push state")
 	}
 }
 
-func (r *FirstPartyRunner) processValueUpdates(ctx context.Context) {
+func (r *FirstPartyRunner[T]) processValueUpdates(ctx context.Context) {
 	r.logger.Info().Msg("Starting value update processor")
 
 	for {
 		select {
 		case <-ctx.Done():
 			r.logger.Info().Msg("Value update processor stopped")
+
 			return
 
 		case signedPriceUpdate := <-r.signedPriceUpdateCh:
@@ -112,14 +115,16 @@ func (r *FirstPartyRunner) processValueUpdates(ctx context.Context) {
 	}
 }
 
-func (r *FirstPartyRunner) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature]) {
+func (r *FirstPartyRunner[T]) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[T]) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
 	assetID := signedPriceUpdate.AssetID
+
 	assetState, exists := r.assetStates[assetID]
 	if !exists {
 		r.logger.Debug().Str("asset", string(assetID)).Msg("Received update for unconfigured asset")
+
 		return
 	}
 
@@ -127,6 +132,7 @@ func (r *FirstPartyRunner) handleSignedPriceUpdate(ctx context.Context, signedPr
 	priceValue, err := r.convertQuantizedPriceToBigFloat(string(signedPriceUpdate.SignedPrice.QuantizedPrice))
 	if err != nil {
 		r.logger.Error().Err(err).Str("asset", string(assetID)).Msg("Failed to convert quantized price")
+
 		return
 	}
 
@@ -140,17 +146,19 @@ func (r *FirstPartyRunner) handleSignedPriceUpdate(ctx context.Context, signedPr
 
 	// Check if we should trigger a push based on price change
 	if r.shouldPushBasedOnDelta(assetState, priceValue) {
-		r.logger.Info().
-			Str("asset", string(assetID)).
-			Str("old_price", assetState.LastPrice.Text('f', 6)).
-			Str("new_price", priceValue.Text('f', 6)).
-			Msg("Triggering push due to price delta threshold")
+		if assetState.LastPrice != nil {
+			r.logger.Info().
+				Str("asset", string(assetID)).
+				Str("old_price", assetState.LastPrice.Text('f', 6)).
+				Str("new_price", priceValue.Text('f', 6)).
+				Msg("Triggering push due to price delta threshold")
+		}
 
 		r.triggerPush(ctx, assetState)
 	}
 }
 
-func (r *FirstPartyRunner) shouldPushBasedOnDelta(state *types.AssetPushState, newPrice *big.Float) bool {
+func (r *FirstPartyRunner[T]) shouldPushBasedOnDelta(state *types.AssetPushState[T], newPrice *big.Float) bool {
 	if state.LastPrice == nil {
 		return true // First price update
 	}
@@ -166,7 +174,7 @@ func (r *FirstPartyRunner) shouldPushBasedOnDelta(state *types.AssetPushState, n
 	return absPercentChange.Cmp(threshold) >= 0
 }
 
-func (r *FirstPartyRunner) processPushTriggers(ctx context.Context) {
+func (r *FirstPartyRunner[T]) processPushTriggers(ctx context.Context) {
 	r.logger.Info().Msg("Starting push trigger processor")
 
 	ticker := time.NewTicker(1 * time.Second) // Check every second
@@ -176,6 +184,7 @@ func (r *FirstPartyRunner) processPushTriggers(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			r.logger.Info().Msg("Push trigger processor stopped")
+
 			return
 
 		case <-ticker.C:
@@ -184,7 +193,7 @@ func (r *FirstPartyRunner) processPushTriggers(ctx context.Context) {
 	}
 }
 
-func (r *FirstPartyRunner) checkTimerTriggers(ctx context.Context) {
+func (r *FirstPartyRunner[T]) checkTimerTriggers(ctx context.Context) {
 	r.assetStatesMutex.Lock()
 	defer r.assetStatesMutex.Unlock()
 
@@ -201,7 +210,7 @@ func (r *FirstPartyRunner) checkTimerTriggers(ctx context.Context) {
 	}
 }
 
-func (r *FirstPartyRunner) triggerPush(parentCtx context.Context, state *types.AssetPushState) {
+func (r *FirstPartyRunner[T]) triggerPush(parentCtx context.Context, state *types.AssetPushState[T]) {
 	if state.PendingSignedPriceUpdate == nil {
 		return
 	}
@@ -217,16 +226,19 @@ func (r *FirstPartyRunner) triggerPush(parentCtx context.Context, state *types.A
 				Err(err).
 				Str("asset", string(state.AssetID)).
 				Msg("Failed to push value to contract")
+
 			return
 		}
 
 		// Update state after successful push
 		r.assetStatesMutex.Lock()
+
 		priceValue, _ := r.convertQuantizedPriceToBigFloat(string(state.PendingSignedPriceUpdate.SignedPrice.QuantizedPrice))
 		state.LastPrice = priceValue
 		state.LastPushTime = time.Now()
-		state.NextPushTime = time.Now().Add(time.Duration(state.Config.PushIntervalSec) * time.Second)
+		state.NextPushTime = time.Now().Add(time.Duration(state.Config.FallbackPeriodSecs) * time.Second)
 		state.PendingSignedPriceUpdate = nil
+
 		r.assetStatesMutex.Unlock()
 
 		r.logger.Info().
@@ -236,10 +248,11 @@ func (r *FirstPartyRunner) triggerPush(parentCtx context.Context, state *types.A
 	}()
 }
 
-func (r *FirstPartyRunner) convertQuantizedPriceToBigFloat(quantizedPrice string) (*big.Float, error) {
+func (r *FirstPartyRunner[T]) convertQuantizedPriceToBigFloat(quantizedPrice string) (*big.Float, error) {
 	bf, success := new(big.Float).SetString(quantizedPrice)
 	if !success {
 		return nil, fmt.Errorf("failed to convert quantized price to big.Float: %s", quantizedPrice)
 	}
+
 	return bf, nil
 }

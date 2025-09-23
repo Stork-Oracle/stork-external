@@ -15,13 +15,13 @@ func NewPushCmd() *cobra.Command {
 		Run:   runPush,
 	}
 
-	pushCmd.Flags().String(runner.WebsocketPortFlag, "8080", runner.WebsocketPortDesc)
-	pushCmd.Flags().String(runner.ChainRpcUrlFlag, "", runner.ChainRpcUrlDesc)
-	pushCmd.Flags().String(runner.ChainWsUrlFlag, "", runner.ChainWsUrlDesc)
-	pushCmd.Flags().String(runner.ContractAddressFlag, "", runner.ContractAddressDesc)
-	pushCmd.Flags().String(runner.AssetConfigFileFlag, "", runner.AssetConfigFileDesc)
-	pushCmd.Flags().String(runner.PrivateKeyFileFlag, "", runner.PrivateKeyFileDesc)
-	pushCmd.Flags().Uint64(runner.GasLimitFlag, 0, runner.GasLimitDesc)
+	pushCmd.Flags().StringP(runner.WebsocketPortFlag, "w", "8080", runner.WebsocketPortDesc)
+	pushCmd.Flags().StringP(runner.ChainRpcUrlFlag, "c", "", runner.ChainRpcUrlDesc)
+	pushCmd.Flags().StringP(runner.ChainWsUrlFlag, "u", "", runner.ChainWsUrlDesc)
+	pushCmd.Flags().StringP(runner.ContractAddressFlag, "x", "", runner.ContractAddressDesc)
+	pushCmd.Flags().StringP(runner.AssetConfigFileFlag, "f", "", runner.AssetConfigFileDesc)
+	pushCmd.Flags().StringP(runner.PrivateKeyFileFlag, "k", "", runner.PrivateKeyFileDesc)
+	pushCmd.Flags().Uint64P(runner.GasLimitFlag, "g", 0, runner.GasLimitDesc)
 
 	_ = pushCmd.MarkFlagRequired(runner.ChainRpcUrlFlag)
 	_ = pushCmd.MarkFlagRequired(runner.ContractAddressFlag)

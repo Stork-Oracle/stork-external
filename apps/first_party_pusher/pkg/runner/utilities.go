@@ -9,18 +9,18 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
+	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/yaml.v2"
 )
 
-func LoadAssetConfig(filename string) (*types.AssetConfigFile, error) {
+func LoadAssetConfig(filename string) (*chain_pusher_types.AssetConfig, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read asset config file: %w", err)
 	}
 
-	var config types.AssetConfigFile
+	var config chain_pusher_types.AssetConfig
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
