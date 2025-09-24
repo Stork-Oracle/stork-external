@@ -32,12 +32,12 @@ Create a `private-key.secret` file containing the private key of your wallet. Th
 ### Running the EVM Pusher
 For full explanation of the flags, run:
 ```bash
-go run ./cmd/main.go evm --help
+go run ./main.go evm --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/main.go evm \
+go run ./main.go evm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -65,12 +65,12 @@ Create a `keypair.json` file containing your Solana wallet keypair. This file is
 ### Running the Solana Pusher
 For full explanation of the flags, run:
 ```bash
-go run ./cmd/main.go solana --help
+go run ./main.go solana --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/main.go solana \
+go run ./main.go solana \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -101,12 +101,12 @@ Creat a `.key` file containing your Sui wallet keypair. This file is needed to s
 ### Running the Sui Pusher
 For full explanation of the flags, run:
 ```bash
-go run ./cmd/main.go sui --help
+go run ./main.go sui --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/main.go sui \
+go run ./main.go sui \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
@@ -148,12 +148,12 @@ Create a `.key` file containing only your private key mnemonic.
 ### Running the CosmWasm Pusher
 For a full explanation of the flags, run:
 ```bash
-go run ./cmd/main.go cosmwasm --help
+go run ./main.go cosmwasm --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/main.go cosmwasm \
+go run ./main.go cosmwasm \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -r <chain-rpc-url> \
@@ -178,12 +178,12 @@ Create a `.key` file containing only your fuel private key hex string (without t
 ### Running the Fuel Pusher
 For a full explanation of the flags, run:
 ```bash
-go run ./cmd/main.go fuel --help
+go run ./main.go fuel --help
 ```
 
 Basic usage:
 ```bash
-go run ./cmd/main.go fuel \
+go run ./main.go fuel \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <fuel-rpc-url> \
