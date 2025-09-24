@@ -1,5 +1,11 @@
 # Chain Pusher
 
+**Note: Unless otherwise specified, all commands in this README are in the context of the current directory.**
+```bash
+# from the root of this repo:
+cd apps/chain_pusher
+```
+
 ## Configuration
 
 Create an `asset-config.yaml` file. This file should be structured as follows:
