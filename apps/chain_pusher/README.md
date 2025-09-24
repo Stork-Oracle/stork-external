@@ -131,7 +131,7 @@ go run . aptos --help
 
 Basic usage:
 ```bash
-go run ./cmd/chain_pusher/main.go aptos \
+go run ./main.go aptos \
     -w wss://api.jp.stork-oracle.network \
     -a <stork-api-key> \
     -c <chain-rpc-url> \
