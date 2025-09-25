@@ -392,11 +392,12 @@ func createBufferFromBytes(buf []byte) *C.uint8_t {
 // Returns an error if the big.Int is too large to fit in the Stark curve.
 // This function assumes the big.Int is positive, and uses the absolute value of the big.Int regardless of sign.
 func createStarkBufferFromBigIntAbs(i *big.Int) (*C.uint8_t, error) {
-	if i.Cmp(fp.Modulus()) >= 0 {
+	absI := new(big.Int).Abs(i)
+	if absI.Cmp(fp.Modulus()) >= 0 {
 		return nil, ErrBigIntTooLarge
 	}
 	bytes := make([]byte, 32)
-	i.FillBytes(bytes)
+	absI.FillBytes(bytes)
 	return (*C.uint8_t)(unsafe.Pointer(&bytes[0])), nil
 }
 
