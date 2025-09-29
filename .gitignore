@@ -22,4 +22,6 @@ debug/
 .idea/
 *.iml
 
+# kadena
 .pc-history
+.kadena
