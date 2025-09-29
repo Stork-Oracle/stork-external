@@ -1,10 +1,10 @@
 import type { HardhatUserConfig } from "hardhat/config";
-
-import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import hardhatViem from "@nomicfoundation/hardhat-viem";
+import hardhatIgnition from "@nomicfoundation/hardhat-ignition";
 import { configVariable } from "hardhat/config";
 
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatViem, hardhatIgnition],
   solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
@@ -26,6 +26,11 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    localhost: {
+      type: "http",
+      chainType: "l1",
+      url: "http://localhost:8545",
+    },
     hardhatLocal: {
       type: "http",
       chainType: "l1",

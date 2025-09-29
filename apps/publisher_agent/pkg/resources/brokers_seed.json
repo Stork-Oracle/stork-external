@@ -1,6 +1,0 @@
-[
-    {
-        "publish_url": "ws://localhost:8080/ws",
-        "asset_ids": ["MY_RANDOM_VALUE"]
-    }
-]

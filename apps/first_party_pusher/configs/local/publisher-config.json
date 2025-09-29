@@ -1,0 +1,11 @@
+{
+  "SignatureTypes": ["evm"],
+  "IncomingWsPort": 5216,
+  "SignEveryUpdate": true,
+  "SeededBrokers": [
+    {
+      "publish_url": "ws://host.docker.internal:8080/ws",
+      "asset_ids": ["BTCUSD", "ETHUSD", "MY_RANDOM_VALUE"]
+    }
+  ]
+}

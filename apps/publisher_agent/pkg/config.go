@@ -44,6 +44,7 @@ type Config struct {
 	PullBasedWsReadTimeout           string
 	SignEveryUpdate                  bool
 	IncomingWsPort                   int
+	SeededBrokers                    []BrokerConnectionConfig
 }
 
 type Keys struct {
@@ -103,7 +104,6 @@ func readFile(path string) ([]byte, error) {
 func LoadConfig(
 	configFilePath string,
 	keysFilePath string,
-	brokerFilePath string,
 ) (*StorkPublisherAgentConfig, *StorkPublisherAgentSecrets, error) {
 	configFileData, err := readFile(configFilePath)
 	if err != nil {
@@ -263,15 +263,6 @@ func LoadConfig(
 		publisherMetadataBaseUrl = DefaultPublisherMetadataBaseUrl
 	}
 
-	var seededBrokers []BrokerConnectionConfig
-	brokerFileData, brokerFileReadErr := readFile(brokerFilePath)
-	if brokerFileReadErr == nil {
-		err = json.Unmarshal(brokerFileData, &seededBrokers)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to unmarshal broker file: %w", err)
-		}
-	}
-
 	config := NewStorkPublisherAgentConfig(
 		configFile.SignatureTypes,
 		keys.EvmPublicKey,
@@ -291,7 +282,7 @@ func LoadConfig(
 		pullBasedWsReadTimeout,
 		configFile.SignEveryUpdate,
 		configFile.IncomingWsPort,
-		seededBrokers,
+		configFile.SeededBrokers,
 	)
 
 	secrets := NewStorkPublisherAgentSecrets(

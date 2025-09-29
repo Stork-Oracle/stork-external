@@ -3,13 +3,15 @@ package runner
 import (
 	"context"
 	"math/big"
-	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 
 	"fmt"
 
+	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
@@ -20,9 +22,8 @@ type FirstPartyRunner[T shared.Signature] struct {
 	contractInteractor types.ContractInteractor[T]
 	websocketServer    *WebsocketServer[T]
 
-	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[T]
-	assetStates         map[shared.AssetID]*types.AssetPushState[T]
-	assetStatesMutex    sync.RWMutex
+	batchingWindowSecs int
+	pollingPeriodSecs  int
 
 	cancel context.CancelFunc
 	logger zerolog.Logger
@@ -31,221 +32,341 @@ type FirstPartyRunner[T shared.Signature] struct {
 func NewFirstPartyRunner[T shared.Signature](
 	config *types.FirstPartyConfig,
 	contractInteractor types.ContractInteractor[T],
+	batchingWindowSecs int,
+	pollingPeriodSecs int,
 	cancel context.CancelFunc,
 	logger zerolog.Logger,
 ) *FirstPartyRunner[T] {
 	return &FirstPartyRunner[T]{
-		config:              config,
-		contractInteractor:  contractInteractor,
-		websocketServer:     nil,
-		signedPriceUpdateCh: make(chan publisher_agent.SignedPriceUpdate[T], 1000),
-		assetStates:         make(map[shared.AssetID]*types.AssetPushState[T]),
-		assetStatesMutex:    sync.RWMutex{},
-		cancel:              cancel,
-		logger:              logger.With().Str("component", "first_party_runner").Logger(),
+		config:             config,
+		contractInteractor: contractInteractor,
+		websocketServer:    nil,
+		batchingWindowSecs: batchingWindowSecs,
+		pollingPeriodSecs:  pollingPeriodSecs,
+		cancel:             cancel,
+		logger:             logger.With().Str("component", "first_party_runner").Logger(),
 	}
 }
 
 func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 	r.logger.Info().Msg("Starting EVM First Party Chain Pusher")
 
-	// Initialize asset states
-	r.initializeAssetStates()
+	signedPriceUpdateCh := make(chan publisher_agent.SignedPriceUpdate[T], 1000)
+	contractUpdateCh := make(chan types.ContractUpdate)
 
-	// Initialize websocket server
-	r.websocketServer = NewWebsocketServer(r.config.WebsocketPort, r.signedPriceUpdateCh)
+	r.websocketServer = NewWebsocketServer(r.config.WebsocketPort, signedPriceUpdateCh)
 
-	// Start processing goroutines
-	go r.processValueUpdates(ctx)
-	go r.processPushTriggers(ctx)
+	go func() {
+		err := r.websocketServer.Start()
+		if err != nil {
+			r.logger.Fatal().Err(err).Msg("WebSocket server failed")
+		}
+	}()
 
-	// Start websocket server (blocking)
-	r.logger.Info().Str("port", r.config.WebsocketPort).Msg("Starting WebSocket server")
+	latestPublisherValueMap, latestContractValueMap, pubKeyAssetIDPairs, assetIDtoEncodedAssetID := r.initialize(ctx)
 
-	err := r.websocketServer.Start()
-	if err != nil {
-		r.logger.Fatal().Err(err).Msg("WebSocket server failed")
+	go r.poll(ctx, contractUpdateCh, pubKeyAssetIDPairs)
+	go r.contractInteractor.ListenContractEvents(ctx, contractUpdateCh, pubKeyAssetIDPairs) // todo: doesn't handle errors
+
+	batchingTicker := time.NewTicker(time.Duration(r.batchingWindowSecs) * time.Second)
+	defer batchingTicker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			r.logger.Info().Msg("First Party Runner stopped")
+
+			return
+
+		case signedPriceUpdate := <-signedPriceUpdateCh:
+			pubKey := common.HexToAddress(string(signedPriceUpdate.SignedPrice.PublisherKey))
+			if _, exists := latestPublisherValueMap[pubKey]; !exists {
+				r.logger.Error().Str("pubkey", pubKey.Hex()).
+					Msg("Pubkey not found in latest publisher value map")
+
+				continue
+			}
+
+			encodedAssetID, exists := assetIDtoEncodedAssetID[signedPriceUpdate.AssetID]
+			if !exists {
+				r.logger.Error().Str("asset", string(signedPriceUpdate.AssetID)).
+					Msg("Asset not found in assetIDtoEncodedAssetID map")
+
+				continue
+			}
+
+			latestPublisherValueMap[pubKey][encodedAssetID] = signedPriceUpdate
+
+		case contractUpdate := <-contractUpdateCh:
+			for assetID, value := range contractUpdate.LatestContractValueMap {
+				if _, exists := latestContractValueMap[contractUpdate.Pubkey]; !exists {
+					r.logger.Error().Str("pubkey", contractUpdate.Pubkey.Hex()).
+						Msg("Pubkey not found in latest contract value map")
+
+					continue
+				}
+
+				encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
+				if !exists {
+					r.logger.Error().Str("asset", assetID).
+						Msg("Asset not found in assetIDtoEncodedAssetID map")
+
+					continue
+				}
+
+				latestContractValueMap[contractUpdate.Pubkey][encodedAssetID] = value
+			}
+
+		case <-batchingTicker.C:
+			r.handleBatch(ctx, latestPublisherValueMap, latestContractValueMap)
+		}
 	}
 }
 
 func (r *FirstPartyRunner[T]) Stop() {
 	r.logger.Info().Msg("Stopping EVM First Party Chain Pusher")
 	r.cancel()
+	r.contractInteractor.Close()
 
 	if r.websocketServer != nil {
 		_ = r.websocketServer.Stop()
 	}
 }
 
-func (r *FirstPartyRunner[T]) initializeAssetStates() {
-	r.assetStatesMutex.Lock()
-	defer r.assetStatesMutex.Unlock()
+func (r *FirstPartyRunner[T]) initialize(ctx context.Context) (
+	map[common.Address]map[shared.EncodedAssetID]publisher_agent.SignedPriceUpdate[T],
+	map[common.Address]map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue,
+	map[common.Address][]string,
+	map[shared.AssetID]shared.EncodedAssetID,
+) {
+	latestContractValueMap := make(map[common.Address]map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue)
+	latestPublisherValueMap := make(map[common.Address]map[shared.EncodedAssetID]publisher_agent.SignedPriceUpdate[T])
+	pubKeyAssetIDPairs := make(map[common.Address][]string, len(r.config.AssetConfig.Assets))
+	assetIDtoEncodedAssetID := make(map[shared.AssetID]shared.EncodedAssetID, len(r.config.AssetConfig.Assets))
 
-	for assetID, assetConfig := range r.config.AssetConfig.Assets {
-		r.assetStates[assetID] = &types.AssetPushState[T]{
-			AssetID:                  assetID,
-			Config:                   assetConfig,
-			LastPrice:                nil,
-			LastPushTime:             time.Time{},
-			PendingSignedPriceUpdate: nil,
-			NextPushTime:             time.Now().Add(time.Duration(assetConfig.FallbackPeriodSecs) * time.Second),
+	for assetID, assetEntry := range r.config.AssetConfig.Assets {
+		if assetEntry.PublicKey == "" {
+			r.logger.Error().Str("asset", string(assetID)).Msg("Asset has no specific pub key configured")
+
+			continue
 		}
 
-		r.logger.Info().
-			Str("asset", string(assetID)).
-			Float64("percent_threshold", assetConfig.PercentChangeThreshold).
-			Uint64("fallback_period_sec", assetConfig.FallbackPeriodSecs).
-			Msg("Initialized asset push state")
-	}
-}
-
-func (r *FirstPartyRunner[T]) processValueUpdates(ctx context.Context) {
-	r.logger.Info().Msg("Starting value update processor")
-
-	for {
-		select {
-		case <-ctx.Done():
-			r.logger.Info().Msg("Value update processor stopped")
-
-			return
-
-		case signedPriceUpdate := <-r.signedPriceUpdateCh:
-			r.handleSignedPriceUpdate(ctx, signedPriceUpdate)
+		pubKey := common.HexToAddress(string(assetEntry.PublicKey))
+		if _, exists := pubKeyAssetIDPairs[pubKey]; !exists {
+			pubKeyAssetIDPairs[pubKey] = make([]string, 0)
 		}
-	}
-}
 
-func (r *FirstPartyRunner[T]) handleSignedPriceUpdate(ctx context.Context, signedPriceUpdate publisher_agent.SignedPriceUpdate[T]) {
-	r.assetStatesMutex.Lock()
-	defer r.assetStatesMutex.Unlock()
-
-	assetID := signedPriceUpdate.AssetID
-
-	assetState, exists := r.assetStates[assetID]
-	if !exists {
-		r.logger.Debug().Str("asset", string(assetID)).Msg("Received update for unconfigured asset")
-
-		return
+		latestPublisherValueMap[pubKey] = make(map[shared.EncodedAssetID]publisher_agent.SignedPriceUpdate[T])
+		latestContractValueMap[pubKey] = make(map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue)
+		pubKeyAssetIDPairs[pubKey] = append(pubKeyAssetIDPairs[pubKey], string(assetID))
+		hash := crypto.Keccak256Hash([]byte(assetID))
+		assetIDtoEncodedAssetID[assetID] = shared.EncodedAssetID(hash.Hex())
 	}
 
-	// Convert quantized price to big.Float for comparison
-	priceValue, err := r.convertQuantizedPriceToBigFloat(string(signedPriceUpdate.SignedPrice.QuantizedPrice))
+	contractUpdates, err := r.contractInteractor.PullValues(ctx, pubKeyAssetIDPairs) // todo: what about cold start?
 	if err != nil {
-		r.logger.Error().Err(err).Str("asset", string(assetID)).Msg("Failed to convert quantized price")
-
-		return
+		r.logger.Error().Err(err).Msg("Failed to pull values from contract")
 	}
 
-	r.logger.Debug().
-		Str("asset", string(assetID)).
-		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
-		Msg("Processing signed price update")
+	for _, update := range contractUpdates {
+		for assetID, value := range update.LatestContractValueMap {
+			if _, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]; !exists {
+				r.logger.Error().Str("asset", assetID).
+					Msg("Asset not found in assetIDtoEncodedAssetID map")
 
-	// Update pending value
-	assetState.PendingSignedPriceUpdate = &signedPriceUpdate
+				continue
+			}
 
-	// Check if we should trigger a push based on price change
-	if r.shouldPushBasedOnDelta(assetState, priceValue) {
-		if assetState.LastPrice != nil {
-			r.logger.Info().
-				Str("asset", string(assetID)).
-				Str("old_price", assetState.LastPrice.Text('f', 6)).
-				Str("new_price", priceValue.Text('f', 6)).
-				Msg("Triggering push due to price delta threshold")
+			encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
+			if !exists {
+				r.logger.Error().Str("asset", assetID).
+					Msg("Asset not found in assetIDtoEncodedAssetID map")
+
+				continue
+			}
+
+			latestContractValueMap[update.Pubkey][encodedAssetID] = value
 		}
+	}
 
-		r.triggerPush(ctx, assetState)
+	return latestPublisherValueMap, latestContractValueMap, pubKeyAssetIDPairs, assetIDtoEncodedAssetID
+}
+
+func (r *FirstPartyRunner[T]) handleBatch(
+	ctx context.Context,
+	latestPublisherValueMap map[common.Address]map[shared.EncodedAssetID]publisher_agent.SignedPriceUpdate[T],
+	latestContractValueMap map[common.Address]map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue,
+) {
+	r.logger.Debug().
+		Int("num_publisher_updates", len(latestPublisherValueMap)).
+		Int("num_contract_updates", len(latestContractValueMap)).
+		Msg("Handling batch")
+
+	updates := make(map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T])
+
+	for pubKey, signedPriceUpdateMap := range latestPublisherValueMap {
+		for encodedAssetID, signedPriceUpdate := range signedPriceUpdateMap {
+			assetEntry, exists := r.config.AssetConfig.Assets[signedPriceUpdate.AssetID]
+			if !exists {
+				r.logger.Error().Str("asset", string(signedPriceUpdate.AssetID)).
+					Msg("Asset not found in asset config")
+
+				continue
+			}
+
+			tnvMap, exists := latestContractValueMap[pubKey]
+			if !exists {
+				r.logger.Error().Str("pubkey", pubKey.Hex()).
+					Msg("Pubkey not found in latest contract value map")
+
+				continue
+			}
+
+			latestContractValue, exists := tnvMap[encodedAssetID]
+			if !exists {
+				r.logger.Info().
+					Str("asset", string(signedPriceUpdate.AssetID)).
+					Msg("Triggering push due to first price update")
+
+				updates[assetEntry] = signedPriceUpdate
+
+				continue
+			}
+
+			if r.shouldPushBasedOnFallback(assetEntry, signedPriceUpdate, latestContractValue) {
+				r.logger.Info().
+					Str("asset", string(signedPriceUpdate.AssetID)).
+					Msg("Triggering push due to fallback period")
+
+				updates[assetEntry] = signedPriceUpdate
+
+				continue
+			}
+
+			if r.shouldPushBasedOnDelta(assetEntry, signedPriceUpdate, latestContractValue) {
+				r.logger.Info().
+					Str("asset", string(signedPriceUpdate.AssetID)).
+					Msg("Triggering push due to price delta threshold")
+
+				updates[assetEntry] = signedPriceUpdate
+			}
+		}
+	}
+	r.logger.Debug().
+		Int("num_updates", len(updates)).
+		Msg("Updates to push")
+
+	if len(updates) > 0 {
+		go r.pushBatch(ctx, updates, latestContractValueMap)
 	}
 }
 
-func (r *FirstPartyRunner[T]) shouldPushBasedOnDelta(state *types.AssetPushState[T], newPrice *big.Float) bool {
-	if state.LastPrice == nil {
-		return true // First price update
+func (r *FirstPartyRunner[T]) shouldPushBasedOnFallback(
+	assetEntry chain_pusher_types.AssetEntry,
+	signedPriceUpdate publisher_agent.SignedPriceUpdate[T],
+	latestContractValue chain_pusher_types.InternalTemporalNumericValue,
+) bool {
+	// todo: this won't push if data stops flowing, is that what we want?
+	lastTime := time.Unix(0, int64(signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano))
+	if lastTime.After(time.Unix(0, int64(latestContractValue.TimestampNs)).Add(time.Duration(assetEntry.FallbackPeriodSecs) * time.Second)) {
+		return true
 	}
+
+	return false
+}
+
+func (r *FirstPartyRunner[T]) shouldPushBasedOnDelta(
+	assetEntry chain_pusher_types.AssetEntry,
+	signedPriceUpdate publisher_agent.SignedPriceUpdate[T],
+	latestContractValue chain_pusher_types.InternalTemporalNumericValue,
+) bool {
+	newPrice, err := r.convertQuantizedPriceToBigFloat(string(signedPriceUpdate.SignedPrice.QuantizedPrice))
+	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Msg("Failed to convert quantized price to big.Float")
+
+		return false
+	}
+
+	contractPrice := big.NewFloat(0).SetInt(latestContractValue.QuantizedValue)
 
 	// Calculate percentage change
-	diff := new(big.Float).Sub(newPrice, state.LastPrice)
-	percentChange := new(big.Float).Quo(diff, state.LastPrice)
+	diff := new(big.Float).Sub(newPrice, contractPrice)
+	percentChange := new(big.Float).Quo(diff, contractPrice)
 	percentChange.Mul(percentChange, big.NewFloat(100))
 
 	absPercentChange := new(big.Float).Abs(percentChange)
-	threshold := big.NewFloat(state.Config.PercentChangeThreshold)
+	threshold := big.NewFloat(assetEntry.PercentChangeThreshold)
 
 	return absPercentChange.Cmp(threshold) >= 0
 }
 
-func (r *FirstPartyRunner[T]) processPushTriggers(ctx context.Context) {
-	r.logger.Info().Msg("Starting push trigger processor")
+func (r *FirstPartyRunner[T]) pushBatch(
+	ctx context.Context,
+	updates map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T],
+	latestContractValueMap map[common.Address]map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue,
+) {
+	r.logger.Debug().
+		Int("num_updates", len(updates)).
+		Msg("Pushing batch to contract")
 
-	ticker := time.NewTicker(1 * time.Second) // Check every second
-	defer ticker.Stop()
+	pushCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	err := r.contractInteractor.BatchPushToContract(pushCtx, updates)
+	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Msg("Failed to push batch to contract")
+	}
+
+	r.logger.Debug().
+		Int("num_updates", len(updates)).
+		Msg("Updated contract values")
+
+	for entry, update := range updates {
+		quantizedValInt := new(big.Int)
+		//nolint:mnd // Base number
+		quantizedValInt.SetString(string(update.SignedPrice.QuantizedPrice), 10)
+		pubKey := common.HexToAddress(string(entry.PublicKey))
+
+		if _, exists := latestContractValueMap[pubKey]; !exists {
+			latestContractValueMap[pubKey] = make(map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue)
+		}
+
+		latestContractValueMap[pubKey][entry.EncodedAssetID] = chain_pusher_types.InternalTemporalNumericValue{
+			TimestampNs:    update.SignedPrice.TimestampedSignature.TimestampNano,
+			QuantizedValue: quantizedValInt,
+		}
+	}
+}
+
+func (r *FirstPartyRunner[T]) poll(
+	ctx context.Context,
+	ch chan types.ContractUpdate,
+	pubKeyAssetIDPairs map[common.Address][]string,
+) {
+	r.logger.Debug().Msg("Polling contract for new values")
+
+	pollingTicker := time.NewTicker(time.Duration(r.pollingPeriodSecs) * time.Second)
+	defer pollingTicker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			r.logger.Info().Msg("Push trigger processor stopped")
-
 			return
+		case <-pollingTicker.C:
+			latestContractUpdates, err := r.contractInteractor.PullValues(ctx, pubKeyAssetIDPairs)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("Failed to pull values from contract")
+			}
 
-		case <-ticker.C:
-			r.checkTimerTriggers(ctx)
+			for _, update := range latestContractUpdates {
+				ch <- update
+			}
 		}
 	}
-}
-
-func (r *FirstPartyRunner[T]) checkTimerTriggers(ctx context.Context) {
-	r.assetStatesMutex.Lock()
-	defer r.assetStatesMutex.Unlock()
-
-	now := time.Now()
-	for assetID, state := range r.assetStates {
-		if now.After(state.NextPushTime) && state.PendingSignedPriceUpdate != nil {
-			r.logger.Info().
-				Str("asset", string(assetID)).
-				Time("next_push_time", state.NextPushTime).
-				Msg("Triggering push due to time interval")
-
-			r.triggerPush(ctx, state)
-		}
-	}
-}
-
-func (r *FirstPartyRunner[T]) triggerPush(parentCtx context.Context, state *types.AssetPushState[T]) {
-	if state.PendingSignedPriceUpdate == nil {
-		return
-	}
-
-	// Push to contract
-	go func() {
-		ctx, cancel := context.WithTimeout(parentCtx, 30*time.Second)
-		defer cancel()
-
-		err := r.contractInteractor.PushSignedPriceUpdate(ctx, state.Config, *state.PendingSignedPriceUpdate)
-		if err != nil {
-			r.logger.Error().
-				Err(err).
-				Str("asset", string(state.AssetID)).
-				Msg("Failed to push value to contract")
-
-			return
-		}
-
-		// Update state after successful push
-		r.assetStatesMutex.Lock()
-
-		priceValue, _ := r.convertQuantizedPriceToBigFloat(string(state.PendingSignedPriceUpdate.SignedPrice.QuantizedPrice))
-		state.LastPrice = priceValue
-		state.LastPushTime = time.Now()
-		state.NextPushTime = time.Now().Add(time.Duration(state.Config.FallbackPeriodSecs) * time.Second)
-		state.PendingSignedPriceUpdate = nil
-
-		r.assetStatesMutex.Unlock()
-
-		r.logger.Info().
-			Str("asset", string(state.AssetID)).
-			Str("value", state.LastPrice.Text('f', 6)).
-			Msg("Successfully pushed value to contract")
-	}()
 }
 
 func (r *FirstPartyRunner[T]) convertQuantizedPriceToBigFloat(quantizedPrice string) (*big.Float, error) {

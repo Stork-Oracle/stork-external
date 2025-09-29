@@ -144,8 +144,6 @@ func (ws *WebsocketServer[T]) handleConnection(conn *websocket.Conn) {
 func (ws *WebsocketServer[T]) processMessage(data []byte) error {
 	var msg publisher_agent.WebsocketMessage[publisher_agent.SignedPriceUpdateBatch[T]]
 
-	ws.logger.Debug().Msgf("Received message: %s", string(data))
-
 	err := json.Unmarshal(data, &msg)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal message: %w", err)

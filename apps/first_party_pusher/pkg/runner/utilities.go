@@ -2,10 +2,8 @@ package runner
 
 import (
 	"crypto/ecdsa"
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
 
@@ -31,13 +29,17 @@ func LoadAssetConfig(filename string) (*chain_pusher_types.AssetConfig, error) {
 }
 
 func LoadPrivateKey(filename string) (*ecdsa.PrivateKey, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read private key file: %w", err)
+	privateKeyHex := os.Getenv("PUSHER_PRIVATE_KEY")
+	if privateKeyHex == "" {
+		privateKeyRaw, err := os.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read private key file: %w", err)
+		}
+
+		privateKeyHex = strings.TrimSpace(string(privateKeyRaw))
 	}
 
-	privateKeyHex := strings.TrimSpace(string(data))
-	privateKeyHex = strings.TrimPrefix(privateKeyHex, "0x") // TODO: idk if we do this regularly
+	privateKeyHex = strings.TrimPrefix(privateKeyHex, "0x")
 
 	privateKeyBytes, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
@@ -50,10 +52,4 @@ func LoadPrivateKey(filename string) (*ecdsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
-}
-
-func GenerateNonce() *big.Int {
-	nonce, _ := rand.Int(rand.Reader, big.NewInt(1<<62))
-
-	return nonce
 }

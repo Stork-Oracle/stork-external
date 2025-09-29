@@ -1,0 +1,116 @@
+services:
+  data-provider:
+    profiles:
+      - local
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "data_provider"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/data_provider_config.json",
+        "-o",
+        "ws://publisher-agent:5216/publish",
+      ]
+    volumes:
+      - "./configs/local/data-provider-config.json:/etc/data_provider_config.json:ro"
+
+  publisher-agent:
+    profiles:
+      - local
+      - production
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "publisher_agent"
+    environment:
+      STORK_EVM_PRIVATE_KEY: ${PUBLISHER_EVM_PRIVATE_KEY}
+      STORK_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY}
+      STORK_STARK_PRIVATE_KEY: ${PUBLISHER_STARK_PRIVATE_KEY}
+      STORK_STARK_PUBLIC_KEY: ${PUBLISHER_STARK_PUBLIC_KEY}
+      STORK_ORACLE_ID: ${PUBLISHER_ORACLE_ID}
+      STORK_PULL_BASED_AUTH: ${PUBLISHER_PULL_BASED_AUTH}
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/publisher_config.json",
+      ]
+    volumes:
+      - "${PUBLISHER_CONFIG_PATH:-./configs/local/publisher-config.json}:/etc/publisher_config.json:ro"
+    ports:
+      - "5216:5216"
+
+  first-party-pusher:
+    profiles:
+      - local
+      - production
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    environment:
+      PUSHER_PRIVATE_KEY: ${PUSHER_PRIVATE_KEY}
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "${CHAIN_RPC_URL:-http://host.docker.internal:8545}",
+        "-x", "${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}",
+        "-f", "/etc/pusher-asset-config.yaml",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${ASSET_CONFIG_PATH:-./configs/local/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
+    depends_on:
+      publisher-agent:
+        condition: service_started
+      # contract:
+      #   condition: service_healthy
+
+  # contract:
+  #   profiles:
+  #     - local
+  #   build:
+  #     context: ../..
+  #     dockerfile: docker/images/first_party_evm.Dockerfile
+  #     args:
+  #       STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266}
+  #       CONTRACT_OWNER_ADDRESS: ${CONTRACT_OWNER_ADDRESS:-0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266}
+  #   environment:
+  #     - CONTRACT_OWNER_ADDRESS=${CONTRACT_OWNER_ADDRESS:-0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266}
+  #   ports:
+  #     - "8545:8545"
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD",
+  #         "/bin/sh",
+  #         "-c",
+  #         "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result"
+  #       ]
+  #     interval: 3s
+  #     timeout: 3s
+  #     retries: 20
+  #     start_period: 2s
+
+
+# Usage:
+# 
+# Local development (full pipeline with dummy data):
+#   docker-compose --profile local up
+#
+# Production (publisher-agent + first-party-pusher only):
+#   PUBLISHER_CONFIG_PATH=./configs/production/publisher-config.json \
+#   PUBLISHER_KEYS_PATH=./configs/production/secrets/publisher-keys.json \
+#   ASSET_CONFIG_PATH=./configs/production/asset-config.yaml \
+#   PRIVATE_KEY_PATH=./configs/production/secrets/private-key.txt \
+#   CHAIN_RPC_URL=https://your-rpc-endpoint.com \
+#   CONTRACT_ADDRESS=0xYourContractAddress \
+#   docker-compose --profile production up

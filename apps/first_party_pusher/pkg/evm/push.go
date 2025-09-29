@@ -21,12 +21,13 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(runner.ContractAddressFlag, "x", "", runner.ContractAddressDesc)
 	pushCmd.Flags().StringP(runner.AssetConfigFileFlag, "f", "", runner.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(runner.PrivateKeyFileFlag, "k", "", runner.PrivateKeyFileDesc)
+	pushCmd.Flags().IntP(runner.BatchingWindowFlag, "b", runner.DefaultBatchingWindow, runner.BatchingWindowDesc)
+	pushCmd.Flags().IntP(runner.PollingPeriodFlag, "p", runner.DefaultPollingPeriod, runner.PollingPeriodDesc)
 	pushCmd.Flags().Uint64P(runner.GasLimitFlag, "g", 0, runner.GasLimitDesc)
 
 	_ = pushCmd.MarkFlagRequired(runner.ChainRpcUrlFlag)
 	_ = pushCmd.MarkFlagRequired(runner.ContractAddressFlag)
 	_ = pushCmd.MarkFlagRequired(runner.AssetConfigFileFlag)
-	_ = pushCmd.MarkFlagRequired(runner.PrivateKeyFileFlag)
 
 	return pushCmd
 }
@@ -38,6 +39,8 @@ func runPush(cmd *cobra.Command, args []string) {
 	contractAddress, _ := cmd.Flags().GetString(runner.ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(runner.AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(runner.PrivateKeyFileFlag)
+	batchingWindow, _ := cmd.Flags().GetInt(runner.BatchingWindowFlag)
+	pollingPeriod, _ := cmd.Flags().GetInt(runner.PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(runner.GasLimitFlag)
 
 	logger := runner.PusherLogger("evm", chainRpcUrl, contractAddress)
@@ -71,11 +74,10 @@ func runPush(cmd *cobra.Command, args []string) {
 		ChainWsUrl:      chainWsUrl,
 		ContractAddress: contractAddress,
 		AssetConfig:     assetConfig,
-		PrivateKey:      privateKey,
 		GasLimit:        gasLimit,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	runner := runner.NewFirstPartyRunner(config, interactor, cancel, logger)
+	runner := runner.NewFirstPartyRunner(config, interactor, batchingWindow, pollingPeriod, cancel, logger)
 	runner.Run(ctx)
 }

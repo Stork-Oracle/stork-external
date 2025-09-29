@@ -11,7 +11,7 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	config, secrets, err := LoadConfig("./resources/push_config.json", "./resources/example_keys.json", "./resources/brokers_seed.json")
+	config, secrets, err := LoadConfig("./resources/push_config.json", "./resources/example_keys.json")
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
@@ -35,8 +35,6 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, "", config.PullBasedWsUrl)
 	assert.Equal(t, 5216, config.IncomingWsPort)
-
-	// TODO: test seeded brokers
 }
 
 func TestLoadKeys(t *testing.T) {

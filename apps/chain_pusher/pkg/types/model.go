@@ -22,6 +22,7 @@ type AssetEntry struct {
 	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
 	FallbackPeriodSecs     uint64                `yaml:"fallback_period_sec"` //nolint:tagliatelle // Legacy
 	Historic               bool                  `yaml:"historic"`
+	PublicKey              shared.PublisherKey   `yaml:"public_key"`
 }
 
 // LoadConfig loads the asset config from the given filename.

@@ -19,7 +19,7 @@ abstract contract FirstPartyStork is
     function updateTemporalNumericValues(
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
             calldata updateData,
-        bool storeHistoric
+        bool[] calldata storeHistoric
     ) public payable {
         uint16 numUpdates = 0;
         uint256 requiredFee = 0;
@@ -46,7 +46,7 @@ abstract contract FirstPartyStork is
                 numUpdates++;
             }
 
-            if (storeHistoric) {
+            if (storeHistoric[i]) {
                 storeHistoricalValue(input.pubKey, input);
             }
             requiredFee += publisherUser.singleUpdateFee;

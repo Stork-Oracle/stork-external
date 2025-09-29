@@ -3,21 +3,22 @@ package first_party_evm
 import (
 	"context"
 	"crypto/ecdsa"
-	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
-	"strings"
+	"strconv"
 	"time"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/evm/bindings"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
 )
@@ -26,6 +27,11 @@ const (
 	maxRetryAttempts         = 5
 	initialBackoff           = 1 * time.Second
 	exponentialBackoffFactor = 1.5
+)
+
+var (
+	ErrEventChannelClosed      = errors.New("event channel is closed")
+	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 )
 
 type ContractInteractor struct {
@@ -97,24 +103,108 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (ci *ContractInteractor) PushSignedPriceUpdate(
+func (ci *ContractInteractor) PullValues(
 	ctx context.Context,
-	asset chain_pusher_types.AssetEntry,
-	signedPriceUpdate publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
-) error {
-	ci.logger.Info().
-		Str("asset", string(signedPriceUpdate.AssetID)).
-		Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
-		Str("encoded_asset_id", string(asset.EncodedAssetID)).
-		Msg("Pushing signed price update to first party contract")
+	pubKeyAssetIDPairs map[common.Address][]string,
+) ([]types.ContractUpdate, error) {
+	polledVals := make([]types.ContractUpdate, 0)
 
-	// Convert the signed price update to contract input
-	updateInput, err := ci.convertSignedPriceUpdateToInput(signedPriceUpdate, asset)
-	if err != nil {
-		return fmt.Errorf("failed to convert signed price update: %w", err)
+	for pubKey, assetIDs := range pubKeyAssetIDPairs {
+		contractUpdate := types.ContractUpdate{
+			Pubkey:                 pubKey,
+			LatestContractValueMap: make(map[string]chain_pusher_types.InternalTemporalNumericValue),
+		}
+		for _, assetID := range assetIDs {
+			storkStructsTemporalNumericValue, err := ci.contract.GetLatestTemporalNumericValue(nil, pubKey, assetID)
+			if err != nil {
+				ci.logger.Error().Err(err).Str("asset_id", assetID).Msg("Failed to get temporal numeric value")
+
+				continue
+			}
+
+			contractUpdate.LatestContractValueMap[assetID] = chain_pusher_types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+		}
+		polledVals = append(polledVals, contractUpdate)
 	}
 
-	// Retry logic for transaction submission
+	return polledVals, nil
+}
+
+func (ci *ContractInteractor) ListenContractEvents(
+	ctx context.Context,
+	ch chan types.ContractUpdate,
+	pubKeyAssetIDPairs map[common.Address][]string,
+) {
+	if ci.wsContract == nil {
+		ci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
+
+		return
+	}
+
+	watchOpts := &bind.WatchOpts{Context: context.Background()}
+
+	sub, eventCh, err := ci.setupSubscription(watchOpts, pubKeyAssetIDPairs)
+	if err != nil {
+		ci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
+
+		return
+	}
+
+	defer func() {
+		ci.logger.Debug().Msg("Exiting ListenContractEvents")
+
+		if sub != nil {
+			sub.Unsubscribe()
+			close(eventCh)
+		}
+	}()
+
+	ci.logger.Info().Msg("Listening for contract events via WebSocket")
+
+	for {
+		err = ci.listenLoop(ctx, sub, eventCh, ch)
+		if ctx.Err() != nil {
+			return
+		}
+
+		ci.logger.Warn().Err(err).Msg("Error while watching contract events")
+
+		if sub != nil {
+			sub.Unsubscribe()
+			sub = nil
+		}
+
+		sub, eventCh, err = ci.reconnect(ctx, watchOpts, pubKeyAssetIDPairs)
+		if err != nil {
+			return
+		}
+	}
+}
+
+// todo: check this follows closer to the chain_pusher contract interactor
+func (ci *ContractInteractor) BatchPushToContract(
+	ctx context.Context,
+	updatesByEntry map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
+) error {
+	updates := make([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, 0, len(updatesByEntry))
+	historic := make([]bool, 0, len(updatesByEntry))
+
+	for entry, signedPriceUpdate := range updatesByEntry {
+		ci.logger.Info().
+			Str("asset", string(signedPriceUpdate.AssetID)).
+			Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
+			Str("encoded_asset_id", string(entry.EncodedAssetID)).
+			Msg("Pushing signed price update to first party contract")
+
+		updateInput, err := ci.convertSignedPriceUpdateToInput(signedPriceUpdate, entry)
+		if err != nil {
+			return fmt.Errorf("failed to convert signed price update: %w", err)
+		}
+
+		updates = append(updates, updateInput)
+		historic = append(historic, entry.Historic)
+	}
+
 	var lastErr error
 
 	backoff := initialBackoff
@@ -125,16 +215,12 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(
 				Int("attempt", attempt+1).
 				Dur("backoff", backoff).
 				Err(lastErr).
-				Msg("Retrying push signed price update transaction")
+				Msg("Retrying batch push signed price update transaction")
 			time.Sleep(backoff)
 			backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
 		}
 
-		txHash, err := ci.submitPushValueTransaction(
-			ctx,
-			[]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{updateInput},
-			asset.Historic,
-		)
+		txHash, err := ci.submitPushValueTransaction(ctx, updates, historic)
 		if err != nil {
 			lastErr = err
 
@@ -142,14 +228,14 @@ func (ci *ContractInteractor) PushSignedPriceUpdate(
 		}
 
 		ci.logger.Info().
-			Str("asset", string(signedPriceUpdate.AssetID)).
+			Int("num_updates", len(updates)).
 			Str("tx_hash", txHash.Hex()).
-			Msg("Successfully submitted signed price update transaction")
+			Msg("Successfully submitted batch signed price update transaction")
 
 		return nil
 	}
 
-	return fmt.Errorf("failed to push signed price update after %d attempts: %w", maxRetryAttempts, lastErr)
+	return fmt.Errorf("failed to push batch signed price update after %d attempts: %w", maxRetryAttempts, lastErr)
 }
 
 func (ci *ContractInteractor) Close() {
@@ -170,7 +256,11 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
 	if !success {
 		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
-			fmt.Errorf("%w: %s", shared.ErrFailedToConvertQuantizedPriceToBigInt, signedPriceUpdate.SignedPrice.QuantizedPrice)
+			fmt.Errorf(
+				"%w: %s",
+				shared.ErrFailedToConvertQuantizedPriceToBigInt,
+				signedPriceUpdate.SignedPrice.QuantizedPrice,
+			)
 	}
 
 	// Create the temporal numeric value using the signed data timestamp
@@ -180,54 +270,45 @@ func (ci *ContractInteractor) convertSignedPriceUpdateToInput(
 	}
 
 	// Parse the publisher key
-	pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(string(signedPriceUpdate.SignedPrice.PublisherKey), "0x"))
+	pubKeyBytes, err := pusher.HexStringToByte20(string(signedPriceUpdate.SignedPrice.PublisherKey))
 	if err != nil {
 		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode publisher key: %w", err)
 	}
 
-	var pubKeyAddress common.Address
-	copy(pubKeyAddress[:], pubKeyBytes)
-
 	// Parse the signature components
-	rBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R, "0x"))
+	rBytes, err := pusher.HexStringToByte32(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R)
 	if err != nil {
 		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature R: %w", err)
 	}
-	sBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S, "0x"))
+
+	sBytes, err := pusher.HexStringToByte32(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S)
 	if err != nil {
 		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
 			fmt.Errorf("failed to decode signature S: %w", err)
 	}
-	vBytes, err := hex.DecodeString(strings.TrimPrefix(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V, "0x"))
-	if err != nil {
+
+	vInt, err := strconv.ParseInt(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
+	if err != nil || vInt < 0 || vInt > 255 {
 		return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{},
-			fmt.Errorf("failed to decode signature V: %w", err)
+			fmt.Errorf("failed to parse signature V: %w", err)
 	}
-
-	// Convert to fixed-size arrays
-	var r, s [32]byte
-
-	copy(r[:], rBytes)
-	copy(s[:], sBytes)
-
-	v := vBytes[0] // V is a single byte
 
 	return bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{
 		TemporalNumericValue: temporalValue,
-		PubKey:               pubKeyAddress,
+		PubKey:               pubKeyBytes,
 		AssetPairId:          string(asset.AssetID),
-		R:                    r,
-		S:                    s,
-		V:                    v,
+		R:                    rBytes,
+		S:                    sBytes,
+		V:                    uint8(vInt),
 	}, nil
 }
 
 func (ci *ContractInteractor) submitPushValueTransaction(
 	ctx context.Context,
 	updateData []bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput,
-	storeHistoric bool,
+	storeHistoric []bool,
 ) (*common.Hash, error) {
 	// Get transaction options
 	auth, err := ci.getTransactionOptions(ctx)
@@ -243,15 +324,11 @@ func (ci *ContractInteractor) submitPushValueTransaction(
 	}
 
 	txHash := tx.Hash()
+
 	return &txHash, nil
 }
 
 func (ci *ContractInteractor) getTransactionOptions(ctx context.Context) (*bind.TransactOpts, error) {
-	nonce, err := ci.client.PendingNonceAt(ctx, crypto.PubkeyToAddress(ci.privateKey.PublicKey))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get nonce: %w", err)
-	}
-
 	gasPrice, err := ci.client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gas price: %w", err)
@@ -262,16 +339,105 @@ func (ci *ContractInteractor) getTransactionOptions(ctx context.Context) (*bind.
 		return nil, fmt.Errorf("failed to create transactor: %w", err)
 	}
 
-	nonceInt, err := pusher.SafeUint64ToInt64(nonce)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert nonce to uint64: %w", err)
-	}
-
-	auth.Nonce = big.NewInt(nonceInt)
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = ci.gasLimit
 	auth.GasPrice = gasPrice
 	auth.Context = ctx
 
 	return auth, nil
+}
+
+func (ci *ContractInteractor) setupSubscription(
+	watchOpts *bind.WatchOpts,
+	pubKeyAssetIDPairs map[common.Address][]string,
+) (ethereum.Subscription, chan *bindings.FirstPartyStorkContractValueUpdate, error) {
+	eventCh := make(chan *bindings.FirstPartyStorkContractValueUpdate)
+
+	pubKeys := make([]common.Address, 0, len(pubKeyAssetIDPairs))
+	assetIDs := make([]string, 0, len(pubKeyAssetIDPairs))
+	for pubKey, assetIDs := range pubKeyAssetIDPairs {
+		pubKeys = append(pubKeys, pubKey)
+		assetIDs = append(assetIDs, assetIDs...)
+	}
+
+	sub, err := ci.wsContract.WatchValueUpdate(watchOpts, eventCh, pubKeys, assetIDs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to watch contract events: %w", err)
+	}
+
+	return sub, eventCh, nil
+}
+
+func (ci *ContractInteractor) listenLoop(
+	ctx context.Context,
+	sub ethereum.Subscription,
+	eventCh chan *bindings.FirstPartyStorkContractValueUpdate,
+	outCh chan types.ContractUpdate,
+) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case err := <-sub.Err():
+			return fmt.Errorf("error from subscription: %w", err)
+
+		case vLog, ok := <-eventCh:
+			if !ok {
+				ci.logger.Warn().Msg("Event channel closed, exiting event listener")
+
+				return ErrEventChannelClosed
+			}
+
+			tv := chain_pusher_types.InternalTemporalNumericValue{
+				QuantizedValue: vLog.QuantizedValue,
+				TimestampNs:    vLog.TimestampNs,
+			}
+			update := types.ContractUpdate{
+				Pubkey:                 vLog.PubKey,
+				LatestContractValueMap: map[string]chain_pusher_types.InternalTemporalNumericValue{string(vLog.AssetId.Hex()): tv},
+			}
+			select {
+			case outCh <- update:
+			case <-ctx.Done():
+				return fmt.Errorf("context done: %w", ctx.Err())
+			}
+		}
+	}
+}
+
+func (ci *ContractInteractor) reconnect(
+	ctx context.Context,
+	watchOpts *bind.WatchOpts,
+	pubKeyAssetIDPairs map[common.Address][]string,
+) (ethereum.Subscription, chan *bindings.FirstPartyStorkContractValueUpdate, error) {
+	backoff := initialBackoff
+	for retryCount := range maxRetryAttempts {
+		backoff = time.Duration(float64(backoff) * exponentialBackoffFactor)
+		ci.logger.Info().Dur("backoff", backoff).
+			Int("attempt", retryCount+1).
+			Int("maxAttempts", maxRetryAttempts).
+			Msg("Attempting to reconnect to contract events")
+
+		select {
+		case <-ctx.Done():
+			return nil, nil, fmt.Errorf("context done: %w", ctx.Err())
+		case <-time.After(backoff):
+			newSub, newEventCh, err := ci.setupSubscription(watchOpts, pubKeyAssetIDPairs)
+			if err != nil {
+				ci.logger.Warn().Err(err).Msg("Failed to reconnect to contract events")
+
+				continue
+			}
+
+			ci.logger.Info().Msg("Successfully reconnected to contract events")
+
+			return newSub, newEventCh, nil
+		}
+	}
+
+	ci.logger.Error().Int("maxRetryAttempts", maxRetryAttempts).
+		Msg("Max retry attempts reached, giving up on reconnection")
+
+	return nil, nil, ErrMaxRetryAttemptsReached
 }
