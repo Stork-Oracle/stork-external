@@ -20,5 +20,8 @@
     "go.testFlags": ["-v", "-count=1", "-tags=integration"],
     "[sway]": {
         "editor.defaultFormatter": "FuelLabs.sway-vscode-plugin"
-    }
+    },
+    "coverage-gutters.showLineCoverage": false,
+    "coverage-gutters.showRulerCoverage": false,
+    "coverage-gutters.showGutterCoverage": false
 }
