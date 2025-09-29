@@ -1,0 +1,20 @@
+{
+  "name": "@stork/kadena-admin-cli",
+  "version": "0.1.0",
+  "description": "Admin CLI for Stork Kadena integration",
+  "main": "admin.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node admin.ts"
+  },
+  "dependencies": {
+    "@kadena/client": "^1.14.0",
+    "@kadena/cryptography-utils": "^0.4.2",
+    "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

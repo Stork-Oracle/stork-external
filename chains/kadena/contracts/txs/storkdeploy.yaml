@@ -1,0 +1,19 @@
+codeFile: ../src/stork.pact
+data:
+  stork:
+    keys: ["5cc0092889287113bd1d44beebc4f57ae8c46c915702df7870fdac83aae27e4d"]
+    pred: "keys-all"
+publicMeta:
+  chainId: "1"
+  sender: "k:5cc0092889287113bd1d44beebc4f57ae8c46c915702df7870fdac83aae27e4d"
+  gasLimit: 100000
+  gasPrice: 0.00001
+  ttl: 7200
+networkId: "development"
+keyPairs:
+  - public: "5cc0092889287113bd1d44beebc4f57ae8c46c915702df7870fdac83aae27e4d"
+    secret: "8bcc84297cb292a9442f3ff0e14b717d99fc7ea6c7dbb9fb7784f4a2fdc73bff"
+    caps:
+      - name: "coin.GAS"
+        args: []
+type: exec
