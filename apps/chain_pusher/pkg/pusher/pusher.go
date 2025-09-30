@@ -31,6 +31,12 @@ func NewPusher(
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
 ) *Pusher {
+	fallbackInteractor := types.NewFallbackContractInteractor(
+		interactor,
+		[]string{chainRpcUrl},
+		[]string{chainWsRpcUrl},
+		*logger,
+	)
 	return &Pusher{
 		storkWsEndpoint: storkWsEndpoint,
 		storkAuth:       storkAuth,
@@ -40,13 +46,14 @@ func NewPusher(
 		assetConfigFile: assetConfigFile,
 		batchingWindow:  batchingWindow,
 		pollingPeriod:   pollingPeriod,
-		interactor:      interactor,
+		interactor:      fallbackInteractor,
 		logger:          logger,
 	}
 }
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
+	// this is just to test the connection - fail fast if the rpc url isn't working
 	err := p.interactor.ConnectRest(p.chainRpcUrl)
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("failed to connect to rest RPC")
