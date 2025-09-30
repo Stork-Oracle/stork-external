@@ -132,7 +132,9 @@ func (sci *ContractInteractor) ConnectWs(url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Solana WebSocket client: %w", err)
 	}
+
 	sci.wsClient = wsClient
+
 	return nil
 }
 

@@ -79,6 +79,7 @@ func (sci *ContractInteractor) ConnectRest(url string) error {
 	}
 
 	sci.contract = contract
+
 	return nil
 }
 

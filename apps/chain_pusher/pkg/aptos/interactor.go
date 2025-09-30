@@ -41,6 +41,7 @@ func NewContractInteractor(
 
 	return &ContractInteractor{
 		logger:           logger,
+		contract:         nil,
 		pollingPeriodSec: pollingPeriodSec,
 		privateKey:       privateKey,
 		contractAddress:  contractAddr,
@@ -54,6 +55,7 @@ func (aci *ContractInteractor) ConnectRest(url string) error {
 	}
 
 	aci.contract = contract
+
 	return nil
 }
 

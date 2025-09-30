@@ -45,7 +45,6 @@ func NewFallbackContractInteractor(
 func (f *FallbackContractInteractor) ConnectRest(httpRpcUrl string) error {
 	f.logger.Info().Msgf("attempting connection to Rest rpc url %s", httpRpcUrl)
 	err := f.contractInteractor.ConnectRest(httpRpcUrl)
-
 	if err != nil {
 		return fmt.Errorf("failed to connect to rest rpc url %s", httpRpcUrl)
 	}
@@ -59,23 +58,28 @@ func (f *FallbackContractInteractor) ConnectWs(_ string) error {
 	for _, wsRpcUrl := range f.wsRpcUrls {
 		f.logger.Info().Msgf("attempting connection to WS rpc url %s", wsRpcUrl)
 		err = f.contractInteractor.ConnectWs(wsRpcUrl)
-
 		if err == nil {
 			return nil
 		}
 
 		f.logger.Error().Err(err).Str("rpcUrl", wsRpcUrl).Msgf("error connecting to WS RPC, will attempt fallback")
 	}
+
 	f.logger.Error().Err(err).Msg("failed to connect to all supplied ws rpc urls!")
 
 	return err
 }
 
-func (f *FallbackContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue) {
+func (f *FallbackContractInteractor) ListenContractEvents(
+	ctx context.Context,
+	ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue,
+) {
 	f.contractInteractor.ListenContractEvents(ctx, ch)
 }
 
-func (f *FallbackContractInteractor) PullValues(encodedAssetIDs []InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error) {
+func (f *FallbackContractInteractor) PullValues(
+	encodedAssetIDs []InternalEncodedAssetID,
+) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error) {
 	result, err := f.runWithFallback(
 		"pullValues",
 		func() (any, error) {
@@ -155,12 +159,14 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 			}
 			return result, nil
 		}
+
 		f.firstHTTPRpcUrlSuccessful = false
 		f.logger.Error().Err(err).
 			Str("rpcUrl", restRpcUrl).
 			Str("contractFunction", contractFuncName).
 			Msgf("error calling contract function on rpc, will attempt fallback")
 	}
+
 	f.logger.Error().Err(err).
 		Str("contractFunction", contractFuncName).
 		Msg("failed to pull values from all supplied rest rpc urls!")

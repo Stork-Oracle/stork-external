@@ -97,6 +97,7 @@ func (eci *ContractInteractor) ConnectRest(url string) error {
 	eci.contract = contract
 	eci.client = client
 	eci.chainID = chainID
+
 	return nil
 }
 
@@ -123,6 +124,7 @@ func (eci *ContractInteractor) ConnectWs(url string) error {
 	}
 
 	eci.wsContract = wsContract
+
 	return nil
 }
 
