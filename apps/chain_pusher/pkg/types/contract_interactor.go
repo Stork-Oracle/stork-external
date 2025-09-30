@@ -43,10 +43,10 @@ func NewFallbackContractInteractor(
 }
 
 func (f *FallbackContractInteractor) ConnectHTTP(httpRpcUrl string) error {
-	f.logger.Info().Msgf("attempting connection to HTTO rpc url %s", httpRpcUrl)
+	f.logger.Info().Msgf("attempting connection to HTTP rpc url %s", httpRpcUrl)
 	err := f.contractInteractor.ConnectHTTP(httpRpcUrl)
 	if err != nil {
-		return fmt.Errorf("failed to connect to HTTP rpc url %s", httpRpcUrl)
+		return fmt.Errorf("failed to connect to HTTP rpc url %s: %w", httpRpcUrl, err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 
 	var result any
 
-	for idx, httpRpcUrl := range f.wsRpcUrls {
+	for idx, httpRpcUrl := range f.httpRpcUrls {
 		if idx > 0 || !f.firstHTTPRpcUrlSuccessful {
 			err = f.contractInteractor.ConnectHTTP(httpRpcUrl)
 			if err != nil {

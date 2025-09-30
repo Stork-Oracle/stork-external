@@ -420,7 +420,7 @@ func (eci *ContractInteractor) GetWalletBalance() (float64, error) {
 	return balanceFloat, nil
 }
 
-//nolint:ireturn // interface return acceptable here.
+//nolint:revive,ireturn // interface return acceptable here
 func setupSubscription(
 	eci *ContractInteractor,
 	watchOpts *bind.WatchOpts,
