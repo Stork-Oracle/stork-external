@@ -11,7 +11,6 @@ import (
 
 type ContractInteractor[T shared.Signature] interface {
 	PullValues(
-		ctx context.Context,
 		pubKeyAssetIDPairs map[common.Address][]string,
 	) ([]ContractUpdate, error)
 	ListenContractEvents(
@@ -20,7 +19,6 @@ type ContractInteractor[T shared.Signature] interface {
 		pubKeyAssetIDPairs map[common.Address][]string,
 	)
 	BatchPushToContract(
-		ctx context.Context,
 		signedPriceUpdatesByAssetEntry map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T],
 	) error
 	Close()
