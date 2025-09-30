@@ -48,7 +48,7 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
 	s.Require().NoError(err)
 
-	err = s.interactor.ConnectHttp(s.config.RpcUrl)
+	err = s.interactor.ConnectHTTP(s.config.RpcUrl)
 	s.Require().NoError(err)
 
 	err = s.interactor.ConnectWs(s.config.WsUrl)

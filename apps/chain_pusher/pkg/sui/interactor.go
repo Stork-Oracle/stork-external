@@ -51,7 +51,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (sci *ContractInteractor) ConnectHttp(url string) error {
+func (sci *ContractInteractor) ConnectHTTP(url string) error {
 	contract, err := bindings.NewStorkContract(url, sci.contractAddr, sci.account)
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract client: %w", err)

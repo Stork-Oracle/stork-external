@@ -78,7 +78,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (eci *ContractInteractor) ConnectHttp(url string) error {
+func (eci *ContractInteractor) ConnectHTTP(url string) error {
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RPC: %w", err)

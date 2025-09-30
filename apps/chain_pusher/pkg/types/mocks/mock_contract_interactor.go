@@ -90,11 +90,11 @@ func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func
 }
 
 // ConnectRest provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) ConnectHttp(url string) error {
+func (_mock *MockContractInteractor) ConnectHTTP(url string) error {
 	ret := _mock.Called(url)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConnectHttp")
+		panic("no return value specified for ConnectHTTP")
 	}
 
 	var r0 error
@@ -106,7 +106,7 @@ func (_mock *MockContractInteractor) ConnectHttp(url string) error {
 	return r0
 }
 
-// MockContractInteractor_ConnectRest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectHttp'
+// MockContractInteractor_ConnectRest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectHTTP'
 type MockContractInteractor_ConnectRest_Call struct {
 	*mock.Call
 }
@@ -114,7 +114,7 @@ type MockContractInteractor_ConnectRest_Call struct {
 // ConnectRest is a helper method to define mock.On call
 //   - url string
 func (_e *MockContractInteractor_Expecter) ConnectRest(url interface{}) *MockContractInteractor_ConnectRest_Call {
-	return &MockContractInteractor_ConnectRest_Call{Call: _e.mock.On("ConnectHttp", url)}
+	return &MockContractInteractor_ConnectRest_Call{Call: _e.mock.On("ConnectHTTP", url)}
 }
 
 func (_c *MockContractInteractor_ConnectRest_Call) Run(run func(url string)) *MockContractInteractor_ConnectRest_Call {

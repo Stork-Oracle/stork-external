@@ -15,7 +15,7 @@ type ContractInteractor interface {
 	) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error)
 	BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error
 	GetWalletBalance() (float64, error)
-	ConnectHttp(url string) error
+	ConnectHTTP(url string) error
 	ConnectWs(url string) error
 }
 
@@ -42,9 +42,9 @@ func NewFallbackContractInteractor(
 	}
 }
 
-func (f *FallbackContractInteractor) ConnectHttp(httpRpcUrl string) error {
+func (f *FallbackContractInteractor) ConnectHTTP(httpRpcUrl string) error {
 	f.logger.Info().Msgf("attempting connection to HTTO rpc url %s", httpRpcUrl)
-	err := f.contractInteractor.ConnectHttp(httpRpcUrl)
+	err := f.contractInteractor.ConnectHTTP(httpRpcUrl)
 	if err != nil {
 		return fmt.Errorf("failed to connect to HTTP rpc url %s", httpRpcUrl)
 	}
@@ -140,7 +140,7 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 
 	for idx, httpRpcUrl := range f.wsRpcUrls {
 		if idx > 0 || !f.firstHTTPRpcUrlSuccessful {
-			err = f.contractInteractor.ConnectHttp(httpRpcUrl)
+			err = f.contractInteractor.ConnectHTTP(httpRpcUrl)
 			if err != nil {
 				f.logger.Error().Err(err).
 					Str("httpRpcUrl", httpRpcUrl).
