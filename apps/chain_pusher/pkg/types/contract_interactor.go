@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/rs/zerolog"
@@ -19,38 +20,34 @@ type ContractInteractor interface {
 }
 
 type FallbackContractInteractor struct {
-	contractInteractor ContractInteractor
-	restRpcUrls        []string
-	wsRpcUrls          []string
-	logger             zerolog.Logger
+	contractInteractor        ContractInteractor
+	httpRpcUrls               []string
+	wsRpcUrls                 []string
+	firstHttpRpcUrlSuccessful bool
+	logger                    zerolog.Logger
 }
 
 func NewFallbackContractInteractor(
 	interactor ContractInteractor,
-	restRpcUrls []string,
+	httpRpcUrls []string,
 	wsRpcUrls []string,
 	logger zerolog.Logger,
 ) *FallbackContractInteractor {
 	return &FallbackContractInteractor{
 		contractInteractor: interactor,
-		restRpcUrls:        restRpcUrls,
+		httpRpcUrls:        httpRpcUrls,
 		wsRpcUrls:          wsRpcUrls,
 		logger:             logger,
 	}
 }
 
-func (f *FallbackContractInteractor) ConnectRest(_ string) error {
-	var err error
-	for _, restRpcUrl := range f.restRpcUrls {
-		f.logger.Info().Msgf("attempting connection to Rest rpc url %s", restRpcUrl)
-		err = f.contractInteractor.ConnectRest(restRpcUrl)
-		if err == nil {
-			return nil
-		}
-		f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error connecting to Rest RPC, will attempt fallback")
+func (f *FallbackContractInteractor) ConnectRest(httpRpcUrl string) error {
+	f.logger.Info().Msgf("attempting connection to Rest rpc url %s", httpRpcUrl)
+	err := f.contractInteractor.ConnectRest(httpRpcUrl)
+	if err == nil {
+		return fmt.Errorf("failed to connect to rest rpc url %s", httpRpcUrl)
 	}
-	f.logger.Error().Err(err).Msg("failed to connect to all supplied rest rpc urls!")
-	return err
+	return nil
 }
 
 func (f *FallbackContractInteractor) ConnectWs(_ string) error {
@@ -71,61 +68,81 @@ func (f *FallbackContractInteractor) ListenContractEvents(ctx context.Context, c
 	f.contractInteractor.ListenContractEvents(ctx, ch)
 }
 
-func (f *FallbackContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error) {
+func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, contractFunc func() (any, error)) (any, error) {
 	var err error
-	var result map[InternalEncodedAssetID]InternalTemporalNumericValue
-	for _, restRpcUrl := range f.wsRpcUrls {
-		err = f.contractInteractor.ConnectRest(restRpcUrl)
-		if err != nil {
-			f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error connecting to rpc rest client, will attempt fallback")
-			continue
+	var result any
+	for idx, restRpcUrl := range f.wsRpcUrls {
+		if idx > 0 || !f.firstHttpRpcUrlSuccessful {
+			err = f.contractInteractor.ConnectRest(restRpcUrl)
+			if err != nil {
+				f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error connecting to rpc rest client, will attempt fallback")
+				f.firstHttpRpcUrlSuccessful = false
+				continue
+			}
 		}
 
-		result, err = f.contractInteractor.PullValues(encodedAssetIds)
+		result, err = contractFunc()
 		if err == nil {
+			if idx == 0 {
+				f.firstHttpRpcUrlSuccessful = true
+			}
 			return result, nil
 		}
-		f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error pulling values from RPC, will attempt fallback")
+		f.firstHttpRpcUrlSuccessful = false
+		f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Str("contractFunction", contractFuncName).Msgf("error calling contract function on rpc, will attempt fallback")
 	}
-	f.logger.Error().Err(err).Msg("failed to pull values from all supplied rest rpc urls!")
+	f.logger.Error().Err(err).Str("contractFunction", contractFuncName).Msg("failed to pull values from all supplied rest rpc urls!")
 	return nil, err
 }
 
-func (f *FallbackContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error {
-	var err error
-	for _, restRpcUrl := range f.wsRpcUrls {
-		err = f.contractInteractor.ConnectRest(restRpcUrl)
-		if err != nil {
-			f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error connecting to rpc rest client, will attempt fallback")
-			continue
-		}
-
-		err = f.contractInteractor.BatchPushToContract(priceUpdates)
-		if err == nil {
-			return nil
-		}
-		f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error running batch push with RPC, will attempt fallback")
+func (f *FallbackContractInteractor) PullValues(encodedAssetIds []InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error) {
+	result, err := f.runWithFallback(
+		"pullValues",
+		func() (any, error) {
+			return f.contractInteractor.PullValues(encodedAssetIds)
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pull values from all supplied rest rpc urls: %w", err)
 	}
-	f.logger.Error().Err(err).Msg("failed to batch push with all supplied rest rpc urls!")
-	return err
+
+	values, success := result.(map[InternalEncodedAssetID]InternalTemporalNumericValue)
+	if !success {
+		return nil, fmt.Errorf("could not convert result to values: %w", err)
+	}
+
+	return values, nil
+}
+
+func (f *FallbackContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error {
+	_, err := f.runWithFallback(
+		"pushBatch",
+		func() (any, error) {
+			err := f.contractInteractor.BatchPushToContract(priceUpdates)
+			return nil, err
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to push batch from all supplied rest rpc urls: %w", err)
+	}
+	return nil
 }
 
 func (f *FallbackContractInteractor) GetWalletBalance() (float64, error) {
-	var err error
-	var result float64
-	for _, restRpcUrl := range f.wsRpcUrls {
-		err = f.contractInteractor.ConnectRest(restRpcUrl)
-		if err != nil {
-			f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error connecting to rpc rest client, will attempt fallback")
-			continue
-		}
-
-		result, err = f.contractInteractor.GetWalletBalance()
-		if err == nil {
-			return result, nil
-		}
-		f.logger.Error().Err(err).Str("rpcUrl", restRpcUrl).Msgf("error pulling wallet balance from RPC, will attempt fallback")
+	result, err := f.runWithFallback(
+		"pullValues",
+		func() (any, error) {
+			return f.contractInteractor.GetWalletBalance()
+		},
+	)
+	if err != nil {
+		return math.NaN(), fmt.Errorf("failed to pull wallet balance from all supplied rest rpc urls: %w", err)
 	}
-	f.logger.Error().Err(err).Msg("failed to pull wallet balance from all supplied rest rpc urls!")
-	return math.NaN(), err
+
+	balance, success := result.(float64)
+	if !success {
+		return math.NaN(), fmt.Errorf("could not convert result to float: %w", err)
+	}
+
+	return balance, nil
 }
