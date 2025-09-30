@@ -45,7 +45,7 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
 	var err error
-	s.interactor, err = NewContractInteractor(s.config.RpcUrl, s.config.WsUrl, s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
+	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
 	s.Require().NoError(err)
 
 	s.prices, err = testutil.LoadAggregatedSignedPrices()
