@@ -44,7 +44,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (fci *ContractInteractor) ConnectRest(url string) error {
+func (fci *ContractInteractor) ConnectHttp(url string) error {
 	config := bindings.Config{
 		RpcUrl:          url,
 		ContractAddress: fci.contractAddress,

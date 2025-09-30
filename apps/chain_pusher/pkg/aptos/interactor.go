@@ -48,7 +48,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (aci *ContractInteractor) ConnectRest(url string) error {
+func (aci *ContractInteractor) ConnectHttp(url string) error {
 	contract, err := bindings.NewStorkContract(url, aci.contractAddress, aci.privateKey)
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract: %w", err)

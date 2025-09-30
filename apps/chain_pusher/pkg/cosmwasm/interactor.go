@@ -63,7 +63,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (sci *ContractInteractor) ConnectRest(url string) error {
+func (sci *ContractInteractor) ConnectHttp(url string) error {
 	contract, err := bindings.NewStorkContract(
 		url,
 		sci.contractAddress,

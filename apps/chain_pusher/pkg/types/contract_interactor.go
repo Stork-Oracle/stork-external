@@ -15,7 +15,7 @@ type ContractInteractor interface {
 	) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error)
 	BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error
 	GetWalletBalance() (float64, error)
-	ConnectRest(url string) error
+	ConnectHttp(url string) error
 	ConnectWs(url string) error
 }
 
@@ -42,11 +42,11 @@ func NewFallbackContractInteractor(
 	}
 }
 
-func (f *FallbackContractInteractor) ConnectRest(httpRpcUrl string) error {
-	f.logger.Info().Msgf("attempting connection to Rest rpc url %s", httpRpcUrl)
-	err := f.contractInteractor.ConnectRest(httpRpcUrl)
+func (f *FallbackContractInteractor) ConnectHttp(httpRpcUrl string) error {
+	f.logger.Info().Msgf("attempting connection to HTTO rpc url %s", httpRpcUrl)
+	err := f.contractInteractor.ConnectHttp(httpRpcUrl)
 	if err != nil {
-		return fmt.Errorf("failed to connect to rest rpc url %s", httpRpcUrl)
+		return fmt.Errorf("failed to connect to HTTP rpc url %s", httpRpcUrl)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (f *FallbackContractInteractor) PullValues(
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to pull values from all supplied rest rpc urls: %w", err)
+		return nil, fmt.Errorf("failed to pull values from all supplied HTTP rpc urls: %w", err)
 	}
 
 	values, success := result.(map[InternalEncodedAssetID]InternalTemporalNumericValue)
@@ -107,7 +107,7 @@ func (f *FallbackContractInteractor) BatchPushToContract(priceUpdates map[Intern
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to push batch from all supplied rest rpc urls: %w", err)
+		return fmt.Errorf("failed to push batch from all supplied HTTP rpc urls: %w", err)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func (f *FallbackContractInteractor) GetWalletBalance() (float64, error) {
 		},
 	)
 	if err != nil {
-		return math.NaN(), fmt.Errorf("failed to pull wallet balance from all supplied rest rpc urls: %w", err)
+		return math.NaN(), fmt.Errorf("failed to pull wallet balance from all supplied HTTP rpc urls: %w", err)
 	}
 
 	balance, success := result.(float64)
@@ -138,13 +138,13 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 
 	var result any
 
-	for idx, restRpcUrl := range f.wsRpcUrls {
+	for idx, httpRpcUrl := range f.wsRpcUrls {
 		if idx > 0 || !f.firstHTTPRpcUrlSuccessful {
-			err = f.contractInteractor.ConnectRest(restRpcUrl)
+			err = f.contractInteractor.ConnectHttp(httpRpcUrl)
 			if err != nil {
 				f.logger.Error().Err(err).
-					Str("rpcUrl", restRpcUrl).
-					Msgf("error connecting to rpc rest client, will attempt fallback")
+					Str("httpRpcUrl", httpRpcUrl).
+					Msgf("error connecting to rpc http client, will attempt fallback")
 
 				f.firstHTTPRpcUrlSuccessful = false
 
@@ -162,14 +162,14 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 
 		f.firstHTTPRpcUrlSuccessful = false
 		f.logger.Error().Err(err).
-			Str("rpcUrl", restRpcUrl).
+			Str("rpcUrl", httpRpcUrl).
 			Str("contractFunction", contractFuncName).
 			Msgf("error calling contract function on rpc, will attempt fallback")
 	}
 
 	f.logger.Error().Err(err).
 		Str("contractFunction", contractFuncName).
-		Msg("failed to pull values from all supplied rest rpc urls!")
+		Msg("failed to pull values from all supplied http rpc urls!")
 
 	return nil, err
 }
