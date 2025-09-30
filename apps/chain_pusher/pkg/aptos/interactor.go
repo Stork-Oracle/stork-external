@@ -52,6 +52,7 @@ func (aci *ContractInteractor) ConnectRest(url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract: %w", err)
 	}
+
 	aci.contract = contract
 	return nil
 }

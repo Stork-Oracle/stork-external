@@ -70,6 +70,11 @@ func NewContractInteractor(
 		gasLimit:        gasLimit,
 
 		verifyPublishers: verifyPublishers,
+
+		contract:   nil,
+		wsContract: nil,
+		client:     nil,
+		chainID:    nil,
 	}, nil
 }
 
@@ -97,7 +102,9 @@ func (eci *ContractInteractor) ConnectRest(url string) error {
 
 func (eci *ContractInteractor) ConnectWs(url string) error {
 	var wsClient *ethclient.Client
+
 	var err error
+
 	if url != "" {
 		wsClient, err = ethclient.Dial(url)
 		if err != nil {
@@ -111,7 +118,7 @@ func (eci *ContractInteractor) ConnectWs(url string) error {
 	if wsClient != nil {
 		wsContract, err = bindings.NewStorkContract(eci.contractAddress, wsClient)
 		if err != nil {
-			return fmt.Errorf("Failed to create WebSocket contract instance: %w", err)
+			return fmt.Errorf("failed to create WebSocket contract instance: %w", err)
 		}
 	}
 

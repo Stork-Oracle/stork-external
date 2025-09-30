@@ -37,6 +37,7 @@ func NewContractInteractor(
 	}
 
 	return &ContractInteractor{
+		contract:        nil,
 		logger:          logger,
 		privateKey:      privateKey,
 		contractAddress: contractAddress,
@@ -54,6 +55,7 @@ func (fci *ContractInteractor) ConnectRest(url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract client: %w", err)
 	}
+
 	fci.contract = contract
 	return nil
 }

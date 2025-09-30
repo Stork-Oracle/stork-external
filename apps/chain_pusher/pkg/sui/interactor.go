@@ -25,7 +25,6 @@ type ContractInteractor struct {
 	account          *account.Account
 	pollingPeriodSec int
 	contractAddr     string
-	assetConfigFile  string
 
 	contract *bindings.StorkContract
 }
@@ -47,6 +46,7 @@ func NewContractInteractor(
 		logger:           logger,
 		account:          account,
 		contractAddr:     contractAddr,
+		contract:         nil,
 		pollingPeriodSec: pollingPeriodSec,
 	}, nil
 }

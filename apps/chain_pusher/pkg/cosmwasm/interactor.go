@@ -50,6 +50,7 @@ func NewContractInteractor(
 
 	return &ContractInteractor{
 		logger:           logger,
+		contract:         nil,
 		contractAddress:  contractAddress,
 		mnemonic:         mnemonicString,
 		batchingWindow:   batchingWindow,

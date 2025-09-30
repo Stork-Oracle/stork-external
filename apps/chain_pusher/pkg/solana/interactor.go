@@ -101,6 +101,8 @@ func NewContractInteractor(
 	bindings.SetProgramID(contractPubKey)
 	sci := &ContractInteractor{
 		logger:             logger,
+		client:             nil,
+		wsClient:           nil,
 		contractAddr:       contractPubKey,
 		feedAccounts:       feedAccounts,
 		treasuryAccounts:   treasuryAccounts,
