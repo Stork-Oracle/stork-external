@@ -53,13 +53,7 @@ func NewPusher(
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
-	// this is just to test the connection - fail fast if the rpc url isn't working
-	err := p.interactor.ConnectRest(p.chainRpcUrl)
-	if err != nil {
-		p.logger.Fatal().Err(err).Msg("failed to connect to rest RPC")
-	}
-
-	err = p.interactor.ConnectWs(p.chainRpcUrl)
+	err := p.interactor.ConnectWs(p.chainRpcUrl)
 	if err != nil {
 		p.logger.Error().Err(err).Msg("failed to connect to ws RPC")
 	}
