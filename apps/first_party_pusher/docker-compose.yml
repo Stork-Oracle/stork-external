@@ -18,10 +18,9 @@ services:
     volumes:
       - "./configs/local/data-provider-config.json:/etc/data_provider_config.json:ro"
 
-  publisher-agent:
+  publisher-agent-local:
     profiles:
       - local
-      - production
     build:
       context: ../..
       dockerfile: docker/images/Dockerfile
@@ -45,10 +44,35 @@ services:
     ports:
       - "5216:5216"
 
-  first-party-pusher:
+  publisher-agent-production:
+    profiles:
+      - production
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "publisher_agent"
+    environment:
+      STORK_EVM_PRIVATE_KEY: ${PUBLISHER_EVM_PRIVATE_KEY}
+      STORK_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY}
+      STORK_STARK_PRIVATE_KEY: ${PUBLISHER_STARK_PRIVATE_KEY}
+      STORK_STARK_PUBLIC_KEY: ${PUBLISHER_STARK_PUBLIC_KEY}
+      STORK_ORACLE_ID: ${PUBLISHER_ORACLE_ID}
+      STORK_PULL_BASED_AUTH: ${PUBLISHER_PULL_BASED_AUTH}
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/publisher_config.json",
+      ]
+    volumes:
+      - "${PUBLISHER_CONFIG_PATH:-./configs/production/publisher-config.json}:/etc/publisher_config.json:ro"
+    ports:
+      - "5216:5216"
+
+  first-party-pusher-local:
     profiles:
       - local
-      - production
     build:
       context: ../..
       dockerfile: docker/images/Dockerfile
@@ -69,10 +93,36 @@ services:
     volumes:
       - "${ASSET_CONFIG_PATH:-./configs/local/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
     depends_on:
-      publisher-agent:
+      publisher-agent-local:
         condition: service_started
       evm-contract:
         condition: service_healthy
+
+  first-party-pusher-production:
+    profiles:
+      - production
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    environment:
+      PUSHER_PRIVATE_KEY: ${PUSHER_PRIVATE_KEY}
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "${CHAIN_RPC_URL:-http://host.docker.internal:8545}",
+        "-x", "${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}",
+        "-f", "/etc/pusher-asset-config.yaml",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${ASSET_CONFIG_PATH:-./configs/production/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
+    depends_on:
+      publisher-agent-production:
+        condition: service_started
 
   evm-contract:
     profiles:
