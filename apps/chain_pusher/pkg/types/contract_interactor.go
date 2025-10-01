@@ -69,7 +69,7 @@ func (f *FallbackContractInteractor) ConnectWs(_ string) error {
 
 	f.logger.Error().Err(err).Msg("failed to connect to all supplied ws rpc urls!")
 
-	return err
+	return fmt.Errorf("failed to connect to all supplied ws rpc urls: %w", err)
 }
 
 func (f *FallbackContractInteractor) ListenContractEvents(
@@ -108,7 +108,7 @@ func (f *FallbackContractInteractor) BatchPushToContract(
 		func() (any, error) {
 			err := f.contractInteractor.BatchPushToContract(priceUpdates)
 
-			return nil, err
+			return nil, fmt.Errorf("failed to push batch: %w", err)
 		},
 	)
 	if err != nil {
