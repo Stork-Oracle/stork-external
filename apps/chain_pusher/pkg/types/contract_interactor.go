@@ -118,7 +118,7 @@ func (f *FallbackContractInteractor) BatchPushToContract(
 
 func (f *FallbackContractInteractor) GetWalletBalance() (float64, error) {
 	result, err := f.runWithFallback(
-		"pullValues",
+		"getWalletBalance",
 		func() (any, error) {
 			return f.contractInteractor.GetWalletBalance()
 		},
