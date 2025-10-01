@@ -44,8 +44,8 @@ func NewFallbackContractInteractor(
 
 func (f *FallbackContractInteractor) ConnectHTTP(httpRpcUrl string) error {
 	f.logger.Info().Msgf("attempting connection to HTTP rpc url %s", httpRpcUrl)
-	err := f.contractInteractor.ConnectHTTP(httpRpcUrl)
 
+	err := f.contractInteractor.ConnectHTTP(httpRpcUrl)
 	if err != nil {
 		return fmt.Errorf("failed to connect to HTTP rpc url %s: %w", httpRpcUrl, err)
 	}
@@ -58,6 +58,7 @@ func (f *FallbackContractInteractor) ConnectWs(_ string) error {
 
 	for _, wsRpcUrl := range f.wsRpcUrls {
 		f.logger.Info().Msgf("attempting connection to WS rpc url %s", wsRpcUrl)
+
 		err = f.contractInteractor.ConnectWs(wsRpcUrl)
 		if err == nil {
 			return nil
@@ -99,11 +100,14 @@ func (f *FallbackContractInteractor) PullValues(
 	return values, nil
 }
 
-func (f *FallbackContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error {
+func (f *FallbackContractInteractor) BatchPushToContract(
+	priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice,
+) error {
 	_, err := f.runWithFallback(
 		"pushBatch",
 		func() (any, error) {
 			err := f.contractInteractor.BatchPushToContract(priceUpdates)
+
 			return nil, err
 		},
 	)
@@ -134,11 +138,15 @@ func (f *FallbackContractInteractor) GetWalletBalance() (float64, error) {
 	return balance, nil
 }
 
-func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, contractFunc func() (any, error)) (any, error) {
+func (f *FallbackContractInteractor) runWithFallback(
+	contractFuncName string,
+	contractFunc func() (any, error),
+) (any, error) {
 	// only reconnect for the first url if the last attempt was unsuccessful
 	// also update whether the last request was successful
 	if !f.firstHTTPRpcUrlSuccessful {
 		httpRpcUrl := f.httpRpcUrls[0]
+
 		err := f.contractInteractor.ConnectHTTP(f.httpRpcUrls[0])
 		if err != nil {
 			f.logger.Error().Err(err).
@@ -152,6 +160,7 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 	result, err := contractFunc()
 	if err == nil {
 		f.firstHTTPRpcUrlSuccessful = true
+
 		return result, nil
 	}
 
