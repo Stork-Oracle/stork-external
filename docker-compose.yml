@@ -66,8 +66,8 @@ services:
     volumes:
       - "./path-to-asset-config.yaml:/etc/asset-config.yaml"
       - "./path-to-private-key.secret:/etc/private-key.secret"
-  
   evm-contract:
+  
     profiles:
       - integration
     build:
