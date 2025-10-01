@@ -432,7 +432,6 @@ func setupSubscription(
 		return nil, nil, fmt.Errorf("failed to watch contract events: %w", err)
 	}
 
-	//nolint:ireturn // interface return acceptable here.
 	return sub, eventCh, nil
 }
 
@@ -496,7 +495,6 @@ func (eci *ContractInteractor) reconnect(
 
 			eci.logger.Info().Msg("Successfully reconnected to contract events")
 
-			//nolint:ireturn // interface return acceptable here.
 			return newSub, newEventCh, nil
 		}
 	}
