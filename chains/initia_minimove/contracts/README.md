@@ -7,8 +7,8 @@ This contract is used to read and write the latest values from the Stork network
 ### Getting started
 
 ```bash
-aptos init
-aptos move test --move-2 --dev
+minitiad init
+minitiad move test --language-version 2.1 --dev
 ```
 
 ### Local Development
@@ -22,13 +22,13 @@ aptos node run-local-testnet --with-indexer-api
 #### Test
 
 ```bash
-aptos move test --move-2 --dev
+minitiad move test --language-version 2.1 --dev
 ```
 
 #### Deploy
 
 ```bash
-aptos move deploy-object --address-name stork --profile <profile> --move-2
+minitiad move deploy-object --from <key_name> --gas auto --gas-adjustment 1.5 --gas-prices <gas_price> --node <rpc_url> --chain-id <chain_id> --language-version 2.1
 ```
 
 #### Upgrade

@@ -14,7 +14,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^1.33.1",
+    "@initia/initia.js": "^0.2.22",
     "commander": "^13.0.0"
   }
 }
