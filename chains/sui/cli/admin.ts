@@ -31,7 +31,7 @@ type UpdateTemporalNumericValueEvmInputRaw = {
 function loadKeypairFromKeystore(key_alias: string = SUI_KEY_ALIAS): Ed25519Keypair {
     const aliasesContent = fs.readFileSync(DEFAULT_ALIASES_PATH, 'utf-8');
     const aliases = JSON.parse(aliasesContent);
-    
+
     const aliasIndex = aliases.findIndex((entry: any) => entry.alias === key_alias);
     if (aliasIndex === -1) {
         throw new Error(`Alias "${key_alias}" not found in aliases file`);
@@ -39,7 +39,7 @@ function loadKeypairFromKeystore(key_alias: string = SUI_KEY_ALIAS): Ed25519Keyp
 
     const keystoreContent = fs.readFileSync(DEFAULT_KEYSTORE_PATH, 'utf-8');
     const keystore = JSON.parse(keystoreContent);
-    
+
     const privateKeyBase64 = keystore[aliasIndex];
     if (!privateKeyBase64) {
         throw new Error(`No private key found for alias "${key_alias}" at index ${aliasIndex}`);
@@ -47,7 +47,7 @@ function loadKeypairFromKeystore(key_alias: string = SUI_KEY_ALIAS): Ed25519Keyp
 
     const privateKeyBytes = fromBase64(privateKeyBase64);
     const actualPrivateKey = privateKeyBytes.slice(1);
-    
+
     return Ed25519Keypair.fromSecretKey(actualPrivateKey);
 }
 
@@ -94,7 +94,7 @@ async function getStorkStateId(): Promise<string> {
         limit: 1,
         order: 'ascending',
     });
-    
+
     return events.data[0].parsedJson.stork_state_id;
 }
 
@@ -104,16 +104,16 @@ function byteArrayToHexString(byteArray: number[]) {
 
 function hexStringToByteArray(hexString: string) {
     if (hexString.startsWith("0x")) {
-      hexString = hexString.slice(2);
+        hexString = hexString.slice(2);
     }
     return Array.from(Buffer.from(hexString, "hex"));
 }
 
 const cliProgram = new Command();
 cliProgram
-  .name("admin")
-  .description("Sui Stork admin client")
-  .version("0.1.0");
+    .name("admin")
+    .description("Sui Stork admin client")
+    .version("0.1.0");
 
 const DEFAULT_SINGLE_UPDATE_FEE_IN_MIST = 1;
 
@@ -122,7 +122,7 @@ cliProgram
     .description("Initialize the Stork program")
     .argument("[stork_contract_address]", "The Stork contract address", (value) => value, STORK_CONTRACT_ADDRESS)
     .argument("<version>", "The version of the Stork state", (value) => value)
-    .action(async (stork_contract_address: string, version: string ) => {
+    .action(async (stork_contract_address: string, version: string) => {
         const keypair = loadKeypairFromKeystore();
         const tx = new Transaction();
         const stork_initialize_function = `${stork_contract_address}::stork::init_stork`;
@@ -166,86 +166,86 @@ cliProgram
         console.log(`Writing to feeds: ${asset_pairs}`);
         const keypair = loadKeypairFromKeystore();
         // try {
-            const result = await fetch(
-                `${endpoint}/v1/prices/latest\?assets\=${asset_pairs}`,
-                {
-                  headers: {
+        const result = await fetch(
+            `${endpoint}/v1/prices/latest\?assets\=${asset_pairs}`,
+            {
+                headers: {
                     Authorization: `Basic ${auth_key}`,
-                  },
-                }
-                );
-                const rawJson = await result.text();
-                const safeJsonText = rawJson.replace(
-                /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
-                (match) => `"${match}"` // Convert large numbers to strings
-                );
-            
-            // console.log(`Response: ${safeJsonText}`);
-            const responseData = JSON.parse(safeJsonText);
-            // console.log(`Response data: ${JSON.stringify(responseData)}`);
-            const updateData: UpdateTemporalNumericValueEvmInputRaw = {
-                ids: [],
-                temporal_numeric_value_timestamp_nss: [],
-                temporal_numeric_value_magnitudes: [],
-                temporal_numeric_value_negatives: [],
-                publisher_merkle_roots: [],
-                value_compute_alg_hashes: [],
-                rs: [],
-                ss: [],
-                vs: [],
+                },
             }
+        );
+        const rawJson = await result.text();
+        const safeJsonText = rawJson.replace(
+            /(?<!["\d])\b\d{16,}\b(?!["])/g, // Regex to find large integers not already in quotes
+            (match) => `"${match}"` // Convert large numbers to strings
+        );
 
-            Object.values(responseData.data).forEach((data: any) => {
-                updateData.ids.push(hexStringToByteArray(data.stork_signed_price.encoded_asset_id));
-                updateData.temporal_numeric_value_timestamp_nss.push(BigInt(data.stork_signed_price.timestamped_signature.timestamp));
-                updateData.temporal_numeric_value_magnitudes.push(BigInt(data.stork_signed_price.price));
-                updateData.temporal_numeric_value_negatives.push(data.stork_signed_price.price < 0);
-                updateData.publisher_merkle_roots.push(hexStringToByteArray(data.stork_signed_price.publisher_merkle_root));
-                updateData.value_compute_alg_hashes.push(hexStringToByteArray(data.stork_signed_price.calculation_alg.checksum));
-                updateData.rs.push(hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.r));
-                updateData.ss.push(hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.s));
-                updateData.vs.push(data.stork_signed_price.timestamped_signature.signature.v);
-            });
+        // console.log(`Response: ${safeJsonText}`);
+        const responseData = JSON.parse(safeJsonText);
+        // console.log(`Response data: ${JSON.stringify(responseData)}`);
+        const updateData: UpdateTemporalNumericValueEvmInputRaw = {
+            ids: [],
+            temporal_numeric_value_timestamp_nss: [],
+            temporal_numeric_value_magnitudes: [],
+            temporal_numeric_value_negatives: [],
+            publisher_merkle_roots: [],
+            value_compute_alg_hashes: [],
+            rs: [],
+            ss: [],
+            vs: [],
+        }
 
-            const tx = new Transaction();
-            const numUpdates = updateData.ids.length;
-            const fee = DEFAULT_UPDATE_FEE_IN_MIST*numUpdates;
-            console.log(`Fee: ${fee}`);
-            //get update_multiple_temporal_numeric_values_evm inputs
-            const [coin] = tx.splitCoins(tx.gas, [fee]);
-            const storkState = await getStorkStateId();
-            console.log(`Stork state: ${JSON.stringify(storkState)}`);
-            const [updateTemporalNumericValueEvmInputVec] = tx.moveCall({
-                target: `${STORK_CONTRACT_ADDRESS}::update_temporal_numeric_value_evm_input_vec::new`,
-                arguments: [
-                    tx.pure.vector('vector<u8>', updateData.ids),
-                    tx.pure.vector('u64', updateData.temporal_numeric_value_timestamp_nss),
-                    tx.pure.vector('u128', updateData.temporal_numeric_value_magnitudes),
-                    tx.pure.vector('bool', updateData.temporal_numeric_value_negatives),
-                    tx.pure.vector('vector<u8>', updateData.publisher_merkle_roots),
-                    tx.pure.vector('vector<u8>', updateData.value_compute_alg_hashes),
-                    tx.pure.vector('vector<u8>', updateData.rs),
-                    tx.pure.vector('vector<u8>', updateData.ss),
-                    tx.pure.vector('u8', updateData.vs),
-                ]
-            });
+        Object.values(responseData.data).forEach((data: any) => {
+            updateData.ids.push(hexStringToByteArray(data.stork_signed_price.encoded_asset_id));
+            updateData.temporal_numeric_value_timestamp_nss.push(BigInt(data.stork_signed_price.timestamped_signature.timestamp));
+            updateData.temporal_numeric_value_magnitudes.push(BigInt(data.stork_signed_price.price));
+            updateData.temporal_numeric_value_negatives.push(data.stork_signed_price.price < 0);
+            updateData.publisher_merkle_roots.push(hexStringToByteArray(data.stork_signed_price.publisher_merkle_root));
+            updateData.value_compute_alg_hashes.push(hexStringToByteArray(data.stork_signed_price.calculation_alg.checksum));
+            updateData.rs.push(hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.r));
+            updateData.ss.push(hexStringToByteArray(data.stork_signed_price.timestamped_signature.signature.s));
+            updateData.vs.push(data.stork_signed_price.timestamped_signature.signature.v);
+        });
 
-            
+        const tx = new Transaction();
+        const numUpdates = updateData.ids.length;
+        const fee = DEFAULT_UPDATE_FEE_IN_MIST * numUpdates;
+        console.log(`Fee: ${fee}`);
+        //get update_multiple_temporal_numeric_values_evm inputs
+        const [coin] = tx.splitCoins(tx.gas, [fee]);
+        const storkState = await getStorkStateId();
+        console.log(`Stork state: ${JSON.stringify(storkState)}`);
+        const [updateTemporalNumericValueEvmInputVec] = tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::update_temporal_numeric_value_evm_input_vec::new`,
+            arguments: [
+                tx.pure.vector('vector<u8>', updateData.ids),
+                tx.pure.vector('u64', updateData.temporal_numeric_value_timestamp_nss),
+                tx.pure.vector('u128', updateData.temporal_numeric_value_magnitudes),
+                tx.pure.vector('bool', updateData.temporal_numeric_value_negatives),
+                tx.pure.vector('vector<u8>', updateData.publisher_merkle_roots),
+                tx.pure.vector('vector<u8>', updateData.value_compute_alg_hashes),
+                tx.pure.vector('vector<u8>', updateData.rs),
+                tx.pure.vector('vector<u8>', updateData.ss),
+                tx.pure.vector('u8', updateData.vs),
+            ]
+        });
 
-            tx.moveCall({
-                target: `${STORK_CONTRACT_ADDRESS}::stork::update_multiple_temporal_numeric_values_evm`,
-                arguments: [
-                    tx.object(storkState),
-                    updateTemporalNumericValueEvmInputVec,
-                    coin,
-                ]
-            });
-            
-            const txResult = await client.signAndExecuteTransaction({
-                signer: keypair,
-                transaction: tx,
-            });
-            console.log(`Transaction result: ${txResult.digest}`);
+
+
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::stork::update_multiple_temporal_numeric_values_evm`,
+            arguments: [
+                tx.object(storkState),
+                updateTemporalNumericValueEvmInputVec,
+                coin,
+            ]
+        });
+
+        const txResult = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log(`Transaction result: ${txResult.digest}`);
 
         // } catch (error) {
         //     console.error(`Error: ${error}`);
@@ -261,11 +261,11 @@ cliProgram
             id: storkState,
             options: { showContent: true }
         });
-        
+
         if (result.data?.content?.dataType !== 'moveObject') {
             throw new Error("Could not fetch StorkState data");
         }
-        
+
         const fields = result.data.content.fields;
         const evmPubkey = byteArrayToHexString(fields['stork_evm_public_key'].fields.bytes);
         console.log({
@@ -284,7 +284,7 @@ cliProgram
         const keypair = loadKeypairFromKeystore();
         const adminCap = await getAdminCap(keypair);
         const storkState = await getStorkStateId();
-        
+
         const tx = new Transaction();
         tx.moveCall({
             target: `${STORK_CONTRACT_ADDRESS}::state::update_single_update_fee_in_mist`,
@@ -294,7 +294,7 @@ cliProgram
                 tx.pure.u64(BigInt(new_fee)),
             ]
         });
-        
+
         const result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
@@ -310,7 +310,7 @@ cliProgram
         const keypair = loadKeypairFromKeystore();
         const adminCap = await getAdminCap(keypair);
         const storkState = await getStorkStateId();
-        
+
         const tx = new Transaction();
         tx.moveCall({
             target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_sui_address`,
@@ -320,7 +320,7 @@ cliProgram
                 tx.pure.address(new_address),
             ]
         });
-        
+
         const result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
@@ -336,7 +336,7 @@ cliProgram
         const keypair = loadKeypairFromKeystore();
         const adminCap = await getAdminCap(keypair);
         const storkState = await getStorkStateId();
-        
+
         const tx = new Transaction();
         tx.moveCall({
             target: `${STORK_CONTRACT_ADDRESS}::state::update_stork_evm_public_key`,
@@ -346,12 +346,81 @@ cliProgram
                 tx.pure.vector('u8', hexStringToByteArray(new_key)),
             ]
         });
-        
+
         const result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
         });
         console.log("EVM public key updated:", result);
+    });
+
+cliProgram
+    .command("read-from-feed")
+    .description("Read from feed")
+    .argument("asset_id", "The plaintext asset id")
+    .action(async (asset_id: string) => {
+        const { keccak_256 } = await import('@noble/hashes/sha3');
+        const encAssetIdBytes = keccak_256(Buffer.from(asset_id));
+        const encAssetId = `0x${Buffer.from(encAssetIdBytes).toString('hex')}`;
+        console.log("Encoded asset id:", encAssetId);
+
+        const storkState = await getStorkStateId();
+
+        // Get the state object to find the feeds registry
+        const stateObject = await client.getObject({
+            id: storkState,
+            options: { showContent: true }
+        });
+
+        if (stateObject.data?.content?.dataType !== 'moveObject') {
+            throw new Error("Could not fetch StorkState data");
+        }
+
+        const fields: any = stateObject.data.content.fields;
+        const stateId = fields.id.id;
+
+        // Get the feeds registry as a dynamic object field
+        const feedsRegistryObject = await client.getDynamicFieldObject({
+            parentId: stateId,
+            name: {
+                type: 'vector<u8>',
+                value: Array.from(Buffer.from('temporal_numeric_value_feed_registry'))
+            }
+        });
+
+        if (!feedsRegistryObject.data?.content || feedsRegistryObject.data.content.dataType !== 'moveObject') {
+            throw new Error("Feeds registry not found");
+        }
+
+        const feedsRegistryId = (feedsRegistryObject.data.content.fields as any).id.id;
+
+        // Get the dynamic field containing the feed from the ObjectTable
+        // ObjectTable stores items with EncodedAssetId as the key type
+        const originalContractId = await getOrigionalContractId();
+        const feedObject = await client.getDynamicFieldObject({
+            parentId: feedsRegistryId,
+            name: {
+                type: `${originalContractId}::encoded_asset_id::EncodedAssetId`,
+                value: {
+                    bytes: Array.from(hexStringToByteArray(encAssetId))
+                }
+            }
+        });
+
+        if (!feedObject.data?.content || feedObject.data.content.dataType !== 'moveObject') {
+            throw new Error("Feed not found");
+        }
+
+        const feedFields: any = feedObject.data.content.fields;
+        const tnvValue = feedFields.latest_value;
+        const timestamp = tnvValue.fields.timestamp_ns;
+        const quantizedValue = tnvValue.fields.quantized_value;
+        const magnitude = BigInt(quantizedValue.fields.magnitude);
+        const isNegative = quantizedValue.fields.negative;
+
+        console.log("Temporal numeric value:");
+        console.log("  Timestamp:", timestamp);
+        console.log("  Value:", isNegative ? `-${magnitude}` : magnitude.toString());
     });
 
 cliProgram
@@ -361,7 +430,7 @@ cliProgram
         const keypair = loadKeypairFromKeystore();
         const adminCap = await getAdminCap(keypair);
         const storkState = await getStorkStateId();
-        
+
         const tx = new Transaction();
         const [coin] = tx.moveCall({
             target: `${STORK_CONTRACT_ADDRESS}::state::withdraw_fees`,
@@ -372,7 +441,7 @@ cliProgram
         });
 
         tx.transferObjects([coin], keypair.getPublicKey().toSuiAddress());
-        
+
         const result = await client.signAndExecuteTransaction({
             signer: keypair,
             transaction: tx,
