@@ -67,8 +67,6 @@ func (f *FallbackContractInteractor) ConnectWs(_ string) error {
 		f.logger.Error().Err(err).Str("rpcUrl", wsRpcUrl).Msgf("error connecting to WS RPC, will attempt fallback")
 	}
 
-	f.logger.Error().Err(err).Msg("failed to connect to all supplied ws rpc urls!")
-
 	return fmt.Errorf("failed to connect to all supplied ws rpc urls: %w", err)
 }
 
@@ -187,10 +185,6 @@ func (f *FallbackContractInteractor) runWithFallback(
 			Str("contractFunction", contractFuncName).
 			Msgf("error calling contract function on rpc, will attempt fallback")
 	}
-
-	f.logger.Error().Err(err).
-		Str("contractFunction", contractFuncName).
-		Msg("failed to call contract function from all supplied http rpc urls!")
 
 	return nil, err
 }
