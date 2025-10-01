@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.24 <0.9.0;
 
-/// @title StorkStructs
-/// @notice Data structures used by the Stork protocol
+/// @title FirstPartyStorkStructs
+/// @notice Data structures used by the First Party Stork protocol
 library FirstPartyStorkStructs {
     /// @notice Represents a temporal numeric value with timestamp and quantized value
     struct TemporalNumericValue {
@@ -12,7 +12,7 @@ library FirstPartyStorkStructs {
         int192 quantizedValue; // 24 bytes
     }
 
-    /// @notice Input structure for updating temporal numeric values
+    /// @notice Input structure for updating temporal numeric values from publishers
     struct PublisherTemporalNumericValueInput {
         TemporalNumericValue temporalNumericValue;
         address pubKey;
@@ -22,6 +22,7 @@ library FirstPartyStorkStructs {
         uint8 v;
     }
 
+    /// @notice Publisher user configuration
     struct PublisherUser {
         address pubKey;
         uint256 singleUpdateFee;

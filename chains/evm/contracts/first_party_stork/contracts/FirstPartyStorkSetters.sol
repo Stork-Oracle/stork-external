@@ -3,8 +3,8 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./FirstPartyStorkEvents.sol";
-import "./FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkEvents.sol";
 import "./FirstPartyStorkState.sol";
 
 contract FirstPartyStorkSetters is FirstPartyStorkState, IFirstPartyStorkEvents {

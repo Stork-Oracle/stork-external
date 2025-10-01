@@ -3,11 +3,12 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkGetters.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkErrors.sol";
 import "./FirstPartyStorkState.sol";
-import "./FirstPartyStorkErrors.sol";
 
-contract FirstPartyStorkGetters is FirstPartyStorkState {
+contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters {
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId

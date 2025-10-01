@@ -2,9 +2,10 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "./FirstPartyStorkEvents.sol";
-import "./FirstPartyStorkStructs.sol";
-import "./FirstPartyStorkErrors.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkEvents.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkErrors.sol";
+import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStork.sol";
 
 import "./FirstPartyStorkGetters.sol";
 import "./FirstPartyStorkSetters.sol";
@@ -14,7 +15,8 @@ import "./FirstPartyStorkVerify.sol";
 abstract contract FirstPartyStork is
     FirstPartyStorkGetters,
     FirstPartyStorkSetters,
-    FirstPartyStorkVerify
+    FirstPartyStorkVerify,
+    IFirstPartyStork
 {
     function updateTemporalNumericValues(
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
