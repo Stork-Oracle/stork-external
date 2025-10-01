@@ -45,6 +45,7 @@ func NewFallbackContractInteractor(
 func (f *FallbackContractInteractor) ConnectHTTP(httpRpcUrl string) error {
 	f.logger.Info().Msgf("attempting connection to HTTP rpc url %s", httpRpcUrl)
 	err := f.contractInteractor.ConnectHTTP(httpRpcUrl)
+
 	if err != nil {
 		return fmt.Errorf("failed to connect to HTTP rpc url %s: %w", httpRpcUrl, err)
 	}
@@ -134,33 +135,44 @@ func (f *FallbackContractInteractor) GetWalletBalance() (float64, error) {
 }
 
 func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, contractFunc func() (any, error)) (any, error) {
-	var err error
+	// only reconnect for the first url if the last attempt was unsuccessful
+	// also update whether the last request was successful
+	if !f.firstHTTPRpcUrlSuccessful {
+		httpRpcUrl := f.httpRpcUrls[0]
+		err := f.contractInteractor.ConnectHTTP(f.httpRpcUrls[0])
+		if err != nil {
+			f.logger.Error().Err(err).
+				Str("httpRpcUrl", httpRpcUrl).
+				Msgf("error connecting to rpc http client, will attempt fallback")
 
-	var result any
+			f.firstHTTPRpcUrlSuccessful = false
+		}
+	}
 
-	for idx, httpRpcUrl := range f.httpRpcUrls {
-		if idx > 0 || !f.firstHTTPRpcUrlSuccessful {
-			err = f.contractInteractor.ConnectHTTP(httpRpcUrl)
-			if err != nil {
-				f.logger.Error().Err(err).
-					Str("httpRpcUrl", httpRpcUrl).
-					Msgf("error connecting to rpc http client, will attempt fallback")
+	result, err := contractFunc()
+	if err == nil {
+		f.firstHTTPRpcUrlSuccessful = true
+		return result, nil
+	}
 
-				f.firstHTTPRpcUrlSuccessful = false
+	f.firstHTTPRpcUrlSuccessful = false
 
-				continue
-			}
+	// if the first failed, try fallback URLs in order until we get a success
+	for _, httpRpcUrl := range f.httpRpcUrls[1:] {
+		err = f.contractInteractor.ConnectHTTP(httpRpcUrl)
+		if err != nil {
+			f.logger.Error().Err(err).
+				Str("httpRpcUrl", httpRpcUrl).
+				Msgf("error connecting to rpc http client, will attempt fallback")
+
+			continue
 		}
 
 		result, err = contractFunc()
 		if err == nil {
-			if idx == 0 {
-				f.firstHTTPRpcUrlSuccessful = true
-			}
 			return result, nil
 		}
 
-		f.firstHTTPRpcUrlSuccessful = false
 		f.logger.Error().Err(err).
 			Str("rpcUrl", httpRpcUrl).
 			Str("contractFunction", contractFuncName).
@@ -169,7 +181,7 @@ func (f *FallbackContractInteractor) runWithFallback(contractFuncName string, co
 
 	f.logger.Error().Err(err).
 		Str("contractFunction", contractFuncName).
-		Msg("failed to pull values from all supplied http rpc urls!")
+		Msg("failed to call contract function from all supplied http rpc urls!")
 
 	return nil, err
 }

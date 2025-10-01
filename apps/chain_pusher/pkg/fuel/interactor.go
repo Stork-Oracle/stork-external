@@ -57,6 +57,7 @@ func (fci *ContractInteractor) ConnectHTTP(url string) error {
 	}
 
 	fci.contract = contract
+
 	return nil
 }
 

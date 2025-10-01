@@ -124,6 +124,7 @@ func NewContractInteractor(
 func (sci *ContractInteractor) ConnectHTTP(url string) error {
 	client := rpc.New(url)
 	sci.client = client
+
 	return nil
 }
 

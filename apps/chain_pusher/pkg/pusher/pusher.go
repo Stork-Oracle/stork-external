@@ -37,6 +37,7 @@ func NewPusher(
 		[]string{chainWsRpcUrl},
 		*logger,
 	)
+
 	return &Pusher{
 		storkWsEndpoint: storkWsEndpoint,
 		storkAuth:       storkAuth,
