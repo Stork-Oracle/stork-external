@@ -10,6 +10,9 @@ import (
 )
 
 type ContractInteractor[T shared.Signature] interface {
+	CheckPublisherUser(
+		pubKey common.Address,
+	) (bool, error)
 	PullValues(
 		pubKeyAssetIDPairs map[common.Address][]string,
 	) ([]ContractUpdate, error)

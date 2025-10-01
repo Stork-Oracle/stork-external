@@ -71,46 +71,31 @@ services:
     depends_on:
       publisher-agent:
         condition: service_started
-      # contract:
-      #   condition: service_healthy
+      evm-contract:
+        condition: service_healthy
 
-  # contract:
-  #   profiles:
-  #     - local
-  #   build:
-  #     context: ../..
-  #     dockerfile: docker/images/first_party_evm.Dockerfile
-  #     args:
-  #       STORK_PUBLIC_KEY: ${STORK_PUBLIC_KEY:-0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266}
-  #       CONTRACT_OWNER_ADDRESS: ${CONTRACT_OWNER_ADDRESS:-0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266}
-  #   environment:
-  #     - CONTRACT_OWNER_ADDRESS=${CONTRACT_OWNER_ADDRESS:-0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266}
-  #   ports:
-  #     - "8545:8545"
-  #   healthcheck:
-  #     test:
-  #       [
-  #         "CMD",
-  #         "/bin/sh",
-  #         "-c",
-  #         "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result"
-  #       ]
-  #     interval: 3s
-  #     timeout: 3s
-  #     retries: 20
-  #     start_period: 2s
-
-
-# Usage:
-# 
-# Local development (full pipeline with dummy data):
-#   docker-compose --profile local up
-#
-# Production (publisher-agent + first-party-pusher only):
-#   PUBLISHER_CONFIG_PATH=./configs/production/publisher-config.json \
-#   PUBLISHER_KEYS_PATH=./configs/production/secrets/publisher-keys.json \
-#   ASSET_CONFIG_PATH=./configs/production/asset-config.yaml \
-#   PRIVATE_KEY_PATH=./configs/production/secrets/private-key.txt \
-#   CHAIN_RPC_URL=https://your-rpc-endpoint.com \
-#   CONTRACT_ADDRESS=0xYourContractAddress \
-#   docker-compose --profile production up
+  evm-contract:
+    profiles:
+      - local
+    build:
+      context: ../..
+      dockerfile: docker/images/first_party_evm.Dockerfile
+      args:
+        PUBLISHER_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY}
+        PRIVATE_KEY: ${PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80} # Default private key for the first account in hardhat as that is the default owner account when deploying locally
+        CONTRACT_ADDRESS: ${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}
+        RPC_URL: ${RPC_URL:-http://127.0.0.1:8545}
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result && grep -q 'REGISTRATION_COMPLETE' /tmp/registered.log"
+        ] # Checks if the contract is deployed and the publisher is registered (temp file is by the entrypoint script)
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

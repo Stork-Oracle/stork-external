@@ -104,6 +104,17 @@ func NewContractInteractor(
 	}, nil
 }
 
+func (ci *ContractInteractor) CheckPublisherUser(
+	pubKey common.Address,
+) (bool, error) {
+	publisherUser, err := ci.contract.GetPublisherUser(nil, pubKey)
+	if err != nil {
+		return false, err
+	}
+
+	return publisherUser.PubKey == pubKey, nil
+}
+
 func (ci *ContractInteractor) PullValues(
 	pubKeyAssetIDPairs map[common.Address][]string,
 ) ([]types.ContractUpdate, error) {

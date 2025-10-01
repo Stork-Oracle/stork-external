@@ -61,7 +61,7 @@ func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 		}
 	}()
 
-	latestPublisherValueMap, latestContractValueMap, pubKeyAssetIDPairs, assetIDtoEncodedAssetID := r.initialize(ctx)
+	latestPublisherValueMap, latestContractValueMap, pubKeyAssetIDPairs, assetIDtoEncodedAssetID := r.initialize()
 
 	go r.poll(ctx, contractUpdateCh, pubKeyAssetIDPairs)
 	go r.contractInteractor.ListenContractEvents(ctx, contractUpdateCh, pubKeyAssetIDPairs)
@@ -79,32 +79,34 @@ func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 		case signedPriceUpdate := <-signedPriceUpdateCh:
 			pubKey := common.HexToAddress(string(signedPriceUpdate.SignedPrice.PublisherKey))
 
-			publisherAssetPair := types.PublisherAssetPair{
-				Address:        pubKey,
-				EncodedAssetID: assetIDtoEncodedAssetID[signedPriceUpdate.AssetID],
-			}
-			if _, exists := latestPublisherValueMap[publisherAssetPair]; !exists {
+			encodedAssetID, assetExpected := assetIDtoEncodedAssetID[signedPriceUpdate.AssetID]
+			if !assetExpected {
 				r.logger.Error().Str("asset", string(signedPriceUpdate.AssetID)).
-					Str("pubkey", pubKey.Hex()).
-					Msg("Publisher asset pair not found in latest publisher value map")
+					Msg("Unexpected asset, not found in assetIDtoEncodedAssetID map")
 
 				continue
+			}
+
+			publisherAssetPair := types.PublisherAssetPair{
+				Address:        pubKey,
+				EncodedAssetID: encodedAssetID,
 			}
 
 			latestPublisherValueMap[publisherAssetPair] = signedPriceUpdate
 
 		case contractUpdate := <-contractUpdateCh:
 			for assetID, value := range contractUpdate.LatestContractValueMap {
-				publisherAssetPair := types.PublisherAssetPair{
-					Address:        contractUpdate.Pubkey,
-					EncodedAssetID: assetIDtoEncodedAssetID[shared.AssetID(assetID)],
-				}
-				if _, exists := latestContractValueMap[publisherAssetPair]; !exists {
+				encodedAssetID, assetExpected := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
+				if !assetExpected {
 					r.logger.Error().Str("asset", assetID).
-						Str("pubkey", contractUpdate.Pubkey.Hex()).
-						Msg("Publisher asset pair not found in latest contract value map")
+						Msg("Unexpected asset, not found in assetIDtoEncodedAssetID map")
 
 					continue
+				}
+
+				publisherAssetPair := types.PublisherAssetPair{
+					Address:        contractUpdate.Pubkey,
+					EncodedAssetID: encodedAssetID,
 				}
 
 				latestContractValueMap[publisherAssetPair] = value
@@ -126,7 +128,7 @@ func (r *FirstPartyRunner[T]) Stop() {
 	}
 }
 
-func (r *FirstPartyRunner[T]) initialize(ctx context.Context) (
+func (r *FirstPartyRunner[T]) initialize() (
 	map[types.PublisherAssetPair]publisher_agent.SignedPriceUpdate[T],
 	map[types.PublisherAssetPair]chain_pusher_types.InternalTemporalNumericValue,
 	map[common.Address][]string,
@@ -163,13 +165,6 @@ func (r *FirstPartyRunner[T]) initialize(ctx context.Context) (
 	// populate latestContractValueMap
 	for _, update := range contractUpdates {
 		for assetID, value := range update.LatestContractValueMap {
-			if _, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]; !exists {
-				r.logger.Error().Str("asset", assetID).
-					Msg("Asset not found in assetIDtoEncodedAssetID map")
-
-				continue
-			}
-
 			encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
 			if !exists {
 				r.logger.Error().Str("asset", assetID).
@@ -184,6 +179,14 @@ func (r *FirstPartyRunner[T]) initialize(ctx context.Context) (
 			}
 
 			latestContractValueMap[publisherAssetPair] = value
+		}
+	}
+
+	for pubKey := range pubKeyAssetIDPairs {
+		isPublisherUser, _ := r.contractInteractor.CheckPublisherUser(pubKey)
+
+		if !isPublisherUser {
+			r.logger.Fatal().Str("pubkey", pubKey.Hex()).Msg("Publisher user not found")
 		}
 	}
 
@@ -245,7 +248,7 @@ func (r *FirstPartyRunner[T]) handleBatch(
 		Msg("Updates to push")
 
 	if len(updates) > 0 {
-		go r.pushBatch(updates, latestContractValueMap)
+		r.pushBatch(updates, latestContractValueMap)
 	}
 }
 

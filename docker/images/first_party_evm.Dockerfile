@@ -2,15 +2,19 @@ FROM node:22-alpine
 
 # Copy in first party stork contract
 COPY chains/evm/contracts/first_party_stork /usr/src/app
+# todo: add sdk
 
 WORKDIR /usr/src/app
 
-ARG STORK_PUBLIC_KEY
-ENV STORK_PUBLIC_KEY=${STORK_PUBLIC_KEY}
+ARG PRIVATE_KEY
+ARG CONTRACT_ADDRESS
+ARG RPC_URL
+ARG PUBLISHER_EVM_PUBLIC_KEY
 
-# TODO: see if i need this
-ARG CONTRACT_OWNER_ADDRESS
-ENV CONTRACT_OWNER_ADDRESS=${CONTRACT_OWNER_ADDRESS}
+ENV PRIVATE_KEY=${PRIVATE_KEY}
+ENV CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+ENV RPC_URL=${RPC_URL}
+ENV PUBLISHER_EVM_PUBLIC_KEY=${PUBLISHER_EVM_PUBLIC_KEY}
 
 # Install system dependencies for healthcheck
 RUN apk add --no-cache wget
@@ -25,4 +29,5 @@ RUN mkdir -p /root/.config/hardhat-nodejs
 COPY docker/scripts/first-party-evm-docker-entrypoint.sh /usr/src/app/docker-entrypoint.sh
 RUN chmod +x /usr/src/app/docker-entrypoint.sh
 
+# Just run the entrypoint script directly - it already handles everything
 ENTRYPOINT [ "/bin/sh", "-c", "/usr/src/app/docker-entrypoint.sh" ]
