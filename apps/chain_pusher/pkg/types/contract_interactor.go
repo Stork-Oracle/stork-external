@@ -198,12 +198,7 @@ func (f *FallbackContractInteractor) runWithFallback(
 			f.logger.Info().
 				Str("httpRpcUrl", httpRpcUrl).
 				Str("contractFunction", contractFuncName).
-<<<<<<< HEAD
-				Msgf("successfully called contract function on fallback rpc url")
-
-=======
 				Msgf("successfully called contract function on fallback http rpc url")
->>>>>>> harry/fallback_rpcs
 			return result, nil
 		}
 
