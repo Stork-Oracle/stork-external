@@ -3,22 +3,27 @@ package types
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+var errRpcDown = errors.New("rpc down")
+
 func TestRunWithFallback(t *testing.T) {
+	t.Parallel()
+
 	badRpc := "https://badrpc.com/"
 	goodRpc := "https://goodrpc.com/"
 
 	interactor := MockContractInteractor{}
 	interactor.On("ConnectHTTP", goodRpc).Return(nil)
-	interactor.On("ConnectHTTP", badRpc).Return(errors.New("bad rpc"))
+	interactor.On("ConnectHTTP", badRpc).Return(errRpcDown)
 
 	var buf bytes.Buffer
+
 	logger := zerolog.New(&buf)
 
 	// one rpc url where connections and functions succeed
@@ -38,22 +43,27 @@ func TestRunWithFallback(t *testing.T) {
 		},
 	)
 	assert.Equal(t, 0, result)
-	assert.NoError(t, err)
-	assert.Equal(t, "", buf.String())
+	require.NoError(t, err)
+	assert.Empty(t, buf.String())
 
 	// one rpc url where connections succeed but functions fail
 	result, err = fallbackContractInteractor.runWithFallback(
 		"failedFunc",
 		func() (any, error) {
-			return nil, fmt.Errorf("rpc down")
+			return nil, errRpcDown
 		},
 	)
 	assert.Nil(t, result)
-	assert.ErrorContains(t, err, "failed with all supplied rpc urls. Last error: rpc down")
-	assert.Contains(t, buf.String(), "error calling contract function on primary http rpc url, will attempt to fallback")
+	require.ErrorContains(t, err, "failed with all supplied rpc urls. Last error: rpc down")
+	assert.Contains(
+		t,
+		buf.String(),
+		"error calling contract function on primary http rpc url, will attempt to fallback",
+	)
 
 	// one rpc where connections fail
 	buf.Reset()
+
 	fallbackContractInteractor = NewFallbackContractInteractor(
 		&interactor,
 		[]string{
@@ -65,15 +75,16 @@ func TestRunWithFallback(t *testing.T) {
 	result, err = fallbackContractInteractor.runWithFallback(
 		"failedFunc",
 		func() (any, error) {
-			return nil, fmt.Errorf("rpc down")
+			return nil, errRpcDown
 		},
 	)
 	assert.Nil(t, result)
-	assert.ErrorContains(t, err, "failed with all supplied rpc urls. Last error")
+	require.ErrorContains(t, err, "failed with all supplied rpc urls. Last error")
 	assert.Contains(t, buf.String(), "error connecting to primary rpc http client, will attempt to fallback")
 
 	// no fallback if first rpc connect + functions succeed
 	buf.Reset()
+
 	fallbackContractInteractor = NewFallbackContractInteractor(
 		&interactor,
 		[]string{
@@ -90,11 +101,12 @@ func TestRunWithFallback(t *testing.T) {
 		},
 	)
 	assert.Equal(t, 0, result)
-	assert.NoError(t, err)
-	assert.Equal(t, "", buf.String())
+	require.NoError(t, err)
+	assert.Empty(t, buf.String())
 
 	// fallback if first rpc connect fails
 	buf.Reset()
+
 	fallbackContractInteractor = NewFallbackContractInteractor(
 		&interactor,
 		[]string{
@@ -111,13 +123,14 @@ func TestRunWithFallback(t *testing.T) {
 		},
 	)
 	assert.Equal(t, 0, result)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "error connecting to primary rpc http client, will attempt to fallback")
 	assert.Contains(t, buf.String(), "successfully connected to fallback http rpc url")
 	assert.Contains(t, buf.String(), "successfully called contract function on fallback http rpc url")
 
 	// fallback if first rpc connect succeeds but first rpc function fails
 	buf.Reset()
+
 	fallbackContractInteractor = NewFallbackContractInteractor(
 		&interactor,
 		[]string{
@@ -133,14 +146,20 @@ func TestRunWithFallback(t *testing.T) {
 		func() (any, error) {
 			if isFirstCall {
 				isFirstCall = false
-				return nil, errors.New("rpc down")
+
+				return nil, errRpcDown
 			}
+
 			return 0, nil
 		},
 	)
 	assert.Equal(t, 0, result)
-	assert.NoError(t, err)
-	assert.Contains(t, buf.String(), "error calling contract function on primary http rpc url, will attempt to fallback")
+	require.NoError(t, err)
+	assert.Contains(
+		t,
+		buf.String(),
+		"error calling contract function on primary http rpc url, will attempt to fallback",
+	)
 	assert.Contains(t, buf.String(), "successfully connected to fallback http rpc url")
 	assert.Contains(t, buf.String(), "successfully called contract function on fallback http rpc url")
 }
