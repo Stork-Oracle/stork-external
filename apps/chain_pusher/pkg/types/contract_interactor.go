@@ -105,11 +105,11 @@ func (f *FallbackContractInteractor) BatchPushToContract(
 		"pushBatch",
 		func() (any, error) {
 			err := f.contractInteractor.BatchPushToContract(priceUpdates)
-
 			if err != nil {
 				return nil, fmt.Errorf("failed to push batch: %w", err)
 			}
-			return nil, nil
+
+			return struct{}{}, nil
 		},
 	)
 	if err != nil {
@@ -188,6 +188,7 @@ func (f *FallbackContractInteractor) runWithFallback(
 				Str("httpRpcUrl", httpRpcUrl).
 				Str("contractFunction", contractFuncName).
 				Msgf("successfully called contract function on fallback rpc url")
+
 			return result, nil
 		}
 
