@@ -146,6 +146,7 @@ func (f *FallbackContractInteractor) runWithFallback(
 	// only reconnect for the first url if the last attempt was unsuccessful
 	// also update whether the last request was successful
 	httpRpcUrl := f.httpRpcUrls[0]
+
 	var err error
 	if !f.firstHTTPRpcUrlSuccessful {
 		err = f.contractInteractor.ConnectHTTP(f.httpRpcUrls[0])
@@ -199,6 +200,7 @@ func (f *FallbackContractInteractor) runWithFallback(
 				Str("httpRpcUrl", httpRpcUrl).
 				Str("contractFunction", contractFuncName).
 				Msgf("successfully called contract function on fallback http rpc url")
+
 			return result, nil
 		}
 
