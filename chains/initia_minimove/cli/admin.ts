@@ -35,9 +35,7 @@ function getWallet(): Wallet {
         gasAdjustment: "1.5",
     });
 
-    const mk = new MnemonicKey({ mnemonic: MNEMONIC, coinType: 118 });
-    console.log("Mnemonic:", MNEMONIC);
-    console.log("Account Address:", mk.accAddress);
+    const mk = new MnemonicKey({ mnemonic: MNEMONIC, coinType: 60, eth: true });
     return new Wallet(rest, mk);
 }
 
@@ -247,7 +245,7 @@ cliProgram
         const response = JSON.parse(safeJsonText);
 
         const ids: number[][] = [];
-        const timestamps: number[] = [];
+        const timestamps: bigint[] = [];
         const magnitudes: string[] = [];
         const negatives: boolean[] = [];
         const merkleRoots: number[][] = [];
@@ -258,7 +256,7 @@ cliProgram
 
         Object.values(response.data).forEach((data: any) => {
             ids.push(hexStringToByteArray(data.stork_signed_price.encoded_asset_id));
-            timestamps.push(parseInt(data.stork_signed_price.timestamped_signature.timestamp));
+            timestamps.push(BigInt(data.stork_signed_price.timestamped_signature.timestamp));
             magnitudes.push(data.stork_signed_price.price.toString());
             negatives.push(data.stork_signed_price.price < 0);
             merkleRoots.push(hexStringToByteArray(data.stork_signed_price.publisher_merkle_root));
@@ -311,6 +309,39 @@ cliProgram
                 [bcs.vector(bcs.u8()).serialize(assetIdBytes).toBase64()]
             );
             console.log(`Temporal numeric value: ${JSON.stringify(result)}`);
+        } catch (error) {
+            console.error("Error querying value:", error);
+        }
+    });
+
+cliProgram
+    .command("read-from-feed")
+    .description("Read from feed using plaintext asset ID")
+    .argument("<asset_id>", "The plaintext asset ID (e.g., INITUSD)")
+    .action(async (assetId: string) => {
+        if (!CONTRACT_ADDRESS) {
+            throw new Error("STORK_CONTRACT_ADDRESS is not set");
+        }
+
+        const wallet = getWallet();
+
+        // Encode the asset ID using keccak256
+        const { keccak256 } = await import("@initia/initia.js");
+        const encodedAssetId = keccak256(Buffer.from(assetId));
+        const assetIdBytes = Array.from(encodedAssetId);
+
+        try {
+            const result = await wallet.rest.move.viewFunction(
+                CONTRACT_ADDRESS,
+                "stork",
+                "get_temporal_numeric_value_unchecked",
+                [],
+                [bcs.vector(bcs.u8()).serialize(assetIdBytes).toBase64()]
+            );
+
+            console.log(`\nTemporal numeric value:`);
+            console.log(`  Timestamp (ns): ${(result as any).timestamp_ns}`);
+            console.log(`  Value: ${(result as any).quantized_value.negative ? '-' : ''}${(result as any).quantized_value.magnitude}`);
         } catch (error) {
             console.error("Error querying value:", error);
         }
