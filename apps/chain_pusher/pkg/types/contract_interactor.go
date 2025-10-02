@@ -106,7 +106,10 @@ func (f *FallbackContractInteractor) BatchPushToContract(
 		func() (any, error) {
 			err := f.contractInteractor.BatchPushToContract(priceUpdates)
 
-			return nil, fmt.Errorf("failed to push batch: %w", err)
+			if err != nil {
+				return nil, fmt.Errorf("failed to push batch: %w", err)
+			}
+			return nil, nil
 		},
 	)
 	if err != nil {

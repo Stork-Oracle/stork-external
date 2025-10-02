@@ -182,8 +182,10 @@ func (eci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var err error
+	var storkStructsTemporalNumericValue bindings.StorkStructsTemporalNumericValue
 	for _, encodedAssetID := range encodedAssetIDs {
-		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
+		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
@@ -195,6 +197,10 @@ func (eci *ContractInteractor) PullValues(
 		}
 
 		polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+	}
+
+	if len(polledVals) == 0 {
+		return nil, fmt.Errorf("no values pulled: %w", err)
 	}
 
 	return polledVals, nil
