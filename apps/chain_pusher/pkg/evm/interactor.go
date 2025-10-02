@@ -182,8 +182,11 @@ func (eci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	var err error
-	var storkStructsTemporalNumericValue bindings.StorkStructsTemporalNumericValue
+	var (
+		err                              error
+		storkStructsTemporalNumericValue bindings.StorkStructsTemporalNumericValue
+	)
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
 		if err != nil {
