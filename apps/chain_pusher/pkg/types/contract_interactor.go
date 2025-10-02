@@ -208,5 +208,5 @@ func (f *FallbackContractInteractor) runWithFallback(
 			Msgf("error calling contract function on fallback http rpc url, will attempt to fallback")
 	}
 
-	return nil, err
+	return nil, fmt.Errorf("failed with all supplied rpc urls. Last error: %w", err)
 }
