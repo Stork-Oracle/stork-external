@@ -146,30 +146,35 @@ func (f *FallbackContractInteractor) runWithFallback(
 	// only reconnect for the first url if the last attempt was unsuccessful
 	// also update whether the last request was successful
 	httpRpcUrl := f.httpRpcUrls[0]
+	var err error
 	if !f.firstHTTPRpcUrlSuccessful {
-		err := f.contractInteractor.ConnectHTTP(f.httpRpcUrls[0])
+		err = f.contractInteractor.ConnectHTTP(f.httpRpcUrls[0])
 		if err != nil {
 			f.logger.Error().Err(err).
 				Str("httpRpcUrl", httpRpcUrl).
-				Msgf("error connecting to rpc http client, will attempt fallback")
+				Str("contractFunction", contractFuncName).
+				Msgf("error connecting to primary rpc http client, will attempt to fallback")
 
 			f.firstHTTPRpcUrlSuccessful = false
 		}
 	}
 
-	result, err := contractFunc()
+	var result any
 	if err == nil {
-		f.firstHTTPRpcUrlSuccessful = true
+		result, err = contractFunc()
+		if err == nil {
+			f.firstHTTPRpcUrlSuccessful = true
 
-		return result, nil
+			return result, nil
+		}
+
+		f.logger.Error().Err(err).
+			Str("httpRpcUrl", httpRpcUrl).
+			Str("contractFunction", contractFuncName).
+			Msgf("error calling contract function on primary http rpc url, will attempt to fallback")
+
+		f.firstHTTPRpcUrlSuccessful = false
 	}
-
-	f.logger.Error().Err(err).
-		Str("httpRpcUrl", httpRpcUrl).
-		Str("contractFunction", contractFuncName).
-		Msgf("error calling contract function on primary rpc url, will attempt fallback")
-
-	f.firstHTTPRpcUrlSuccessful = false
 
 	// if the first failed, try fallback URLs in order until we get a success
 	for _, httpRpcUrl = range f.httpRpcUrls[1:] {
@@ -177,24 +182,30 @@ func (f *FallbackContractInteractor) runWithFallback(
 		if err != nil {
 			f.logger.Error().Err(err).
 				Str("httpRpcUrl", httpRpcUrl).
-				Msgf("error connecting to rpc http client, will attempt fallback")
+				Str("contractFunction", contractFuncName).
+				Msgf("error connecting to fallback http rpc client, will attempt to fallback")
 
 			continue
 		}
+
+		f.logger.Info().
+			Str("httpRpcUrl", httpRpcUrl).
+			Str("contractFunction", contractFuncName).
+			Msgf("successfully connected to fallback http rpc url")
 
 		result, err = contractFunc()
 		if err == nil {
 			f.logger.Info().
 				Str("httpRpcUrl", httpRpcUrl).
 				Str("contractFunction", contractFuncName).
-				Msgf("successfully called contract function on fallback rpc url")
+				Msgf("successfully called contract function on fallback http rpc url")
 			return result, nil
 		}
 
 		f.logger.Error().Err(err).
 			Str("httpRpcUrl", httpRpcUrl).
 			Str("contractFunction", contractFuncName).
-			Msgf("error calling contract function on rpc url, will attempt fallback")
+			Msgf("error calling contract function on fallback http rpc url, will attempt to fallback")
 	}
 
 	return nil, err
