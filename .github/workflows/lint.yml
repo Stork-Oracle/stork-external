@@ -117,5 +117,7 @@ jobs:
               golangci_lint_flags: "--config=.golangci.yml ./apps/chain_pusher/..."
               reporter: github-pr-check
               cache: false
+              golangci_lint_version: 2.5.0
+              go_version: 1.25.1
               filter_mode: nofilter
               fail_level: error
