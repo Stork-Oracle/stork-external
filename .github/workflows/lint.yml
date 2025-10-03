@@ -116,6 +116,5 @@ jobs:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               golangci_lint_flags: "--config=.golangci.yml ./apps/chain_pusher/..."
               reporter: github-pr-check
-              cache: false
               filter_mode: nofilter
               fail_level: error
