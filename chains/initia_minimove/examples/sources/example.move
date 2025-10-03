@@ -1,7 +1,7 @@
 module example::example {
 
     use stork::stork;
-    use aptos_framework::event;
+    use initia_std::event;
 
     #[event]
     struct ExampleStorkPriceEvent has copy, drop, store {

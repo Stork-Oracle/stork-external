@@ -6,7 +6,7 @@ authors = []
 [addresses]
 example = "_"
 # Official addresses can be found at https://docs.stork.network/resources/contract-addresses/initia_minimove
-stork = "0x68ba7261bf09152006999d7f53432ed540e238d8f1050e1fe739738309f58217"
+stork = "0xc0f5348a0fa48486899b780f349bbdd433136947d502226d03291245e8da52ee"
 
 [dev-addresses]
 example = "0x101"
@@ -18,7 +18,7 @@ subdir = "precompile/modules/initia_stdlib"
 
 [dependencies.stork]
 git = "https://github.com/stork-oracle/stork-external.git"
-rev = "main"
+rev = "henry/sto-1103-initia-chain-integration"
 subdir = "chains/initia_minimove/contracts"
 
 [dev-dependencies]
