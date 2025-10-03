@@ -1,7 +1,7 @@
-dir: '{{.InterfaceDirRelative}}/mocks'
+dir: '{{.InterfaceDirRelative}}'
 structname: Mock{{.InterfaceName | camelcase | firstUpper}}
 filename: "mock_{{.InterfaceName | snakecase | lower}}.go"
-pkgname: mocks
+pkgname: types
 template: testify
 template-data:
   unroll-variadic: true

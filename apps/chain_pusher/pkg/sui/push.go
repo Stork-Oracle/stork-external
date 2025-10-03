@@ -52,10 +52,8 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	}
 
 	interactor, err := NewContractInteractor(
-		chainRpcUrl,
 		contractAddress,
 		keyFileContent,
-		assetConfigFile,
 		pollingPeriod,
 		logger,
 	)
@@ -67,6 +65,7 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 		storkWsEndpoint,
 		storkAuth,
 		chainRpcUrl,
+		"",
 		contractAddress,
 		assetConfigFile,
 		batchingWindow,

@@ -45,7 +45,13 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
 	var err error
-	s.interactor, err = NewContractInteractor(s.config.RpcUrl, s.config.WsUrl, s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
+	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
+	s.Require().NoError(err)
+
+	err = s.interactor.ConnectHTTP(s.config.RpcUrl)
+	s.Require().NoError(err)
+
+	err = s.interactor.ConnectWs(s.config.WsUrl)
 	s.Require().NoError(err)
 
 	s.prices, err = testutil.LoadAggregatedSignedPrices()
@@ -72,9 +78,8 @@ func (s *InteractorTestSuite) Test_01_GetWalletBalance_Initial() {
 // Test_02_PullValues_Initial tests the behavior of pulling values from the contract before any prices are pushed.
 func (s *InteractorTestSuite) Test_02_PullValues_Initial() {
 	values, err := s.interactor.PullValues(s.prices.AllEncodedAssetIDs())
-	s.Require().NoError(err)
-	s.Require().NotNil(values)
-	s.Require().Equal(0, len(values))
+	s.Require().ErrorContains(err, "no values pulled")
+	s.Require().Nil(values)
 }
 
 // Test_03_BatchPushToContract tests the behavior of batch pushing to the contract.
