@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
@@ -172,13 +172,13 @@ func (iwc *IncomingWebsocketConnection) Reader(valueUpdateChannels []chan ValueU
 	iwc.Close()
 }
 
-type OutgoingWebsocketConnectionAssets[T signer.Signature] struct {
-	assetIds     map[AssetId]struct{}
+type OutgoingWebsocketConnectionAssets[T shared.Signature] struct {
+	assetIds     map[shared.AssetID]struct{}
 	assetIdsLock sync.RWMutex
 }
 
-func NewOutgoingWebsocketConnectionAssets[T signer.Signature](
-	assetIds map[AssetId]struct{},
+func NewOutgoingWebsocketConnectionAssets[T shared.Signature](
+	assetIds map[shared.AssetID]struct{},
 ) *OutgoingWebsocketConnectionAssets[T] {
 	return &OutgoingWebsocketConnectionAssets[T]{
 		assetIds:     assetIds,
@@ -206,13 +206,13 @@ func (a *OutgoingWebsocketConnectionAssets[T]) filterSignedPriceUpdateBatch(
 	return filteredPriceUpdates
 }
 
-func (a *OutgoingWebsocketConnectionAssets[T]) UpdateAssets(assetIds map[AssetId]struct{}) {
+func (a *OutgoingWebsocketConnectionAssets[T]) UpdateAssets(assetIds map[shared.AssetID]struct{}) {
 	a.assetIdsLock.Lock()
 	a.assetIds = assetIds
 	a.assetIdsLock.Unlock()
 }
 
-type OutgoingWebsocketConnection[T signer.Signature] struct {
+type OutgoingWebsocketConnection[T shared.Signature] struct {
 	WebsocketConnection
 	assets                   *OutgoingWebsocketConnectionAssets[T]
 	removed                  bool
@@ -220,7 +220,7 @@ type OutgoingWebsocketConnection[T signer.Signature] struct {
 	signedPriceUpdateBatchCh chan SignedPriceUpdateBatch[T]
 }
 
-func NewOutgoingWebsocketConnection[T signer.Signature](
+func NewOutgoingWebsocketConnection[T shared.Signature](
 	conn WebsocketConnection,
 	assets *OutgoingWebsocketConnectionAssets[T],
 	logger zerolog.Logger,
@@ -346,7 +346,7 @@ func SendWebsocketMsg[T any](
 	// create a new websocket message
 	msg := WebsocketMessage[T]{
 		Type:    msgType,
-		TraceId: traceId,
+		TraceID: traceId,
 		Error:   errMsg,
 		Data:    data,
 	}
@@ -411,7 +411,7 @@ func upgradeAndEnforceCompression(
 	enforceCompression bool,
 	upgrader websocket.Upgrader,
 	logger zerolog.Logger,
-	authToken AuthToken,
+	authToken shared.AuthToken,
 ) (*websocket.Conn, error) {
 	// all subscriber connections (except stork) must have the permessage-deflate extension to enable compression,
 	// this cuts outgoing data size by ~75% per subscriber, huge aws egress cost savings.
@@ -487,15 +487,15 @@ func HandleNewIncomingWsConnection(
 		return
 	}
 
-	connId := ConnectionId(uuid.New().String())
+	connID := ConnectionID(uuid.New().String())
 
-	logger.Debug().Str("conn_id", string(connId)).Msg("adding publisher websocket")
+	logger.Debug().Str("conn_id", string(connID)).Msg("adding publisher websocket")
 
 	websocketConn := *NewWebsocketConnection(
 		conn,
 		logger,
 		func() {
-			logger.Info().Str("conn_id", string(connId)).Msg("removing publisher websocket")
+			logger.Info().Str("conn_id", string(connID)).Msg("removing publisher websocket")
 		},
 	)
 	incomingWebsocketConn := NewIncomingWebsocketConnection(websocketConn, logger)

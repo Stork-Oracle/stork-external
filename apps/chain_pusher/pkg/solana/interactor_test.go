@@ -5,6 +5,7 @@ import (
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	bin "github.com/gagliardetto/binary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -84,7 +85,7 @@ func TestPriceUpdateToTemporalNumericValueEvmInput(t *testing.T) {
 			expectedID := tt.PriceBytes.StorkSignedPrice.EncodedAssetID
 			expectedTemporalNumericValueTimestampNs := tt.PriceBytes.StorkSignedPrice.TimestampedSignature.TimestampNano
 			expectedTemporalNumericValueQuantizedValue := quantizedPriceToInt128(
-				types.QuantizedPrice(tt.PriceBytes.StorkSignedPrice.QuantizedPrice.String()),
+				shared.QuantizedPrice(tt.PriceBytes.StorkSignedPrice.QuantizedPrice.String()),
 			)
 			expectedPublisherMerkleRoot := tt.PriceBytes.StorkSignedPrice.PublisherMerkleRoot
 			expectedValueComputeAlgHash := tt.PriceBytes.StorkSignedPrice.StorkCalculationAlg
@@ -111,32 +112,32 @@ func TestQuantizedPriceToInt128(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		quantizedPrice types.QuantizedPrice
+		quantizedPrice shared.QuantizedPrice
 		expected       bin.Int128
 	}{
 		{
 			name:           "zero value",
-			quantizedPrice: types.QuantizedPrice("0"),
+			quantizedPrice: shared.QuantizedPrice("0"),
 			expected:       bin.Int128{Lo: 0, Hi: 0},
 		},
 		{
 			name:           "small positive number",
-			quantizedPrice: types.QuantizedPrice("1000"),
+			quantizedPrice: shared.QuantizedPrice("1000"),
 			expected:       bin.Int128{Lo: 1000, Hi: 0},
 		},
 		{
 			name:           "large positive number",
-			quantizedPrice: types.QuantizedPrice("10000000000000000000000000"),
+			quantizedPrice: shared.QuantizedPrice("10000000000000000000000000"),
 			expected:       bin.Int128{Lo: 1590897978359414784, Hi: 542101},
 		},
 		{
 			name:           "small negative number",
-			quantizedPrice: types.QuantizedPrice("-1000"),
+			quantizedPrice: shared.QuantizedPrice("-1000"),
 			expected:       bin.Int128{Lo: 18446744073709550616, Hi: 18446744073709551615},
 		},
 		{
 			name:           "large negative number",
-			quantizedPrice: types.QuantizedPrice("-10000000000000000000000000"),
+			quantizedPrice: shared.QuantizedPrice("-10000000000000000000000000"),
 			expected:       bin.Int128{Lo: 16855846095350136832, Hi: 18446744073709009514},
 		},
 	}

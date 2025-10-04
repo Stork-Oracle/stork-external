@@ -1,0 +1,29 @@
+{
+    "name": "@storknetwork/first-party-stork-evm-sdk",
+    "version": "1.0.0",
+    "description": "An EVM Solidity SDK for First Party Stork Protocol",
+    "files": [
+        "*.sol",
+        "README.md"
+    ],
+    "keywords": [
+        "stork",
+        "oracle",
+        "first-party",
+        "solidity",
+        "evm",
+        "smart-contracts",
+        "price-feeds",
+        "publisher"
+    ],
+    "author": "Stork Labs",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stork-oracle/stork-external.git",
+        "directory": "chains/evm/sdks/first_party_stork_evm_sdk"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

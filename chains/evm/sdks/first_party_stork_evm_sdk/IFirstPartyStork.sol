@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity >=0.8.24 <0.9.0;
+
+import "./FirstPartyStorkStructs.sol";
+import "./IFirstPartyStorkEvents.sol";
+import "./IFirstPartyStorkGetters.sol";
+
+/// @title IFirstPartyStork
+/// @notice Interface for the First Party Stork oracle contract
+/// @dev This interface provides access to First Party Stork's temporal numeric values and publisher management functions
+interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
+    /// @notice Updates multiple temporal numeric values by verifying publisher signatures
+    /// @param updateData Array of PublisherTemporalNumericValueInput structs containing feed updates
+    /// @param storeHistoric Array of booleans indicating whether to store each update as historical data
+    /// @dev Requires sufficient fee based on the publisher's single update fee
+    /// @dev Reverts with InvalidSignature if any feed update fails signature verification
+    /// @dev Reverts with NoFreshUpdate if none of the provided updates are fresher than current values
+    /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
+    function updateTemporalNumericValues(
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] calldata updateData,
+        bool[] calldata storeHistoric
+    ) external payable;
+
+    /// @notice Creates a new publisher user with specified fee configuration
+    /// @param pubKey The publisher's public key
+    /// @param singleUpdateFee The fee required for a single update from this publisher
+    /// @dev Only callable by contract owner
+    function createPublisherUser(
+        address pubKey,
+        uint256 singleUpdateFee
+    ) external;
+
+    /// @notice Deletes an existing publisher user
+    /// @param pubKey The publisher's public key to remove
+    /// @dev Only callable by contract owner
+    /// @dev Historical data remains accessible even after publisher deletion
+    function deletePublisherUser(address pubKey) external;
+
+    /// @notice Verifies a publisher signature for the given parameters
+    /// @param oraclePubKey The publisher's public key
+    /// @param assetPairId The asset pair identifier
+    /// @param timestamp The timestamp of the data (in nanoseconds, but verification uses seconds)
+    /// @param value The quantized value
+    /// @param r The r component of the signature
+    /// @param s The s component of the signature
+    /// @param v The v component of the signature
+    /// @return bool True if the signature is valid
+    function verifyPublisherSignatureV1(
+        address oraclePubKey,
+        string memory assetPairId,
+        uint256 timestamp,
+        int256 value,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    ) external pure returns (bool);
+}

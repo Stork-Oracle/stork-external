@@ -75,6 +75,28 @@ jobs:
           npx hardhat --network hardhat test
         working-directory: ./chains/evm/contracts/stork_chainlink_adapter
 
+  test-first-party-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js for FirstPartyStork
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './chains/evm/contracts/first_party_stork/package-lock.json'
+
+      - name: Install dependencies for FirstPartyStork
+        run: npm install
+        working-directory: ./chains/evm/contracts/first_party_stork
+
+      - name: Run hardhat tests for FirstPartyStork
+        run: npx hardhat test
+        working-directory: ./chains/evm/contracts/first_party_stork
+
   test-solana:
     runs-on: ubuntu-latest
 

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +35,7 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 600`,
 			fileName: "test_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetID]AssetEntry{
+				Assets: map[shared.AssetID]AssetEntry{
 					"BTCUSD": {
 						AssetID:                "BTCUSD",
 						EncodedAssetID:         "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
@@ -56,7 +57,7 @@ func TestLoadConfig(t *testing.T) {
 			fileContent: `assets: {}`,
 			fileName:    "empty_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetID]AssetEntry{},
+				Assets: map[shared.AssetID]AssetEntry{},
 			},
 			wantError: false,
 		},
@@ -70,7 +71,7 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 120`,
 			fileName: "single_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetID]AssetEntry{
+				Assets: map[shared.AssetID]AssetEntry{
 					"SOLUSD": {
 						AssetID:                "SOLUSD",
 						EncodedAssetID:         "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837",
@@ -107,7 +108,7 @@ func TestLoadConfig(t *testing.T) {
     fallback_period_sec: 0`,
 			fileName: "zero_values_config.yaml",
 			expected: &AssetConfig{
-				Assets: map[AssetID]AssetEntry{
+				Assets: map[shared.AssetID]AssetEntry{
 					"TEST": {
 						AssetID:                "TEST",
 						EncodedAssetID:         "0x0000000000000000000000000000000000000000000000000000000000000000",

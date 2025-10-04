@@ -11,7 +11,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var {{ .PascalStr }}DataSourceId types.DataSourceId = types.DataSourceId(utils.GetCurrentDirName())
+var {{ .PascalStr }}DataSourceID types.DataSourceID = types.DataSourceID(utils.GetCurrentDirName())
 
 type {{ .CamelStr }}DataSourceFactory struct{}
 
@@ -20,7 +20,7 @@ func (f *{{ .CamelStr }}DataSourceFactory) Build(sourceConfig types.DataProvider
 }
 
 func init() {
-	sources.RegisterDataSourceFactory({{ .PascalStr }}DataSourceId, &{{ .CamelStr }}DataSourceFactory{})
+	sources.RegisterDataSourceFactory({{ .PascalStr }}DataSourceID, &{{ .CamelStr }}DataSourceFactory{})
 }
 
 // assert we're satisfying our interfaces

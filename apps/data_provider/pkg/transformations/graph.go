@@ -11,29 +11,29 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
-const TransformationDataSourceId = types.DataSourceId("transformation")
+const TransformationDataSourceID = types.DataSourceID("transformation")
 
 type TransformationGraph struct {
 	dependencyGraph       *simple.DirectedGraph
 	orderedNodes          []graph.Node
-	nodeToValueId         map[graph.Node]types.ValueId
-	valueIdToNode         map[types.ValueId]graph.Node
-	parsedTransformations map[types.ValueId]*Expression
+	nodeToValueID         map[graph.Node]types.ValueID
+	valueIDToNode         map[types.ValueID]graph.Node
+	parsedTransformations map[types.ValueID]*Expression
 	currentVals           map[string]types.DataSourceValueUpdate
 }
 
 func NewTransformationGraph(
 	dependencyGraph *simple.DirectedGraph,
 	orderedNodes []graph.Node,
-	nodeToValueId map[graph.Node]types.ValueId,
-	valueIdToNode map[types.ValueId]graph.Node,
-	parsedTransformations map[types.ValueId]*Expression,
+	nodeToValueID map[graph.Node]types.ValueID,
+	valueIDToNode map[types.ValueID]graph.Node,
+	parsedTransformations map[types.ValueID]*Expression,
 ) *TransformationGraph {
 	return &TransformationGraph{
 		dependencyGraph:       dependencyGraph,
 		orderedNodes:          orderedNodes,
-		nodeToValueId:         nodeToValueId,
-		valueIdToNode:         valueIdToNode,
+		nodeToValueID:         nodeToValueID,
+		valueIDToNode:         valueIDToNode,
 		parsedTransformations: parsedTransformations,
 		currentVals:           make(map[string]types.DataSourceValueUpdate),
 	}
@@ -47,10 +47,10 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 	// do a breadth-first traversal get all affected nodes
 	dirtyTransformationNodes := make(map[graph.Node]any)
 	queue := make([]graph.Node, 0)
-	for valueId, sourceUpdate := range sourceUpdates {
-		queue = append(queue, tg.valueIdToNode[valueId])
-		finalUpdateMap[valueId] = sourceUpdate
-		tg.currentVals[string(valueId)] = sourceUpdate
+	for valueID, sourceUpdate := range sourceUpdates {
+		queue = append(queue, tg.valueIDToNode[valueID])
+		finalUpdateMap[valueID] = sourceUpdate
+		tg.currentVals[string(valueID)] = sourceUpdate
 	}
 
 	for len(queue) > 0 {
@@ -70,21 +70,21 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 	// update dirty transformations in topological order
 	for _, node := range tg.orderedNodes {
 		if _, isDirty := dirtyTransformationNodes[node]; isDirty {
-			transformationValueId := tg.nodeToValueId[node]
-			transformation := tg.parsedTransformations[transformationValueId]
+			transformationValueID := tg.nodeToValueID[node]
+			transformation := tg.parsedTransformations[transformationValueID]
 			transformationValue := transformation.Eval(tg.currentVals)
 			if math.IsNaN(transformationValue) {
 				continue
 			}
 
 			computed := types.DataSourceValueUpdate{
-				ValueId:      transformationValueId,
-				DataSourceId: TransformationDataSourceId,
+				ValueID:      transformationValueID,
+				DataSourceID: TransformationDataSourceID,
 				Time:         updateTime,
 				Value:        transformationValue,
 			}
-			finalUpdateMap[transformationValueId] = computed
-			tg.currentVals[string(transformationValueId)] = computed
+			finalUpdateMap[transformationValueID] = computed
+			tg.currentVals[string(transformationValueID)] = computed
 		}
 	}
 
@@ -93,58 +93,58 @@ func (tg *TransformationGraph) ProcessSourceUpdates(sourceUpdates types.DataSour
 
 func BuildTransformationGraph(
 	transformations []types.DataProviderTransformationConfig,
-	sourceIds map[types.ValueId]any,
+	sourceIDs map[types.ValueID]any,
 ) (*TransformationGraph, error) {
 	g := simple.NewDirectedGraph()
 
 	// allow translating node <-> value id
-	nodeToValueId := make(map[graph.Node]types.ValueId)
-	valueIdToNode := make(map[types.ValueId]graph.Node)
+	nodeToValueID := make(map[graph.Node]types.ValueID)
+	valueIDToNode := make(map[types.ValueID]graph.Node)
 
-	parsedTransformations := make(map[types.ValueId]*Expression)
+	parsedTransformations := make(map[types.ValueID]*Expression)
 	for _, transformation := range transformations {
 		expr, err := parse(transformation.Formula)
 		if err != nil {
 			return nil, err
 		}
-		parsedTransformations[transformation.Id] = expr
+		parsedTransformations[transformation.ID] = expr
 
 		node := g.NewNode()
 		g.AddNode(node)
-		nodeToValueId[node] = transformation.Id
-		if _, exists := valueIdToNode[transformation.Id]; exists {
-			return nil, fmt.Errorf("duplicate value id: %v", transformation.Id)
+		nodeToValueID[node] = transformation.ID
+		if _, exists := valueIDToNode[transformation.ID]; exists {
+			return nil, fmt.Errorf("duplicate value id: %v", transformation.ID)
 		}
-		valueIdToNode[transformation.Id] = node
+		valueIDToNode[transformation.ID] = node
 	}
 
-	for sourceId := range sourceIds {
+	for sourceID := range sourceIDs {
 		node := g.NewNode()
 		g.AddNode(node)
-		nodeToValueId[node] = sourceId
-		if _, exists := valueIdToNode[sourceId]; exists {
-			return nil, fmt.Errorf("duplicate value id: %v", sourceId)
+		nodeToValueID[node] = sourceID
+		if _, exists := valueIDToNode[sourceID]; exists {
+			return nil, fmt.Errorf("duplicate value id: %v", sourceID)
 		}
-		valueIdToNode[sourceId] = node
+		valueIDToNode[sourceID] = node
 	}
 
 	for _, transformation := range transformations {
-		expr, ok := parsedTransformations[transformation.Id]
+		expr, ok := parsedTransformations[transformation.ID]
 		if !ok {
-			return nil, fmt.Errorf("no such transformation: %s", transformation.Id)
+			return nil, fmt.Errorf("no such transformation: %s", transformation.ID)
 		}
 
 		deps := expr.getDependencies()
 		for _, dep := range deps {
-			_, sourcePriceExists := sourceIds[types.ValueId(dep)]
+			_, sourcePriceExists := sourceIDs[types.ValueID(dep)]
 			if !sourcePriceExists {
-				_, transformationExists := valueIdToNode[types.ValueId(dep)]
+				_, transformationExists := valueIDToNode[types.ValueID(dep)]
 				if !transformationExists {
 					return nil, fmt.Errorf("no such source or transformation id: %s", dep)
 				}
 			}
 
-			g.SetEdge(g.NewEdge(valueIdToNode[types.ValueId(dep)], valueIdToNode[transformation.Id]))
+			g.SetEdge(g.NewEdge(valueIDToNode[types.ValueID(dep)], valueIDToNode[transformation.ID]))
 		}
 	}
 
@@ -153,7 +153,7 @@ func BuildTransformationGraph(
 		return nil, fmt.Errorf("could not linearize price id graph - there may be circular dependencies: %v", err)
 	}
 
-	transformationGraph := NewTransformationGraph(g, orderedNodes, nodeToValueId, valueIdToNode, parsedTransformations)
+	transformationGraph := NewTransformationGraph(g, orderedNodes, nodeToValueID, valueIDToNode, parsedTransformations)
 
 	return transformationGraph, nil
 }

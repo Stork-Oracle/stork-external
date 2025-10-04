@@ -20,25 +20,25 @@ help:
 .PHONY: install-stork-generate
 install-stork-generate:
 	@echo "Installing stork-generate..."
-	@echo "Running: go build -o $(shell go env GOPATH)/bin/stork-generate ./apps/cmd/generate"
-	@go build -o $(shell go env GOPATH)/bin/stork-generate ./apps/cmd/generate
-	@./apps/scripts/animate.sh
+	@echo "Running: go build -o $(shell go env GOPATH | cut -d: -f1)/bin/stork-generate ./utils/generate"
+	@go build -o $(shell go env GOPATH | cut -d: -f1)/bin/stork-generate ./utils/generate
+	@./scripts/animate.sh
 	@echo "Successfully installed stork-generate. Run 'stork-generate help' to get started."
 
 ## Uninstall the stork-generate binary
 .PHONY: uninstall-stork-generate
 uninstall-stork-generate:
 	@echo "Uninstalling stork-generate..."
-	@echo "Running: rm -f $(shell go env GOPATH)/bin/stork-generate"
-	@rm -f $(shell go env GOPATH)/bin/stork-generate
+	@echo "Running: rm -f $(shell go env GOPATH | cut -d: -f1)/bin/stork-generate"
+	@rm -f $(shell go env GOPATH | cut -d: -f1)/bin/stork-generate
 	@echo "Successfully uninstalled stork-generate"
 
 ## Install the stork-source-runner binary
 .PHONY: install-data-provider
 install-data-provider:
 	@echo "Installing data-provider..."
-	@echo "Running: go build -o $(shell go env GOPATH)/bin/data-provider ./apps/cmd/data_provider"
-	@go build -o $(shell go env GOPATH)/bin/data-provider ./apps/cmd/data_provider
+	@echo "Running: go build -o $(shell go env GOPATH)/bin/data-provider ./apps/data_provider"
+	@go build -o $(shell go env GOPATH)/bin/data-provider ./apps/data_provider
 	@echo "Successfully installed data-provider. Run 'data-provider help' to get started."
 
 ## Uninstall the stork-source-runner binary
@@ -62,4 +62,4 @@ start-data-provider: rebuild-data-provider
 		exit 1; \
 	fi
 	@echo "Starting data provider with arguments: $(ARGS)"
-	@data-provider start $(ARGS)
+	@$(shell go env GOPATH)/bin/data-provider start $(ARGS)

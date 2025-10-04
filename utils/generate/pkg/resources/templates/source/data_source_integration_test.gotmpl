@@ -18,9 +18,9 @@ import (
 // This test will hit real external data sources. It's meant to be run manually so you can manually examine the results.
 func Test{{ .PascalStr }}DataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "MY_TEST_VALUE_ID",
+		ID: "MY_TEST_VALUE_ID",
 		Config: {{ .PascalStr }}Config{
-			DataSource:      {{ .PascalStr }}DataSourceId,
+			DataSource:      {{ .PascalStr }}DataSourceID,
 			// TODO: add valid configuration
 		},
 	}
