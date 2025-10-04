@@ -21,6 +21,6 @@ type PublisherAssetPair struct {
 }
 
 type ContractUpdate struct {
-	Pubkey                 common.Address
-	LatestContractValueMap map[string]chain_pusher_types.InternalTemporalNumericValue
+	Pubkey           common.Address
+	ContractValueMap map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue
 }

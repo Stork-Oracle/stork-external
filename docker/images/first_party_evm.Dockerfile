@@ -2,7 +2,7 @@ FROM node:22-alpine
 
 # Copy in first party stork contract
 COPY chains/evm/contracts/first_party_stork /usr/src/app
-# todo: add sdk
+COPY chains/evm/sdks/first_party_stork_evm_sdk /usr/sdks/first_party_stork_evm_sdk
 
 WORKDIR /usr/src/app
 

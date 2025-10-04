@@ -59,6 +59,65 @@ jobs:
         run: make integration-test
         env:
           TARGETPLATFORM: linux/amd64
+
+  first-party-test:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.3'
+
+      - name: Cache Go modules
+        id: go-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            ${{ runner.os }}-go-
+
+      - name: Clean Go module cache if needed
+        run: |
+          if ! go mod download 2>/dev/null; then
+            echo "Module download failed, cleaning cache..."
+            go clean -modcache
+            go mod download
+          fi
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run First Party Docker Compose Integration Profile
+        run: cd apps/first_party_pusher && docker compose --profile integration up -d --build --quiet-pull
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for EVM contract to be ready..."
+          timeout 60 bash -c 'until docker compose -f apps/first_party_pusher/docker-compose.yml ps | grep -q "healthy"; do sleep 2; done'
+
+      - name: Run Tests
+        run: go test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
           
   data-provider-codegen-check:
     runs-on: ubuntu-latest

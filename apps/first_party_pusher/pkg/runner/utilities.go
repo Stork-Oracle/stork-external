@@ -8,7 +8,11 @@ import (
 	"strings"
 
 	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
+	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
 )
 
@@ -52,4 +56,43 @@ func LoadPrivateKey(filename string) (*ecdsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
+}
+
+func CreateTestEvmSignedPriceUpdate(
+	privateKey signer.EvmPrivateKey,
+	publishTimestampNano int64,
+	assetID shared.AssetID,
+	quantizedPrice shared.QuantizedPrice,
+	externalAssetID string,
+	signatureType shared.SignatureType,
+) (publisher_agent.SignedPriceUpdate[*shared.EvmSignature], error) {
+	logger := zerolog.New(nil)
+
+	signer, err := signer.NewEvmSigner(privateKey, logger)
+	if err != nil {
+		return publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{}, err
+	}
+
+	timestampedSig, externalAssetID, err := signer.SignPublisherPrice(
+		publishTimestampNano,
+		string(assetID),
+		string(quantizedPrice),
+	)
+	if err != nil {
+		return publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{}, err
+	}
+
+	return publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
+		OracleID: "local",
+		AssetID:  assetID,
+		Trigger:  publisher_agent.UnspecifiedTriggerType,
+		SignedPrice: publisher_agent.SignedPrice[*shared.EvmSignature]{
+			PublisherKey:         shared.PublisherKey(signer.GetPublisherKey()),
+			ExternalAssetID:      externalAssetID,
+			SignatureType:        signatureType,
+			QuantizedPrice:       quantizedPrice,
+			TimestampedSignature: *timestampedSig,
+			Metadata:             publisher_agent.Metadata{},
+		},
+	}, nil
 }

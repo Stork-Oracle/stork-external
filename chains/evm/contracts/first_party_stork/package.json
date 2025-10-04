@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
-    "@openzeppelin/contracts-upgradeable": "^5.4.0"
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "@storknetwork/first-party-stork-evm-sdk": "^1.0.0"
   },
   "type": "module"
 }

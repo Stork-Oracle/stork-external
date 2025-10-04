@@ -116,28 +116,40 @@ func (ci *ContractInteractor) CheckPublisherUser(
 }
 
 func (ci *ContractInteractor) PullValues(
-	pubKeyAssetIDPairs map[common.Address][]string,
+	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
+	assetIDtoEncodedAssetID map[shared.AssetID]shared.EncodedAssetID,
 ) ([]types.ContractUpdate, error) {
 	polledVals := make([]types.ContractUpdate, 0)
 
 	for pubKey, assetIDs := range pubKeyAssetIDPairs {
 		contractUpdate := types.ContractUpdate{
-			Pubkey:                 pubKey,
-			LatestContractValueMap: make(map[string]chain_pusher_types.InternalTemporalNumericValue),
+			Pubkey:           pubKey,
+			ContractValueMap: make(map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue),
 		}
 		for _, assetID := range assetIDs {
-			storkStructsTemporalNumericValue, err := ci.contract.GetLatestTemporalNumericValue(nil, pubKey, assetID)
+			storkStructsTemporalNumericValue, err := ci.contract.GetLatestTemporalNumericValue(
+				nil,
+				pubKey,
+				string(assetID),
+			)
 			if err != nil {
 				if strings.Contains(err.Error(), "NotFound()") {
-					ci.logger.Warn().Err(err).Str("asset_id", assetID).Msg("No value found")
+					ci.logger.Warn().Err(err).Str("asset_id", string(assetID)).Msg("No value found")
 				} else {
-					ci.logger.Warn().Err(err).Str("asset_id", assetID).Msg("Failed to get temporal numeric value")
+					ci.logger.Warn().Err(err).Str("asset_id", string(assetID)).Msg("Failed to get temporal numeric value")
 				}
 
 				continue
 			}
 
-			contractUpdate.LatestContractValueMap[assetID] = chain_pusher_types.InternalTemporalNumericValue(
+			encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
+			if !exists {
+				ci.logger.Error().Str("asset_id", string(assetID)).Msg("Asset not found in assetIDtoEncodedAssetID map")
+
+				continue
+			}
+
+			contractUpdate.ContractValueMap[encodedAssetID] = chain_pusher_types.InternalTemporalNumericValue(
 				storkStructsTemporalNumericValue,
 			)
 		}
@@ -151,7 +163,7 @@ func (ci *ContractInteractor) PullValues(
 func (ci *ContractInteractor) ListenContractEvents(
 	ctx context.Context,
 	ch chan types.ContractUpdate,
-	pubKeyAssetIDPairs map[common.Address][]string,
+	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
 ) {
 	if ci.wsContract == nil {
 		ci.logger.Warn().Msg("WebSocket contract not available, cannot listen for events")
@@ -307,7 +319,7 @@ func (ci *ContractInteractor) getUpdatePayload(
 
 func (ci *ContractInteractor) setupSubscription(
 	watchOpts *bind.WatchOpts,
-	pubKeyAssetIDPairs map[common.Address][]string,
+	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
 ) (ethereum.Subscription, chan *bindings.FirstPartyStorkContractValueUpdate, error) {
 	eventCh := make(chan *bindings.FirstPartyStorkContractValueUpdate)
 	pubKeys := make([]common.Address, 0, len(pubKeyAssetIDPairs))
@@ -315,7 +327,9 @@ func (ci *ContractInteractor) setupSubscription(
 
 	for pubKey, assets := range pubKeyAssetIDPairs {
 		pubKeys = append(pubKeys, pubKey)
-		assetIDs = append(assetIDs, assets...)
+		for _, asset := range assets {
+			assetIDs = append(assetIDs, string(asset))
+		}
 	}
 
 	sub, err := ci.wsContract.WatchValueUpdate(watchOpts, eventCh, pubKeys, assetIDs)
@@ -351,9 +365,12 @@ func (ci *ContractInteractor) listenLoop(
 				QuantizedValue: vLog.QuantizedValue,
 				TimestampNs:    vLog.TimestampNs,
 			}
+
 			update := types.ContractUpdate{
-				Pubkey:                 vLog.PubKey,
-				LatestContractValueMap: map[string]chain_pusher_types.InternalTemporalNumericValue{string(vLog.AssetId.Hex()): tv},
+				Pubkey: vLog.PubKey,
+				ContractValueMap: map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue{
+					shared.EncodedAssetID(vLog.AssetId.Hex()): tv,
+				},
 			}
 			select {
 			case outCh <- update:
@@ -367,7 +384,7 @@ func (ci *ContractInteractor) listenLoop(
 func (ci *ContractInteractor) reconnect(
 	ctx context.Context,
 	watchOpts *bind.WatchOpts,
-	pubKeyAssetIDPairs map[common.Address][]string,
+	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
 ) (ethereum.Subscription, chan *bindings.FirstPartyStorkContractValueUpdate, error) {
 	backoff := initialBackoff
 	for retryCount := range maxRetryAttempts {

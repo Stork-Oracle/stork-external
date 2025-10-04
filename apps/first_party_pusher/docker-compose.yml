@@ -13,7 +13,7 @@ services:
         "-c",
         "/etc/data_provider_config.json",
         "-o",
-        "ws://publisher-agent:5216/publish",
+        "ws://publisher-agent-local:5216/publish",
       ]
     volumes:
       - "./configs/local/data-provider-config.json:/etc/data_provider_config.json:ro"
@@ -127,11 +127,12 @@ services:
   evm-contract:
     profiles:
       - local
+      - integration
     build:
       context: ../..
       dockerfile: docker/images/first_party_evm.Dockerfile
       args:
-        PUBLISHER_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY}
+        PUBLISHER_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY:-0x99e295e85cb07C16B7BB62A44dF532A7F2620237}
         PRIVATE_KEY: ${PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80} # Default private key for the first account in hardhat as that is the default owner account when deploying locally
         CONTRACT_ADDRESS: ${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}
         RPC_URL: ${RPC_URL:-http://127.0.0.1:8545}

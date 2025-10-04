@@ -14,12 +14,13 @@ type ContractInteractor[T shared.Signature] interface {
 		pubKey common.Address,
 	) (bool, error)
 	PullValues(
-		pubKeyAssetIDPairs map[common.Address][]string,
+		pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
+		assetIDtoEncodedAssetID map[shared.AssetID]shared.EncodedAssetID,
 	) ([]ContractUpdate, error)
 	ListenContractEvents(
 		ctx context.Context,
 		ch chan ContractUpdate,
-		pubKeyAssetIDPairs map[common.Address][]string,
+		pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
 	)
 	BatchPushToContract(
 		signedPriceUpdatesByAssetEntry map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T],

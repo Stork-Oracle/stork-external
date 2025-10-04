@@ -63,7 +63,7 @@ func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 
 	latestPublisherValueMap, latestContractValueMap, pubKeyAssetIDPairs, assetIDtoEncodedAssetID := r.initialize()
 
-	go r.poll(ctx, contractUpdateCh, pubKeyAssetIDPairs)
+	go r.poll(ctx, contractUpdateCh, pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
 	go r.contractInteractor.ListenContractEvents(ctx, contractUpdateCh, pubKeyAssetIDPairs)
 
 	batchingTicker := time.NewTicker(time.Duration(r.batchingWindowSecs) * time.Second)
@@ -95,15 +95,7 @@ func (r *FirstPartyRunner[T]) Run(ctx context.Context) {
 			latestPublisherValueMap[publisherAssetPair] = signedPriceUpdate
 
 		case contractUpdate := <-contractUpdateCh:
-			for assetID, value := range contractUpdate.LatestContractValueMap {
-				encodedAssetID, assetExpected := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
-				if !assetExpected {
-					r.logger.Error().Str("asset", assetID).
-						Msg("Unexpected asset, not found in assetIDtoEncodedAssetID map")
-
-					continue
-				}
-
+			for encodedAssetID, value := range contractUpdate.ContractValueMap {
 				publisherAssetPair := types.PublisherAssetPair{
 					Address:        contractUpdate.Pubkey,
 					EncodedAssetID: encodedAssetID,
@@ -131,12 +123,12 @@ func (r *FirstPartyRunner[T]) Stop() {
 func (r *FirstPartyRunner[T]) initialize() (
 	map[types.PublisherAssetPair]publisher_agent.SignedPriceUpdate[T],
 	map[types.PublisherAssetPair]chain_pusher_types.InternalTemporalNumericValue,
-	map[common.Address][]string,
+	map[common.Address][]shared.AssetID,
 	map[shared.AssetID]shared.EncodedAssetID,
 ) {
 	latestPublisherValueMap := make(map[types.PublisherAssetPair]publisher_agent.SignedPriceUpdate[T])
 	latestContractValueMap := make(map[types.PublisherAssetPair]chain_pusher_types.InternalTemporalNumericValue)
-	pubKeyAssetIDPairs := make(map[common.Address][]string, len(r.config.AssetConfig.Assets))
+	pubKeyAssetIDPairs := make(map[common.Address][]shared.AssetID, len(r.config.AssetConfig.Assets))
 	assetIDtoEncodedAssetID := make(map[shared.AssetID]shared.EncodedAssetID, len(r.config.AssetConfig.Assets))
 
 	// populate pubKeyAssetIDPairs and assetIDtoEncodedAssetID
@@ -149,30 +141,22 @@ func (r *FirstPartyRunner[T]) initialize() (
 
 		pubKey := common.HexToAddress(string(assetEntry.PublicKey))
 		if _, exists := pubKeyAssetIDPairs[pubKey]; !exists {
-			pubKeyAssetIDPairs[pubKey] = make([]string, 0)
+			pubKeyAssetIDPairs[pubKey] = make([]shared.AssetID, 0)
 		}
 
-		pubKeyAssetIDPairs[pubKey] = append(pubKeyAssetIDPairs[pubKey], string(assetID))
+		pubKeyAssetIDPairs[pubKey] = append(pubKeyAssetIDPairs[pubKey], assetID)
 		hash := crypto.Keccak256Hash([]byte(assetID))
 		assetIDtoEncodedAssetID[assetID] = shared.EncodedAssetID(hash.Hex())
 	}
 
-	contractUpdates, err := r.contractInteractor.PullValues(pubKeyAssetIDPairs)
+	contractUpdates, err := r.contractInteractor.PullValues(pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Failed to pull values from contract - expected if cold starting")
 	}
 
 	// populate latestContractValueMap
 	for _, update := range contractUpdates {
-		for assetID, value := range update.LatestContractValueMap {
-			encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
-			if !exists {
-				r.logger.Error().Str("asset", assetID).
-					Msg("Asset not found in assetIDtoEncodedAssetID map")
-
-				continue
-			}
-
+		for encodedAssetID, value := range update.ContractValueMap {
 			publisherAssetPair := types.PublisherAssetPair{
 				Address:        update.Pubkey,
 				EncodedAssetID: encodedAssetID,
@@ -329,7 +313,8 @@ func (r *FirstPartyRunner[T]) pushBatch(
 func (r *FirstPartyRunner[T]) poll(
 	ctx context.Context,
 	ch chan types.ContractUpdate,
-	pubKeyAssetIDPairs map[common.Address][]string,
+	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
+	assetIDtoEncodedAssetID map[shared.AssetID]shared.EncodedAssetID,
 ) {
 	r.logger.Debug().Msg("Polling contract for new values")
 
@@ -341,7 +326,7 @@ func (r *FirstPartyRunner[T]) poll(
 		case <-ctx.Done():
 			return
 		case <-pollingTicker.C:
-			latestContractUpdates, err := r.contractInteractor.PullValues(pubKeyAssetIDPairs)
+			latestContractUpdates, err := r.contractInteractor.PullValues(pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
 			if err != nil {
 				r.logger.Error().Err(err).Msg("Failed to pull values from contract")
 			}

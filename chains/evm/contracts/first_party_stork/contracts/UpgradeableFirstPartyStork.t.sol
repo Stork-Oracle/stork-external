@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "./UpgradeableFirstPartyStork.sol";
-import "./FirstPartyStorkStructs.sol";
+import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/Test.sol";
 
@@ -10,35 +10,104 @@ contract UpgradeableFirstPartyStorkTest is Test {
     UpgradeableFirstPartyStork public implementation;
     UpgradeableFirstPartyStork public stork;
     TransparentUpgradeableProxy public proxy;
+
+    // ==== PUBLISHER ADDRESSES ====
     
     address public owner = address(0x1);
-    address public publisher1 = address(0x2);
-    address public publisher2 = address(0x3);
-    address public otherAccount = address(0x4);
+    address public publisher1 = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+    address public publisher2 = address(0x16eB47a6BBdF1E1D1E9AC23E6f473f1bCAe519C0);
+    address public otherAccount = address(0x2);
+
+    // ==== SINGLE UPDATE FEE ====
+
+    uint256 public singleUpdateFee = 100;
+
+    // ==== ASSET PAIRS ====
+
+    string public ethUsd = "ETHUSD";
+    string public btcUsd = "BTCUSD";
+
+    // ==== TEST DATA ====
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub1OldEth = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1680210933000000000,
+            quantizedValue: 1100000000000000000
+        }),
+        pubKey: publisher1,
+        assetPairId: ethUsd,
+        r: 0xff867c1b1658e0b4868dbac1ab0961aebd4ea8308939497c73e76f6c393b158e,
+        s: 0x74b19977de6e0a56b7a627e16db9e996548ae12ab10eb209355d13794e28f692,
+        v: 0x1c
+    });
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub1Eth = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1680210934000000000,
+            quantizedValue: 1000000000000000000
+        }),
+        pubKey: publisher1,
+        assetPairId: ethUsd,
+        r: 0xeabf8494b0b64aab3033dac3c821464324ed861ae68ea6e18fecea05f6675f61,
+        s: 0x2fdb84b8b4710b1e1926c8cc4073a3bd7fbfcdd03601303462e097a9f3ae667a,
+        v: 0x1b
+    });
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub1Btc = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1680210934000000000,
+            quantizedValue: 2000000000000000000
+        }),
+        pubKey: publisher1,
+        assetPairId: btcUsd,
+        r: 0x2b9b43a6d18a4768693b679c7b407a71d41ee682bddc544ecbe8c436110950c3,
+        s: 0x08febe3ce25e61e1a8004f7608ff5d4ed56249f5462cabe36b5806bb4e12a44c,
+        v: 0x1b
+    });
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub1Neg = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1680210934000000000,
+            quantizedValue: -1000000000000000000
+        }),
+        pubKey: publisher1,
+        assetPairId: btcUsd,
+        r: 0xcf78de6532aacc02cfd6fff1148d7f2afcd4892a35aa53a5cc2cc92c95829277,
+        s: 0x55e9a40115dc85f0f4ad336e9c3c23a36d057272dbbb9eede3337ebb0ae81eb0,
+        v: 0x1b
+    });
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub2Btc = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1721755261000000000,
+            quantizedValue: 66078270000000000000000
+        }),
+        pubKey: publisher2,
+        assetPairId: btcUsd,
+        r: 0xbb1e6f87445556233f98c085e2e25e5938bb0fa4eee42b7df06f50836ae4e42e,
+        s: 0x79f16b0f10c35db8a08088c53dcaa40355dca57db840eb850b9328fc064c6002,
+        v: 0x1c
+    });
+
+    // ===== DEPLOY TESTS =====
 
     function setUp() public {
-        // Deploy implementation
         implementation = new UpgradeableFirstPartyStork();
         
-        // Encode initialize call
         bytes memory initializeData = abi.encodeWithSelector(
             UpgradeableFirstPartyStork.initialize.selector,
             owner
         );
         
-        // Deploy proxy
         proxy = new TransparentUpgradeableProxy(
             address(implementation),
             owner, // admin
             initializeData
         );
         
-        // Get contract instance at proxy address
         stork = UpgradeableFirstPartyStork(address(proxy));
     }
 
-    // ===== DEPLOY TESTS =====
-    
     function test_ShouldReturnOwner() public view {
         assertEq(stork.owner(), owner);
     }
@@ -51,20 +120,45 @@ contract UpgradeableFirstPartyStorkTest is Test {
 
     // ===== CREATE PUBLISHER USER TESTS =====
     
-    function test_CreatePublisherUserSuccessfully() public {
-        uint256 singleUpdateFee = 100;
+    function test_CreatePublisherUser_Successful() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+    }
+
+    function test_CreatePublisherUser_UpdatesIfExists() public {
+        uint256 newSingleUpdateFee = 500;
         
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
-        
+
         FirstPartyStorkStructs.PublisherUser memory publisherUser = stork.getPublisherUser(publisher1);
         assertEq(publisherUser.pubKey, publisher1);
         assertEq(publisherUser.singleUpdateFee, singleUpdateFee);
+
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, newSingleUpdateFee);
+
+        publisherUser = stork.getPublisherUser(publisher1);
+        assertEq(publisherUser.pubKey, publisher1);
+        assertEq(publisherUser.singleUpdateFee, newSingleUpdateFee);
     }
 
-    function test_CreatePublisherUserRevertsIfNotOwner() public {
-        uint256 singleUpdateFee = 100;
-        
+    function test_CreatePublisherUser_MultiplePublishers() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.prank(owner);
+        stork.createPublisherUser(publisher2, singleUpdateFee*2);
+
+        FirstPartyStorkStructs.PublisherUser memory publisherUser1 = stork.getPublisherUser(publisher1);
+        assertEq(publisherUser1.pubKey, publisher1);
+        assertEq(publisherUser1.singleUpdateFee, singleUpdateFee);
+
+        FirstPartyStorkStructs.PublisherUser memory publisherUser2 = stork.getPublisherUser(publisher2);
+        assertEq(publisherUser2.pubKey, publisher2);
+        assertEq(publisherUser2.singleUpdateFee, singleUpdateFee*2);
+    }
+
+    function test_CreatePublisherUser_RevertsIfNotOwner() public {
         vm.prank(otherAccount);
         vm.expectRevert(); // OwnableUnauthorizedAccount
         stork.createPublisherUser(publisher1, singleUpdateFee);
@@ -72,18 +166,13 @@ contract UpgradeableFirstPartyStorkTest is Test {
 
     // ===== DELETE PUBLISHER USER TESTS =====
     
-    function test_DeletePublisherUserSuccessfully() public {
-        uint256 singleUpdateFee = 100;
-        
-        // First create a publisher user
+    function test_DeletePublisherUser_Successful() public {
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
         
-        // Verify it exists
         FirstPartyStorkStructs.PublisherUser memory publisherUser = stork.getPublisherUser(publisher1);
         assertEq(publisherUser.pubKey, publisher1);
         
-        // Delete the publisher user
         vm.prank(owner);
         stork.deletePublisherUser(publisher1);
         
@@ -92,7 +181,12 @@ contract UpgradeableFirstPartyStorkTest is Test {
         stork.getPublisherUser(publisher1);
     }
 
-    function test_DeletePublisherUserRevertsIfNotOwner() public {
+    function test_DeletePublisherUser_RevertsIfNotFound() public {
+        vm.expectRevert(); // NotFound
+        stork.deletePublisherUser(publisher1);
+    }
+
+    function test_DeletePublisherUser_RevertsIfNotOwner() public {
         vm.prank(otherAccount);
         vm.expectRevert(); // OwnableUnauthorizedAccount
         stork.deletePublisherUser(publisher1);
@@ -102,49 +196,28 @@ contract UpgradeableFirstPartyStorkTest is Test {
     
     function test_VerifyPublisherSignatureV1_ValidSignature() public view {
         bool result = stork.verifyPublisherSignatureV1(
-            0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b,
-            "ETHUSD",
-            1680210934000000000, // timestamp in nanoseconds
-            1000000000000000000, // quantized value
-            0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            0x1b
+            pub1Eth.pubKey,
+            pub1Eth.assetPairId,
+            pub1Eth.temporalNumericValue.timestampNs,
+            pub1Eth.temporalNumericValue.quantizedValue,
+            pub1Eth.r,
+            pub1Eth.s,
+            pub1Eth.v
         );
         assertTrue(result);
     }
 
     function test_VerifyPublisherSignatureV1_InvalidSignature() public view {
         bool result = stork.verifyPublisherSignatureV1(
-            0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b,
-            "ETHUSD",
-            1680210934000000000,
-            1000000000000000000,
-            0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            0x1c // changed from 0x1b
+            pub1Eth.pubKey,
+            pub1Eth.assetPairId,
+            pub1Eth.temporalNumericValue.timestampNs,
+            pub1Eth.temporalNumericValue.quantizedValue,
+            pub1Eth.r,
+            pub1Eth.s,
+            pub1Eth.v + 1
         );
         assertFalse(result);
-    }
-
-    // ===== GET LATEST TEMPORAL NUMERIC VALUE TESTS =====
-    
-    function test_GetLatestTemporalNumericValue_RevertsIfNeverUpdated() public {
-        vm.expectRevert(); // NotFound
-        stork.getLatestTemporalNumericValue(publisher1, "ETHUSD");
-    }
-
-    // ===== GET HISTORICAL RECORDS COUNT TESTS =====
-    
-    function test_GetHistoricalRecordsCount_ReturnsZeroForNonExistent() public view {
-        uint256 count = stork.getHistoricalRecordsCount(publisher1, "ETHUSD");
-        assertEq(count, 0);
-    }
-
-    // ===== GET CURRENT ROUND ID TESTS =====
-    
-    function test_GetCurrentRoundId_ReturnsZeroForNonExistent() public view {
-        uint256 roundId = stork.getCurrentRoundId(publisher1, "ETHUSD");
-        assertEq(roundId, 0);
     }
 
     // ===== GET PUBLISHER USER TESTS =====
@@ -155,8 +228,6 @@ contract UpgradeableFirstPartyStorkTest is Test {
     }
 
     function test_GetPublisherUser_ReturnsAfterCreation() public {
-        uint256 singleUpdateFee = 100;
-        
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
         
@@ -165,374 +236,365 @@ contract UpgradeableFirstPartyStorkTest is Test {
         assertEq(publisherUser.singleUpdateFee, singleUpdateFee);
     }
 
-    // ===== FUZZ TESTS =====
-    
-    function testFuzz_CreatePublisherUser(address publisher, uint256 fee) public {
-        vm.assume(publisher != address(0));
-        vm.assume(fee > 0);
-        
-        vm.prank(owner);
-        stork.createPublisherUser(publisher, fee);
-        
-        FirstPartyStorkStructs.PublisherUser memory publisherUser = stork.getPublisherUser(publisher);
-        assertEq(publisherUser.pubKey, publisher);
-        assertEq(publisherUser.singleUpdateFee, fee);
+    // ===== UPDATE TEMPORAL NUMERIC VALUES TESTS =====
+
+    function test_GetLatestTemporalNumericValue_RevertsIfNeverUpdated() public {
+        vm.expectRevert(); // NotFound
+        stork.getLatestTemporalNumericValue(publisher1, ethUsd);
     }
 
-    function testFuzz_GetHistoricalRecordsCount(address publisher, string memory assetPairId) public view {
-        // Should always return 0 for non-existent pairs
-        uint256 count = stork.getHistoricalRecordsCount(publisher, assetPairId);
+    function test_GetHistoricalTemporalNumericValue_RevertsIfNeverUpdated() public {
+        vm.expectRevert(); // NotFound
+        stork.getHistoricalTemporalNumericValue(publisher1, ethUsd, 0);
+    }
+
+    function test_GetHistoricalRecordsCount_ReturnsZeroForNonExistent() public view {
+        uint256 count = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(count, 0);
     }
 
-    function testFuzz_GetCurrentRoundId(address publisher, string memory assetPairId) public view {
-        // Should always return 0 for non-existent pairs
-        uint256 roundId = stork.getCurrentRoundId(publisher, assetPairId);
+    function test_GetCurrentRoundId_ReturnsZeroForNonExistent() public view {
+        uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
         assertEq(roundId, 0);
     }
-
-    // ===== UPDATE TEMPORAL NUMERIC VALUES TESTS =====
     
     function test_UpdateTemporalNumericValues_RevertsWithInsufficientFee() public {
-        uint256 singleUpdateFee = 100;
-        
-        // Create publisher user
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
         
-        // Create update data with known good signature from earlier test
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData[0] = pub1Eth;
+
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = false;
         
         // Should revert with insufficient fee
         vm.expectRevert(); // InsufficientFee
-        vm.deal(publisher1, 1 ether);
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee - 1}(updateData, false);
+        stork.updateTemporalNumericValues{value: singleUpdateFee - 1}(updateData, storeHistoric);
     }
 
     function test_UpdateTemporalNumericValues_SuccessfulUpdate() public {
-        uint256 singleUpdateFee = 100;
-        
-        // Create publisher user with the test signature's pubKey
         vm.prank(owner);
-        stork.createPublisherUser(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, singleUpdateFee);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
         
-        // Create update data with known good signature
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData[0] = pub1Eth;
+
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = false;
         
-        // Fund the publisher and make successful update
-        vm.deal(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, 1 ether);
-        vm.prank(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, false);
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
         
-        // Verify the update was successful
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
-            stork.getLatestTemporalNumericValue(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, "ETHUSD");
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
         
-        assertEq(latestValue.timestampNs, 1680210934000000000);
-        assertEq(latestValue.quantizedValue, 1000000000000000000);
+        assertEq(latestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(latestValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
         
-        // Verify round ID behavior: only increments when storeHistoric=true
-        uint256 roundId = stork.getCurrentRoundId(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, "ETHUSD");
+        uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
         assertEq(roundId, 0); // Round ID stays 0 because storeHistoric=false (no historical record created)
     }
 
     function test_UpdateTemporalNumericValues_SuccessfulUpdateWithHistoric() public {
-        uint256 singleUpdateFee = 100;
-        
-        // Create publisher user with the test signature's pubKey
         vm.prank(owner);
-        stork.createPublisherUser(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, singleUpdateFee);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
         
         // Create update data with known good signature
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData[0] = pub1Eth;
+
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = true;
+
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
         
-        // Fund the publisher and make successful update with historic=true
-        vm.deal(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, 1 ether);
-        vm.prank(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, true);
-        
-        // Verify the update was successful
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
-            stork.getLatestTemporalNumericValue(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, "ETHUSD");
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
         
-        assertEq(latestValue.timestampNs, 1680210934000000000);
-        assertEq(latestValue.quantizedValue, 1000000000000000000);
+        assertEq(latestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(latestValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
         
-        // Verify historical record was stored
-        uint256 historicalCount = stork.getHistoricalRecordsCount(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, "ETHUSD");
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
+
+        uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
+        assertEq(roundId, 1);
         
-        // Verify we can retrieve the historical record
         FirstPartyStorkStructs.TemporalNumericValue memory historicalValue = 
-            stork.getHistoricalTemporalNumericValue(0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b, "ETHUSD", 0);
+            stork.getHistoricalTemporalNumericValue(publisher1, ethUsd, 0);
         
-        assertEq(historicalValue.timestampNs, 1680210934000000000);
-        assertEq(historicalValue.quantizedValue, 1000000000000000000);
+        assertEq(historicalValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(historicalValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
     }
 
     function test_MultipleUpdatesWithHistoric() public {
-        uint256 singleUpdateFee = 100;
-        address testPublisher = 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b;
-        
-        // Create publisher user
         vm.prank(owner);
-        stork.createPublisherUser(testPublisher, singleUpdateFee);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.prank(owner);
+        stork.createPublisherUser(publisher2, singleUpdateFee);
         
-        vm.deal(testPublisher, 10 ether);
+        vm.deal(publisher1, 1 ether);
+        vm.deal(publisher2, 1 ether);
         
-        // First update
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData1[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: testPublisher,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData1[0] = pub1Eth;
+
+        bool[] memory storeHistoric1 = new bool[](1);
+        storeHistoric1[0] = true;
         
-        vm.prank(testPublisher);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, true);
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, storeHistoric1);
         
-        // Second update (simulate different signature for different timestamp)
-        // Using a different known good signature from the test
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData2[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210935000000000, // Different timestamp
-                quantizedValue: 2000000000000000000  // Different value
-            }),
-            pubKey: testPublisher,
-            assetPairId: "ETHUSD",
-            // Note: In a real scenario, these would be different signatures for the new data
-            // For testing purposes, we'll use the same signature (this would fail in production)
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData2[0] = pub2Btc;
         
-        // This will fail due to signature mismatch, but let's test the successful path
-        // by using the same data but without historic to test round ID increment
-        vm.prank(testPublisher);
-        vm.expectRevert(); // InvalidSignature - expected since we're reusing signature
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2, true);
+        bool[] memory storeHistoric2 = new bool[](1);
+        storeHistoric2[0] = true;
         
-        // Verify first update results
-        uint256 historicalCount = stork.getHistoricalRecordsCount(testPublisher, "ETHUSD");
+        vm.prank(publisher2);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2, storeHistoric2);
+        
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
         
-        uint256 roundId = stork.getCurrentRoundId(testPublisher, "ETHUSD");
-        assertEq(roundId, 1); // Round ID increments to 1 because storeHistoric=true (historical record created)
+        uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
+        assertEq(roundId, 1);
+
+        uint256 historicalCount2 = stork.getHistoricalRecordsCount(publisher2, btcUsd);
+        assertEq(historicalCount2, 1);
+
+        uint256 roundId2 = stork.getCurrentRoundId(publisher2, btcUsd);
+        assertEq(roundId2, 1);
     }
 
-    function test_DeletePublisherUser_AfterSuccessfulUpdates() public {
-        uint256 singleUpdateFee = 100;
-        address testPublisher = 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b;
-        
-        // Create publisher user
+    function test_UpdateTemporalNumericValues_MultipleUpdatesAtOnce() public {
         vm.prank(owner);
-        stork.createPublisherUser(testPublisher, singleUpdateFee);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
         
-        // Make a successful update first
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](2);
+        
+        updateData[0] = pub1Eth;
+        updateData[1] = pub1Btc;
+        
+        bool[] memory storeHistoric = new bool[](2);
+        storeHistoric[0] = true;
+        storeHistoric[1] = true;
+        
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee*2}(updateData, storeHistoric);
+
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(historicalCount, 1);
+
+        uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
+        assertEq(roundId, 1);
+
+        uint256 historicalCount2 = stork.getHistoricalRecordsCount(publisher1, btcUsd);
+        assertEq(historicalCount2, 1);
+
+        uint256 roundId2 = stork.getCurrentRoundId(publisher1, btcUsd);
+        assertEq(roundId2, 1);
+    }
+
+    function test_UpdateTemporalNumericValues_SuccessfulUpdateWithNegativeValue() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
+
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: testPublisher,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
+        updateData[0] = pub1Neg;
+
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = true;
+
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
         
-        vm.deal(testPublisher, 1 ether);
-        vm.prank(testPublisher);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, true);
+        FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
+            stork.getLatestTemporalNumericValue(publisher1, btcUsd);
+        assertEq(latestValue.quantizedValue, -1000000000000000000);
+    }
+
+    function test_UpdateTemporalNumericValues_OlderUpdateIsNotStored() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData[0] = pub1Eth;
+
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = true;
+
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(historicalCount, 1);
+
+        FirstPartyStorkStructs.TemporalNumericValue memory historicalValue = 
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
+        assertEq(historicalValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(historicalValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+
+        updateData[0] = pub1OldEth;
+
+        vm.prank(publisher1);
+        vm.expectRevert(); // NoFreshUpdate
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+
+        uint256 historicalCount2 = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(historicalCount2, 1);
+
+        FirstPartyStorkStructs.TemporalNumericValue memory historicalValue2 = 
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
+        assertEq(historicalValue2.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(historicalValue2.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+    }
+
+    function test_UpdateTemporalNumericValues_SameUpdateTwice() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData[0] = pub1Eth;
+        
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = true;
+        
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+
+        // Timestamp is same, so both updates are stored
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(historicalCount, 2);
+    }
+
+    function test_UpdateTemporalNumericValues_EmptyUpdate() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](0);
+
+        bool[] memory storeHistoric = new bool[](0);
+
+        vm.prank(publisher1);
+        vm.expectRevert(); // NoFreshUpdate
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+
+    }
+
+    function test_MultiplePublishersForSameAssetPair() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.prank(owner);
+        stork.createPublisherUser(publisher2, singleUpdateFee);
+        
+        vm.deal(publisher1, 1 ether);
+        vm.deal(publisher2, 1 ether);
+
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData1[0] = pub1Btc;
+
+        bool[] memory storeHistoric1 = new bool[](1);
+        storeHistoric1[0] = true;
+
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, storeHistoric1);
+
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData2[0] = pub2Btc;
+        
+        bool[] memory storeHistoric2 = new bool[](1);
+        storeHistoric2[0] = true;
+        
+        vm.prank(publisher2);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2, storeHistoric2);
+
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, btcUsd);
+        assertEq(historicalCount, 1);
+
+        uint256 roundId = stork.getCurrentRoundId(publisher1, btcUsd);
+        assertEq(roundId, 1);
+
+        uint256 historicalCount2 = stork.getHistoricalRecordsCount(publisher2, btcUsd);
+        assertEq(historicalCount2, 1);
+
+        uint256 roundId2 = stork.getCurrentRoundId(publisher2, btcUsd);
+        assertEq(roundId2, 1);
+    }
+
+    function test_DeletePublisherUser_AfterSuccessfulUpdates() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.deal(publisher1, 1 ether);
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData[0] = pub1Eth;
+        
+        bool[] memory storeHistoric = new bool[](1);
+        storeHistoric[0] = true;
+        
+        vm.prank(publisher1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
         
         // Verify update was successful
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
-            stork.getLatestTemporalNumericValue(testPublisher, "ETHUSD");
-        assertEq(latestValue.timestampNs, 1680210934000000000);
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
+        assertEq(latestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+
+        uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(historicalCount, 1);
         
-        // Now delete the publisher user
         vm.prank(owner);
-        stork.deletePublisherUser(testPublisher);
+        stork.deletePublisherUser(publisher1);
         
         // Verify publisher user is deleted
         vm.expectRevert(); // NotFound
-        stork.getPublisherUser(testPublisher);
+        stork.getPublisherUser(publisher1);
         
-        // But historical data should still be accessible
+        // Historical data should still be accessible
         FirstPartyStorkStructs.TemporalNumericValue memory stillLatestValue = 
-            stork.getLatestTemporalNumericValue(testPublisher, "ETHUSD");
-        assertEq(stillLatestValue.timestampNs, 1680210934000000000);
+            stork.getLatestTemporalNumericValue(publisher1, ethUsd);
+        assertEq(stillLatestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
         
-        uint256 historicalCount = stork.getHistoricalRecordsCount(testPublisher, "ETHUSD");
-        assertEq(historicalCount, 1);
-    }
-
-    function test_MultiplePublishersAndAssetPairs() public {
-        uint256 singleUpdateFee = 100;
-        address testPublisher1 = 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b;
-        address testPublisher2 = publisher2; // Different publisher
-        
-        // Create two publisher users
-        vm.prank(owner);
-        stork.createPublisherUser(testPublisher1, singleUpdateFee);
-        
-        vm.prank(owner);
-        stork.createPublisherUser(testPublisher2, singleUpdateFee * 2); // Different fee
-        
-        // Update from first publisher for ETHUSD
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
-            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
-        
-        updateData1[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: testPublisher1,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
-        
-        vm.deal(testPublisher1, 1 ether);
-        vm.prank(testPublisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, true);
-        
-        // Verify first publisher's data
-        FirstPartyStorkStructs.TemporalNumericValue memory value1 = 
-            stork.getLatestTemporalNumericValue(testPublisher1, "ETHUSD");
-        assertEq(value1.quantizedValue, 1000000000000000000);
-        
-        uint256 count1 = stork.getHistoricalRecordsCount(testPublisher1, "ETHUSD");
-        assertEq(count1, 1);
-        
-        // Verify second publisher has no data yet
-        uint256 count2 = stork.getHistoricalRecordsCount(testPublisher2, "ETHUSD");
-        assertEq(count2, 0);
-        
-        uint256 count3 = stork.getHistoricalRecordsCount(testPublisher1, "BTCUSD");
-        assertEq(count3, 0);
-        
-        // Verify different fees for different publishers
-        FirstPartyStorkStructs.PublisherUser memory user1 = stork.getPublisherUser(testPublisher1);
-        FirstPartyStorkStructs.PublisherUser memory user2 = stork.getPublisherUser(testPublisher2);
-        
-        assertEq(user1.singleUpdateFee, singleUpdateFee);
-        assertEq(user2.singleUpdateFee, singleUpdateFee * 2);
-    }
-
-    function test_RoundIdBehavior_HistoricVsNonHistoric() public {
-        uint256 singleUpdateFee = 100;
-        address testPublisher = 0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b;
-        
-        // Create publisher user
-        vm.prank(owner);
-        stork.createPublisherUser(testPublisher, singleUpdateFee);
-        
-        vm.deal(testPublisher, 10 ether);
-        
-        // Initial state: round ID should be 0
-        uint256 initialRoundId = stork.getCurrentRoundId(testPublisher, "ETHUSD");
-        assertEq(initialRoundId, 0);
-        
-        // Update with storeHistoric=false
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
-            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
-        
-        updateData1[0] = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
-            temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
-                timestampNs: 1680210934000000000,
-                quantizedValue: 1000000000000000000
-            }),
-            pubKey: testPublisher,
-            assetPairId: "ETHUSD",
-            r: 0xd80926f0433827d55e17bc77953b44788fb40057c55b2578da4f59361d758555,
-            s: 0x69703bad148facb6ba7e5d61676240d6e50162d97e0e7e31d7c7ccd35db6df5f,
-            v: 0x1b
-        });
-        
-        vm.prank(testPublisher);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, false); // storeHistoric=false
-        
-        // Round ID should still be 0 (no historical record created)
-        uint256 roundIdAfterNonHistoric = stork.getCurrentRoundId(testPublisher, "ETHUSD");
-        assertEq(roundIdAfterNonHistoric, 0);
-        
-        // Historical count should still be 0
-        uint256 historicalCountAfterNonHistoric = stork.getHistoricalRecordsCount(testPublisher, "ETHUSD");
-        assertEq(historicalCountAfterNonHistoric, 0);
-        
-        // But latest value should be updated
-        FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
-            stork.getLatestTemporalNumericValue(testPublisher, "ETHUSD");
-        assertEq(latestValue.quantizedValue, 1000000000000000000);
-        
-        // Now update with storeHistoric=true
-        vm.prank(testPublisher);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, true); // storeHistoric=true
-        
-        // Round ID should now increment to 1
-        uint256 roundIdAfterHistoric = stork.getCurrentRoundId(testPublisher, "ETHUSD");
-        assertEq(roundIdAfterHistoric, 1);
-        
-        // Historical count should now be 1
-        uint256 historicalCountAfterHistoric = stork.getHistoricalRecordsCount(testPublisher, "ETHUSD");
-        assertEq(historicalCountAfterHistoric, 1);
+        uint256 stillHistoricalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
+        assertEq(stillHistoricalCount, 1);
     }
 }
