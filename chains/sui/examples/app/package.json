@@ -10,9 +10,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@mysten/sui.js": "^0.54.1",
+    "@mysten/sui": "^1.38.0",
     "@types/node": "^22.10.1",
     "commander": "^12.1.0",
+    "keccak256": "^1.0.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }

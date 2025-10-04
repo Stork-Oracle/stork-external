@@ -1,5 +1,8 @@
 include mk/rust.mk
 
+LIB_DIR ?= $(RUST_LIB_DIR)
+include mk/misc.mk
+
 CGO_LDFLAGS := "-L$(RUST_LIB_DIR)"
 GOBIN := $(PWD)/.bin
 GO := GOBIN=$(GOBIN) CGO_ENABLED=1 CGO_LDFLAGS=$(CGO_LDFLAGS) LD_LIBRARY_PATH=$(RUST_LIB_DIR):$(LD_LIBRARY_PATH) GOPRIVATE="*" GIT_TERMINAL_PROMPT=0 go
@@ -7,9 +10,12 @@ GO := GOBIN=$(GOBIN) CGO_ENABLED=1 CGO_LDFLAGS=$(CGO_LDFLAGS) LD_LIBRARY_PATH=$(
 $(GOBIN):
 	@mkdir -p $(GOBIN)
 
+MOCKERY_MAJOR_VERSION := 3
+MOCKERY_VERSION := v3.5.0
+
 $(GOBIN)/mockery: $(GOBIN)
-	@echo "Installing mockery..."
-	@$(GO) install github.com/vektra/mockery/v2@v2.46.3
+	@echo "Installing mockery $(MOCKERY_VERSION)..."
+	@$(GO) install github.com/vektra/mockery/v$(MOCKERY_MAJOR_VERSION)@$(MOCKERY_VERSION)
 
 .PHONY: mocks
 ## Generate mocks for the project using mockery
@@ -32,18 +38,10 @@ integration-test: signer_ffi fuel_ffi
 	    $(GO) test -v -tags integration $$pkg; \
 	done
 
-.PHONY: install-cosmwasm-libs
-install-cosmwasm-libs:
-	@if [ ! -f "$(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so" ]; then \
-		echo "Installing CosmWasm libraries..."; \
-		curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so -o $(RUST_LIB_DIR)/libwasmvm.$(shell uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').so; \
-		echo "Successfully installed CosmWasm libraries to $(RUST_LIB_DIR)/"; \
-	else \
-		echo "CosmWasm libraries already installed"; \
-	fi
+
 
 # Individual Go Targets
-chain_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
+chain_pusher: signer_ffi fuel_ffi wasmvm
 	@echo "Installing chain pusher..."
 	@$(GO) install -v ./apps/chain_pusher
 
@@ -65,17 +63,17 @@ first_party_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
 
 .PHONY: install
 ## Aggregate target to install all Go binaries	
-install: chain_pusher publisher_agent data_provider generate first_party_pusher install-cosmwasm-libs
+install: chain_pusher publisher_agent data_provider generate wasmvm first_party_pusher
 	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean
 ## Clean up the project
-clean: clean-rust
+clean: clean-rust clean-misc
 	@rm -rf $(GOBIN)
 	@$(GO) clean -cache -testcache
 
 # pass in a target to run-local to run a specific binary
-run-local: signer_ffi fuel_ffi install-cosmwasm-libs
+run-local: signer_ffi fuel_ffi wasmvm
 	@$(GO) run ./apps/$(target)/cmd $(args)
 
 # Lint Go code using golangci-lint

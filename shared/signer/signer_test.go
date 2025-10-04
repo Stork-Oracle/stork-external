@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 	"testing"
+	"unsafe"
 
 	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/rs/zerolog"
@@ -119,6 +120,35 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0x444a5457494e59455355534454574150343830637a6f7778", assetId)
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// Asset ID max length test (26 characters)
+	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
+		TimestampNano: 1710191092123456789,
+		MsgHash:       "0x68ff7cbdc262933f6682fd316ff76f524575e4ea05c13fb5eb29a816c1e28d1",
+		Signature: &StarkSignature{
+			R: "0x3c000f009dd7a96b558bec75013991fdf6181504a7505d7248074a5f0c7c33e",
+			S: "0xd088d281c49b29af8d47808ac965ed6ac2817de573e80b01f810758cb338c4",
+		},
+	}
+	signedPriceUpdate, assetId, err = signer.SignPublisherPrice(
+		1710191092123456789,
+		"thisAssetIDLengthIs26Chars",
+		"72147681412670819000000",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "0x74686973417373657449444c656e677468497332364368617273637a6f7778", assetId)
+	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
+
+	// Asset ID too long test (27 characters)
+	signedPriceUpdate, assetId, err = signer.SignPublisherPrice(
+		1710191092123456789,
+		"assetIDLengthIs26Characters",
+		"72147681412670819000000",
+	)
+	_ = signedPriceUpdate
+	_ = assetId
+
+	assert.Error(t, err)
 }
 
 func TestSigner_SignAuth_Evm(t *testing.T) {
@@ -204,4 +234,54 @@ func TestBigIntBytesToTwosComplement(t *testing.T) {
 		"00000000000000000000000000000000000000000000000000000b5e620f4800",
 		hex.EncodeToString(twosComplement),
 	)
+}
+
+func TestCreateStarkBufferFromBigIntAbs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		intBigInt     *big.Int
+		expectedBytes [32]byte
+		expectedError error
+	}{
+		{
+			name:          "negative",
+			intBigInt:     new(big.Int).SetInt64(-1),
+			expectedBytes: [32]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:          "positive",
+			intBigInt:     new(big.Int).SetInt64(1),
+			expectedBytes: [32]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:          "max value",
+			intBigInt:     new(big.Int).Sub(fp.Modulus(), big.NewInt(1)),
+			expectedBytes: [32]byte{0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		},
+		{
+			name:          "too large",
+			intBigInt:     fp.Modulus(),
+			expectedBytes: [32]byte{},
+			expectedError: ErrBigIntTooLarge,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := createStarkBufferFromBigIntAbs(tt.intBigInt)
+			if tt.expectedError != nil {
+				assert.ErrorIs(t, err, tt.expectedError)
+				return
+			} else {
+				assert.NoError(t, err)
+			}
+			// deref the resulting c pointer to a byte array
+			resultBytes := (*[32]byte)(unsafe.Pointer(result))
+			assert.Equal(t, tt.expectedBytes, *resultBytes)
+		})
+	}
 }
