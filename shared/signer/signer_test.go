@@ -7,6 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
@@ -122,10 +123,10 @@ func TestSigner_SignPublisherPrice_Stark(t *testing.T) {
 	assert.Equal(t, expectedTimestampedSig, signedPriceUpdate)
 
 	// Asset ID max length test (26 characters)
-	expectedTimestampedSig = &TimestampedSignature[*StarkSignature]{
+	expectedTimestampedSig = &shared.TimestampedSignature[*shared.StarkSignature]{
 		TimestampNano: 1710191092123456789,
 		MsgHash:       "0x68ff7cbdc262933f6682fd316ff76f524575e4ea05c13fb5eb29a816c1e28d1",
-		Signature: &StarkSignature{
+		Signature: &shared.StarkSignature{
 			R: "0x3c000f009dd7a96b558bec75013991fdf6181504a7505d7248074a5f0c7c33e",
 			S: "0xd088d281c49b29af8d47808ac965ed6ac2817de573e80b01f810758cb338c4",
 		},

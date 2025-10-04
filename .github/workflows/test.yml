@@ -117,7 +117,9 @@ jobs:
           timeout 60 bash -c 'until docker compose -f apps/first_party_pusher/docker-compose.yml ps | grep -q "healthy"; do sleep 2; done'
 
       - name: Run Tests
-        run: go test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
+        run: make first-party-integration-test
+        env:
+          TARGETPLATFORM: linux/amd64 
           
   data-provider-codegen-check:
     runs-on: ubuntu-latest

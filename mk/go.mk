@@ -34,10 +34,16 @@ test: signer_ffi fuel_ffi
 integration-test: signer_ffi fuel_ffi
 	@echo "Running Go integration tests..."
 	@set -e; \
-	for pkg in $$($(GO) list ./... | grep -v "/integration$$"); do \
+	for pkg in $$($(GO) list ./... | grep -v "/integration$$" | grep -v "apps/first_party_pusher"); do \
 	    $(GO) test -v -tags integration $$pkg; \
 	done
 
+.PHONY: first-party-integration-test
+## Run all Go integration tests
+first-party-integration-test: signer_ffi
+	@echo "Running Go integration tests..."
+	@set -e; \
+	go test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
 
 
 # Individual Go Targets
