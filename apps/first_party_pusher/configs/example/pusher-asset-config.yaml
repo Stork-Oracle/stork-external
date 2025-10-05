@@ -1,0 +1,17 @@
+assets:
+  BTCUSD:
+    asset_id: BTCUSD
+    percent_change_threshold: 1.0
+    fallback_period_sec: 60
+    public_key: 0x99e295e85cb07C16B7BB62A44dF532A7F2620237
+  ETHUSD:
+    asset_id: ETHUSD
+    percent_change_threshold: 0.5
+    fallback_period_sec: 30
+    public_key: 0x99e295e85cb07C16B7BB62A44dF532A7F2620237
+  MY_RANDOM_VALUE:
+    asset_id: MY_RANDOM_VALUE
+    percent_change_threshold: 10.0
+    fallback_period_sec: 30
+    public_key: 0x99e295e85cb07C16B7BB62A44dF532A7F2620237
+    historic: true

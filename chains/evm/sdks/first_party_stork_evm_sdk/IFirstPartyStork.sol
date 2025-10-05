@@ -37,7 +37,7 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
     function deletePublisherUser(address pubKey) external;
 
     /// @notice Verifies a publisher signature for the given parameters
-    /// @param oraclePubKey The publisher's public key
+    /// @param publisherPubKey The publisher's public key
     /// @param assetPairId The asset pair identifier
     /// @param timestamp The timestamp of the data (in nanoseconds, but verification uses seconds)
     /// @param value The quantized value
@@ -46,7 +46,7 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
     /// @param v The v component of the signature
     /// @return bool True if the signature is valid
     function verifyPublisherSignatureV1(
-        address oraclePubKey,
+        address publisherPubKey,
         string memory assetPairId,
         uint256 timestamp,
         int256 value,

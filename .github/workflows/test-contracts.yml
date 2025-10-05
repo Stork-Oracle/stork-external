@@ -85,7 +85,7 @@ jobs:
       - name: Set up Node.js for FirstPartyStork
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: './chains/evm/contracts/first_party_stork/package-lock.json'
 

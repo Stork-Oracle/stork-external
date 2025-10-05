@@ -14,7 +14,7 @@ interface IFirstPartyStorkGetters {
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId
-    ) external view returns (FirstPartyStorkStructs.TemporalNumericValue memory value);
+    ) external view returns (FirstPartyStorkStructs.TemporalNumericValue memory);
 
     /// @notice Retrieves a historical temporal numeric value for the specified publisher, asset pair, and round ID
     /// @param pubKey The publisher's public key

@@ -15,7 +15,7 @@ This signature is derived from
 5. Merkle root of the signed publisher message hashes
 6. Value computation algorithm hash
 
-See `verifyStorkSignatureV1` in `contracts/StorkVerify.sol` for more details.
+See `verifyStorkSignatureV1` in `contracts/stork/StorkVerify.sol` for more details.
 
 ### Getting started
 

@@ -2,146 +2,76 @@
 
 The First Party Chain Pusher is a standalone application that receives price update messages from publisher agents via WebSocket and pushes them to First Party Stork contracts based on configurable cadence and delta tolerance settings.
 
-## Features
-
-- **WebSocket Server**: Receives price updates from publisher agents in the same format as the main Stork system
-- **Configurable Push Logic**: Supports both time-based (cadence) and price-change-based (delta tolerance) push triggers
-- **Chain Support**: Currently supports EVM-based chains with the First Party Stork contract
-- **Rate Limiting**: Built-in rate limiting for blockchain RPC calls
-- **Robust Error Handling**: Retry logic and comprehensive error handling for contract interactions
-
-## Usage
-
-### Build and Run
+**Note: Unless otherwise specified, all commands in this README are in the context of the current directory.**
 
 ```bash
-# Build the application
-go build -o first-party-chain-pusher ./cmd
-
-# Run with EVM chain
-./first-party-chain-pusher evm \
-  --chain-rpc-url https://your-rpc-endpoint.com \
-  --contract-address 0x1234567890abcdef1234567890abcdef12345678 \
-  --asset-config-file sample.asset-config.yaml \
-  --private-key-file private-key.txt \
-  --websocket-port 8080
+# from the root of this repo:
+cd apps/first_party_pusher
 ```
 
-### Configuration Files
+## Configuration
 
-#### Asset Configuration (`sample.asset-config.yaml`)
+Create an `asset-config.yaml` file. This file should be structured as follows:
 
 ```yaml
 assets:
   BTCUSD:
+    # The asset's symbol, used to set which incoming assets to expect from the websocket server
     asset_id: BTCUSD
-    encoded_asset_id: 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de
-    push_interval_sec: 60      # Push at least every 60 seconds
-    percent_change_threshold: 1.0  # Push if price changes by 1% or more
-  ETHUSD:
-    asset_id: ETHUSD
-    encoded_asset_id: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-    push_interval_sec: 30
-    percent_change_threshold: 0.5
+    # The publisher's public key that signs the price updates
+    public_key: 0x99e295e85cb07C16B7BB62A44dF532A7F2620237
+    # If the data feed is not updated within this period the asset should be added to the batched updates
+    fallback_period_sec: 60
+    # If the data feed changes by more than this percentage, the asset should be added to the batched updates
+    percent_change_threshold: 1.0
+    # Optional: Store historical data on-chain (default: false)
+    historic: false
 ```
 
-#### Private Key File
+See [configs/example/pusher-asset-config.yaml](configs/example/pusher-asset-config.yaml) for an example.
 
-Create a file containing your private key in hex format:
+### Rust
 
-```
-0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12
-```
+Please ensure you've run `make rust` in the root of this repo before running the pusher, as portions of the pusher rely on calls to libraries built with rust and linked to the pusher via cgo. This is not necessary if you are running via docker.
 
-Or without the `0x` prefix:
+## EVM Chain Setup
 
-```
-1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12
-```
+### Wallet Setup
 
-### Command Line Options
+Create a `.env` file containing the private key of your wallet. This is needed to pay gas/transaction fees.
 
-#### EVM Command
+See [.env.example](.env.example) for an example. This example also includes variables used to configure the accompanying publisher agent. For more information on the publisher agent see [Publisher Agent README](../publisher_agent/README.md).
 
-- `--websocket-port`: WebSocket server port (default: 8080)
-- `--chain-rpc-url`: Chain RPC URL (required)
-- `--chain-ws-url`: Chain WebSocket URL (optional)
-- `--contract-address`: First Party Stork contract address (required)
-- `--asset-config-file`: Asset configuration file path (required)
-- `--private-key-file`: Private key file path (required)
-- `--gas-limit`: Gas limit for transactions (0 to use estimate)
-- `--limit-per-second`: JSON RPC call limit per second (default: 10.0)
-- `--burst-limit`: JSON RPC call burst limit (default: 20)
+### Running the EVM Pusher
 
-### WebSocket API
-
-The application exposes a WebSocket endpoint at `/ws` that accepts price update messages in the same format as the publisher agent:
-
-```json
-{
-  "type": "prices",
-  "data": [
-    {
-      "t": 1640995200000000000,
-      "a": "BTCUSD",
-      "v": "50000.123456",
-      "m": {}
-    }
-  ]
-}
-```
-
-Where:
-- `t`: Publish timestamp in nanoseconds
-- `a`: Asset identifier
-- `v`: Price value (can be string or number)
-- `m`: Optional metadata object
-
-### Push Logic
-
-The application pushes values to the contract when either condition is met:
-
-1. **Time Trigger**: The configured `push_interval_sec` has elapsed since the last push
-2. **Delta Trigger**: The price has changed by more than the configured `percent_change_threshold`
-
-### Health Check
-
-A health check endpoint is available at `/health` that returns `200 OK`.
-
-## Architecture
-
-The application consists of several key components:
-
-1. **WebSocket Server**: Handles incoming connections and price update messages
-2. **Value Processor**: Processes incoming price updates and determines when to trigger pushes
-3. **Contract Interactor**: Manages blockchain interactions and transaction submission
-4. **Asset State Manager**: Tracks the current state of each configured asset
-
-## Development
-
-### Adding New Chain Support
-
-To add support for additional chains:
-
-1. Create a new command file (e.g., `solana_command.go`)
-2. Implement the chain-specific contract interactor
-3. Add the command to the main CLI in `cmd/main.go`
-
-### Testing
-
-The application includes comprehensive logging to help with debugging and monitoring. Set the `--verbose` flag for detailed logs.
-
-## Security Considerations
-
-- Store private keys securely and never commit them to version control
-- Use appropriate gas limits to prevent excessive transaction costs
-- Monitor the application logs for any unusual behavior
-- Consider running the application behind a firewall or VPN for production use
-
-### Generate contract bindings for EVM
-
-From the root of the repo, run:
+For full explanation of the flags, run:
 
 ```bash
-abigen --abi <(jq -r '.abi' ./chains/evm/contracts/first_party_stork/artifacts/contracts/FirstPartyStork.sol/FirstPartyStork.json) --pkg bindings --type FirstPartyStorkContract --out ./apps/first_party_pusher/pkg/evm/bindings/stork_evm_contract.go
+go run main.go evm --help
+```
+
+Basic usage:
+
+```bash
+go run main.go evm \
+    -c <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> 
+```
+
+### Running with Docker
+
+For local development with a full stack: Data Provider -> Publisher Agent -> First Party Pusher -> First Party Stork Contract:
+
+```bash
+# Start local stack
+docker compose --profile local up
+```
+
+This is the recommended method.
+
+For local development with Publisher Agent -> First Party Pusher:
+
+```bash
+docker compose --profile production up
 ```
