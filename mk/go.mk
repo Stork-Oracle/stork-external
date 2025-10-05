@@ -43,7 +43,7 @@ integration-test: signer_ffi fuel_ffi
 first-party-integration-test: signer_ffi
 	@echo "Running Go integration tests..."
 	@set -e; \
-	go test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
+	$(GO) test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
 
 
 # Individual Go Targets
