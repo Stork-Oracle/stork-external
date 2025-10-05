@@ -214,7 +214,7 @@ func (ci *ContractInteractor) ListenContractEvents(
 func (ci *ContractInteractor) BatchPushToContract(
 	updatesByEntry map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
 ) error {
-	updates, historical, err := ci.getUpdatePayload(updatesByEntry)
+	updates, err := ci.getUpdatePayload(updatesByEntry)
 	if err != nil {
 		return fmt.Errorf("failed to convert signed price update: %w", err)
 	}
@@ -228,7 +228,7 @@ func (ci *ContractInteractor) BatchPushToContract(
 	auth.GasLimit = ci.gasLimit
 	auth.Value = big.NewInt(0)
 
-	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updates, historical)
+	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updates)
 	if err != nil {
 		return fmt.Errorf("failed to call UpdateTemporalNumericValues: %w", err)
 	}
@@ -253,9 +253,8 @@ func (ci *ContractInteractor) Close() {
 
 func (ci *ContractInteractor) getUpdatePayload(
 	updatesByEntry map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
-) ([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, []bool, error) {
+) ([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, error) {
 	updates := make([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, 0, len(updatesByEntry))
-	historical := make([]bool, 0, len(updatesByEntry))
 
 	for entry, signedPriceUpdate := range updatesByEntry {
 		ci.logger.Info().
@@ -267,7 +266,7 @@ func (ci *ContractInteractor) getUpdatePayload(
 		// Convert quantized price to big.Int
 		quantizedValue, success := new(big.Int).SetString(string(signedPriceUpdate.SignedPrice.QuantizedPrice), 10)
 		if !success {
-			return nil, nil,
+			return nil,
 				fmt.Errorf(
 					"%w: %s",
 					shared.ErrFailedToConvertQuantizedPriceToBigInt,
@@ -284,37 +283,37 @@ func (ci *ContractInteractor) getUpdatePayload(
 		// Parse the publisher key
 		pubKeyBytes, err := pusher.HexStringToByte20(string(signedPriceUpdate.SignedPrice.PublisherKey))
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to decode publisher key: %w", err)
+			return nil, fmt.Errorf("failed to decode publisher key: %w", err)
 		}
 
 		// Parse the signature components
 		rBytes, err := pusher.HexStringToByte32(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.R)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to decode signature R: %w", err)
+			return nil, fmt.Errorf("failed to decode signature R: %w", err)
 		}
 
 		sBytes, err := pusher.HexStringToByte32(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.S)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to decode signature S: %w", err)
+			return nil, fmt.Errorf("failed to decode signature S: %w", err)
 		}
 
 		vInt, err := strconv.ParseInt(signedPriceUpdate.SignedPrice.TimestampedSignature.Signature.V[2:], 16, 8)
 		if err != nil || vInt < 0 || vInt > 255 {
-			return nil, nil, fmt.Errorf("failed to parse signature V: %w", err)
+			return nil, fmt.Errorf("failed to parse signature V: %w", err)
 		}
 
 		updates = append(updates, bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput{
 			TemporalNumericValue: temporalValue,
 			PubKey:               pubKeyBytes,
 			AssetPairId:          string(entry.AssetID),
+			StoreHistorical:      entry.Historical,
 			R:                    rBytes,
 			S:                    sBytes,
 			V:                    uint8(vInt),
 		})
-		historical = append(historical, entry.Historical)
 	}
 
-	return updates, historical, nil
+	return updates, nil
 }
 
 func (ci *ContractInteractor) setupSubscription(

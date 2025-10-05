@@ -24,13 +24,14 @@ type FirstPartyPriceCase struct {
 }
 
 type ExpectedUpdateData struct {
-	PubKey         common.Address
-	AssetPairID    string
-	TimestampNs    uint64
-	QuantizedValue *big.Int
-	R              [32]byte
-	S              [32]byte
-	V              uint8
+	PubKey          common.Address
+	AssetPairID     string
+	StoreHistorical bool
+	TimestampNs     uint64
+	QuantizedValue  *big.Int
+	R               [32]byte
+	S               [32]byte
+	V               uint8
 }
 
 // standardFirstPartyPriceCases is an adapted version of testutil.StandardPriceCase for FirstPartyStork.
@@ -159,7 +160,7 @@ func TestGetUpdatePayload(t *testing.T) {
 				logger: logger,
 			}
 
-			payload, historical, err := ci.getUpdatePayload(updatesByEntry)
+			payload, err := ci.getUpdatePayload(updatesByEntry)
 
 			if tc.WantError {
 				assert.Error(t, err)
@@ -169,16 +170,15 @@ func TestGetUpdatePayload(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Len(t, payload, 1)
-			require.Len(t, historical, 1)
 
 			assert.Equal(t, tc.ExpectedData.PubKey, payload[0].PubKey)
 			assert.Equal(t, tc.ExpectedData.AssetPairID, payload[0].AssetPairId)
+			assert.Equal(t, tc.ExpectedData.StoreHistorical, payload[0].StoreHistorical)
 			assert.Equal(t, tc.ExpectedData.TimestampNs, payload[0].TemporalNumericValue.TimestampNs)
 			assert.Equal(t, tc.ExpectedData.QuantizedValue, payload[0].TemporalNumericValue.QuantizedValue)
 			assert.Equal(t, tc.ExpectedData.R, payload[0].R)
 			assert.Equal(t, tc.ExpectedData.S, payload[0].S)
 			assert.Equal(t, tc.ExpectedData.V, payload[0].V)
-			assert.Equal(t, tc.AssetEntry.Historical, historical[0])
 		})
 	}
 
@@ -201,19 +201,18 @@ func TestGetUpdatePayload(t *testing.T) {
 			logger: logger,
 		}
 
-		payload, historical, err := ci.getUpdatePayload(updatesByEntry)
+		payload, err := ci.getUpdatePayload(updatesByEntry)
 		require.NoError(t, err)
 		assert.Len(t, payload, 2)
-		assert.Len(t, historical, 2)
 
-		historicCount := 0
+		historicalCount := 0
 
-		for _, h := range historical {
-			if h {
-				historicCount++
+		for _, p := range payload {
+			if p.StoreHistorical {
+				historicalCount++
 			}
 		}
 
-		assert.Equal(t, 1, historicCount, "should have exactly one historical update")
+		assert.Equal(t, 1, historicalCount, "should have exactly one historical update")
 	})
 }

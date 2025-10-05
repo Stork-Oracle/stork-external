@@ -17,6 +17,7 @@ library FirstPartyStorkStructs {
         TemporalNumericValue temporalNumericValue;
         address pubKey;
         string assetPairId;
+        bool storeHistorical;
         bytes32 r;
         bytes32 s;
         uint8 v;

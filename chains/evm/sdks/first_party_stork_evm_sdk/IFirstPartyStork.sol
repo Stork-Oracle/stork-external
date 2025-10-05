@@ -11,14 +11,12 @@ import "./IFirstPartyStorkGetters.sol";
 interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
     /// @notice Updates multiple temporal numeric values by verifying publisher signatures
     /// @param updateData Array of PublisherTemporalNumericValueInput structs containing feed updates
-    /// @param storeHistoric Array of booleans indicating whether to store each update as historical data
     /// @dev Requires sufficient fee based on the publisher's single update fee
     /// @dev Reverts with InvalidSignature if any feed update fails signature verification
     /// @dev Reverts with NoFreshUpdate if none of the provided updates are fresher than current values
     /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
     function updateTemporalNumericValues(
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] calldata updateData,
-        bool[] calldata storeHistoric
     ) external payable;
 
     /// @notice Verifies a publisher signature for the given parameters
@@ -39,4 +37,13 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
         bytes32 s,
         uint8 v
     ) external pure returns (bool);
+
+    /// @notice Retrieves the total update fee for a publisher and update
+    /// @param pubkey The publisher's public key
+    /// @param totalNumUpdates The number of updates
+    /// @return fee The total update fee
+    function getUpdateFeeV1(
+        address pubkey,
+        uint totalNumUpdates
+    ) external view returns (uint);
 }

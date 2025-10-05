@@ -53,4 +53,11 @@ interface IFirstPartyStorkGetters {
     function getPublisherUser(
         address pubKey
     ) external view returns (FirstPartyStorkStructs.PublisherUser memory);
+    
+    /// @notice Retrieves the single update fee for a publisher
+    /// @param pubKey The publisher's public key
+    /// @return fee The single update fee
+    function getSingleUpdateFee(
+        address pubKey
+    ) external view returns (uint);
 }

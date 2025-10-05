@@ -34,6 +34,7 @@ type FirstPartyStorkStructsPublisherTemporalNumericValueInput struct {
 	TemporalNumericValue FirstPartyStorkStructsTemporalNumericValue
 	PubKey               common.Address
 	AssetPairId          string
+	StoreHistorical      bool
 	R                    [32]byte
 	S                    [32]byte
 	V                    uint8
@@ -53,7 +54,7 @@ type FirstPartyStorkStructsTemporalNumericValue struct {
 
 // FirstPartyStorkContractMetaData contains all meta data concerning the FirstPartyStorkContract contract.
 var FirstPartyStorkContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"},{\"internalType\":\"bool[]\",\"name\":\"storeHistoric\",\"type\":\"bool[]\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"publisherPubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"HistoricalValueStored\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"PublisherUserAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"PublisherUserRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"assetId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"createPublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"deletePublisherUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getCurrentRoundId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getHistoricalRecordsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"roundId\",\"type\":\"uint256\"}],\"name\":\"getHistoricalTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"}],\"name\":\"getLatestTemporalNumericValue\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getPublisherUser\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFee\",\"type\":\"uint256\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherUser\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"}],\"name\":\"getSingleUpdateFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"totalNumUpdates\",\"type\":\"uint256\"}],\"name\":\"getUpdateFeeV1\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structFirstPartyStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"storeHistorical\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structFirstPartyStorkStructs.PublisherTemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"updateTemporalNumericValues\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"publisherPubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"value\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // FirstPartyStorkContractABI is the input ABI used to generate the binding from.
@@ -357,6 +358,68 @@ func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetPublish
 	return _FirstPartyStorkContract.Contract.GetPublisherUser(&_FirstPartyStorkContract.CallOpts, pubKey)
 }
 
+// GetSingleUpdateFee is a free data retrieval call binding the contract method 0x44bae290.
+//
+// Solidity: function getSingleUpdateFee(address pubKey) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetSingleUpdateFee(opts *bind.CallOpts, pubKey common.Address) (*big.Int, error) {
+	var out []interface{}
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getSingleUpdateFee", pubKey)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetSingleUpdateFee is a free data retrieval call binding the contract method 0x44bae290.
+//
+// Solidity: function getSingleUpdateFee(address pubKey) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetSingleUpdateFee(pubKey common.Address) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetSingleUpdateFee(&_FirstPartyStorkContract.CallOpts, pubKey)
+}
+
+// GetSingleUpdateFee is a free data retrieval call binding the contract method 0x44bae290.
+//
+// Solidity: function getSingleUpdateFee(address pubKey) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetSingleUpdateFee(pubKey common.Address) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetSingleUpdateFee(&_FirstPartyStorkContract.CallOpts, pubKey)
+}
+
+// GetUpdateFeeV1 is a free data retrieval call binding the contract method 0xe11ddbc3.
+//
+// Solidity: function getUpdateFeeV1(address pubKey, uint256 totalNumUpdates) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCaller) GetUpdateFeeV1(opts *bind.CallOpts, pubKey common.Address, totalNumUpdates *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _FirstPartyStorkContract.contract.Call(opts, &out, "getUpdateFeeV1", pubKey, totalNumUpdates)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetUpdateFeeV1 is a free data retrieval call binding the contract method 0xe11ddbc3.
+//
+// Solidity: function getUpdateFeeV1(address pubKey, uint256 totalNumUpdates) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) GetUpdateFeeV1(pubKey common.Address, totalNumUpdates *big.Int) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetUpdateFeeV1(&_FirstPartyStorkContract.CallOpts, pubKey, totalNumUpdates)
+}
+
+// GetUpdateFeeV1 is a free data retrieval call binding the contract method 0xe11ddbc3.
+//
+// Solidity: function getUpdateFeeV1(address pubKey, uint256 totalNumUpdates) view returns(uint256)
+func (_FirstPartyStorkContract *FirstPartyStorkContractCallerSession) GetUpdateFeeV1(pubKey common.Address, totalNumUpdates *big.Int) (*big.Int, error) {
+	return _FirstPartyStorkContract.Contract.GetUpdateFeeV1(&_FirstPartyStorkContract.CallOpts, pubKey, totalNumUpdates)
+}
+
 // VerifyPublisherSignatureV1 is a free data retrieval call binding the contract method 0x9bccd2d5.
 //
 // Solidity: function verifyPublisherSignatureV1(address publisherPubKey, string assetPairId, uint256 timestamp, int256 value, bytes32 r, bytes32 s, uint8 v) pure returns(bool)
@@ -430,25 +493,25 @@ func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) Delete
 	return _FirstPartyStorkContract.Contract.DeletePublisherUser(&_FirstPartyStorkContract.TransactOpts, pubKey)
 }
 
-// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0xe7e9f9a9.
+// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x38a3f02f.
 //
-// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool[] storeHistoric) payable returns()
-func (_FirstPartyStorkContract *FirstPartyStorkContractTransactor) UpdateTemporalNumericValues(opts *bind.TransactOpts, updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric []bool) (*types.Transaction, error) {
-	return _FirstPartyStorkContract.contract.Transact(opts, "updateTemporalNumericValues", updateData, storeHistoric)
+// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bool,bytes32,bytes32,uint8)[] updateData) payable returns()
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactor) UpdateTemporalNumericValues(opts *bind.TransactOpts, updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.contract.Transact(opts, "updateTemporalNumericValues", updateData)
 }
 
-// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0xe7e9f9a9.
+// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x38a3f02f.
 //
-// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool[] storeHistoric) payable returns()
-func (_FirstPartyStorkContract *FirstPartyStorkContractSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric []bool) (*types.Transaction, error) {
-	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData, storeHistoric)
+// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bool,bytes32,bytes32,uint8)[] updateData) payable returns()
+func (_FirstPartyStorkContract *FirstPartyStorkContractSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData)
 }
 
-// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0xe7e9f9a9.
+// UpdateTemporalNumericValues is a paid mutator transaction binding the contract method 0x38a3f02f.
 //
-// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bytes32,bytes32,uint8)[] updateData, bool[] storeHistoric) payable returns()
-func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput, storeHistoric []bool) (*types.Transaction, error) {
-	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData, storeHistoric)
+// Solidity: function updateTemporalNumericValues(((uint64,int192),address,string,bool,bytes32,bytes32,uint8)[] updateData) payable returns()
+func (_FirstPartyStorkContract *FirstPartyStorkContractTransactorSession) UpdateTemporalNumericValues(updateData []FirstPartyStorkStructsPublisherTemporalNumericValueInput) (*types.Transaction, error) {
+	return _FirstPartyStorkContract.Contract.UpdateTemporalNumericValues(&_FirstPartyStorkContract.TransactOpts, updateData)
 }
 
 // FirstPartyStorkContractHistoricalValueStoredIterator is returned from FilterHistoricalValueStored and is used to iterate over the raw logs and unpacked data for HistoricalValueStored events raised by the FirstPartyStorkContract contract.

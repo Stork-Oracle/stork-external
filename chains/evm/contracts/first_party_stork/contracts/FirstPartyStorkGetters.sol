@@ -55,4 +55,10 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters
 
         return _state.publisherUsers[pubKey];
     }
+
+    function getSingleUpdateFee(
+        address pubKey
+    ) public view returns (uint) {
+        return getPublisherUser(pubKey).singleUpdateFee;
+    }
 }

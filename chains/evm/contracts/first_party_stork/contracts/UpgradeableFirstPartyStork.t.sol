@@ -236,6 +236,89 @@ contract UpgradeableFirstPartyStorkTest is Test {
         assertEq(publisherUser.singleUpdateFee, singleUpdateFee);
     }
 
+    // ===== GET SINGLE UPDATE FEE TESTS =====
+
+    function test_GetSingleUpdateFee_ReturnsCorrectFee() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        
+        uint fee = stork.getSingleUpdateFee(publisher1);
+        assertEq(fee, singleUpdateFee);
+    }
+
+    function test_GetSingleUpdateFee_ReturnsDifferentFeesForDifferentPublishers() public {
+        uint256 pub1Fee = 100;
+        uint256 pub2Fee = 500;
+        
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, pub1Fee);
+        vm.prank(owner);
+        stork.createPublisherUser(publisher2, pub2Fee);
+        
+        assertEq(stork.getSingleUpdateFee(publisher1), pub1Fee);
+        assertEq(stork.getSingleUpdateFee(publisher2), pub2Fee);
+    }
+
+    function test_GetSingleUpdateFee_RevertsIfPublisherNotFound() public {
+        vm.expectRevert(); // NotFound
+        stork.getSingleUpdateFee(publisher1);
+    }
+
+    function test_GetSingleUpdateFee_ReturnsUpdatedFeeAfterChange() public {
+        uint256 initialFee = 100;
+        uint256 updatedFee = 500;
+        
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, initialFee);
+        assertEq(stork.getSingleUpdateFee(publisher1), initialFee);
+        
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, updatedFee);
+        assertEq(stork.getSingleUpdateFee(publisher1), updatedFee);
+    }
+
+    // ===== GET UPDATE FEE V1 TESTS =====
+
+    function test_GetUpdateFeeV1_CalculatesCorrectly() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        
+        uint fee1 = stork.getUpdateFeeV1(publisher1, 1);
+        assertEq(fee1, singleUpdateFee * 1);
+        
+        uint fee5 = stork.getUpdateFeeV1(publisher1, 5);
+        assertEq(fee5, singleUpdateFee * 5);
+        
+        uint fee10 = stork.getUpdateFeeV1(publisher1, 10);
+        assertEq(fee10, singleUpdateFee * 10);
+    }
+
+    function test_GetUpdateFeeV1_ReturnsZeroForZeroUpdates() public {
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, singleUpdateFee);
+        
+        uint fee = stork.getUpdateFeeV1(publisher1, 0);
+        assertEq(fee, 0);
+    }
+
+    function test_GetUpdateFeeV1_RevertsIfPublisherNotFound() public {
+        vm.expectRevert(); // NotFound
+        stork.getUpdateFeeV1(publisher1, 5);
+    }
+
+    function test_GetUpdateFeeV1_WorksWithDifferentPublisherFees() public {
+        uint256 pub1Fee = 100;
+        uint256 pub2Fee = 500;
+        
+        vm.prank(owner);
+        stork.createPublisherUser(publisher1, pub1Fee);
+        vm.prank(owner);
+        stork.createPublisherUser(publisher2, pub2Fee);
+        
+        assertEq(stork.getUpdateFeeV1(publisher1, 3), pub1Fee * 3);
+        assertEq(stork.getUpdateFeeV1(publisher2, 3), pub2Fee * 3);
+    }
+
     // ===== UPDATE TEMPORAL NUMERIC VALUES TESTS =====
 
     function test_GetLatestTemporalNumericValue_RevertsIfNeverUpdated() public {
