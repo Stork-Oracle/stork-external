@@ -26,11 +26,6 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    localhost: {
-      type: "http",
-      chainType: "l1",
-      url: "http://localhost:8545",
-    },
     hardhatLocal: {
       type: "http",
       chainType: "l1",
@@ -43,12 +38,6 @@ const config: HardhatUserConfig = {
     hardhatOp: {
       type: "edr-simulated",
       chainType: "op",
-    },
-    sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
     },
   },
 };

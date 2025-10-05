@@ -22,5 +22,4 @@ debug/
 .idea/
 *.iml
 
-# First Party Pusher secrets
-apps/first_party_pusher/.env
+**/.env

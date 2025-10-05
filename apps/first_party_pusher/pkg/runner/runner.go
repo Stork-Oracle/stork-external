@@ -186,7 +186,7 @@ func (r *FirstPartyRunner[T]) handleBatch(
 		Int("num_contract_updates", len(latestContractValueMap)).
 		Msg("Handling batch")
 
-	updates := make(map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T])
+	updates := make(map[types.AssetEntry]publisher_agent.SignedPriceUpdate[T])
 
 	for publisherAssetPair, signedPriceUpdate := range latestPublisherValueMap {
 		assetEntry, exists := r.config.AssetConfig.Assets[signedPriceUpdate.AssetID]
@@ -237,7 +237,7 @@ func (r *FirstPartyRunner[T]) handleBatch(
 }
 
 func (r *FirstPartyRunner[T]) shouldPushBasedOnFallback(
-	assetEntry chain_pusher_types.AssetEntry,
+	assetEntry types.AssetEntry,
 	signedPriceUpdate publisher_agent.SignedPriceUpdate[T],
 	latestContractValue chain_pusher_types.InternalTemporalNumericValue,
 ) bool {
@@ -247,7 +247,7 @@ func (r *FirstPartyRunner[T]) shouldPushBasedOnFallback(
 }
 
 func (r *FirstPartyRunner[T]) shouldPushBasedOnDelta(
-	assetEntry chain_pusher_types.AssetEntry,
+	assetEntry types.AssetEntry,
 	signedPriceUpdate publisher_agent.SignedPriceUpdate[T],
 	latestContractValue chain_pusher_types.InternalTemporalNumericValue,
 ) bool {
@@ -275,7 +275,7 @@ func (r *FirstPartyRunner[T]) shouldPushBasedOnDelta(
 }
 
 func (r *FirstPartyRunner[T]) pushBatch(
-	updates map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[T],
+	updates map[types.AssetEntry]publisher_agent.SignedPriceUpdate[T],
 	latestContractValueMap map[types.PublisherAssetPair]chain_pusher_types.InternalTemporalNumericValue,
 ) {
 	r.logger.Debug().

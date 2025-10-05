@@ -212,9 +212,9 @@ func (ci *ContractInteractor) ListenContractEvents(
 }
 
 func (ci *ContractInteractor) BatchPushToContract(
-	updatesByEntry map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
+	updatesByEntry map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
 ) error {
-	updates, historic, err := ci.getUpdatePayload(updatesByEntry)
+	updates, historical, err := ci.getUpdatePayload(updatesByEntry)
 	if err != nil {
 		return fmt.Errorf("failed to convert signed price update: %w", err)
 	}
@@ -228,7 +228,7 @@ func (ci *ContractInteractor) BatchPushToContract(
 	auth.GasLimit = ci.gasLimit
 	auth.Value = big.NewInt(0)
 
-	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updates, historic)
+	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updates, historical)
 	if err != nil {
 		return fmt.Errorf("failed to call UpdateTemporalNumericValues: %w", err)
 	}
@@ -252,10 +252,10 @@ func (ci *ContractInteractor) Close() {
 }
 
 func (ci *ContractInteractor) getUpdatePayload(
-	updatesByEntry map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
+	updatesByEntry map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature],
 ) ([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, []bool, error) {
 	updates := make([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, 0, len(updatesByEntry))
-	historic := make([]bool, 0, len(updatesByEntry))
+	historical := make([]bool, 0, len(updatesByEntry))
 
 	for entry, signedPriceUpdate := range updatesByEntry {
 		ci.logger.Info().
@@ -311,10 +311,10 @@ func (ci *ContractInteractor) getUpdatePayload(
 			S:                    sBytes,
 			V:                    uint8(vInt),
 		})
-		historic = append(historic, entry.Historic)
+		historical = append(historical, entry.Historical)
 	}
 
-	return updates, historic, nil
+	return updates, historical, nil
 }
 
 func (ci *ContractInteractor) setupSubscription(

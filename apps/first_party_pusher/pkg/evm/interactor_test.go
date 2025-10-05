@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/ethereum/go-ethereum/common"
@@ -76,7 +76,7 @@ func defaultFirstPartyPriceCase() FirstPartyPriceCase {
 			AssetID:        assetID,
 			EncodedAssetID: encodedAssetID,
 			PublicKey:      pubKey,
-			Historic:       false,
+			Historical:     false,
 		},
 		ExpectedData: &ExpectedUpdateData{
 			PubKey:         common.HexToAddress(string(pubKey)),
@@ -159,7 +159,7 @@ func TestGetUpdatePayload(t *testing.T) {
 				logger: logger,
 			}
 
-			payload, historic, err := ci.getUpdatePayload(updatesByEntry)
+			payload, historical, err := ci.getUpdatePayload(updatesByEntry)
 
 			if tc.WantError {
 				assert.Error(t, err)
@@ -169,7 +169,7 @@ func TestGetUpdatePayload(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Len(t, payload, 1)
-			require.Len(t, historic, 1)
+			require.Len(t, historical, 1)
 
 			assert.Equal(t, tc.ExpectedData.PubKey, payload[0].PubKey)
 			assert.Equal(t, tc.ExpectedData.AssetPairID, payload[0].AssetPairId)
@@ -178,18 +178,18 @@ func TestGetUpdatePayload(t *testing.T) {
 			assert.Equal(t, tc.ExpectedData.R, payload[0].R)
 			assert.Equal(t, tc.ExpectedData.S, payload[0].S)
 			assert.Equal(t, tc.ExpectedData.V, payload[0].V)
-			assert.Equal(t, tc.AssetEntry.Historic, historic[0])
+			assert.Equal(t, tc.AssetEntry.Historical, historical[0])
 		})
 	}
 
-	t.Run("multiple updates with mixed historic flags", func(t *testing.T) {
+	t.Run("multiple updates with mixed historical flags", func(t *testing.T) {
 		t.Parallel()
 
 		case1 := validPositiveFirstPartyCase()
-		case1.AssetEntry.Historic = true
+		case1.AssetEntry.Historical = true
 
 		case2 := validZeroFirstPartyCase()
-		case2.AssetEntry.Historic = false
+		case2.AssetEntry.Historical = false
 
 		updatesByEntry := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 			case1.AssetEntry: case1.Update,
@@ -201,19 +201,19 @@ func TestGetUpdatePayload(t *testing.T) {
 			logger: logger,
 		}
 
-		payload, historic, err := ci.getUpdatePayload(updatesByEntry)
+		payload, historical, err := ci.getUpdatePayload(updatesByEntry)
 		require.NoError(t, err)
 		assert.Len(t, payload, 2)
-		assert.Len(t, historic, 2)
+		assert.Len(t, historical, 2)
 
 		historicCount := 0
 
-		for _, h := range historic {
+		for _, h := range historical {
 			if h {
 				historicCount++
 			}
 		}
 
-		assert.Equal(t, 1, historicCount, "should have exactly one historic update")
+		assert.Equal(t, 1, historicCount, "should have exactly one historical update")
 	})
 }

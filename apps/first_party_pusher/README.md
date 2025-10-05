@@ -1,7 +1,5 @@
 # First Party Chain Pusher
 
-The First Party Chain Pusher is a standalone application that receives price update messages from publisher agents via WebSocket and pushes them to First Party Stork contracts based on configurable cadence and delta tolerance settings.
-
 **Note: Unless otherwise specified, all commands in this README are in the context of the current directory.**
 
 ```bash
@@ -18,14 +16,14 @@ assets:
   BTCUSD:
     # The asset's symbol, used to set which incoming assets to expect from the websocket server
     asset_id: BTCUSD
-    # The publisher's public key that signs the price updates
+    # The publisher's public key that signs the updates
     public_key: 0x99e295e85cb07C16B7BB62A44dF532A7F2620237
     # If the data feed is not updated within this period the asset should be added to the batched updates
     fallback_period_sec: 60
     # If the data feed changes by more than this percentage, the asset should be added to the batched updates
     percent_change_threshold: 1.0
     # Optional: Store historical data on-chain (default: false)
-    historic: false
+    historical: false
 ```
 
 See [configs/example/pusher-asset-config.yaml](configs/example/pusher-asset-config.yaml) for an example.
@@ -69,9 +67,3 @@ docker compose --profile local up
 ```
 
 This is the recommended method.
-
-For local development with Publisher Agent -> First Party Pusher:
-
-```bash
-docker compose --profile production up
-```

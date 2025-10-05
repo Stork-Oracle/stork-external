@@ -20,11 +20,5 @@
     "go.testFlags": ["-v", "-count=1", "-tags=integration"],
     "[sway]": {
         "editor.defaultFormatter": "FuelLabs.sway-vscode-plugin"
-    },
-    "cSpell.words": [
-        "ethclient",
-        "Interactor",
-        "nolint",
-        "zerolog"
-    ]
+    }
 }

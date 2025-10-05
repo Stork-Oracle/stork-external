@@ -11,8 +11,23 @@ type FirstPartyConfig struct {
 	ChainRpcUrl     string
 	ChainWsUrl      string
 	ContractAddress string
-	AssetConfig     *chain_pusher_types.AssetConfig
+	AssetConfig     *AssetConfig
 	GasLimit        uint64
+}
+
+// AssetConfig is the type representation of the asset-config.yaml file.
+type AssetConfig struct {
+	Assets map[shared.AssetID]AssetEntry `yaml:"assets"`
+}
+
+// AssetEntry is a single asset entry in the asset-config.yaml file.
+type AssetEntry struct {
+	AssetID                shared.AssetID        `yaml:"asset_id"`
+	EncodedAssetID         shared.EncodedAssetID `yaml:"encoded_asset_id"`
+	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
+	FallbackPeriodSecs     uint64                `yaml:"fallback_period_sec"` //nolint:tagliatelle // Legacy
+	Historical             bool                  `yaml:"historical"`
+	PublicKey              shared.PublisherKey   `yaml:"public_key"`
 }
 
 type PublisherAssetPair struct {

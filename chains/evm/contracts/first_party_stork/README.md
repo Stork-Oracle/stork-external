@@ -2,7 +2,7 @@
 
 This directory contains a [Hardhat](https://hardhat.org/docs) project used to manage and deploy the First Party Stork EVM compatible contract.
 
-This contract is used to read and write per publisher latest value price updates on-chain. Updates have optional historical data storage.
+This contract is used to read and write per publisher latest value updates on-chain. Updates have optional historical data storage.
 
 In order for a new value to be accepted by the contract, the signature associated with the value must be validated against the relevant registered publisher's public key.
 
@@ -42,7 +42,7 @@ npx hardhat node
 #### Deploy to local network
 
 ```bash
-npx hardhat ignition deploy ignition/modules/FirstPartyStork.ts --network localhost
+npx hardhat ignition deploy ignition/modules/FirstPartyStork.ts --network hardhatLocal 
 ```
 
 #### Register Publisher on local contract

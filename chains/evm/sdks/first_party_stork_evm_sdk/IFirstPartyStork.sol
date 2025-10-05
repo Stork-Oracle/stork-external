@@ -21,21 +21,6 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
         bool[] calldata storeHistoric
     ) external payable;
 
-    /// @notice Creates a new publisher user with specified fee configuration
-    /// @param pubKey The publisher's public key
-    /// @param singleUpdateFee The fee required for a single update from this publisher
-    /// @dev Only callable by contract owner
-    function createPublisherUser(
-        address pubKey,
-        uint256 singleUpdateFee
-    ) external;
-
-    /// @notice Deletes an existing publisher user
-    /// @param pubKey The publisher's public key to remove
-    /// @dev Only callable by contract owner
-    /// @dev Historical data remains accessible even after publisher deletion
-    function deletePublisherUser(address pubKey) external;
-
     /// @notice Verifies a publisher signature for the given parameters
     /// @param publisherPubKey The publisher's public key
     /// @param assetPairId The asset pair identifier

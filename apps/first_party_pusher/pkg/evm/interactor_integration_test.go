@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
@@ -111,12 +110,12 @@ func (s *FirstPartyInteractorTestSuite) Test_02_PullValues_Initial() {
 
 // Test_03_BatchPushToContract_Single tests pushing a single update.
 func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
-	update := map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
+	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
 			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historic:       false,
+			Historical:     false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -165,12 +164,12 @@ func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
 
 // Test_04_BatchPushToContract_Multiple tests pushing multiple updates.
 func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
-	update := map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
+	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
 			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historic:       false,
+			Historical:     false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -194,7 +193,7 @@ func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 			AssetID:        "BTCUSD",
 			EncodedAssetID: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historic:       false,
+			Historical:     false,
 		}: {
 			OracleID: "local",
 			AssetID:  "BTCUSD",
@@ -265,12 +264,12 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 
 	time.Sleep(1 * time.Second)
 
-	update := map[chain_pusher_types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
+	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
 			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historic:       false,
+			Historical:     false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -294,7 +293,7 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 			AssetID:        "BTCUSD",
 			EncodedAssetID: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historic:       false,
+			Historical:     false,
 		}: {
 			OracleID: "local",
 			AssetID:  "BTCUSD",
