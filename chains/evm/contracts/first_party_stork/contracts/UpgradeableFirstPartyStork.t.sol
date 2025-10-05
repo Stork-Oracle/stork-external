@@ -36,6 +36,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         }),
         pubKey: publisher1,
         assetPairId: ethUsd,
+        storeHistorical: true,
         r: 0xff867c1b1658e0b4868dbac1ab0961aebd4ea8308939497c73e76f6c393b158e,
         s: 0x74b19977de6e0a56b7a627e16db9e996548ae12ab10eb209355d13794e28f692,
         v: 0x1c
@@ -48,6 +49,20 @@ contract UpgradeableFirstPartyStorkTest is Test {
         }),
         pubKey: publisher1,
         assetPairId: ethUsd,
+        storeHistorical: false,
+        r: 0xeabf8494b0b64aab3033dac3c821464324ed861ae68ea6e18fecea05f6675f61,
+        s: 0x2fdb84b8b4710b1e1926c8cc4073a3bd7fbfcdd03601303462e097a9f3ae667a,
+        v: 0x1b
+    });
+
+    FirstPartyStorkStructs.PublisherTemporalNumericValueInput public pub1EthHistorical = FirstPartyStorkStructs.PublisherTemporalNumericValueInput({
+        temporalNumericValue: FirstPartyStorkStructs.TemporalNumericValue({
+            timestampNs: 1680210934000000000,
+            quantizedValue: 1000000000000000000
+        }),
+        pubKey: publisher1,
+        assetPairId: ethUsd,
+        storeHistorical: true,
         r: 0xeabf8494b0b64aab3033dac3c821464324ed861ae68ea6e18fecea05f6675f61,
         s: 0x2fdb84b8b4710b1e1926c8cc4073a3bd7fbfcdd03601303462e097a9f3ae667a,
         v: 0x1b
@@ -60,6 +75,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         }),
         pubKey: publisher1,
         assetPairId: btcUsd,
+        storeHistorical: true,
         r: 0x2b9b43a6d18a4768693b679c7b407a71d41ee682bddc544ecbe8c436110950c3,
         s: 0x08febe3ce25e61e1a8004f7608ff5d4ed56249f5462cabe36b5806bb4e12a44c,
         v: 0x1b
@@ -72,6 +88,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         }),
         pubKey: publisher1,
         assetPairId: btcUsd,
+        storeHistorical: true,
         r: 0xcf78de6532aacc02cfd6fff1148d7f2afcd4892a35aa53a5cc2cc92c95829277,
         s: 0x55e9a40115dc85f0f4ad336e9c3c23a36d057272dbbb9eede3337ebb0ae81eb0,
         v: 0x1b
@@ -84,6 +101,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         }),
         pubKey: publisher2,
         assetPairId: btcUsd,
+        storeHistorical: true,
         r: 0xbb1e6f87445556233f98c085e2e25e5938bb0fa4eee42b7df06f50836ae4e42e,
         s: 0x79f16b0f10c35db8a08088c53dcaa40355dca57db840eb850b9328fc064c6002,
         v: 0x1c
@@ -350,14 +368,11 @@ contract UpgradeableFirstPartyStorkTest is Test {
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
         updateData[0] = pub1Eth;
-
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = false;
         
         // Should revert with insufficient fee
         vm.expectRevert(); // InsufficientFee
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee - 1}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee - 1}(updateData);
     }
 
     function test_UpdateTemporalNumericValues_SuccessfulUpdate() public {
@@ -369,12 +384,9 @@ contract UpgradeableFirstPartyStorkTest is Test {
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
         updateData[0] = pub1Eth;
-
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = false;
         
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
         
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
@@ -383,7 +395,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         assertEq(latestValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
         
         uint256 roundId = stork.getCurrentRoundId(publisher1, ethUsd);
-        assertEq(roundId, 0); // Round ID stays 0 because storeHistoric=false (no historical record created)
+        assertEq(roundId, 0); // Round ID stays 0 because storeHistorical=false (no historical record created)
     }
 
     function test_UpdateTemporalNumericValues_SuccessfulUpdateWithHistoric() public {
@@ -395,19 +407,16 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = pub1Eth;
-
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = true;
+        updateData[0] = pub1EthHistorical;
 
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
         
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
         
-        assertEq(latestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
-        assertEq(latestValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+        assertEq(latestValue.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
+        assertEq(latestValue.quantizedValue, pub1EthHistorical.temporalNumericValue.quantizedValue);
         
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
@@ -418,8 +427,8 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.TemporalNumericValue memory historicalValue = 
             stork.getHistoricalTemporalNumericValue(publisher1, ethUsd, 0);
         
-        assertEq(historicalValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
-        assertEq(historicalValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+        assertEq(historicalValue.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
+        assertEq(historicalValue.quantizedValue, pub1EthHistorical.temporalNumericValue.quantizedValue);
     }
 
     function test_MultipleUpdatesWithHistoric() public {
@@ -434,24 +443,18 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData1[0] = pub1Eth;
+        updateData1[0] = pub1EthHistorical;
 
-        bool[] memory storeHistoric1 = new bool[](1);
-        storeHistoric1[0] = true;
-        
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, storeHistoric1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1);
         
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
         updateData2[0] = pub2Btc;
         
-        bool[] memory storeHistoric2 = new bool[](1);
-        storeHistoric2[0] = true;
-        
         vm.prank(publisher2);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2, storeHistoric2);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2);
         
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
@@ -474,15 +477,11 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](2);
         
-        updateData[0] = pub1Eth;
+        updateData[0] = pub1EthHistorical;
         updateData[1] = pub1Btc;
         
-        bool[] memory storeHistoric = new bool[](2);
-        storeHistoric[0] = true;
-        storeHistoric[1] = true;
-        
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee*2}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee*2}(updateData);
 
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
@@ -507,11 +506,8 @@ contract UpgradeableFirstPartyStorkTest is Test {
         
         updateData[0] = pub1Neg;
 
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = true;
-
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
         
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
             stork.getLatestTemporalNumericValue(publisher1, btcUsd);
@@ -526,35 +522,32 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = pub1Eth;
-
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = true;
+        updateData[0] = pub1EthHistorical;
 
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
 
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
 
         FirstPartyStorkStructs.TemporalNumericValue memory historicalValue = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
-        assertEq(historicalValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
-        assertEq(historicalValue.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+        assertEq(historicalValue.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
+        assertEq(historicalValue.quantizedValue, pub1EthHistorical.temporalNumericValue.quantizedValue);
 
         updateData[0] = pub1OldEth;
 
         vm.prank(publisher1);
         vm.expectRevert(); // NoFreshUpdate
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
 
         uint256 historicalCount2 = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount2, 1);
 
         FirstPartyStorkStructs.TemporalNumericValue memory historicalValue2 = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
-        assertEq(historicalValue2.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
-        assertEq(historicalValue2.quantizedValue, pub1Eth.temporalNumericValue.quantizedValue);
+        assertEq(historicalValue2.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
+        assertEq(historicalValue2.quantizedValue, pub1EthHistorical.temporalNumericValue.quantizedValue);
     }
 
     function test_UpdateTemporalNumericValues_SameUpdateTwice() public {
@@ -565,16 +558,13 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = pub1Eth;
-        
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = true;
+        updateData[0] = pub1EthHistorical;
         
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
 
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
 
         // Timestamp is same, so both updates are stored
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
@@ -589,11 +579,9 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](0);
 
-        bool[] memory storeHistoric = new bool[](0);
-
         vm.prank(publisher1);
         vm.expectRevert(); // NoFreshUpdate
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
 
     }
 
@@ -611,22 +599,16 @@ contract UpgradeableFirstPartyStorkTest is Test {
         
         updateData1[0] = pub1Btc;
 
-        bool[] memory storeHistoric1 = new bool[](1);
-        storeHistoric1[0] = true;
-
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1, storeHistoric1);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData1);
 
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
         updateData2[0] = pub2Btc;
         
-        bool[] memory storeHistoric2 = new bool[](1);
-        storeHistoric2[0] = true;
-        
         vm.prank(publisher2);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2, storeHistoric2);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData2);
 
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, btcUsd);
         assertEq(historicalCount, 1);
@@ -649,18 +631,15 @@ contract UpgradeableFirstPartyStorkTest is Test {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
             new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        updateData[0] = pub1Eth;
-        
-        bool[] memory storeHistoric = new bool[](1);
-        storeHistoric[0] = true;
+        updateData[0] = pub1EthHistorical;
         
         vm.prank(publisher1);
-        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData, storeHistoric);
+        stork.updateTemporalNumericValues{value: singleUpdateFee}(updateData);
         
         // Verify update was successful
         FirstPartyStorkStructs.TemporalNumericValue memory latestValue = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
-        assertEq(latestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(latestValue.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
 
         uint256 historicalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(historicalCount, 1);
@@ -675,7 +654,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
         // Historical data should still be accessible
         FirstPartyStorkStructs.TemporalNumericValue memory stillLatestValue = 
             stork.getLatestTemporalNumericValue(publisher1, ethUsd);
-        assertEq(stillLatestValue.timestampNs, pub1Eth.temporalNumericValue.timestampNs);
+        assertEq(stillLatestValue.timestampNs, pub1EthHistorical.temporalNumericValue.timestampNs);
         
         uint256 stillHistoricalCount = stork.getHistoricalRecordsCount(publisher1, ethUsd);
         assertEq(stillHistoricalCount, 1);
