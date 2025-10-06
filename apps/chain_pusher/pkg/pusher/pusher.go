@@ -75,7 +75,7 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	initialValues, err := p.interactor.PullValues(encodedAssetIDs)
 	if err != nil {
-		p.logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
+		p.logger.Error().Err(err).Msg("Failed to pull initial values from contract")
 	}
 
 	for encodedAssetID, value := range initialValues {
@@ -154,8 +154,6 @@ func (p *Pusher) poll(
 		polledVals, err := p.interactor.PullValues(encodedAssetIDs)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
-
-			continue
 		}
 
 		if len(polledVals) > 0 {

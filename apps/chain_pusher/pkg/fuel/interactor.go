@@ -78,6 +78,8 @@ func (fci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var failedToGetLatestValueErr error
+
 	for _, assetID := range encodedAssetIDs {
 		// Convert asset ID to hex string
 		idHex := hex.EncodeToString(assetID[:])
@@ -105,6 +107,7 @@ func (fci *ContractInteractor) PullValues(
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
 			} else {
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+				failedToGetLatestValueErr = err
 			}
 
 			continue
@@ -118,6 +121,15 @@ func (fci *ContractInteractor) PullValues(
 		}
 
 		result[assetID] = internalValue
+	}
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return result, err
 	}
 
 	return result, nil

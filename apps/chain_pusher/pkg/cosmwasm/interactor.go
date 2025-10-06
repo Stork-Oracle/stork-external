@@ -103,6 +103,8 @@ func (sci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var failedToGetLatestValueErr error
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		var encodeAssetIDInt [32]int
 		for i, b := range encodedAssetID {
@@ -111,6 +113,8 @@ func (sci *ContractInteractor) PullValues(
 
 		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIDInt)
 		if err != nil {
+			failedToGetLatestValueErr = err
+
 			continue
 		}
 
@@ -137,6 +141,15 @@ func (sci *ContractInteractor) PullValues(
 	}
 
 	sci.logger.Debug().Msgf("Pulled %d values from contract", len(polledVals))
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return polledVals, err
+	}
 
 	return polledVals, nil
 }

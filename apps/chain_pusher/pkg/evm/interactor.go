@@ -187,6 +187,8 @@ func (eci *ContractInteractor) PullValues(
 		storkStructsTemporalNumericValue bindings.StorkStructsTemporalNumericValue
 	)
 
+	var failedToGetLatestValueErr error
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
 		if err != nil {
@@ -194,6 +196,7 @@ func (eci *ContractInteractor) PullValues(
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+				failedToGetLatestValueErr = err
 			}
 
 			continue
@@ -202,8 +205,13 @@ func (eci *ContractInteractor) PullValues(
 		polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
 
-	if len(polledVals) == 0 {
-		return nil, fmt.Errorf("no values pulled: %w", err)
+	if failedToGetLatestValueErr != nil {
+		err = fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return polledVals, err
 	}
 
 	return polledVals, nil

@@ -164,12 +164,15 @@ func (sci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var failedToGetLatestValueErr error
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		feedAccount := sci.feedAccounts[encodedAssetID]
 
 		accountInfo, err := sci.client.GetAccountInfo(context.Background(), feedAccount)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to get account info")
+			failedToGetLatestValueErr = err
 
 			continue
 		}
@@ -194,6 +197,15 @@ func (sci *ContractInteractor) PullValues(
 			QuantizedValue: account.LatestValue.QuantizedValue.BigInt(),
 			TimestampNs:    account.LatestValue.TimestampNs,
 		}
+	}
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return polledVals, err
 	}
 
 	return polledVals, nil
