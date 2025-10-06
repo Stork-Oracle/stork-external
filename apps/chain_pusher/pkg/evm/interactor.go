@@ -192,7 +192,7 @@ func (eci *ContractInteractor) PullValues(
 	for _, encodedAssetID := range encodedAssetIDs {
 		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
 		if err != nil {
-			if strings.Contains(err.Error(), "NotFound()") {
+			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
