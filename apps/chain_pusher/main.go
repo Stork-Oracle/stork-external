@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos"
-	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/fuel"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana"
@@ -50,9 +49,12 @@ func main() {
 	rootCmd.AddCommand(evm.NewPushCmd())
 	rootCmd.AddCommand(solana.NewPushCmd())
 	rootCmd.AddCommand(sui.NewPushCmd())
-	rootCmd.AddCommand(cosmwasm.NewPushCmd())
 	rootCmd.AddCommand(aptos.NewPushCmd())
 	rootCmd.AddCommand(fuel.NewPushCmd())
+
+	// CosmWasm and Initia MiniMove are conditionally compiled due to CGO conflicts
+	addCosmwasmCmd(rootCmd)
+	addInitiaMiniMoveCmd(rootCmd)
 
 	err := rootCmd.Execute()
 	if err != nil {
