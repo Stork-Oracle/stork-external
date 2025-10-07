@@ -10,7 +10,7 @@ import (
 
 func NewPushCmd() *cobra.Command {
 	pushCmd := &cobra.Command{
-		Use:   "initia_minimove",
+		Use:   "initia-minimove",
 		Short: "Push WebSocket prices to Initia MiniMove contract",
 		Run:   runPush,
 	}

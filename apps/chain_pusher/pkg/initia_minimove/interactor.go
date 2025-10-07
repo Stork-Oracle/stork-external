@@ -2,6 +2,7 @@ package initia_minimove
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -74,7 +75,12 @@ func (ici *ContractInteractor) PullValues(
 	for _, encodedAssetID := range encodedAssetIDs {
 		value, err := ici.contract.GetTemporalNumericValueUnchecked(encodedAssetID[:])
 		if err != nil {
-			// Value may not exist yet
+			if errors.Is(err, bindings.ErrFeedNotFound) {
+				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
+			} else {
+				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+			}
+
 			continue
 		}
 

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/aptos-labs/serde-reflection/serde-generate/runtime/golang/serde"
 	http "github.com/cometbft/cometbft/rpc/client/http"
@@ -20,12 +21,15 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	keyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	movetypes "github.com/initia-labs/initia/x/move/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	initiacodec "github.com/initia-labs/initia/crypto/codec"
+	ethsecp256k1 "github.com/initia-labs/initia/crypto/ethsecp256k1"
+	initiahd "github.com/initia-labs/initia/crypto/hd"
+	initiakeyring "github.com/initia-labs/initia/crypto/keyring"
 	vmtypes "github.com/initia-labs/movevm/types"
 )
 
@@ -42,7 +46,83 @@ var (
 	ErrNoAccountFound        = errors.New("no account found")
 	ErrQueryFailed           = errors.New("query failed")
 	ErrTxFailed              = errors.New("transaction failed")
+	ErrFeedNotFound          = errors.New("feed not found")
 )
+
+// ------------
+// The following types and functions were copied and pasted from:
+//  - https://github.com/initia-labs/initia/blob/main/x/move/types/query.pb.go.
+//  - https://github.com/initia-labs/initia/blob/main/x/move/types/tx.pb.go.
+// This was done to avoid having to link initias libmovevm library (https://github.com/initia-labs/movevm).
+// libmovevm is required to compile the package containing these types but not actually used in the types.
+// ------------
+
+// QueryViewRequest is the request type for the QueryView
+// RPC method
+type QueryViewRequest struct {
+	// Address is the owner address of the module to query
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// ModuleName is the module name of the entry function to query
+	ModuleName string `protobuf:"bytes,2,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
+	// FunctionName is the name of a function to query
+	FunctionName string `protobuf:"bytes,3,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"`
+	// TypeArgs is the type arguments of a function to execute
+	// ex) "0x1::BasicCoin::Initia", "bool", "u8", "u64"
+	TypeArgs []string `protobuf:"bytes,4,rep,name=type_args,json=typeArgs,proto3" json:"type_args,omitempty"`
+	// Args is the arguments of a function to execute
+	// - number: little endian
+	// - string: base64 bytes
+	Args [][]byte `protobuf:"bytes,5,rep,name=args,proto3" json:"args,omitempty"`
+}
+
+func (*QueryViewRequest) ProtoMessage()    {}
+func (m *QueryViewRequest) Reset()         { *m = QueryViewRequest{} }
+func (m *QueryViewRequest) String() string { return proto.CompactTextString(m) }
+
+// VMEvent is the event emitted from vm.
+type VMEvent struct {
+	TypeTag string `protobuf:"bytes,1,opt,name=type_tag,json=typeTag,proto3" json:"type_tag,omitempty"`
+	Data    string `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+// QueryViewResponse is the response type for the
+// QueryView RPC method
+type QueryViewResponse struct {
+	Data    string    `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Events  []VMEvent `protobuf:"bytes,2,rep,name=events,proto3" json:"events"`
+	GasUsed uint64    `protobuf:"varint,3,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
+}
+
+func (m *QueryViewResponse) Reset()         { *m = QueryViewResponse{} }
+func (m *QueryViewResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryViewResponse) ProtoMessage()    {}
+
+// MsgExecute is the message to execute the given module function
+type MsgExecute struct {
+	// Sender is the that actor that signed the messages
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// ModuleAddr is the address of the module deployer
+	ModuleAddress string `protobuf:"bytes,2,opt,name=module_address,json=moduleAddress,proto3" json:"module_address,omitempty"`
+	// ModuleName is the name of module to execute
+	ModuleName string `protobuf:"bytes,3,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
+	// FunctionName is the name of a function to execute
+	FunctionName string `protobuf:"bytes,4,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"`
+	// TypeArgs is the type arguments of a function to execute
+	// ex) "0x1::BasicCoin::Initia", "bool", "u8", "u64"
+	TypeArgs []string `protobuf:"bytes,5,rep,name=type_args,json=typeArgs,proto3" json:"type_args,omitempty"`
+	// Args is the arguments of a function to execute
+	// - number: little endian
+	// - string: base64 bytes
+	Args [][]byte `protobuf:"bytes,6,rep,name=args,proto3" json:"args,omitempty"`
+}
+
+func (m *MsgExecute) Reset()         { *m = MsgExecute{} }
+func (m *MsgExecute) String() string { return proto.CompactTextString(m) }
+func (*MsgExecute) ProtoMessage()    {}
+
+// ------------
+// End copied types
+// ------------
 
 // I128 represents a signed 128-bit integer with magnitude and sign
 type I128 struct {
@@ -112,6 +192,8 @@ func NewStorkContract(
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountAddressPrefix+"pub")
 	config.Seal()
 
+	// Note: rpcUrl should be a Tendermint RPC endpoint (e.g., https://rpc.testnet.initia.xyz)
+	// not a REST endpoint, despite the parameter name
 	rpcClient, err := http.New(rpcUrl, "/websocket")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rpc http client: %w", err)
@@ -120,22 +202,27 @@ func NewStorkContract(
 	// Initia uses Ethereum-style derivation (coinType 60)
 	hdPath := hd.NewFundraiserParams(0, CoinType, 0).String()
 
-	derivedPrivKey, err := hd.Secp256k1.Derive()(mnemonic, "", hdPath)
+	// Use Initia's ethsecp256k1 algorithm for key derivation
+	ethAlgo := initiahd.EthSecp256k1
+	derivedPrivKey, err := ethAlgo.Derive()(mnemonic, "", hdPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive private key: %w", err)
 	}
 
-	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
+	privKey := ethsecp256k1.PrivKey{Key: derivedPrivKey}
 
 	//nolint:exhaustruct // all fields are set in the constructor.
 	storkContract := &StorkContract{ContractAddress: contractAddress, ChainPrefix: AccountAddressPrefix}
 
+	proto.RegisterType((*MsgExecute)(nil), "initia.move.v1.MsgExecute")
 	// set up execution context and factory
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	sdktypes.RegisterInterfaces(interfaceRegistry)
 	authtypes.RegisterInterfaces(interfaceRegistry)
 	cryptocodec.RegisterInterfaces(interfaceRegistry)
-	movetypes.RegisterInterfaces(interfaceRegistry)
+	initiacodec.RegisterInterfaces(interfaceRegistry)
+
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &MsgExecute{})
 
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	storkContract.marshaler = marshaler
@@ -143,13 +230,13 @@ func NewStorkContract(
 
 	senderAddr := sdktypes.AccAddress(privKey.PubKey().Address())
 
-	kr := keyring.NewInMemory(marshaler)
+	kr := keyring.NewInMemory(marshaler, initiakeyring.EthSecp256k1Option())
 	keyName := privKey.PubKey().Address().String()
 
 	err = kr.ImportPrivKeyHex(
 		keyName,
 		hex.EncodeToString(privKey.Key),
-		"secp256k1",
+		ethsecp256k1.KeyType,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to import key: %w", err)
@@ -196,6 +283,9 @@ func (s *StorkContract) GetTemporalNumericValueUnchecked(
 
 	result, err := s.viewFunction("stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg})
 	if err != nil {
+		if strings.Contains(err.Error(), "temporal_numeric_value_feed_registry, code=0") {
+			return nil, ErrFeedNotFound
+		}
 		return nil, fmt.Errorf("failed to query temporal numeric value: %w", err)
 	}
 
@@ -322,7 +412,7 @@ func (s *StorkContract) viewFunction(
 	typeArgs []string,
 	args [][]byte,
 ) ([]interface{}, error) {
-	request := &movetypes.QueryViewRequest{
+	request := &QueryViewRequest{
 		Address:      s.ContractAddress,
 		ModuleName:   moduleName,
 		FunctionName: functionName,
@@ -348,7 +438,7 @@ func (s *StorkContract) viewFunction(
 		return nil, fmt.Errorf("query failed with code %d: %s", result.Response.Code, result.Response.Log)
 	}
 
-	var resp movetypes.QueryViewResponse
+	var resp QueryViewResponse
 
 	err = s.marshaler.Unmarshal(result.Response.Value, &resp)
 	if err != nil {
@@ -356,10 +446,16 @@ func (s *StorkContract) viewFunction(
 	}
 
 	// Parse JSON response
+	// The response is wrapped in an array by the Move VM
 	var jsonResult []interface{}
 	err = json.Unmarshal([]byte(resp.Data), &jsonResult)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON response: %w", err)
+		// If it's not an array, try parsing as a single value and wrap it
+		var singleResult interface{}
+		if err2 := json.Unmarshal([]byte(resp.Data), &singleResult); err2 == nil {
+			return []interface{}{singleResult}, nil
+		}
+		return nil, fmt.Errorf("failed to unmarshal JSON response: %w (data: %s)", err, resp.Data)
 	}
 
 	return jsonResult, nil
@@ -378,7 +474,7 @@ func (s *StorkContract) executeContract(
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
 	}
 
-	msg := &movetypes.MsgExecute{
+	msg := &MsgExecute{
 		Sender:        senderBech32,
 		ModuleAddress: s.ContractAddress,
 		ModuleName:    moduleName,
