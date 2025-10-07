@@ -53,3 +53,4 @@ To deploy the contract, clone down the repo and run the following commands from 
 2. `npx hardhat compile`
 3. Set the `storkContract` and `encodedAssetId` in the `ignition/parameters.json` file. Stork contract addresses and encoded asset ids can be found in the [Stork Documentation](https://docs.stork.network/). 
 4. Deploy the contract with `npx hardhat --network <network> ignition deploy ignition/modules/StorkChainlinkAdapter.ts --deployment-id chain-<chainId>-<assetId> --parameters ignition/parameters.json`
+5. Verify the contract on etherscan with `npx hardhat ignition verify chain-<chainId>-<assetId>`
