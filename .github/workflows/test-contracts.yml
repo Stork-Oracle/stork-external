@@ -320,13 +320,13 @@ jobs:
         with:
           go-version: "1.24.3"
 
-      - name: Cache Go Binaries
+      - name: Cache Minitiad
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/bin
-          key: ${{ runner.os }}-go-binaries-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-minitiad-${{ hashFiles('**/go.sum') }}
 
       - name: Install Minitiad if not cached
         run: |
