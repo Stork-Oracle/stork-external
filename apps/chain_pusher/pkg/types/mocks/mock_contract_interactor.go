@@ -2,11 +2,12 @@
 // github.com/vektra/mockery
 // template: testify
 
-package types
+package mocks
 
 import (
 	"context"
 
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -38,7 +39,7 @@ func (_m *MockContractInteractor) EXPECT() *MockContractInteractor_Expecter {
 }
 
 // BatchPushToContract provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error {
+func (_mock *MockContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
 	ret := _mock.Called(priceUpdates)
 
 	if len(ret) == 0 {
@@ -46,7 +47,7 @@ func (_mock *MockContractInteractor) BatchPushToContract(priceUpdates map[Intern
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(map[InternalEncodedAssetID]AggregatedSignedPrice) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error); ok {
 		r0 = returnFunc(priceUpdates)
 	} else {
 		r0 = ret.Error(0)
@@ -60,16 +61,16 @@ type MockContractInteractor_BatchPushToContract_Call struct {
 }
 
 // BatchPushToContract is a helper method to define mock.On call
-//   - priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice
+//   - priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
 func (_e *MockContractInteractor_Expecter) BatchPushToContract(priceUpdates interface{}) *MockContractInteractor_BatchPushToContract_Call {
 	return &MockContractInteractor_BatchPushToContract_Call{Call: _e.mock.On("BatchPushToContract", priceUpdates)}
 }
 
-func (_c *MockContractInteractor_BatchPushToContract_Call) Run(run func(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice)) *MockContractInteractor_BatchPushToContract_Call {
+func (_c *MockContractInteractor_BatchPushToContract_Call) Run(run func(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)) *MockContractInteractor_BatchPushToContract_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 map[InternalEncodedAssetID]AggregatedSignedPrice
+		var arg0 map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
 		if args[0] != nil {
-			arg0 = args[0].(map[InternalEncodedAssetID]AggregatedSignedPrice)
+			arg0 = args[0].(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 		}
 		run(
 			arg0,
@@ -83,7 +84,7 @@ func (_c *MockContractInteractor_BatchPushToContract_Call) Return(err error) *Mo
 	return _c
 }
 
-func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error) *MockContractInteractor_BatchPushToContract_Call {
+func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error) *MockContractInteractor_BatchPushToContract_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -244,7 +245,7 @@ func (_c *MockContractInteractor_GetWalletBalance_Call) RunAndReturn(run func() 
 }
 
 // ListenContractEvents provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue) {
+func (_mock *MockContractInteractor) ListenContractEvents(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue) {
 	_mock.Called(ctx, ch)
 	return
 }
@@ -256,20 +257,20 @@ type MockContractInteractor_ListenContractEvents_Call struct {
 
 // ListenContractEvents is a helper method to define mock.On call
 //   - ctx context.Context
-//   - ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue
+//   - ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue
 func (_e *MockContractInteractor_Expecter) ListenContractEvents(ctx interface{}, ch interface{}) *MockContractInteractor_ListenContractEvents_Call {
 	return &MockContractInteractor_ListenContractEvents_Call{Call: _e.mock.On("ListenContractEvents", ctx, ch)}
 }
 
-func (_c *MockContractInteractor_ListenContractEvents_Call) Run(run func(ctx context.Context, ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue)) *MockContractInteractor_ListenContractEvents_Call {
+func (_c *MockContractInteractor_ListenContractEvents_Call) Run(run func(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)) *MockContractInteractor_ListenContractEvents_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 chan map[InternalEncodedAssetID]InternalTemporalNumericValue
+		var arg1 chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue
 		if args[1] != nil {
-			arg1 = args[1].(chan map[InternalEncodedAssetID]InternalTemporalNumericValue)
+			arg1 = args[1].(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 		}
 		run(
 			arg0,
@@ -284,32 +285,32 @@ func (_c *MockContractInteractor_ListenContractEvents_Call) Return() *MockContra
 	return _c
 }
 
-func (_c *MockContractInteractor_ListenContractEvents_Call) RunAndReturn(run func(ctx context.Context, ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue)) *MockContractInteractor_ListenContractEvents_Call {
+func (_c *MockContractInteractor_ListenContractEvents_Call) RunAndReturn(run func(ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)) *MockContractInteractor_ListenContractEvents_Call {
 	_c.Run(run)
 	return _c
 }
 
 // PullValues provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) PullValues(encodedAssetIDs []InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error) {
+func (_mock *MockContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	ret := _mock.Called(encodedAssetIDs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PullValues")
 	}
 
-	var r0 map[InternalEncodedAssetID]InternalTemporalNumericValue
+	var r0 map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func([]types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)); ok {
 		return returnFunc(encodedAssetIDs)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]InternalEncodedAssetID) map[InternalEncodedAssetID]InternalTemporalNumericValue); ok {
+	if returnFunc, ok := ret.Get(0).(func([]types.InternalEncodedAssetID) map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue); ok {
 		r0 = returnFunc(encodedAssetIDs)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[InternalEncodedAssetID]InternalTemporalNumericValue)
+			r0 = ret.Get(0).(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([]InternalEncodedAssetID) error); ok {
+	if returnFunc, ok := ret.Get(1).(func([]types.InternalEncodedAssetID) error); ok {
 		r1 = returnFunc(encodedAssetIDs)
 	} else {
 		r1 = ret.Error(1)
@@ -323,16 +324,16 @@ type MockContractInteractor_PullValues_Call struct {
 }
 
 // PullValues is a helper method to define mock.On call
-//   - encodedAssetIDs []InternalEncodedAssetID
+//   - encodedAssetIDs []types.InternalEncodedAssetID
 func (_e *MockContractInteractor_Expecter) PullValues(encodedAssetIDs interface{}) *MockContractInteractor_PullValues_Call {
 	return &MockContractInteractor_PullValues_Call{Call: _e.mock.On("PullValues", encodedAssetIDs)}
 }
 
-func (_c *MockContractInteractor_PullValues_Call) Run(run func(encodedAssetIDs []InternalEncodedAssetID)) *MockContractInteractor_PullValues_Call {
+func (_c *MockContractInteractor_PullValues_Call) Run(run func(encodedAssetIDs []types.InternalEncodedAssetID)) *MockContractInteractor_PullValues_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 []InternalEncodedAssetID
+		var arg0 []types.InternalEncodedAssetID
 		if args[0] != nil {
-			arg0 = args[0].([]InternalEncodedAssetID)
+			arg0 = args[0].([]types.InternalEncodedAssetID)
 		}
 		run(
 			arg0,
@@ -341,12 +342,12 @@ func (_c *MockContractInteractor_PullValues_Call) Run(run func(encodedAssetIDs [
 	return _c
 }
 
-func (_c *MockContractInteractor_PullValues_Call) Return(internalEncodedAssetIDToInternalTemporalNumericValue map[InternalEncodedAssetID]InternalTemporalNumericValue, err error) *MockContractInteractor_PullValues_Call {
+func (_c *MockContractInteractor_PullValues_Call) Return(internalEncodedAssetIDToInternalTemporalNumericValue map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, err error) *MockContractInteractor_PullValues_Call {
 	_c.Call.Return(internalEncodedAssetIDToInternalTemporalNumericValue, err)
 	return _c
 }
 
-func (_c *MockContractInteractor_PullValues_Call) RunAndReturn(run func(encodedAssetIDs []InternalEncodedAssetID) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error)) *MockContractInteractor_PullValues_Call {
+func (_c *MockContractInteractor_PullValues_Call) RunAndReturn(run func(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)) *MockContractInteractor_PullValues_Call {
 	_c.Call.Return(run)
 	return _c
 }
