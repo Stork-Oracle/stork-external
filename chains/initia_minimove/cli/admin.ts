@@ -50,7 +50,7 @@ async function executeTx(msg: MsgExecute) {
     console.log(`Transaction hash: ${result.txhash}`);
 
     // Wait for transaction to be included in a block
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     const txInfo = await wallet.rest.tx.txInfo(result.txhash);
     if (txInfo.code !== 0) {
