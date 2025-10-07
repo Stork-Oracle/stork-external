@@ -59,12 +59,13 @@ func NewContractInteractor(
 }
 
 // ListenContractEvents is a placeholder function for the contract interactor.
-// unfortunately, Initia MiniMove doesn't currently support websocket RPCs, so we can't listen to events from the contract
+// unfortunately, Initia MiniMove doesn't currently support websocket RPCs
 // this contract does emit events, so this can be implemented in the future if Initia re-adds websocket support.
 func (ici *ContractInteractor) ListenContractEvents(
 	ctx context.Context, ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
-	ici.logger.Warn().Msg("Initia MiniMove does not currently support listening to events via websocket, falling back to polling")
+	ici.logger.Warn().
+		Msg("Initia MiniMove does not currently support listening to events via websocket, falling back to polling")
 }
 
 func (ici *ContractInteractor) PullValues(

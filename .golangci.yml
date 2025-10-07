@@ -50,6 +50,7 @@ linters:
         - ^github.com/aptos-labs/aptos-go-sdk/crypto.Ed25519PrivateKey$
         # generated internal libs
         - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings.+$
+        - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/initia_minimove/bindings.+$
     embeddedstructfieldcheck:
       forbid-mutex: true
     exhaustive:
