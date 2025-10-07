@@ -1,4 +1,4 @@
-# Aptos
+# Initia MiniMove
 
 This directory contains the contract related code for Stork on Initia MiniMove. 
 
