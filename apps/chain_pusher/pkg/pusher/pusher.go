@@ -47,7 +47,7 @@ func NewPusher(
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
-	p.logger.Info().Str("wsRpcUrl", p.chainWsRpcUrl).Msg("Connecting to HTTP WS URL")
+	p.logger.Info().Str("wsRpcUrl", p.chainWsRpcUrl).Msg("Connecting to WS RPC URL")
 
 	err := p.interactor.ConnectWs(p.chainWsRpcUrl)
 	if err != nil {
