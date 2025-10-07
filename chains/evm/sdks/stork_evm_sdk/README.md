@@ -2,7 +2,7 @@
 
 This is a Solidity SDK to build EVM contracts that consume Stork price feeds. This package is maintained by [Stork Labs](https://stork.network).
 
-It is available on [npm](https://www.npmjs.com/package/@stork-network/stork-evm-sdk).
+It is available on [npm](https://www.npmjs.com/package/@storknetwork/stork-evm-sdk).
 
 ## Pull Model
 

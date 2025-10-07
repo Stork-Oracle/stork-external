@@ -62,7 +62,7 @@ $(FUEL_HEADER_DEST): build-rust-workspace
 .PHONY: signer_ffi
 signer_ffi: $(SIGNER_LIB_DEST) $(SIGNER_HEADER_DEST)
 
-.PHONY: fuel_ffi  
+.PHONY: fuel_ffi
 fuel_ffi: $(FUEL_LIB_DEST) $(FUEL_HEADER_DEST)
 
 # Main target

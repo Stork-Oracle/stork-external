@@ -17,14 +17,22 @@ import (
 var ErrFailedToConvertBigInt = errors.New("failed to convert Uint128 string to big.Int")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger zerolog.Logger
 
 	pollingPeriodSec int
+	batchingWindow   int
+	mnemonic         string
+	contractAddress  string
+	gasPrice         float64
+	gasAdjustment    float64
+	denom            string
+	chainID          string
+	chainPrefix      string
+
+	contract *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	chainGrpcUrl string,
 	contractAddress string,
 	mnemonic []byte,
 	batchingWindow int,
@@ -40,25 +48,44 @@ func NewContractInteractor(
 
 	mnemonicString := strings.TrimSpace(string(mnemonic))
 
-	contract, err := bindings.NewStorkContract(
-		chainGrpcUrl,
-		contractAddress,
-		mnemonicString,
-		gasPrice,
-		gasAdjustment,
-		denom,
-		chainID,
-		chainPrefix,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract: %w", err)
-	}
-
 	return &ContractInteractor{
 		logger:           logger,
-		contract:         contract,
+		contract:         nil,
+		contractAddress:  contractAddress,
+		mnemonic:         mnemonicString,
+		batchingWindow:   batchingWindow,
+		gasPrice:         gasPrice,
+		gasAdjustment:    gasAdjustment,
+		denom:            denom,
+		chainID:          chainID,
+		chainPrefix:      chainPrefix,
 		pollingPeriodSec: pollingPeriod,
 	}, nil
+}
+
+func (sci *ContractInteractor) ConnectHTTP(url string) error {
+	contract, err := bindings.NewStorkContract(
+		url,
+		sci.contractAddress,
+		sci.mnemonic,
+		sci.gasPrice,
+		sci.gasAdjustment,
+		sci.denom,
+		sci.chainID,
+		sci.chainPrefix,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create stork contract: %w", err)
+	}
+
+	sci.contract = contract
+
+	return nil
+}
+
+func (sci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 // ListenContractEvents is a placeholder function for the contract interactor.
@@ -76,6 +103,8 @@ func (sci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var failedToGetLatestValueErr error
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		var encodeAssetIDInt [32]int
 		for i, b := range encodedAssetID {
@@ -84,6 +113,8 @@ func (sci *ContractInteractor) PullValues(
 
 		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIDInt)
 		if err != nil {
+			failedToGetLatestValueErr = err
+
 			continue
 		}
 
@@ -110,6 +141,15 @@ func (sci *ContractInteractor) PullValues(
 	}
 
 	sci.logger.Debug().Msgf("Pulled %d values from contract", len(polledVals))
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return polledVals, err
+	}
 
 	return polledVals, nil
 }

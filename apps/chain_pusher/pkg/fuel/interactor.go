@@ -18,12 +18,13 @@ import (
 var ErrPrivateKeyEmpty = errors.New("private key cannot be empty")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger          zerolog.Logger
+	privateKey      string
+	contractAddress string
+	contract        *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	rpcUrl string,
 	contractAddress string,
 	keyFileContent []byte,
 	logger zerolog.Logger,
@@ -35,21 +36,34 @@ func NewContractInteractor(
 		return nil, fmt.Errorf("failed to load private key: %w", err)
 	}
 
+	return &ContractInteractor{
+		contract:        nil,
+		logger:          logger,
+		privateKey:      privateKey,
+		contractAddress: contractAddress,
+	}, nil
+}
+
+func (fci *ContractInteractor) ConnectHTTP(url string) error {
 	config := bindings.Config{
-		RpcUrl:          rpcUrl,
-		ContractAddress: contractAddress,
-		PrivateKey:      privateKey,
+		RpcUrl:          url,
+		ContractAddress: fci.contractAddress,
+		PrivateKey:      fci.privateKey,
 	}
 
 	contract, err := bindings.NewStorkContract(config.RpcUrl, config.ContractAddress, config.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
+		return fmt.Errorf("failed to create stork contract client: %w", err)
 	}
 
-	return &ContractInteractor{
-		logger:   logger,
-		contract: contract,
-	}, nil
+	fci.contract = contract
+
+	return nil
+}
+
+func (fci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 func (fci *ContractInteractor) ListenContractEvents(
@@ -63,6 +77,8 @@ func (fci *ContractInteractor) PullValues(
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+
+	var failedToGetLatestValueErr error
 
 	for _, assetID := range encodedAssetIDs {
 		// Convert asset ID to hex string
@@ -91,6 +107,7 @@ func (fci *ContractInteractor) PullValues(
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
 			} else {
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+				failedToGetLatestValueErr = err
 			}
 
 			continue
@@ -104,6 +121,15 @@ func (fci *ContractInteractor) PullValues(
 		}
 
 		result[assetID] = internalValue
+	}
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return result, err
 	}
 
 	return result, nil
