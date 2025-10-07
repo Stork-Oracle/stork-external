@@ -96,6 +96,8 @@ func (ici *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
+	var failedToGetLatestValueErr error
+
 	for _, encodedAssetID := range encodedAssetIDs {
 		value, err := ici.contract.GetTemporalNumericValueUnchecked(encodedAssetID[:])
 		if err != nil {
@@ -103,6 +105,7 @@ func (ici *ContractInteractor) PullValues(
 				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
 				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+				failedToGetLatestValueErr = err
 			}
 
 			continue
@@ -125,6 +128,15 @@ func (ici *ContractInteractor) PullValues(
 	}
 
 	ici.logger.Debug().Msgf("Pulled %d values from contract", len(polledVals))
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return polledVals, err
+	}
 
 	return polledVals, nil
 }
