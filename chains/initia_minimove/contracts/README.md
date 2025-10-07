@@ -1,4 +1,4 @@
-# Stork Intia Minimove Contract
+# Stork Initia MiniMove Contract
 
 This directory contains the Stork Initia Minimove compatible contract written in [Initia's flavor of Aptos Move](https://docs.initia.xyz/home/core-concepts/initia-and-rollups/rollups/vms/minimove/introduction).
 
