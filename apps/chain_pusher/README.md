@@ -235,7 +235,7 @@ go run ./cmd/main.go initia-minimove \
 At the time of writing there is no way to generate Go bindings for Initia MiniMove automatically. Manually built contract bindings/utilities can be found [here](pkg/initia_minimove/bindings/stork_minimove_contract.go).
 
 #### EVM Chain Example (Polygon Testnet)
-This is an example of how to run the EVM pusher with docker, though this should work for any chain with the appropriate flags.
+This is an example of how to run the EVM pusher with docker, though this works for any chain (with the chain-appropriate flags).
 
 ```bash
 docker run \
