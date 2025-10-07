@@ -17,14 +17,20 @@ import (
 var ErrFailedToConvertQuantizedPriceToBigInt = errors.New("failed to convert quantized price to big int")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger zerolog.Logger
 
 	pollingPeriodSec int
+	mnemonic         string
+	contractAddress  string
+	gasPrice         float64
+	gasAdjustment    float64
+	denom            string
+	chainID          string
+
+	contract *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	rpcUrl string,
 	contractAddr string,
 	mnemonic []byte,
 	pollingPeriodSec int,
@@ -38,24 +44,41 @@ func NewContractInteractor(
 
 	mnemonicString := strings.TrimSpace(string(mnemonic))
 
-	contract, err := bindings.NewStorkContract(
-		rpcUrl,
-		contractAddr,
-		mnemonicString,
-		gasPrice,
-		gasAdjustment,
-		denom,
-		chainID,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract: %w", err)
-	}
-
 	return &ContractInteractor{
 		logger:           logger,
-		contract:         contract,
+		contract:         nil,
+		contractAddress:  contractAddr,
+		mnemonic:         mnemonicString,
 		pollingPeriodSec: pollingPeriodSec,
+		gasPrice:         gasPrice,
+		gasAdjustment:    gasAdjustment,
+		denom:            denom,
+		chainID:          chainID,
 	}, nil
+}
+
+func (ici *ContractInteractor) ConnectHTTP(url string) error {
+	contract, err := bindings.NewStorkContract(
+		url,
+		ici.contractAddress,
+		ici.mnemonic,
+		ici.gasPrice,
+		ici.gasAdjustment,
+		ici.denom,
+		ici.chainID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create stork contract: %w", err)
+	}
+
+	ici.contract = contract
+
+	return nil
+}
+
+func (ici *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 // ListenContractEvents is a placeholder function for the contract interactor.
