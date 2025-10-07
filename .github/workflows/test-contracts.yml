@@ -326,7 +326,11 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/bin
+            ~/go/pkg/mod/github.com/initia-labs/movevm@*
           key: ${{ runner.os }}-go-minitiad-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-minitiad-${{ hashFiles('**/go.sum') }}
+            ${{ runner.os }}-go-minitiad-
 
       - name: Install Minitiad if not cached
         run: |
