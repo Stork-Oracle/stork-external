@@ -27,6 +27,4 @@ minitiad move deploy-object stork --from <key_name> --gas auto --gas-adjustment 
 
 #### Upgrade
 
-```bash
-aptos move upgrade-object --address-name stork --profile <profile> --object-address <object-address> --move-2
-```
+Upgrading is not officially supported my minitiad at this time.
