@@ -48,6 +48,7 @@ func NewPusher(
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
 	p.logger.Info().Str("wsRpcUrl", p.chainWsRpcUrl).Msg("Connecting to HTTP WS URL")
+
 	err := p.interactor.ConnectWs(p.chainWsRpcUrl)
 	if err != nil {
 		p.logger.Error().Err(err).
@@ -56,6 +57,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	}
 
 	p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Connecting to HTTP RPC URL")
+
 	err = p.interactor.ConnectHTTP(p.chainRpcUrl)
 	if err != nil {
 		p.logger.Error().Err(err).
@@ -82,6 +84,7 @@ func (p *Pusher) Run(ctx context.Context) {
 		p.logger.Error().Err(err).Msg("Failed to pull initial values from contract")
 
 		p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
 		err = p.interactor.ConnectHTTP(p.chainRpcUrl)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
@@ -166,6 +169,7 @@ func (p *Pusher) poll(
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
 
 			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
 			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
 			if err != nil {
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
@@ -240,6 +244,7 @@ func (p *Pusher) handlePushUpdates(
 			p.logger.Error().Err(err).Msg("Failed to push batch to contract")
 
 			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
 			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
 			if err != nil {
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
