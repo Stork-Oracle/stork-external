@@ -8,13 +8,15 @@ import {
 } from "@initia/initia.js";
 
 // Environment variables
-const RPC_URL = process.env.RPC_URL || "https://rest.testnet.initia.xyz";
+const RPC_URL = process.env.RPC_URL;
 const MNEMONIC = process.env.MNEMONIC;
 const CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
 const DEFAULT_UPDATE_FEE_AMOUNT = "1";
-const DEFAULT_UPDATE_FEE_DENOM = process.env.NATIVE_DENOM || "uinit";
-const CHAIN_ID = process.env.CHAIN_ID || "initiation-2";
+const DEFAULT_UPDATE_FEE_DENOM = process.env.NATIVE_DENOM;
+const CHAIN_ID = process.env.CHAIN_ID;
+const GAS_PRICE = process.env.GAS_PRICE;
+const GAS_ADJUSTMENT = process.env.GAS_ADJUSTMENT;
 
 // Helper functions
 function hexStringToByteArray(hexString: string): number[] {
@@ -29,10 +31,31 @@ function getWallet(): Wallet {
         throw new Error("MNEMONIC environment variable is not set");
     }
 
+    if (!RPC_URL) {
+        throw new Error("RPC_URL environment variable is not set");
+    }
+
+    if (!CHAIN_ID) {
+        throw new Error("CHAIN_ID environment variable is not set");
+    }
+
+    if (!GAS_PRICE) {
+        throw new Error("GAS_PRICE environment variable is not set");
+    }
+
+    if (!GAS_ADJUSTMENT) {
+        throw new Error("GAS_ADJUSTMENT environment variable is not set");
+    }
+
+    if (!DEFAULT_UPDATE_FEE_DENOM) {
+        throw new Error("NATIVE_DENOM environment variable is not set");
+    }
+
+    const gasPrices = `${GAS_PRICE}${DEFAULT_UPDATE_FEE_DENOM}`;
     const rest = new RESTClient(RPC_URL, {
         chainId: CHAIN_ID,
-        gasPrices: "0.15uinit",
-        gasAdjustment: "1.5",
+        gasPrices: gasPrices,
+        gasAdjustment: GAS_ADJUSTMENT,
     });
 
     const mk = new MnemonicKey({ mnemonic: MNEMONIC, coinType: 60, eth: true });
@@ -73,6 +96,14 @@ cliProgram
     .action(async () => {
         if (!CONTRACT_ADDRESS) {
             throw new Error("STORK_CONTRACT_ADDRESS is not set");
+        }
+
+        if (!DEFAULT_UPDATE_FEE_AMOUNT) {
+            throw new Error("UPDATE_FEE_AMOUNT environment variable is not set");
+        }
+
+        if (!DEFAULT_UPDATE_FEE_DENOM) {
+            throw new Error("NATIVE_DENOM environment variable is not set");
         }
 
         const wallet = getWallet();
