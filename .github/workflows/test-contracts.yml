@@ -1,4 +1,4 @@
-name: Test Contracts 
+name: Test Contracts
 
 on:
   push:
@@ -14,9 +14,9 @@ jobs:
       - name: Set up Node.js for Stork
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './chains/evm/contracts/stork/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./chains/evm/contracts/stork/package-lock.json"
 
       - name: Install dependencies for Stork
         run: npm install
@@ -46,9 +46,9 @@ jobs:
       - name: Set up Node.js for StorkPythAdapter
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './chains/evm/contracts/stork_pyth_adapter/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./chains/evm/contracts/stork_pyth_adapter/package-lock.json"
 
       - name: Install dependencies for StorkPythAdapter
         run: npm install
@@ -62,9 +62,9 @@ jobs:
       - name: Set up Node.js for StorkChainlinkAdapter
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './chains/evm/contracts/stork_chainlink_adapter/package-lock.json'
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./chains/evm/contracts/stork_chainlink_adapter/package-lock.json"
 
       - name: Install dependencies for StorkChainlinkAdapter
         run: npm install
@@ -85,9 +85,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './chains/solana/contracts/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./chains/solana/contracts/package-lock.json"
 
       - name: Install dependencies
         run: npm install
@@ -141,7 +141,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libudev-dev
-
 
       - name: Install Anchor CLI
         run: |
@@ -202,7 +201,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -235,15 +233,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-          cache: 'pip'
-          cache-dependency-path: '**/requirements.txt'
-          
+          python-version: "3.x"
+          cache: "pip"
+          cache-dependency-path: "**/requirements.txt"
+
       - name: Install pip dependencies
         run: |
           python -m pip install --upgrade pip
           pip install packaging
-          
+
       - name: Cache Aptos CLI
         uses: actions/cache@v4
         with:
@@ -251,7 +249,7 @@ jobs:
             ~/.aptos
             ~/.local/bin/aptos
           key: ${{ runner.os }}-aptos-cli
-          
+
       - name: Install Aptos CLI
         run: |
           if ! command -v aptos &> /dev/null; then
@@ -267,7 +265,7 @@ jobs:
         run: |
           aptos move test --move-2 --dev
         working-directory: ./chains/aptos/contracts
-  
+
   test-fuel:
     runs-on: ubuntu-latest
 
@@ -309,4 +307,40 @@ jobs:
         run: |
           cargo test
         working-directory: ./chains/fuel/contracts/stork/
-        
+
+  test-initia-minimove:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24.3"
+          cache: false
+
+      - name: Cache Minitiad
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/bin/minitiad
+            ~/go/pkg/mod/github.com/initia-labs/movevm@*
+          key: ${{ runner.os }}-minitiad-binary-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-minitiad-binary-${{ hashFiles('**/go.sum') }}
+            ${{ runner.os }}-minitiad-binary-
+
+      - name: Install Minitiad if not cached
+        run: |
+          if ! command -v minitiad &> /dev/null; then
+            git clone -b feat/initia-main --single-branch https://github.com/initia-labs/minimove.git
+            cd minimove
+            make install
+          fi
+
+      - name: Run Unit tests
+        run: |
+          minitiad move test --language-version 2.1 --dev
+        working-directory: ./chains/initia_minimove/contracts

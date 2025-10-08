@@ -1,0 +1,24 @@
+[package]
+name = "example"
+version = "1.0.0"
+authors = []
+
+[addresses]
+example = "_"
+# Official addresses can be found at https://docs.stork.network/resources/contract-addresses/initia_minimove
+stork = "0xc0f5348a0fa48486899b780f349bbdd433136947d502226d03291245e8da52ee"
+
+[dev-addresses]
+example = "0x101"
+
+[dependencies.InitiaStdlib]
+git = "https://github.com/initia-labs/movevm.git"
+rev = "main"
+subdir = "precompile/modules/initia_stdlib"
+
+[dependencies.stork]
+git = "https://github.com/stork-oracle/stork-external.git"
+rev = "henry/sto-1103-initia-chain-integration"
+subdir = "chains/initia_minimove/contracts"
+
+[dev-dependencies]

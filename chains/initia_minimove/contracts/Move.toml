@@ -1,0 +1,16 @@
+[package]
+name = "stork"
+version = "1.0.1"
+authors = []
+
+[addresses]
+stork = "_"
+
+
+[dev-addresses]
+stork = "0x101"
+
+[dependencies]
+InitiaStdlib = { git = "https://github.com/initia-labs/movevm.git", subdir = "precompile/modules/initia_stdlib", rev = "main" }
+
+[dev-dependencies]

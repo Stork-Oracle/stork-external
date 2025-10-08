@@ -9,6 +9,7 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/cosmwasm"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/fuel"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/initia_minimove"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui"
 	"github.com/rs/zerolog"
@@ -53,6 +54,7 @@ func main() {
 	rootCmd.AddCommand(cosmwasm.NewPushCmd())
 	rootCmd.AddCommand(aptos.NewPushCmd())
 	rootCmd.AddCommand(fuel.NewPushCmd())
+	rootCmd.AddCommand(initia_minimove.NewPushCmd())
 
 	err := rootCmd.Execute()
 	if err != nil {
