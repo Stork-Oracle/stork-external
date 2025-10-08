@@ -14,9 +14,9 @@ import (
 
 func TestRandomDataSource_RunDataSource(t *testing.T) {
 	config := types.DataProviderSourceConfig{
-		Id: "TEST_RANDOM",
+		ID: "TEST_RANDOM",
 		Config: RandomConfig{
-			DataSource:      RandomDataSourceId,
+			DataSource:      RandomDataSourceID,
 			UpdateFrequency: "50ms",
 			MinValue:        101.0,
 			MaxValue:        105.0,

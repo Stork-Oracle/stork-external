@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 )
 
 type EvmSignatureBytes struct {
@@ -52,17 +53,17 @@ type PriceCase struct {
 func defaultPrice() (types.AggregatedSignedPrice, AggregatedSignedPriceBytes) {
 	return types.AggregatedSignedPrice{
 			StorkSignedPrice: &types.StorkSignedPrice{
-				EncodedAssetID: types.EncodedAssetID(
+				EncodedAssetID: shared.EncodedAssetID(
 					"0x1234567890123456789012345678901234567890123456789012345678901234",
 				),
-				QuantizedPrice:      types.QuantizedPrice("1000000000000000000"),
+				QuantizedPrice:      shared.QuantizedPrice("1000000000000000000"),
 				PublisherMerkleRoot: "0xe5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318",
 				StorkCalculationAlg: types.StorkCalculationAlg{
 					Checksum: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
 				},
-				TimestampedSignature: types.TimestampedSignature{
+				TimestampedSignature: shared.TimestampedSignature[*shared.EvmSignature]{
 					TimestampNano: uint64(1722632569208762117),
-					Signature: types.EvmSignature{
+					Signature: &shared.EvmSignature{
 						R: "0xb9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741",
 						S: "0x16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758",
 						V: "0x1c",
@@ -270,7 +271,7 @@ func validNegativePriceCase() PriceCase {
 	negativeQuantizedPriceBigInt := big.NewInt(-1000000000000000000)
 
 	defaultPrice, defaultPriceBytes := defaultPrice()
-	defaultPrice.StorkSignedPrice.QuantizedPrice = types.QuantizedPrice(negativeQuantizedPrice)
+	defaultPrice.StorkSignedPrice.QuantizedPrice = shared.QuantizedPrice(negativeQuantizedPrice)
 	defaultPriceBytes.StorkSignedPrice.QuantizedPrice = negativeQuantizedPriceBigInt
 
 	return PriceCase{
@@ -287,7 +288,7 @@ func validZeroPriceCase() PriceCase {
 	zeroQuantizedPriceBigInt := big.NewInt(0)
 
 	defaultPrice, defaultPriceBytes := defaultPrice()
-	defaultPrice.StorkSignedPrice.QuantizedPrice = types.QuantizedPrice(zeroQuantizedPrice)
+	defaultPrice.StorkSignedPrice.QuantizedPrice = shared.QuantizedPrice(zeroQuantizedPrice)
 	defaultPriceBytes.StorkSignedPrice.QuantizedPrice = zeroQuantizedPriceBigInt
 
 	return PriceCase{
@@ -318,7 +319,7 @@ func invalidEncodedAssetIDCase() PriceCase {
 	invalidEncodedAssetID := "invalid"
 
 	defaultPrice, _ := defaultPrice()
-	defaultPrice.StorkSignedPrice.EncodedAssetID = types.EncodedAssetID(invalidEncodedAssetID)
+	defaultPrice.StorkSignedPrice.EncodedAssetID = shared.EncodedAssetID(invalidEncodedAssetID)
 
 	return PriceCase{
 		Name:       "invalid encoded asset ID",

@@ -3,23 +3,21 @@ package publisher_agent
 import (
 	"math/big"
 
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 )
-
-type MessageType string
 
 const WildcardSubscriptionAsset = "*"
 
 type (
-	ConnectionId string
-	AuthToken    string
+	MessageType  string
+	ConnectionID string
+	OracleID     string
 )
 
 type WebsocketMessage[T any] struct {
-	connId  ConnectionId
 	Type    string `json:"type"`
 	Error   string `json:"error,omitempty"`
-	TraceId string `json:"trace_id,omitempty"`
+	TraceID string `json:"trace_id,omitempty"`
 	Data    T      `json:"data,omitempty"`
 }
 
@@ -27,33 +25,22 @@ type ErrorMessage struct {
 	Error string `json:"error"`
 }
 
-type (
-	OracleId       string
-	AssetId        string
-	QuantizedPrice string
-)
-
-const (
-	EvmSignatureType   = signer.SignatureType("evm")
-	StarkSignatureType = signer.SignatureType("stark")
-)
-
 // Incoming
 type (
 	Metadata                 map[string]any
 	PriceUpdatePullWebsocket struct {
-		PublishTimestampNano int64    `json:"t"`
-		Asset                AssetId  `json:"a"`
-		Price                float64  `json:"p"`
-		Metadata             Metadata `json:"m,omitempty"`
+		PublishTimestampNano int64          `json:"t"`
+		Asset                shared.AssetID `json:"a"`
+		Price                float64        `json:"p"`
+		Metadata             Metadata       `json:"m,omitempty"`
 	}
 )
 
 type ValueUpdatePushWebsocket struct {
-	PublishTimestampNano int64    `json:"t"`
-	Asset                AssetId  `json:"a"`
-	Value                any      `json:"v"`
-	Metadata             Metadata `json:"m,omitempty"`
+	PublishTimestampNano int64          `json:"t"`
+	Asset                shared.AssetID `json:"a"`
+	Value                any            `json:"v"`
+	Metadata             Metadata       `json:"m,omitempty"`
 }
 
 // Intermediate
@@ -67,7 +54,7 @@ const (
 
 type ValueUpdate struct {
 	PublishTimestampNano int64
-	Asset                AssetId
+	Asset                shared.AssetID
 	Value                *big.Float
 	Metadata             Metadata
 }
@@ -78,34 +65,34 @@ type ValueUpdateWithTrigger struct {
 }
 
 // Outgoing
-type SignedPrice[T signer.Signature] struct {
-	PublisherKey         signer.PublisherKey            `json:"publisher_key"`
-	ExternalAssetId      string                         `json:"external_asset_id"`
-	SignatureType        signer.SignatureType           `json:"signature_type"`
-	QuantizedPrice       QuantizedPrice                 `json:"price"`
-	TimestampedSignature signer.TimestampedSignature[T] `json:"timestamped_signature"`
+type SignedPrice[T shared.Signature] struct {
+	PublisherKey         shared.PublisherKey            `json:"publisher_key"`
+	ExternalAssetID      string                         `json:"external_asset_id"`
+	SignatureType        shared.SignatureType           `json:"signature_type"`
+	QuantizedPrice       shared.QuantizedPrice          `json:"price"`
+	TimestampedSignature shared.TimestampedSignature[T] `json:"timestamped_signature"`
 	Metadata             Metadata                       `json:"metadata,omitempty"`
 }
 
 // SignedPriceUpdate represents a signed price from a publisher
-type SignedPriceUpdate[T signer.Signature] struct {
-	OracleId    OracleId       `json:"oracle_id"`
-	AssetId     AssetId        `json:"asset_id"`
+type SignedPriceUpdate[T shared.Signature] struct {
+	OracleID    OracleID       `json:"oracle_id"`
+	AssetID     shared.AssetID `json:"asset_id"`
 	Trigger     TriggerType    `json:"trigger"`
 	SignedPrice SignedPrice[T] `json:"signed_price"`
 }
 
-type SignedPriceUpdateBatch[T signer.Signature] map[AssetId]SignedPriceUpdate[T]
+type SignedPriceUpdateBatch[T shared.Signature] map[shared.AssetID]SignedPriceUpdate[T]
 
 type SubscriptionRequest struct {
-	Assets []AssetId `json:"assets"`
+	Assets []shared.AssetID `json:"assets"`
 }
 
 type (
 	BrokerPublishUrl       string
 	BrokerConnectionConfig struct {
 		PublishUrl BrokerPublishUrl `json:"publish_url"`
-		AssetIds   []AssetId        `json:"asset_ids"`
+		AssetIDs   []shared.AssetID `json:"asset_ids"`
 	}
 )
 

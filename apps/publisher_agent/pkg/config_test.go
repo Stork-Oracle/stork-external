@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
-	assert.Equal(t, []signer.SignatureType{"evm", "stark"}, config.SignatureTypes)
+	assert.Equal(t, []shared.SignatureType{"evm", "stark"}, config.SignatureTypes)
 	assert.Equal(
 		t,
 		signer.EvmPrivateKey("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de"),

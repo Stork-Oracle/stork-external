@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -39,7 +40,7 @@ func getEvmHashes(payload [][]byte) (common.Hash, common.Hash) {
 	return payloadHash, prefixedHash
 }
 
-func evmSignatureToBytes(sig EvmSignature) ([]byte, error) {
+func evmSignatureToBytes(sig shared.EvmSignature) ([]byte, error) {
 	cleanedR, _ := strings.CutPrefix(sig.R, "0x")
 	rBytes, err := hex.DecodeString(cleanedR)
 	if err != nil {
