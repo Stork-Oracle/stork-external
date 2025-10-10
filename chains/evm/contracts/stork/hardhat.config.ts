@@ -344,6 +344,11 @@ const config: HardhatUserConfig = {
       verifyURL: "https://verification-explorer.sophon.xyz/contract_verification",
       zksync: true,
     },
+    sophonZKsyncOSTestnet: {
+      url: "https://zksync-os-testnet-sophon.zksync.dev",
+      accounts: [PRIVATE_KEY],
+      chainId: 531050204,
+    },
     storyOdysseyTestnet: {
       url: "https://rpc.odyssey.storyrpc.io",
       accounts: [PRIVATE_KEY],
