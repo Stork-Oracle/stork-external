@@ -18,7 +18,7 @@ subdir = "precompile/modules/initia_stdlib"
 
 [dependencies.stork]
 git = "https://github.com/stork-oracle/stork-external.git"
-rev = "henry/sto-1103-initia-chain-integration"
+rev = "main"
 subdir = "chains/initia_minimove/contracts"
 
 [dev-dependencies]
