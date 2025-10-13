@@ -300,6 +300,7 @@ contract UpgradeableFirstPartyStorkTest is Test {
     function test_GetUpdateFeeV1_CalculatesCorrectly() public {
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
+        vm.prank(owner);
         stork.createPublisherUser(publisher2, singleUpdateFee*2);
 
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
