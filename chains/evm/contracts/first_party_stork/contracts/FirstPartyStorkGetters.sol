@@ -13,11 +13,12 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters
         address pubKey,
         string memory assetPairId
     ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory value) {
-        if (_state.latestValues[pubKey][assetPairId].timestampNs == 0) {
+        bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
+        if (_state.latestValues[pubKey][encodedAssetId].timestampNs == 0) {
             revert FirstPartyStorkErrors.NotFound();
         }
 
-        return _state.latestValues[pubKey][assetPairId];
+        return _state.latestValues[pubKey][encodedAssetId];
     }
 
     function getHistoricalTemporalNumericValue(
@@ -25,25 +26,28 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters
         string memory assetPairId,
         uint256 roundId
     ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory) {
-        if (roundId >= _state.historicalValues[pubKey][assetPairId].length) {
+        bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
+        if (roundId >= _state.historicalValues[pubKey][encodedAssetId].length) {
             revert FirstPartyStorkErrors.NotFound();
         }
 
-        return _state.historicalValues[pubKey][assetPairId][roundId];
+        return _state.historicalValues[pubKey][encodedAssetId][roundId];
     }
 
     function getHistoricalRecordsCount(
         address pubKey,
         string memory assetPairId
     ) public view returns (uint256) {
-        return _state.historicalValues[pubKey][assetPairId].length;
+        bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
+        return _state.historicalValues[pubKey][encodedAssetId].length;
     }
 
     function getCurrentRoundId(
         address pubKey,
         string memory assetPairId
     ) public view returns (uint256) {
-        return _state.currentRoundId[pubKey][assetPairId];
+        bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
+        return _state.currentRoundId[pubKey][encodedAssetId];
     }
 
     function getPublisherUser(
@@ -60,5 +64,11 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters
         address pubKey
     ) public view returns (uint) {
         return getPublisherUser(pubKey).singleUpdateFee;
+    }
+
+    function getEncodedAssetId(
+        string memory assetPairId
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(assetPairId));
     }
 }

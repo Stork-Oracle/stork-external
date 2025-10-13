@@ -1,6 +1,6 @@
 {
     "name": "@storknetwork/first-party-stork-evm-sdk",
-    "version": "1.1.0",
+    "version": "1.4.1",
     "description": "An EVM Solidity SDK for First Party Stork Protocol",
     "files": [
         "*.sol",

@@ -39,11 +39,10 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
     ) external pure returns (bool);
 
     /// @notice Retrieves the total update fee for a publisher and update
-    /// @param pubkey The publisher's public key
-    /// @param totalNumUpdates The number of updates
+    /// @param updateData Array of PublisherTemporalNumericValueInput structs containing feed updates
     /// @return fee The total update fee
     function getUpdateFeeV1(
-        address pubkey,
-        uint totalNumUpdates
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
+            calldata updateData
     ) external view returns (uint);
 }

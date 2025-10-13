@@ -1,7 +1,6 @@
 import type { HardhatUserConfig } from "hardhat/config";
 import hardhatViem from "@nomicfoundation/hardhat-viem";
 import hardhatIgnition from "@nomicfoundation/hardhat-ignition";
-import { configVariable } from "hardhat/config";
 
 const config: HardhatUserConfig = {
   plugins: [hardhatViem, hardhatIgnition],

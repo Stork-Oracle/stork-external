@@ -97,12 +97,7 @@ func (s *FirstPartyInteractorTestSuite) Test_02_PullValues_Initial() {
 		s.pubKey: {"ETHUSD", "BTCUSD"},
 	}
 
-	assetIDtoEncodedAssetID := map[shared.AssetID]shared.EncodedAssetID{
-		"ETHUSD": "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
-		"BTCUSD": "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
-	}
-
-	values, err := s.interactor.PullValues(pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
+	values, err := s.interactor.PullValues(pubKeyAssetIDPairs)
 	s.Require().NoError(err) // first party evm interactor does not return error in current implementation
 	s.Require().Equal(len(values), len(pubKeyAssetIDPairs))
 	s.Require().Empty(values[0].ContractValueMap) // contract is empty
@@ -113,7 +108,6 @@ func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
-			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
 			Historical:     false,
 		}: {
@@ -146,17 +140,13 @@ func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
 		s.pubKey: {"ETHUSD"},
 	}
 
-	assetIDtoEncodedAssetID := map[shared.AssetID]shared.EncodedAssetID{
-		"ETHUSD": "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
-	}
-
-	values, err := s.interactor.PullValues(pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
+	values, err := s.interactor.PullValues(pubKeyAssetIDPairs)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(values)
 	s.Require().Equal(1, len(values))
 	s.Require().Equal(1, len(values[0].ContractValueMap))
 
-	value, exists := values[0].ContractValueMap[assetIDtoEncodedAssetID["ETHUSD"]]
+	value, exists := values[0].ContractValueMap["ETHUSD"]
 	s.Require().True(exists, "value should exist")
 	s.Require().Equal("1000000000000000000", value.QuantizedValue.String())
 	s.Require().Equal(uint64(1680210934000000000), value.TimestampNs)
@@ -167,7 +157,6 @@ func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
-			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
 			Historical:     false,
 		}: {
@@ -191,7 +180,6 @@ func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 		},
 		{
 			AssetID:        "BTCUSD",
-			EncodedAssetID: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
 			Historical:     false,
 		}: {
@@ -224,23 +212,18 @@ func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 		s.pubKey: {"ETHUSD", "BTCUSD"},
 	}
 
-	assetIDtoEncodedAssetID := map[shared.AssetID]shared.EncodedAssetID{
-		"ETHUSD": "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
-		"BTCUSD": "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
-	}
-
-	values, err := s.interactor.PullValues(pubKeyAssetIDPairs, assetIDtoEncodedAssetID)
+	values, err := s.interactor.PullValues(pubKeyAssetIDPairs)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(values)
 	s.Require().Equal(1, len(values))
 	s.Require().Equal(2, len(values[0].ContractValueMap))
 
-	value1, exists := values[0].ContractValueMap[assetIDtoEncodedAssetID["ETHUSD"]]
+	value1, exists := values[0].ContractValueMap["ETHUSD"]
 	s.Require().True(exists, "ETHUSD value should exist")
 	s.Require().Equal("1100000000000000000", value1.QuantizedValue.String())
 	s.Require().Equal(uint64(1680210935000000000), value1.TimestampNs)
 
-	value2, exists := values[0].ContractValueMap[assetIDtoEncodedAssetID["BTCUSD"]]
+	value2, exists := values[0].ContractValueMap["BTCUSD"]
 	s.Require().True(exists, "BTCUSD value should exist")
 	s.Require().Equal("2000000000000000000", value2.QuantizedValue.String())
 	s.Require().Equal(uint64(1680210935000000000), value2.TimestampNs)
@@ -267,7 +250,6 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
 			AssetID:        "ETHUSD",
-			EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
 			Historical:     false,
 		}: {
@@ -291,7 +273,6 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 		},
 		{
 			AssetID:        "BTCUSD",
-			EncodedAssetID: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
 			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
 			Historical:     false,
 		}: {
@@ -317,26 +298,21 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 	err := s.interactor.BatchPushToContract(update)
 	s.Require().NoError(err)
 
-	assetIDtoEncodedAssetID := map[shared.AssetID]shared.EncodedAssetID{
-		"ETHUSD": "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
-		"BTCUSD": "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
-	}
-
-	expectedValues := map[shared.EncodedAssetID]struct {
+	expectedValues := map[shared.AssetID]struct {
 		quantizedValue string
 		timestamp      uint64
 	}{
-		assetIDtoEncodedAssetID["ETHUSD"]: {
+		"ETHUSD": {
 			quantizedValue: "1200000000000000000",
 			timestamp:      1680210936000000000,
 		},
-		assetIDtoEncodedAssetID["BTCUSD"]: {
+		"BTCUSD": {
 			quantizedValue: "2100000000000000000",
 			timestamp:      1680210936000000000,
 		},
 	}
 
-	receivedAssets := make(map[shared.EncodedAssetID]bool)
+	receivedAssets := make(map[shared.AssetID]bool)
 	timeout := time.After(5 * time.Second)
 
 	for len(receivedAssets) < len(expectedValues) {
@@ -352,12 +328,12 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 			s.Require().Equal(1, len(receivedUpdate.ContractValueMap))
 
 			// Validate each asset in the update
-			for encodedAssetID, value := range receivedUpdate.ContractValueMap {
-				expected, exists := expectedValues[encodedAssetID]
-				s.Require().True(exists, "Received unexpected asset: %s", encodedAssetID)
+			for assetID, value := range receivedUpdate.ContractValueMap {
+				expected, exists := expectedValues[assetID]
+				s.Require().True(exists, "Received unexpected asset: %s", assetID)
 				s.Require().Equal(expected.quantizedValue, value.QuantizedValue.String())
 				s.Require().Equal(expected.timestamp, value.TimestampNs)
-				receivedAssets[encodedAssetID] = true
+				receivedAssets[assetID] = true
 			}
 
 		case <-timeout:

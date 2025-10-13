@@ -300,28 +300,53 @@ contract UpgradeableFirstPartyStorkTest is Test {
     function test_GetUpdateFeeV1_CalculatesCorrectly() public {
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
+        stork.createPublisherUser(publisher2, singleUpdateFee*2);
+
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        uint fee1 = stork.getUpdateFeeV1(publisher1, 1);
-        assertEq(fee1, singleUpdateFee * 1);
+        updateData1[0] = pub1Eth;
         
-        uint fee5 = stork.getUpdateFeeV1(publisher1, 5);
-        assertEq(fee5, singleUpdateFee * 5);
+        uint fee1 = stork.getUpdateFeeV1(updateData1);
+        assertEq(fee1, singleUpdateFee);
+
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
         
-        uint fee10 = stork.getUpdateFeeV1(publisher1, 10);
-        assertEq(fee10, singleUpdateFee * 10);
+        updateData2[0] = pub2Btc;
+        
+        uint fee2 = stork.getUpdateFeeV1(updateData2);
+        assertEq(fee2, singleUpdateFee*2);
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData3 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](2);
+        
+        updateData3[0] = pub1Eth;
+        updateData3[1] = pub2Btc;
+
+        uint fee3 = stork.getUpdateFeeV1(updateData3);
+        assertEq(fee3, singleUpdateFee + singleUpdateFee*2);
     }
 
     function test_GetUpdateFeeV1_ReturnsZeroForZeroUpdates() public {
         vm.prank(owner);
         stork.createPublisherUser(publisher1, singleUpdateFee);
         
-        uint fee = stork.getUpdateFeeV1(publisher1, 0);
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](0);
+        
+        uint fee = stork.getUpdateFeeV1(updateData);
         assertEq(fee, 0);
     }
 
     function test_GetUpdateFeeV1_RevertsIfPublisherNotFound() public {
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](1);
+        
+        updateData[0] = pub1Eth;
+        
         vm.expectRevert(); // NotFound
-        stork.getUpdateFeeV1(publisher1, 5);
+        stork.getUpdateFeeV1(updateData);
     }
 
     function test_GetUpdateFeeV1_WorksWithDifferentPublisherFees() public {
@@ -332,9 +357,23 @@ contract UpgradeableFirstPartyStorkTest is Test {
         stork.createPublisherUser(publisher1, pub1Fee);
         vm.prank(owner);
         stork.createPublisherUser(publisher2, pub2Fee);
+
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData1 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](3);
         
-        assertEq(stork.getUpdateFeeV1(publisher1, 3), pub1Fee * 3);
-        assertEq(stork.getUpdateFeeV1(publisher2, 3), pub2Fee * 3);
+        updateData1[0] = pub1Eth;
+        updateData1[1] = pub1Eth;
+        updateData1[2] = pub1Eth;
+        
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] memory updateData2 = 
+            new FirstPartyStorkStructs.PublisherTemporalNumericValueInput[](3);
+        
+        updateData2[0] = pub2Btc;
+        updateData2[1] = pub2Btc;
+        updateData2[2] = pub2Btc;
+        
+        assertEq(stork.getUpdateFeeV1(updateData1), pub1Fee * 3);
+        assertEq(stork.getUpdateFeeV1(updateData2), pub2Fee * 3);
     }
 
     // ===== UPDATE TEMPORAL NUMERIC VALUES TESTS =====

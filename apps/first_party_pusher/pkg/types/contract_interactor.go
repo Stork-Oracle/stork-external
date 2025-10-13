@@ -14,7 +14,6 @@ type ContractInteractor[T shared.Signature] interface {
 	) (bool, error)
 	PullValues(
 		pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
-		assetIDtoEncodedAssetID map[shared.AssetID]shared.EncodedAssetID,
 	) ([]ContractUpdate, error)
 	ListenContractEvents(
 		ctx context.Context,

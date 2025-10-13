@@ -22,20 +22,20 @@ type AssetConfig struct {
 
 // AssetEntry is a single asset entry in the asset-config.yaml file.
 type AssetEntry struct {
-	AssetID                shared.AssetID        `yaml:"asset_id"`
-	EncodedAssetID         shared.EncodedAssetID `yaml:"encoded_asset_id"`
-	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
-	FallbackPeriodSecs     uint64                `yaml:"fallback_period_sec"` //nolint:tagliatelle // Legacy
-	Historical             bool                  `yaml:"historical"`
-	PublicKey              shared.PublisherKey   `yaml:"public_key"`
+	AssetID                shared.AssetID      `yaml:"asset_id"`
+	PercentChangeThreshold float64             `yaml:"percent_change_threshold"`
+	FallbackPeriodSecs     uint64              `yaml:"fallback_period_sec"` //nolint:tagliatelle // Legacy
+	PublicKey              shared.PublisherKey `yaml:"public_key"`
+	Historical             bool                `yaml:"historical"`
 }
 
+// PublisherAssetPair contains the data needed for indexing the contract state.
 type PublisherAssetPair struct {
-	Address        common.Address
-	EncodedAssetID shared.EncodedAssetID
+	Address common.Address
+	AssetID shared.AssetID
 }
 
 type ContractUpdate struct {
 	Pubkey           common.Address
-	ContractValueMap map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue
+	ContractValueMap map[shared.AssetID]chain_pusher_types.InternalTemporalNumericValue
 }

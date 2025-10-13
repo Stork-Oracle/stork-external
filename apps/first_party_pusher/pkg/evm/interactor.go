@@ -117,14 +117,13 @@ func (ci *ContractInteractor) CheckPublisherUser(
 
 func (ci *ContractInteractor) PullValues(
 	pubKeyAssetIDPairs map[common.Address][]shared.AssetID,
-	assetIDtoEncodedAssetID map[shared.AssetID]shared.EncodedAssetID,
 ) ([]types.ContractUpdate, error) {
 	polledVals := make([]types.ContractUpdate, 0)
 
 	for pubKey, assetIDs := range pubKeyAssetIDPairs {
 		contractUpdate := types.ContractUpdate{
 			Pubkey:           pubKey,
-			ContractValueMap: make(map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue),
+			ContractValueMap: make(map[shared.AssetID]chain_pusher_types.InternalTemporalNumericValue),
 		}
 		for _, assetID := range assetIDs {
 			storkStructsTemporalNumericValue, err := ci.contract.GetLatestTemporalNumericValue(
@@ -142,14 +141,7 @@ func (ci *ContractInteractor) PullValues(
 				continue
 			}
 
-			encodedAssetID, exists := assetIDtoEncodedAssetID[shared.AssetID(assetID)]
-			if !exists {
-				ci.logger.Error().Str("asset_id", string(assetID)).Msg("Asset not found in assetIDtoEncodedAssetID map")
-
-				continue
-			}
-
-			contractUpdate.ContractValueMap[encodedAssetID] = chain_pusher_types.InternalTemporalNumericValue(
+			contractUpdate.ContractValueMap[assetID] = chain_pusher_types.InternalTemporalNumericValue(
 				storkStructsTemporalNumericValue,
 			)
 		}
@@ -219,6 +211,11 @@ func (ci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to convert signed price update: %w", err)
 	}
 
+	fee, err := ci.contract.GetUpdateFeeV1(nil, updates)
+	if err != nil {
+		return fmt.Errorf("failed to get update fee: %w", err)
+	}
+
 	auth, err := bind.NewKeyedTransactorWithChainID(ci.privateKey, ci.chainID)
 	if err != nil {
 		return fmt.Errorf("failed to create transactor: %w", err)
@@ -226,7 +223,7 @@ func (ci *ContractInteractor) BatchPushToContract(
 
 	// let the library auto-estimate the gas price
 	auth.GasLimit = ci.gasLimit
-	auth.Value = big.NewInt(0)
+	auth.Value = fee
 
 	tx, err := ci.contract.UpdateTemporalNumericValues(auth, updates)
 	if err != nil {
@@ -234,8 +231,9 @@ func (ci *ContractInteractor) BatchPushToContract(
 	}
 
 	ci.logger.Info().
-		Int("num_updates", len(updates)).
 		Str("tx_hash", tx.Hash().Hex()).
+		Int("num_updates", len(updates)).
+		Uint64("gasPrice", tx.GasPrice().Uint64()).
 		Msg("Successfully submitted batch signed price update transaction")
 
 	return nil
@@ -260,7 +258,6 @@ func (ci *ContractInteractor) getUpdatePayload(
 		ci.logger.Info().
 			Str("asset", string(signedPriceUpdate.AssetID)).
 			Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
-			Str("encoded_asset_id", string(entry.EncodedAssetID)).
 			Msg("Pushing signed price update to first party contract")
 
 		// Convert quantized price to big.Int
@@ -367,8 +364,8 @@ func (ci *ContractInteractor) listenLoop(
 
 			update := types.ContractUpdate{
 				Pubkey: vLog.PubKey,
-				ContractValueMap: map[shared.EncodedAssetID]chain_pusher_types.InternalTemporalNumericValue{
-					shared.EncodedAssetID(vLog.AssetId.Hex()): tv,
+				ContractValueMap: map[shared.AssetID]chain_pusher_types.InternalTemporalNumericValue{
+					shared.AssetID(vLog.AssetId): tv,
 				},
 			}
 			select {

@@ -48,7 +48,6 @@ func standardFirstPartyPriceCases() []FirstPartyPriceCase {
 func defaultFirstPartyPriceCase() FirstPartyPriceCase {
 	pubKey := shared.PublisherKey("0x0810E094a8b0e750c7ACB66F469AfBBd595FF69b")
 	assetID := shared.AssetID("ETHUSD")
-	encodedAssetID := shared.EncodedAssetID("0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160")
 	quantizedPrice := shared.QuantizedPrice("1000000000000000000")
 	timestampNs := uint64(1680210934000000000)
 
@@ -75,7 +74,6 @@ func defaultFirstPartyPriceCase() FirstPartyPriceCase {
 		},
 		AssetEntry: types.AssetEntry{
 			AssetID:        assetID,
-			EncodedAssetID: encodedAssetID,
 			PublicKey:      pubKey,
 			Historical:     false,
 		},

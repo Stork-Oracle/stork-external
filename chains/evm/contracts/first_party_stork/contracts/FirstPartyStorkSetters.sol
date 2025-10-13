@@ -6,21 +6,24 @@ pragma solidity >=0.8.24 <0.9.0;
 import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
 import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkEvents.sol";
 import "./FirstPartyStorkState.sol";
+import "./FirstPartyStorkGetters.sol";
 
-contract FirstPartyStorkSetters is FirstPartyStorkState, IFirstPartyStorkEvents {
+contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkGetters, IFirstPartyStorkEvents {
     function updateLatestValueIfNecessary(
         address pubKey,
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
+        bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][input.assetPairId].timestampNs;
+        .latestValues[pubKey][encodedAssetId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
             return false;
         }
 
-        _state.latestValues[pubKey][input.assetPairId] = input.temporalNumericValue;
+        _state.latestValues[pubKey][encodedAssetId] = input.temporalNumericValue;
         emit ValueUpdate(
             pubKey,
+            input.assetPairId,
             input.assetPairId,
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue
@@ -32,25 +35,27 @@ contract FirstPartyStorkSetters is FirstPartyStorkState, IFirstPartyStorkEvents 
         address pubKey,
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
+        bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][input.assetPairId].timestampNs;
+        .latestValues[pubKey][encodedAssetId].timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
             return false;
         }
 
-        _state.historicalValues[pubKey][input.assetPairId].push(
+        _state.historicalValues[pubKey][encodedAssetId].push(
             FirstPartyStorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
                 input.temporalNumericValue.quantizedValue
             )
         );
-        _state.currentRoundId[pubKey][input.assetPairId]++;
+        _state.currentRoundId[pubKey][encodedAssetId]++;
         emit HistoricalValueStored(
             pubKey,
             input.assetPairId,
+            input.assetPairId,
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue,
-            _state.currentRoundId[pubKey][input.assetPairId]
+            _state.currentRoundId[pubKey][encodedAssetId]
         );
         return true;
     }

@@ -5,27 +5,31 @@ pragma solidity >=0.8.24 <0.9.0;
 /// @notice Events emitted by the First Party Stork contract
 /// @dev This interface can be used for listening to updates for off-chain and testing purposes
 interface IFirstPartyStorkEvents {
-    /// @notice Emitted when the latest value with `assetId` has received a fresh update
+    /// @notice Emitted when the latest value with `encodedAssetId` has received a fresh update
     /// @param pubKey The publisher's public key
+    /// @param encodedAssetId The asset ID (keccak256 hashed because of the indexed keyword)
     /// @param assetId The asset ID
     /// @param timestampNs Publish time of the given update
     /// @param quantizedValue Value of the given update
     event ValueUpdate(
         address indexed pubKey,
-        string indexed assetId,
+        string indexed encodedAssetId,
+        string assetId,
         uint64 timestampNs,
         int192 quantizedValue
     );
 
     /// @notice Emitted when a historical value is stored
     /// @param pubKey The publisher's public key
+    /// @param encodedAssetId The asset ID (keccak256 hashed because of the indexed keyword)
     /// @param assetId The asset ID
     /// @param timestampNs Publish time of the given update
     /// @param quantizedValue Value of the given update
     /// @param roundId The round ID of the historical record
     event HistoricalValueStored(
         address indexed pubKey,
-        string indexed assetId,
+        string indexed encodedAssetId,
+        string assetId,
         uint64 timestampNs,
         int192 quantizedValue,
         uint256 roundId

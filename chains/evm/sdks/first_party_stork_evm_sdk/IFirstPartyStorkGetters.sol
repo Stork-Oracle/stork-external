@@ -60,4 +60,11 @@ interface IFirstPartyStorkGetters {
     function getSingleUpdateFee(
         address pubKey
     ) external view returns (uint);
+
+    /// @notice Calculates the encoded asset ID for the specified asset pair
+    /// @param assetPairId The asset pair identifier
+    /// @return encodedAssetId The keccak256 hash of the asset pair identifier
+    function getEncodedAssetId(
+        string memory assetPairId
+    ) external pure returns (bytes32);
 }

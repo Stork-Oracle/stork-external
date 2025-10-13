@@ -25,8 +25,6 @@ abstract contract FirstPartyStork is
         for (uint i = 0; i < updateData.length; i++) {
             FirstPartyStorkStructs.PublisherTemporalNumericValueInput
                 memory input = updateData[i];
-            FirstPartyStorkStructs.PublisherUser
-                memory publisherUser = getPublisherUser(input.pubKey);
 
             bool verified = verifyPublisherSignatureV1(
                 input.pubKey,
@@ -43,12 +41,12 @@ abstract contract FirstPartyStork is
             bool updated = updateLatestValueIfNecessary(input.pubKey, input);
             if (updated) {
                 numUpdates++;
+                requiredFee += getSingleUpdateFee(input.pubKey);
             }
 
             if (input.storeHistorical) {
                 storeHistoricalValue(input.pubKey, input);
             }
-            requiredFee += publisherUser.singleUpdateFee;
         }
 
         if (numUpdates == 0) {
@@ -60,11 +58,16 @@ abstract contract FirstPartyStork is
     }
 
     function getUpdateFeeV1(
-        address pubKey,
-        uint totalNumUpdates
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
+            calldata updateData
     ) public view returns (uint) {
-        FirstPartyStorkStructs.PublisherUser memory publisherUser = getPublisherUser(pubKey);
-        return totalNumUpdates * publisherUser.singleUpdateFee;
+        uint256 feeAmount = 0;
+        for (uint i = 0; i < updateData.length; i++) {
+            FirstPartyStorkStructs.PublisherTemporalNumericValueInput
+                memory input = updateData[i];
+            feeAmount += getSingleUpdateFee(input.pubKey);
+        }
+        return feeAmount;
     }
 
     function createPublisherUser(
