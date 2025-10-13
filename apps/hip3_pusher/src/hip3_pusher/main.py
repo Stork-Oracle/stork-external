@@ -5,6 +5,8 @@ import time
 import json
 import asyncio
 import random
+import yaml
+from yaml.loader import SafeLoader
 from websockets import connect
 
 MSG_QUEUE_MAX = 10_000
@@ -117,26 +119,30 @@ def coordinator():
     send_to_endpoint(snapshot)
 
 def main():
-    url = os.getenv("STORK_WS_URL")
-    auth = os.getenv("STORK_WS_AUTH")
-    assets = os.getenv("STORK_WS_ASSETS").split(",")
-    ws_t = threading.Thread(target=run_websocket, args=(url, auth, assets), name="ws", daemon=True)
-    coord_t = threading.Thread(target=coordinator, name="coord", daemon=True)
+    config_path = os.getenv("CONFIG_PATH")
+    with open(config_path, "r") as f:
+        config = yaml.load(f, Loader=SafeLoader)
+    print(config)
+    # url = os.getenv("STORK_WS_URL")
+    # auth = os.getenv("STORK_WS_AUTH")
+    # assets = os.getenv("STORK_WS_ASSETS").split(",")
+    # ws_t = threading.Thread(target=run_websocket, args=(url, auth, assets), name="ws", daemon=True)
+    # coord_t = threading.Thread(target=coordinator, name="coord", daemon=True)
 
-    ws_t.start()
-    coord_t.start()
+    # ws_t.start()
+    # coord_t.start()
 
-    try:
-        # Keep main thread alive but responsive to signals
-        while not stop_event.is_set():
-            stop_event.wait(timeout=1.0)
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt received, shutting down...")
-        stop_event.set()
+    # try:
+    #     # Keep main thread alive but responsive to signals
+    #     while not stop_event.is_set():
+    #         stop_event.wait(timeout=1.0)
+    # except KeyboardInterrupt:
+    #     print("KeyboardInterrupt received, shutting down...")
+    #     stop_event.set()
     
-    # Give threads a moment to clean up
-    print("Waiting for threads to finish...")
-    ws_t.join(timeout=5.0)
-    coord_t.join(timeout=5.0)
+    # # Give threads a moment to clean up
+    # print("Waiting for threads to finish...")
+    # ws_t.join(timeout=5.0)
+    # coord_t.join(timeout=5.0)
     
-    print("Shutdown complete")
+    # print("Shutdown complete")

@@ -1,0 +1,10 @@
+config:
+  dex:
+    name: tsts
+    testnet: true
+
+markets:
+  - hip3_name: BTCUSD
+    stork_spot_asset: BTCUSD
+    stork_mark_asset: BTCUSD
+    autocalculate_ext: true
