@@ -32,5 +32,5 @@ DOCKERHUB_USERNAME="storknetwork"
 IMAGE_NAME=${SERVICE//_/-}
 
 docker buildx use stork-cli-builder
-docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t "$DOCKERHUB_USERNAME"/"$IMAGE_NAME":"$TAG" -t "$DOCKERHUB_USERNAME"/"$IMAGE_NAME":"$TYPE_TAG" --push --progress=plain . --build-arg SERVICE=$SERVICE
+docker buildx build --platform linux/amd64,linux/arm64 -f ./docker/images/Dockerfile -t "$DOCKERHUB_USERNAME"/"$IMAGE_NAME":"$TAG" -t "$DOCKERHUB_USERNAME"/"$IMAGE_NAME":"$TYPE_TAG" --push --progress=plain . --build-arg SERVICE=$SERVICE
 echo "Pushed image successfully"
