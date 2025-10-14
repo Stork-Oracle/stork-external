@@ -219,6 +219,10 @@ func (r *PublisherAgentRunner[T]) mergeBrokers(
 	registryBrokers map[BrokerPublishUrl]map[shared.AssetID]struct{},
 	seededBrokers map[BrokerPublishUrl]map[shared.AssetID]struct{},
 ) map[BrokerPublishUrl]map[shared.AssetID]struct{} {
+	if registryBrokers == nil {
+		return seededBrokers
+	}
+
 	// merge seeded brokers with registry brokers
 	for brokerUrl, assetIDs := range seededBrokers {
 		_, exists := registryBrokers[brokerUrl]

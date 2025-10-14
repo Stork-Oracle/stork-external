@@ -42,3 +42,26 @@ func TestMergeBrokers_UnionWhenOverlapping(t *testing.T) {
 	assert.Contains(t, result[sharedBrokerUrl], asset2, "Should have ETHUSD (overlapping)")
 	assert.Contains(t, result[sharedBrokerUrl], asset3, "Should have SOLUSD from registry")
 }
+
+func TestMergeBrokers_NilRegistry(t *testing.T) {
+	t.Parallel()
+
+	runner := &PublisherAgentRunner[*shared.EvmSignature]{
+		logger: zerolog.Nop(),
+	}
+
+	broker1 := BrokerPublishUrl("wss://broker1.example.com")
+	asset1 := shared.AssetID("BTCUSD")
+
+	seededBrokers := map[BrokerPublishUrl]map[shared.AssetID]struct{}{
+		broker1: {
+			asset1: struct{}{},
+		},
+	}
+
+	result := runner.mergeBrokers(nil, seededBrokers)
+
+	assert.Contains(t, result, broker1, "Should have broker1")
+	assert.Len(t, result[broker1], 1, "Should have exactly 1 asset")
+	assert.Contains(t, result[broker1], asset1, "Should have BTCUSD from seeded")
+}
