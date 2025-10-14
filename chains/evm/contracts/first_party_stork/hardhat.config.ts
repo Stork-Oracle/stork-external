@@ -3,6 +3,8 @@ import hardhatViem from "@nomicfoundation/hardhat-viem";
 import hardhatIgnition from "@nomicfoundation/hardhat-ignition";
 import { configVariable } from "hardhat/config";
 
+const PRIVATE_KEY = configVariable("PRIVATE_KEY");
+
 const config: HardhatUserConfig = {
   plugins: [hardhatViem, hardhatIgnition],
   solidity: {
@@ -28,16 +30,14 @@ const config: HardhatUserConfig = {
   networks: {
     hardhatLocal: {
       type: "http",
-      chainType: "l1",
       url: "http://localhost:8545",
+      chainId: 31337,
     },
-    hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
-    },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
+    plumeTestnet: {
+      type: "http",
+      url: "https://testnet-rpc.plume.org",
+      chainId: 98867,
+      accounts: [PRIVATE_KEY],
     },
   },
 };
