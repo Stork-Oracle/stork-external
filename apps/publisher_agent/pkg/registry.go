@@ -27,18 +27,16 @@ func NewRegistryClient(baseUrl string, storkAuthSigner signer.StorkAuthSigner, l
 func (c *RegistryClient) GetBrokersForPublisher(
 	publisherKey shared.PublisherKey,
 ) (map[BrokerPublishUrl]map[shared.AssetID]struct{}, error) {
-	brokerMap := make(map[BrokerPublishUrl]map[shared.AssetID]struct{})
-
 	brokerEndpoint := c.baseUrl + "/v1/registry/brokers"
 	queryParams := url.Values{}
 	queryParams.Add("publisher_key", string(publisherKey))
 	authHeaders, err := c.storkAuthSigner.GetAuthHeaders()
 	if err != nil {
-		return brokerMap, fmt.Errorf("error getting auth header: %v", err)
+		return nil, fmt.Errorf("error getting auth header: %v", err)
 	}
 	response, err := RestQuery("GET", brokerEndpoint, queryParams, nil, authHeaders)
 	if err != nil {
-		return brokerMap, fmt.Errorf("failed to get broker list: %v", err)
+		return nil, fmt.Errorf("failed to get broker list: %v", err)
 	}
 
 	var brokers []BrokerConnectionConfig
@@ -49,13 +47,15 @@ func (c *RegistryClient) GetBrokersForPublisher(
 		err = json.Unmarshal(response, &errorResponse)
 		if err == nil {
 			if errorResponse.Error == "Unauthorized" {
-				return brokerMap, fmt.Errorf("not authorized to query Stork Registry - check your configured StorkAuth")
+				return nil, fmt.Errorf("not authorized to query Stork Registry - check your configured StorkAuth")
 			} else {
-				return brokerMap, fmt.Errorf("failed to query the Stork Registry: %s", errorResponse.Error)
+				return nil, fmt.Errorf("failed to query the Stork Registry: %s", errorResponse.Error)
 			}
 		}
-		return brokerMap, fmt.Errorf("failed to unmarshal response from Stork Registry: %s", string(response))
+		return nil, fmt.Errorf("failed to unmarshal response from Stork Registry: %s", string(response))
 	}
+
+	brokerMap := make(map[BrokerPublishUrl]map[shared.AssetID]struct{})
 
 	if len(brokers) == 0 {
 		c.logger.Warn().

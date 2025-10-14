@@ -1,4 +1,4 @@
-package runner 
+package pusher 
 
 import (
 	"github.com/rs/zerolog"

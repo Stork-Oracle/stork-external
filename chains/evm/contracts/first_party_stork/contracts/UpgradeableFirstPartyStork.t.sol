@@ -254,6 +254,20 @@ contract UpgradeableFirstPartyStorkTest is Test {
         assertEq(publisherUser.singleUpdateFee, singleUpdateFee);
     }
 
+    // ===== GET ENCODED ASSET ID TESTS =====
+
+    function test_GetEncodedAssetId_BTCUSD() public view {
+        bytes32 hash = stork.getEncodedAssetId(btcUsd);
+        bytes32 expected = 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de;
+        assertEq(hash, expected);
+    }
+
+     function test_GetEncodedAssetId_ETHUSD() public view {
+        bytes32 hash = stork.getEncodedAssetId(ethUsd);
+        bytes32 expected = 0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160;
+        assertEq(hash, expected);
+    }
+    
     // ===== GET SINGLE UPDATE FEE TESTS =====
 
     function test_GetSingleUpdateFee_ReturnsCorrectFee() public {

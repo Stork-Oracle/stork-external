@@ -7,8 +7,9 @@ import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
 import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkGetters.sol";
 import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkErrors.sol";
 import "./FirstPartyStorkState.sol";
+import "./FirstPartyStorkHelpers.sol";
 
-contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters {
+contract FirstPartyStorkGetters is FirstPartyStorkState, FirstPartyStorkHelpers, IFirstPartyStorkGetters {
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId
@@ -64,11 +65,5 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, IFirstPartyStorkGetters
         address pubKey
     ) public view returns (uint) {
         return getPublisherUser(pubKey).singleUpdateFee;
-    }
-
-    function getEncodedAssetId(
-        string memory assetPairId
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(assetPairId));
     }
 }

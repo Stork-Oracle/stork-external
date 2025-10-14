@@ -82,22 +82,12 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	// query Stork Registry for brokers
 
 	publicKey := r.signer.GetPublisherKey()
-	newBrokerMap, err := r.registryClient.GetBrokersForPublisher(publicKey)
+	registryBrokers, err := r.registryClient.GetBrokersForPublisher(publicKey)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
 	}
 
-	// merge seeded brokers with registry brokers
-	for brokerUrl, assetIDs := range r.seededBrokers {
-		_, exists := newBrokerMap[brokerUrl]
-		if !exists {
-			newBrokerMap[brokerUrl] = assetIDs
-		} else {
-			for assetID := range assetIDs {
-				newBrokerMap[brokerUrl][assetID] = struct{}{}
-			}
-		}
-	}
+	newBrokerMap := r.mergeBrokers(registryBrokers, r.seededBrokers)
 
 	// add or update desired connections
 	r.outgoingConnectionsLock.RLock()
@@ -223,4 +213,23 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			time.Sleep(r.config.BrokerReconnectDelay)
 		}
 	}
+}
+
+func (r *PublisherAgentRunner[T]) mergeBrokers(
+	registryBrokers map[BrokerPublishUrl]map[shared.AssetID]struct{},
+	seededBrokers map[BrokerPublishUrl]map[shared.AssetID]struct{},
+) map[BrokerPublishUrl]map[shared.AssetID]struct{} {
+	// merge seeded brokers with registry brokers
+	for brokerUrl, assetIDs := range seededBrokers {
+		_, exists := registryBrokers[brokerUrl]
+		if !exists {
+			registryBrokers[brokerUrl] = assetIDs
+		} else {
+			for assetID := range assetIDs {
+				registryBrokers[brokerUrl][assetID] = struct{}{}
+			}
+		}
+	}
+
+	return registryBrokers
 }

@@ -1,4 +1,4 @@
-package runner
+package pusher
 
 import (
 	"encoding/json"

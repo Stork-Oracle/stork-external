@@ -1,4 +1,4 @@
-package runner
+package pusher
 
 const (
 	DefaultBatchingWindow = 5
