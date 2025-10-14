@@ -34,7 +34,6 @@ async def connect_with_basic_auth(url: str, auth: str, assets: list[str]):
             
 
 def run_websocket(url: str, auth: str, assets: list[str]):
-    """Wrapper to run async websocket in a thread with retry logic"""
     max_retries = 100
     base_delay = 1.0  # Start with 1 second
     max_delay = 5.0  # Cap at 5 seconds
@@ -80,10 +79,6 @@ def run_websocket(url: str, auth: str, assets: list[str]):
         print("WebSocket thread stopped due to stop event")
 
 def coordinator():
-    """
-    Emulates Go’s: select { case <-msgCh; case <-ticker.C }
-    by using Queue.get(timeout=remaining_time).
-    """
     next_flush = time.monotonic() + FLUSH_INTERVAL_SEC
     print("Coordinator started")
 
