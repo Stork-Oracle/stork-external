@@ -63,7 +63,7 @@ generate:
 	@echo "Installing generate..."
 	@$(GO) install -v ./utils/generate
 
-first_party_pusher: signer_ffi fuel_ffi install-cosmwasm-libs
+first_party_pusher: signer_ffi
 	@echo "Installing first party pusher..."
 	@$(GO) install -v ./apps/first_party_pusher
 
