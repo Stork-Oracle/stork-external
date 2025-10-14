@@ -16,6 +16,7 @@ type Pusher struct {
 	storkWsEndpoint string
 	storkAuth       string
 	chainRpcUrl     string
+	chainWsRpcUrl   string
 	contractAddress string
 	assetConfigFile string
 	batchingWindow  int
@@ -26,7 +27,7 @@ type Pusher struct {
 
 // NewPusher creates a new Pusher with the given parameters.
 func NewPusher(
-	storkWsEndpoint, storkAuth, chainRpcUrl, contractAddress, assetConfigFile string,
+	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile string,
 	batchingWindow, pollingPeriod int,
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
@@ -35,6 +36,7 @@ func NewPusher(
 		storkWsEndpoint: storkWsEndpoint,
 		storkAuth:       storkAuth,
 		chainRpcUrl:     chainRpcUrl,
+		chainWsRpcUrl:   chainWsRpcUrl,
 		contractAddress: contractAddress,
 		assetConfigFile: assetConfigFile,
 		batchingWindow:  batchingWindow,
@@ -46,6 +48,24 @@ func NewPusher(
 
 // Run starts the Pusher.
 func (p *Pusher) Run(ctx context.Context) {
+	p.logger.Info().Str("wsRpcUrl", p.chainWsRpcUrl).Msg("Connecting to WS RPC URL")
+
+	err := p.interactor.ConnectWs(p.chainWsRpcUrl)
+	if err != nil {
+		p.logger.Error().Err(err).
+			Str("wsRpcUrl", p.chainWsRpcUrl).
+			Msg("failed to connect to ws RPC")
+	}
+
+	p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Connecting to HTTP RPC URL")
+
+	err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+	if err != nil {
+		p.logger.Error().Err(err).
+			Str("httpRpcUrl", p.chainRpcUrl).
+			Msg("failed to connect to HTTP RPC")
+	}
+
 	priceConfig, assetIDs, encodedAssetIDs, err := p.initializeAssets()
 	if err != nil {
 		p.logger.Fatal().Err(err).Msg("Failed to initialize assets")
@@ -62,7 +82,14 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	initialValues, err := p.interactor.PullValues(encodedAssetIDs)
 	if err != nil {
-		p.logger.Fatal().Err(err).Msg("Failed to pull initial values from contract")
+		p.logger.Error().Err(err).Msg("Failed to pull initial values from contract")
+
+		p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
+		err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+		if err != nil {
+			p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
+		}
 	}
 
 	for encodedAssetID, value := range initialValues {
@@ -142,7 +169,12 @@ func (p *Pusher) poll(
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
 
-			continue
+			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
+			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+			if err != nil {
+				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
+			}
 		}
 
 		if len(polledVals) > 0 {
@@ -211,6 +243,13 @@ func (p *Pusher) handlePushUpdates(
 		err := p.interactor.BatchPushToContract(updates)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to push batch to contract")
+
+			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
+
+			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+			if err != nil {
+				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
+			}
 		} else {
 			for encodedAssetID, update := range updates {
 				quantizedValInt := new(big.Int)

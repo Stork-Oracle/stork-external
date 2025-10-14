@@ -58,8 +58,6 @@ func runPush(cmd *cobra.Command, args []string) {
 	}
 
 	interactor, err := NewContractInteractor(
-		chainRpcUrl,
-		chainWsUrl,
 		contractAddress,
 		keyFileContent,
 		verifyPublishers,
@@ -74,6 +72,7 @@ func runPush(cmd *cobra.Command, args []string) {
 		storkWsEndpoint,
 		storkAuth,
 		chainRpcUrl,
+		chainWsUrl,
 		contractAddress,
 		assetConfigFile,
 		batchingWindow,

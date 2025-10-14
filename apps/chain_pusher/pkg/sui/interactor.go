@@ -18,17 +18,18 @@ import (
 var ErrPrivateKeyEmpty = errors.New("private key is empty")
 
 type ContractInteractor struct {
-	logger   zerolog.Logger
-	contract *bindings.StorkContract
+	logger zerolog.Logger
 
+	account          *account.Account
 	pollingPeriodSec int
+	contractAddr     string
+
+	contract *bindings.StorkContract
 }
 
 func NewContractInteractor(
-	rpcUrl string,
 	contractAddr string,
 	keyFileContent []byte,
-	assetConfigFile string,
 	pollingPeriodSec int,
 	logger zerolog.Logger,
 ) (*ContractInteractor, error) {
@@ -39,16 +40,29 @@ func NewContractInteractor(
 		return nil, err
 	}
 
-	contract, err := bindings.NewStorkContract(rpcUrl, contractAddr, account)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stork contract client: %w", err)
-	}
-
 	return &ContractInteractor{
 		logger:           logger,
-		contract:         contract,
+		account:          account,
+		contractAddr:     contractAddr,
+		contract:         nil,
 		pollingPeriodSec: pollingPeriodSec,
 	}, nil
+}
+
+func (sci *ContractInteractor) ConnectHTTP(url string) error {
+	contract, err := bindings.NewStorkContract(url, sci.contractAddr, sci.account)
+	if err != nil {
+		return fmt.Errorf("failed to create stork contract client: %w", err)
+	}
+
+	sci.contract = contract
+
+	return nil
+}
+
+func (sci *ContractInteractor) ConnectWs(url string) error {
+	// not implemented
+	return nil
 }
 
 // ListenContractEvents is a placeholder function for the Sui contract interactor.

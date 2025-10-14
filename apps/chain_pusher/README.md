@@ -165,12 +165,12 @@ go run ./main.go cosmwasm \
     -r <chain-rpc-url> \
     -x <contract-address> \
     -f <asset-config-file> \
-    -k <mnemonic-file> \
+    -m <mnemonic-file> \
     -g <gas-price> \
     -j <gas-adjustment> \
     -d <denom> \
     -i <chain-id> \
-    -p <chain-prefix>
+    -c <chain-prefix>
 ```
 
 ### CosmWasm Development Setup
@@ -212,7 +212,37 @@ The pusher runs on a per chain basis.
 2. Setup `.asset-config.yaml` and wallet files in user home directory, e.g. `/home/ec2-user`
 3. Run the appropriate docker command for your chain
 
+## Initia MiniMove Chain Setup
+
+### Wallet Setup
+Create a `.key` file containing your private key mnemonic.
+
+For a full explanation of the flags, run:
+```bash
+go run ./cmd/main.go initia-minimove --help
+```
+
+Basic usage:
+```bash
+go run ./cmd/main.go initia-minimove \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -r <chain-rpc-url> \
+    -x <contract-address> \
+    -f <asset-config-file> \
+    -m <mnemonic-file>
+    -g <gas-price> \
+    -j <gas-adjustment> \
+    -d <denom> \
+    -i <chain-id> \
+```
+
+### Initia MiniMove Development Setup
+At the time of writing there is no way to generate Go bindings for Initia MiniMove automatically. Manually built contract bindings/utilities can be found [here](pkg/initia_minimove/bindings/stork_minimove_contract.go).
+
 #### EVM Chain Example (Polygon Testnet)
+This is an example of how to run the EVM pusher with docker, though this works for any chain (with the chain-appropriate flags).
+
 ```bash
 docker run \
     -v /home/ec2-user/polygon.asset-config.yaml:/etc/asset-config.yaml \

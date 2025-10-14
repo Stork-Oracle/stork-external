@@ -10,7 +10,7 @@ func PusherLogger(
 	contractAddress string,
 ) zerolog.Logger {
 	return pusher.AppLogger("evm").With().
-		Str("chainRpcUrl", chainRpcUrl).
+		Str("chainHttpRpcUrl", chainRpcUrl).
 		Str("contractAddress", contractAddress).
 		Logger()
 }

@@ -16,6 +16,11 @@ const config: HardhatUserConfig = {
       chainId: 31337,
       loggingEnabled: true,
     },
+    base: {
+      url: "https://base.llamarpc.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 8453,
+    },
     baseSepolia: {
       url: "https://sepolia.base.org",
       accounts: [PRIVATE_KEY],
@@ -33,10 +38,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: {
-      mainnet: ETHERSCAN_API_KEY,
-      plumeMainnet: 'fake',
-    },
+    apiKey: ETHERSCAN_API_KEY,
     customChains: [
       {
         network: "plumeMainnet",
