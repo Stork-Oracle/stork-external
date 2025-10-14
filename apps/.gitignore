@@ -6,3 +6,5 @@ build
 !sample.asset-config.yaml
 
 config
+
+**/local/
