@@ -21,6 +21,7 @@ services:
   publisher-agent:
     profiles:
       - local
+      - first-party
     build:
       context: ../..
       dockerfile: docker/images/Dockerfile
@@ -32,7 +33,6 @@ services:
       STORK_STARK_PRIVATE_KEY: ${PUBLISHER_STARK_PRIVATE_KEY}
       STORK_STARK_PUBLIC_KEY: ${PUBLISHER_STARK_PUBLIC_KEY}
       STORK_ORACLE_ID: ${PUBLISHER_ORACLE_ID}
-      STORK_PULL_BASED_AUTH: ${PUBLISHER_PULL_BASED_AUTH}
     command:
       [
         "start",
@@ -44,7 +44,7 @@ services:
     ports:
       - "5216:5216"
 
-  first-party-pusher:
+  first-party-pusher-local:
     profiles:
       - local
     build:
@@ -71,6 +71,32 @@ services:
         condition: service_started
       evm-contract:
         condition: service_healthy
+
+  first-party-pusher:
+    profiles:
+      - first-party
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    environment:
+      PUSHER_PRIVATE_KEY: ${PUSHER_PRIVATE_KEY}
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "${CHAIN_RPC_URL}",
+        "-x", "${CONTRACT_ADDRESS}",
+        "-f", "/etc/pusher-asset-config.yaml",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${ASSET_CONFIG_PATH:-./configs/local/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
+    depends_on:
+      publisher-agent:
+        condition: service_started
 
   evm-contract:
     profiles:
