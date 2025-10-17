@@ -5,6 +5,7 @@ import typer
 from typing import Optional
 
 from .config import validate_config_early
+from .logging import setup_logging, get_logger
 
 app = typer.Typer(help="HIP3 pusher CLI: push HIP-3 configs/events somewhere.", add_completion=False)
 
@@ -25,6 +26,9 @@ def push(
     verbose: int = typer.Option(
         0, "--verbose", "-v", count=True, help="Increase verbosity (-v, -vv)"
     ),
+    json_logs: bool = typer.Option(
+        False, "--json-logs", help="Output logs in JSON format"
+    ),
 ):
     """
     Push using HIP-3 configs.
@@ -32,32 +36,47 @@ def push(
     Example:
       hip3-pusher push ./examples/sample_config.yaml -c ./examples/creds.toml -vv
     """
-    # Validate config structure early - fail fast if invalid
-    validated_config = validate_config_early(config)
-
-    # Simple logging based on verbosity
-    def log(level: int, msg: str):
-        if verbose >= level:
-            typer.echo(msg)
-
-    log(1, f"Config: {config}")
-    log(1, f"DEX: {validated_config.config.dex.name} ({'testnet' if validated_config.config.dex.testnet else 'mainnet'})")
-    log(1, f"Markets: {len(validated_config.markets)}")
-    
+    # Configure logging based on verbosity and format preference
+    log_level = "ERROR"
+    if verbose >= 1:
+        log_level = "INFO"
     if verbose >= 2:
-        for i, market in enumerate(validated_config.markets, 1):
-            log(2, f"  Market {i}: {market.hip3_name} -> {market.stork_spot_asset}")
+        log_level = "DEBUG"
+    
+    setup_logging(level=log_level, json_format=json_logs)
+    logger = get_logger(__name__)
+    
+    logger.info("Starting HIP3 push operation")
+    
+    # Validate config structure early - fail fast if invalid
+    try:
+        validated_config = validate_config_early(config)
+        logger.info(f"Configuration validated successfully: {config}")
+    except Exception as e:
+        logger.error(f"Configuration validation failed: {config} - {e}")
+        raise typer.Exit(1)
+
+    # Log configuration details
+    network_type = "testnet" if validated_config.config.dex.testnet else "mainnet"
+    logger.info(f"DEX: {validated_config.config.dex.name} ({network_type})")
+    logger.info(f"Markets: {len(validated_config.markets)} configured")
+    
+    # Log detailed market information in debug mode
+    for i, market in enumerate(validated_config.markets, 1):
+        logger.debug(f"Market {i}: {market.hip3_name} -> {market.stork_spot_asset} (autocalc: {market.autocalculate_ext})")
     
     if creds:
-        log(1, f"Creds:  {creds}")
+        logger.info(f"Credentials: {creds}")
     if endpoint:
-        log(1, f"Endpoint: {endpoint}")
+        logger.info(f"Endpoint: {endpoint}")
 
     if dry_run:
+        logger.info("Dry run completed successfully - no actions executed")
         typer.echo("✅ Dry run: config validation passed, no actions executed.")
         raise typer.Exit(0)
 
     # TODO: Real pushing logic here - use validated_config
+    logger.info("Push operation completed successfully")
     typer.echo("Pushed successfully.")
 
 @app.callback()
