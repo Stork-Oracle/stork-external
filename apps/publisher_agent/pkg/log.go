@@ -3,7 +3,7 @@ package publisher_agent
 import (
 	"net/http"
 
-	"github.com/Stork-Oracle/stork-external/shared/signer"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,7 @@ func MainLogger() zerolog.Logger {
 	return BaseAppLogger().With().Str("service", "main").Logger()
 }
 
-func RunnerLogger(signatureType signer.SignatureType) zerolog.Logger {
+func RunnerLogger(signatureType shared.SignatureType) zerolog.Logger {
 	return BaseAppLogger().With().Str("service", "runner").Str("signature_type", string(signatureType)).Logger()
 }
 

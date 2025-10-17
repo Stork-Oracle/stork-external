@@ -6,7 +6,7 @@ package boringvaultevm
 import "github.com/Stork-Oracle/stork-external/apps/data_provider/pkg/types"
 
 type BoringVaultEvmConfig struct {
-	DataSource      types.DataSourceId `json:"dataSource"` // required for all Data Provider Sources
+	DataSource      types.DataSourceID `json:"dataSource"` // required for all Data Provider Sources
 	UpdateFrequency string             `json:"updateFrequency"`
 	HttpProviderUrl string             `json:"httpProviderUrl"`
 	ContractAddress string             `json:"contractAddress"`

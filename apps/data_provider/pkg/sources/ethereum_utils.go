@@ -54,7 +54,7 @@ func GetEthereumContract(
 func CallEthereumFunction(
 	contract *bind.BoundContract,
 	functionName string,
-	valueId types.ValueId,
+	valueID types.ValueID,
 	logger zerolog.Logger,
 ) ([]any, error) {
 	// retry with exponential backoff
@@ -66,7 +66,7 @@ func CallEthereumFunction(
 		if queryError != nil {
 			logger.Warn().
 				Err(queryError).
-				Msgf("Failed to query contract method %s for value id %s (attempt %v): %v", functionName, valueId, attempt, queryError)
+				Msgf("Failed to query contract method %s for value id %s (attempt %v): %v", functionName, valueID, attempt, queryError)
 			time.Sleep(delay)
 			delay = delay * 2
 		} else {
@@ -78,7 +78,7 @@ func CallEthereumFunction(
 		return nil, fmt.Errorf(
 			"failed to hit contract method %s for value id %s: %v",
 			functionName,
-			valueId,
+			valueID,
 			queryError,
 		)
 	}

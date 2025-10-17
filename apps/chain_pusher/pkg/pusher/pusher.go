@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/rs/zerolog"
 )
 
@@ -183,13 +184,13 @@ func (p *Pusher) poll(
 }
 
 // initializeAssets loads config and prepares asset IDs.
-func (p *Pusher) initializeAssets() (*types.AssetConfig, []types.AssetID, []types.InternalEncodedAssetID, error) {
+func (p *Pusher) initializeAssets() (*types.AssetConfig, []shared.AssetID, []types.InternalEncodedAssetID, error) {
 	priceConfig, err := types.LoadConfig(p.assetConfigFile)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to load price config: %w", err)
 	}
 
-	assetIDs := make([]types.AssetID, len(priceConfig.Assets))
+	assetIDs := make([]shared.AssetID, len(priceConfig.Assets))
 	encodedAssetIDs := make([]types.InternalEncodedAssetID, len(priceConfig.Assets))
 
 	i := 0
