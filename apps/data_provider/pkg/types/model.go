@@ -6,8 +6,8 @@ import (
 )
 
 type (
-	DataSourceId string
-	ValueId      string
+	DataSourceID string
+	ValueID      string
 
 	DataProviderConfig struct {
 		Sources         []DataProviderSourceConfig         `json:"sources,omitempty"`
@@ -15,12 +15,12 @@ type (
 	}
 
 	DataProviderSourceConfig struct {
-		Id     ValueId `json:"id"`
+		ID     ValueID `json:"id"`
 		Config any     `json:"config"`
 	}
 
 	DataProviderTransformationConfig struct {
-		Id      ValueId `json:"id"`
+		ID      ValueID `json:"id"`
 		Formula string  `json:"formula"`
 	}
 
@@ -33,17 +33,17 @@ type (
 	}
 
 	DataSourceValueUpdate struct {
-		ValueId      ValueId
-		DataSourceId DataSourceId
+		ValueID      ValueID
+		DataSourceID DataSourceID
 		Time         time.Time
 		Value        float64
 	}
 
-	DataSourceUpdateMap map[ValueId]DataSourceValueUpdate
+	DataSourceUpdateMap map[ValueID]DataSourceValueUpdate
 
 	ValueUpdate struct {
 		PublishTimestampNano int64   `json:"t"`
-		ValueId              ValueId `json:"a"`
+		ValueID              ValueID `json:"a"`
 		Value                string  `json:"v"`
 	}
 

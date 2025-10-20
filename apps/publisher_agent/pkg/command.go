@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
@@ -47,11 +48,11 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 	mainLogger.Info().Msg("initializing publisher agent")
 
 	valueUpdateChannels := make([]chan ValueUpdate, 0)
-	var evmRunner *PublisherAgentRunner[*signer.EvmSignature]
-	var starkRunner *PublisherAgentRunner[*signer.StarkSignature]
+	var evmRunner *PublisherAgentRunner[*shared.EvmSignature]
+	var starkRunner *PublisherAgentRunner[*shared.StarkSignature]
 	for _, signatureType := range config.SignatureTypes {
 		switch signatureType {
-		case EvmSignatureType:
+		case shared.EvmSignatureType:
 			mainLogger.Info().Msg("Starting EVM runner")
 			logger := RunnerLogger(signatureType)
 			thisSigner, err := signer.NewEvmSigner(secrets.EvmPrivateKey, logger)
@@ -62,7 +63,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create EVM auth signer: %v", err)
 			}
-			evmRunner = NewPublisherAgentRunner[*signer.EvmSignature](
+			evmRunner = NewPublisherAgentRunner[*shared.EvmSignature](
 				*config,
 				thisSigner,
 				evmAuthSigner,
@@ -71,13 +72,13 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			)
 			valueUpdateChannels = append(valueUpdateChannels, evmRunner.ValueUpdateCh)
 			go evmRunner.Run()
-		case StarkSignatureType:
+		case shared.StarkSignatureType:
 			mainLogger.Info().Msg("Starting Stark runner")
 			logger := RunnerLogger(signatureType)
 			thisSigner, err := signer.NewStarkSigner(
 				secrets.StarkPrivateKey,
 				string(config.StarkPublicKey),
-				string(config.OracleId),
+				string(config.OracleID),
 				logger,
 			)
 			if err != nil {
@@ -91,7 +92,7 @@ func runPublisherAgent(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create Stark auth signer: %v", err)
 			}
-			starkRunner = NewPublisherAgentRunner[*signer.StarkSignature](
+			starkRunner = NewPublisherAgentRunner[*shared.StarkSignature](
 				*config,
 				thisSigner,
 				starkAuthSigner,

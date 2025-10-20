@@ -2,7 +2,6 @@ package aptos
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -10,11 +9,10 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/aptos/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/aptos-labs/aptos-go-sdk/crypto"
 	"github.com/rs/zerolog"
 )
-
-var ErrFailedToConvertQuantizedPriceToBigInt = errors.New("failed to convert quantized price to big int")
 
 type ContractInteractor struct {
 	logger zerolog.Logger
@@ -166,7 +164,7 @@ func aggregatedSignedPriceToUpdateData(
 	//nolint:mnd // base number.
 	magnitude, ok := new(big.Int).SetString(magnitudeString, 10)
 	if !ok {
-		return bindings.UpdateData{}, ErrFailedToConvertQuantizedPriceToBigInt
+		return bindings.UpdateData{}, shared.ErrFailedToConvertQuantizedPriceToBigInt
 	}
 
 	negative := magnitude.Sign() == -1

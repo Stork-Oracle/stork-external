@@ -1,6 +1,6 @@
 #!/bin/bash
 
-STARTUP_ANIMATION_PATH="apps/lib/generate/frames"
+STARTUP_ANIMATION_PATH="utils/generate/pkg/frames"
 
 function run_animation() {
     # Get base path (current working directory)

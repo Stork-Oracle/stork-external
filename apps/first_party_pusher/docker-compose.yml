@@ -1,0 +1,126 @@
+services:
+  data-provider:
+    profiles:
+      - local
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "data_provider"
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/data_provider_config.json",
+        "-o",
+        "ws://publisher-agent:5216/publish",
+      ]
+    volumes:
+      - "./configs/local/data-provider-config.json:/etc/data_provider_config.json:ro"
+
+  publisher-agent:
+    profiles:
+      - local
+      - first-party
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "publisher_agent"
+    environment:
+      STORK_EVM_PRIVATE_KEY: ${PUBLISHER_EVM_PRIVATE_KEY}
+      STORK_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY}
+      STORK_STARK_PRIVATE_KEY: ${PUBLISHER_STARK_PRIVATE_KEY}
+      STORK_STARK_PUBLIC_KEY: ${PUBLISHER_STARK_PUBLIC_KEY}
+      STORK_ORACLE_ID: ${PUBLISHER_ORACLE_ID}
+    command:
+      [
+        "start",
+        "-c",
+        "/etc/publisher_config.json",
+      ]
+    volumes:
+      - "${PUBLISHER_CONFIG_PATH:-./configs/local/publisher-config.json}:/etc/publisher_config.json:ro"
+    ports:
+      - "5216:5216"
+
+  first-party-pusher-local:
+    profiles:
+      - local
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    environment:
+      PUSHER_PRIVATE_KEY: ${PUSHER_PRIVATE_KEY}
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "${CHAIN_RPC_URL:-http://host.docker.internal:8545}",
+        "-x", "${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}",
+        "-f", "/etc/pusher-asset-config.yaml",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${ASSET_CONFIG_PATH:-./configs/local/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
+    depends_on:
+      publisher-agent:
+        condition: service_started
+      evm-contract:
+        condition: service_healthy
+
+  first-party-pusher:
+    profiles:
+      - first-party
+    build:
+      context: ../..
+      dockerfile: docker/images/Dockerfile
+      args:
+        SERVICE: "first_party_pusher"
+    environment:
+      PUSHER_PRIVATE_KEY: ${PUSHER_PRIVATE_KEY}
+    command:
+      [
+        "evm",
+        "-w", "8080",
+        "-c", "${CHAIN_RPC_URL}",
+        "-x", "${CONTRACT_ADDRESS}",
+        "-f", "/etc/pusher-asset-config.yaml",
+      ]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${ASSET_CONFIG_PATH:-./configs/local/pusher-asset-config.yaml}:/etc/pusher-asset-config.yaml:ro"
+    depends_on:
+      publisher-agent:
+        condition: service_started
+
+  evm-contract:
+    profiles:
+      - local
+      - integration
+    build:
+      context: ../..
+      dockerfile: docker/images/first_party_evm.Dockerfile
+      args:
+        PUBLISHER_EVM_PUBLIC_KEY: ${PUBLISHER_EVM_PUBLIC_KEY:-0x99e295e85cb07C16B7BB62A44dF532A7F2620237}
+        PRIVATE_KEY: ${PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80} # Default private key for the first account in hardhat as that is the default owner account when deploying locally
+        CONTRACT_ADDRESS: ${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}
+        RPC_URL: ${RPC_URL:-http://127.0.0.1:8545}
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/sh",
+          "-c",
+          "wget --quiet --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' --header 'Content-Type: application/json' -O - http://127.0.0.1:8545 | grep result && grep -q 'REGISTRATION_COMPLETE' /tmp/registered.log"
+        ] # Checks if the contract is deployed and the publisher is registered (temp file is by the entrypoint script)
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

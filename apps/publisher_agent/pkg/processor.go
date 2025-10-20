@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/rs/zerolog"
 )
@@ -16,14 +17,14 @@ type ClockTick struct{}
 
 const SignedMessageBatchPeriod = 1 * time.Millisecond
 
-type ValueUpdateProcessor[T signer.Signature] struct {
+type ValueUpdateProcessor[T shared.Signature] struct {
 	valueUpdateCh             chan ValueUpdate
 	signedPriceUpdateBatchCh  chan SignedPriceUpdateBatch[T]
 	signer                    signer.Signer[T]
-	oracleId                  OracleId
+	oracleId                  OracleID
 	numRunners                int
-	valueUpdates              map[AssetId]ValueUpdate
-	lastReportedPrice         map[AssetId]float64
+	valueUpdates              map[shared.AssetID]ValueUpdate
+	lastReportedPrice         map[shared.AssetID]float64
 	clockPeriod               time.Duration
 	deltaCheckPeriod          time.Duration
 	changeThresholdProportion float64 // 0-1
@@ -34,9 +35,9 @@ type ValueUpdateProcessor[T signer.Signature] struct {
 	signQueueSize             int32
 }
 
-func NewPriceUpdateProcessor[T signer.Signature](
+func NewPriceUpdateProcessor[T shared.Signature](
 	signer signer.Signer[T],
-	oracleId OracleId,
+	oracleId OracleID,
 	numRunners int,
 	clockPeriod time.Duration,
 	deltaCheckPeriod time.Duration,
@@ -52,8 +53,8 @@ func NewPriceUpdateProcessor[T signer.Signature](
 		signer:                    signer,
 		oracleId:                  oracleId,
 		numRunners:                numRunners,
-		valueUpdates:              make(map[AssetId]ValueUpdate),
-		lastReportedPrice:         make(map[AssetId]float64),
+		valueUpdates:              make(map[shared.AssetID]ValueUpdate),
+		lastReportedPrice:         make(map[shared.AssetID]float64),
 		clockPeriod:               clockPeriod,
 		deltaCheckPeriod:          deltaCheckPeriod,
 		changeThresholdProportion: changeThresholdProportion,
@@ -164,13 +165,13 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 				}
 
 				priceUpdate := SignedPriceUpdate[T]{
-					OracleId: vup.oracleId,
-					AssetId:  update.ValueUpdate.Asset,
+					OracleID: vup.oracleId,
+					AssetID:  update.ValueUpdate.Asset,
 					Trigger:  update.TriggerType,
 					SignedPrice: SignedPrice[T]{
-						PublisherKey:         signer.PublisherKey(vup.signer.GetPublisherKey()),
-						ExternalAssetId:      externalAssetId,
-						SignatureType:        signer.SignatureType(vup.signer.GetSignatureType()),
+						PublisherKey:         shared.PublisherKey(vup.signer.GetPublisherKey()),
+						ExternalAssetID:      externalAssetId,
+						SignatureType:        shared.SignatureType(vup.signer.GetSignatureType()),
 						QuantizedPrice:       quantizedPrice,
 						TimestampedSignature: *timestampedSig,
 						Metadata:             update.ValueUpdate.Metadata,
@@ -195,7 +196,7 @@ func (vup *ValueUpdateProcessor[T]) Run() {
 			select {
 			// add incoming signed updates into a map
 			case signedUpdate := <-signedUpdates:
-				signedPriceUpdateBatch[signedUpdate.AssetId] = signedUpdate
+				signedPriceUpdateBatch[signedUpdate.AssetID] = signedUpdate
 			case <-ticker.C:
 				{
 					if len(signedPriceUpdateBatch) > 0 {

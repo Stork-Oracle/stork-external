@@ -34,10 +34,16 @@ test: signer_ffi fuel_ffi
 integration-test: signer_ffi fuel_ffi
 	@echo "Running Go integration tests..."
 	@set -e; \
-	for pkg in $$($(GO) list ./... | grep -v "/integration$$"); do \
+	for pkg in $$($(GO) list ./... | grep -v "/integration$$" | grep -v "apps/first_party_pusher"); do \
 	    $(GO) test -v -tags integration $$pkg; \
 	done
 
+.PHONY: first-party-integration-test
+## Run all Go integration tests
+first-party-integration-test: signer_ffi
+	@echo "Running Go integration tests..."
+	@set -e; \
+	$(GO) test -v -tags integration ./apps/first_party_pusher/pkg/evm/...
 
 
 # Individual Go Targets
@@ -57,9 +63,13 @@ generate:
 	@echo "Installing generate..."
 	@$(GO) install -v ./utils/generate
 
+first_party_pusher: signer_ffi
+	@echo "Installing first party pusher..."
+	@$(GO) install -v ./apps/first_party_pusher
+
 .PHONY: install
 ## Aggregate target to install all Go binaries	
-install: chain_pusher publisher_agent data_provider generate wasmvm
+install: chain_pusher publisher_agent data_provider generate wasmvm first_party_pusher
 	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean

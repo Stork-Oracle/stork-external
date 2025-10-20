@@ -34,9 +34,9 @@ func TestValidBoringVaultEvmConfig(t *testing.T) {
 
 	sourceConfig := config.Sources[0]
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, boringvaultevm.BoringVaultEvmDataSourceId, dataSourceId)
+	assert.Equal(t, boringvaultevm.BoringVaultEvmDataSourceID, dataSourceID)
 
 	sourceSpecificConfig, err := boringvaultevm.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)

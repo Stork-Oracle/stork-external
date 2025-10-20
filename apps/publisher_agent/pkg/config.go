@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"time"
 
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/Stork-Oracle/stork-external/shared/signer"
 )
 
@@ -28,7 +29,7 @@ const (
 )
 
 type Config struct {
-	SignatureTypes                   []signer.SignatureType
+	SignatureTypes                   []shared.SignatureType
 	ClockPeriod                      string
 	DeltaCheckPeriod                 string
 	ChangeThresholdPercent           float64 // 0-100
@@ -43,6 +44,7 @@ type Config struct {
 	PullBasedWsReadTimeout           string
 	SignEveryUpdate                  bool
 	IncomingWsPort                   int
+	SeededBrokers                    []BrokerConnectionConfig
 }
 
 type Keys struct {
@@ -50,8 +52,8 @@ type Keys struct {
 	EvmPublicKey    signer.EvmPublisherKey
 	StarkPrivateKey signer.StarkPrivateKey
 	StarkPublicKey  signer.StarkPublisherKey
-	OracleId        OracleId
-	PullBasedAuth   AuthToken
+	OracleID        OracleID `json:"OracleId"` //nolint:tagliatelle // Backwards compatibility
+	PullBasedAuth   shared.AuthToken
 }
 
 // this overwrites
@@ -72,25 +74,26 @@ func (k *Keys) updateFromEnvVars() {
 	if starkPublicKey != "" {
 		k.StarkPublicKey = signer.StarkPublisherKey(starkPublicKey)
 	}
-	oracleId := os.Getenv("STORK_ORACLE_ID")
-	if oracleId != "" {
-		k.OracleId = OracleId(oracleId)
+	oracleID := os.Getenv("STORK_ORACLE_ID")
+	if oracleID != "" {
+		k.OracleID = OracleID(oracleID)
 	}
 
 	pullBasedAuth := os.Getenv("STORK_PULL_BASED_AUTH")
 	if pullBasedAuth != "" {
-		k.PullBasedAuth = AuthToken(pullBasedAuth)
+		k.PullBasedAuth = shared.AuthToken(pullBasedAuth)
 	}
 }
 
 func readFile(path string) ([]byte, error) {
 	file, err := os.Open(path)
-	defer file.Close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
-	data, err := ioutil.ReadAll(file)
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
@@ -134,14 +137,14 @@ func LoadConfig(
 
 	for _, signatureType := range configFile.SignatureTypes {
 		switch signatureType {
-		case EvmSignatureType:
+		case shared.EvmSignatureType:
 			if !Hex32Regex.MatchString(string(keys.EvmPrivateKey)) {
 				return nil, nil, errors.New("must pass a valid EVM private key")
 			}
 			if !Hex32Regex.MatchString(string(keys.EvmPublicKey)) {
 				return nil, nil, errors.New("must pass a valid EVM public key")
 			}
-		case StarkSignatureType:
+		case shared.StarkSignatureType:
 			if !Hex32Regex.MatchString(string(keys.StarkPrivateKey)) {
 				return nil, nil, errors.New("must pass a valid Stark private key")
 			}
@@ -153,7 +156,7 @@ func LoadConfig(
 		}
 	}
 
-	if len(keys.OracleId) != 5 {
+	if len(keys.OracleID) != 5 {
 		return nil, nil, errors.New("oracle id length must be 5")
 	}
 
@@ -267,7 +270,7 @@ func LoadConfig(
 		clockUpdatePeriod,
 		deltaUpdatePeriod,
 		changeThresholdPercent,
-		keys.OracleId,
+		keys.OracleID,
 		storkRegistryBaseUrl,
 		storkRegistryRefreshDuration,
 		brokerReconnectDelayDuration,
@@ -279,6 +282,7 @@ func LoadConfig(
 		pullBasedWsReadTimeout,
 		configFile.SignEveryUpdate,
 		configFile.IncomingWsPort,
+		configFile.SeededBrokers,
 	)
 
 	secrets := NewStorkPublisherAgentSecrets(
@@ -293,13 +297,13 @@ func LoadConfig(
 type StorkPublisherAgentSecrets struct {
 	EvmPrivateKey   signer.EvmPrivateKey
 	StarkPrivateKey signer.StarkPrivateKey
-	PullBasedAuth   AuthToken
+	PullBasedAuth   shared.AuthToken
 }
 
 func NewStorkPublisherAgentSecrets(
 	evmPrivateKey signer.EvmPrivateKey,
 	starkPrivateKey signer.StarkPrivateKey,
-	pullBasedAuth AuthToken,
+	pullBasedAuth shared.AuthToken,
 ) *StorkPublisherAgentSecrets {
 	return &StorkPublisherAgentSecrets{
 		EvmPrivateKey:   evmPrivateKey,
@@ -309,13 +313,13 @@ func NewStorkPublisherAgentSecrets(
 }
 
 type StorkPublisherAgentConfig struct {
-	SignatureTypes                  []signer.SignatureType
+	SignatureTypes                  []shared.SignatureType
 	EvmPublicKey                    signer.EvmPublisherKey
 	StarkPublicKey                  signer.StarkPublisherKey
 	ClockPeriod                     time.Duration
 	DeltaCheckPeriod                time.Duration
 	ChangeThresholdProportion       float64 // 0-1
-	OracleId                        OracleId
+	OracleID                        OracleID
 	StorkRegistryBaseUrl            string
 	StorkRegistryRefreshInterval    time.Duration
 	BrokerReconnectDelay            time.Duration
@@ -327,16 +331,17 @@ type StorkPublisherAgentConfig struct {
 	PullBasedWsReadTimeout          time.Duration
 	SignEveryUpdate                 bool
 	IncomingWsPort                  int
+	SeededBrokers                   []BrokerConnectionConfig
 }
 
 func NewStorkPublisherAgentConfig(
-	signatureTypes []signer.SignatureType,
+	signatureTypes []shared.SignatureType,
 	evmPublisherKey signer.EvmPublisherKey,
 	starkPublisherKey signer.StarkPublisherKey,
 	clockPeriod time.Duration,
 	deltaPeriod time.Duration,
 	changeThresholdPercentage float64,
-	oracleId OracleId,
+	oracleID OracleID,
 	storkRegistryBaseUrl string,
 	storkRegistryRefreshInterval time.Duration,
 	brokerReconnectDelay time.Duration,
@@ -348,6 +353,7 @@ func NewStorkPublisherAgentConfig(
 	pullBasedWsReadTimeout time.Duration,
 	signEveryUpdate bool,
 	incomingWsPort int,
+	seededBrokers []BrokerConnectionConfig,
 ) *StorkPublisherAgentConfig {
 	return &StorkPublisherAgentConfig{
 		SignatureTypes:                  signatureTypes,
@@ -356,7 +362,7 @@ func NewStorkPublisherAgentConfig(
 		ClockPeriod:                     clockPeriod,
 		DeltaCheckPeriod:                deltaPeriod,
 		ChangeThresholdProportion:       changeThresholdPercentage / 100.0,
-		OracleId:                        oracleId,
+		OracleID:                        oracleID,
 		StorkRegistryBaseUrl:            storkRegistryBaseUrl,
 		StorkRegistryRefreshInterval:    storkRegistryRefreshInterval,
 		BrokerReconnectDelay:            brokerReconnectDelay,
@@ -368,5 +374,6 @@ func NewStorkPublisherAgentConfig(
 		PullBasedWsReadTimeout:          pullBasedWsReadTimeout,
 		SignEveryUpdate:                 signEveryUpdate,
 		IncomingWsPort:                  incomingWsPort,
+		SeededBrokers:                   seededBrokers,
 	}
 }

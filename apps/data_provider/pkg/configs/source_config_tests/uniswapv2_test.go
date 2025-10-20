@@ -36,16 +36,16 @@ func TestValidUniswapV2Config(t *testing.T) {
 	assert.Equal(t, 1, len(config.Sources))
 
 	sourceConfig := config.Sources[0]
-	assert.Equal(t, types.ValueId("WETHUSDT"), sourceConfig.Id)
+	assert.Equal(t, types.ValueID("WETHUSDT"), sourceConfig.ID)
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, uniswapv2.UniswapV2DataSourceId, dataSourceId)
+	assert.Equal(t, uniswapv2.UniswapV2DataSourceID, dataSourceID)
 
 	uniswapConfig, err := uniswapv2.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)
 
-	assert.Equal(t, types.DataSourceId("uniswapv2"), uniswapConfig.DataSource)
+	assert.Equal(t, types.DataSourceID("uniswapv2"), uniswapConfig.DataSource)
 	assert.Equal(t, "5s", uniswapConfig.UpdateFrequency)
 	assert.Equal(t, "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852", uniswapConfig.ContractAddress)
 	assert.Equal(t, "https://ethereum-rpc.publicnode.com", uniswapConfig.HttpProviderUrl)

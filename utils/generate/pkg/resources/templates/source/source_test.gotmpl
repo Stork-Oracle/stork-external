@@ -34,9 +34,9 @@ func TestValid{{ .PascalStr }}Config(t *testing.T) {
 
 	sourceConfig := config.Sources[0]
 
-	dataSourceId, err := utils.GetDataSourceId(sourceConfig.Config)
+	dataSourceID, err := utils.GetDataSourceID(sourceConfig.Config)
 	assert.NoError(t, err)
-	assert.Equal(t, {{ .LowerStr }}.{{ .PascalStr }}DataSourceId, dataSourceId)
+	assert.Equal(t, {{ .LowerStr }}.{{ .PascalStr }}DataSourceID, dataSourceID)
 
 	sourceSpecificConfig, err := {{ .LowerStr }}.GetSourceSpecificConfig(sourceConfig)
 	assert.NoError(t, err)

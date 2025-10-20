@@ -1,0 +1,23 @@
+{
+  "name": "first_party_stork",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@types/node": "^22.18.6",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.6",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.0",
+    "viem": "^2.37.8"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "@storknetwork/first-party-stork-evm-sdk": "^1.0.0"
+  },
+  "type": "module"
+}
