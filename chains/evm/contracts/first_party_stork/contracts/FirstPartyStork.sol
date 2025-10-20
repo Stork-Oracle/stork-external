@@ -70,6 +70,10 @@ abstract contract FirstPartyStork is
         return feeAmount;
     }
 
+    function version() public pure returns (string memory) {
+        return "1.0.0";
+    }
+
     function createPublisherUser(
         address pubKey,
         uint256 singleUpdateFee

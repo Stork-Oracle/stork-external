@@ -45,4 +45,8 @@ interface IFirstPartyStork is IFirstPartyStorkEvents, IFirstPartyStorkGetters {
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
             calldata updateData
     ) external view returns (uint);
+
+    /// @notice Retrieves the current version of the contract
+    /// @return string The version string (e.g., "1.0.0")
+    function version() external pure returns (string memory);
 }
