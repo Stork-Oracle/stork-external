@@ -3,9 +3,29 @@ import sys
 from pathlib import Path
 import typer
 from typing import Optional
+import logging
+import json
+import datetime
 
 from .config import validate_config_early
-from .logging import setup_logging, get_logger
+
+
+class JSONFormatter(logging.Formatter):
+    """Simple JSON formatter for log records."""
+    
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.datetime.fromtimestamp(record.created).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        
+        if record.exc_info:
+            log_entry["exception"] = self.formatException(record.exc_info)
+            
+        return json.dumps(log_entry)
+
 
 app = typer.Typer(help="HIP3 pusher CLI: push HIP-3 configs/events somewhere.", add_completion=False)
 
@@ -37,15 +57,30 @@ def push(
       hip3-pusher push ./examples/sample_config.yaml -c ./examples/creds.toml -vv
     """
     # Configure logging based on verbosity and format preference
-    log_level = "ERROR"
+    log_level = logging.ERROR
     if verbose >= 1:
-        log_level = "INFO"
+        log_level = logging.INFO
     if verbose >= 2:
-        log_level = "DEBUG"
+        log_level = logging.DEBUG
+
+    # Configure basic logging
+    if json_logs:
+        # Use JSON formatter for structured logging
+        handler = logging.StreamHandler()
+        handler.setFormatter(JSONFormatter())
+        logging.basicConfig(
+            level=log_level,
+            handlers=[handler]
+        )
+    else:
+        # Use standard text format
+        logging.basicConfig(
+            level=log_level,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
     
-    setup_logging(level=log_level, json_format=json_logs)
-    logger = get_logger(__name__)
-    
+    logger = logging.getLogger("hip3_pusher")
     logger.info("Starting HIP3 push operation")
     
     # Validate config structure early - fail fast if invalid

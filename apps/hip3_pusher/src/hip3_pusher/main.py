@@ -8,8 +8,9 @@ import random
 import yaml
 from yaml.loader import SafeLoader
 from websockets import connect
+import logging
 
-from .logging import setup_logging, get_logger
+logger = logging.getLogger("hip3_pusher")
 
 MSG_QUEUE_MAX = 10_000
 FLUSH_INTERVAL_SEC = 3.0
@@ -22,16 +23,13 @@ state_lock = threading.Lock()
 
 def send_to_endpoint(snapshot: dict):
     """Send snapshot data to the configured endpoint."""
-    logger = get_logger(__name__)
-    
     # Replace with real HTTP call
     # requests.post("https://example.com/ingest", json=snapshot, timeout=5)
     logger.info(f"Sending data to endpoint: {len(snapshot)} items - {list(snapshot.keys())}")
 
 async def connect_with_basic_auth(url: str, auth: str, assets: list[str]):
     """Connect to WebSocket with basic authentication and subscribe to assets."""
-    logger = get_logger(__name__)
-    
+
     logger.info(f"Establishing WebSocket connection to {url} for {len(assets)} assets")
     
     async with connect(url, additional_headers=[("Authorization", f"Basic {auth}")]) as ws:
@@ -55,8 +53,6 @@ async def connect_with_basic_auth(url: str, auth: str, assets: list[str]):
 
 def run_websocket(url: str, auth: str, assets: list[str]):
     """Run WebSocket connection with retry logic."""
-    logger = get_logger(__name__)
-    
     max_retries = 100
     base_delay = 1.0  # Start with 1 second
     max_delay = 5.0  # Cap at 5 seconds
@@ -111,8 +107,6 @@ def run_websocket(url: str, auth: str, assets: list[str]):
 
 def coordinator():
     """Coordinate message processing and data flushing."""
-    logger = get_logger(__name__)
-    
     next_flush = time.monotonic() + FLUSH_INTERVAL_SEC
     logger.info(f"Coordinator started (flush interval: {FLUSH_INTERVAL_SEC}s)")
     
@@ -169,10 +163,17 @@ def coordinator():
 
 def main():
     """Main entry point for the hip3_pusher service."""
-    # Configure logging for service mode
-    setup_logging(level="INFO", json_format=True)
-    logger = get_logger(__name__)
+    # Configure basic logging for service mode
+    log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_level = getattr(logging, log_level_str, logging.INFO)
     
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    
+    logger = logging.getLogger("hip3_pusher")
     logger.info("HIP3 pusher service starting")
     
     config_path = os.getenv("CONFIG_PATH")
