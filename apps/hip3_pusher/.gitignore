@@ -1,0 +1,33 @@
+# === PYTHON BUILD ARTIFACTS ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*$py.class
+
+# Compiled C extensions
+*.so
+
+# === DISTRIBUTION / PACKAGING ===
+# Setuptools / Wheel / Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# === SOURCE LAYOUT ===
+# Byte-compiled / temporary files in src or tests
+src/**/__pycache__/
+tests/**/__pycache__/
+
+# === ENVIRONMENTS ===
+# Virtualenv / venv / Poetry / Hatch / Pyenv
+.venv/
+venv/
+env/
+ENV/
+*.env
+.envrc

@@ -1,0 +1,24 @@
+config:
+  dex:
+    name: tsts
+    testnet: true
+
+markets:
+  - hip3_name: TEST2
+    spot_asset:
+      min_value: 10.0
+      max_value: 10.0
+    mark_asset:
+      min_value: 10.0
+      max_value: 10.0
+    external_asset:
+      min_value: 10.0
+      max_value: 10.0
+
+  - hip3_name: BTCUSD
+    spot_asset:
+      identifier: BTCUSD
+    mark_asset:
+      identifier: BTCUSD
+    external_asset:
+      identifier: BTCUSD

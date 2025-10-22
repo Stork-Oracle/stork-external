@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hip3_pusher"
+version = "0.1.0"
+description = "A pusher for the HIP3 protocol"
+authors = [{name="Stork Labs"}]
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "hyperliquid-python-sdk==0.19.0",
+    "pyyaml==6.0.3",
+    "typer==0.19.2",
+    "websockets==15.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+hip3-pusher = "hip3_pusher.main:main"
