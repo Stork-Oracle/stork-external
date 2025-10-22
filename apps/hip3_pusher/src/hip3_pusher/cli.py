@@ -6,9 +6,9 @@ from typing import Optional
 import logging
 import json
 import datetime
+from .runner import run
 
 from .config import validate_config_early
-
 
 class JSONFormatter(logging.Formatter):
     """Simple JSON formatter for log records."""
@@ -32,16 +32,14 @@ app = typer.Typer(help="HIP3 pusher CLI: push HIP-3 configs/events somewhere.", 
 @app.command()
 def push(
     config: Path = typer.Argument(..., help="Main config file", metavar="CONFIG"),
-    creds: Path = typer.Option(
-        None,
-        "--creds", "-c",
-        help="Credentials file (TOML/YAML/JSON)",
+    private_key_file: str = typer.Option(
+        ..., "--private-key-file", "-k", help="Private key file"
     ),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Validate and print actions without executing"
+    stork_ws_endpoint: str = typer.Option(
+        "wss://api.jp.stork-oracle.network", "--stork-ws-url", help="Stork WebSocket URL"
     ),
-    endpoint: Optional[str] = typer.Option(
-        None, "--endpoint", envvar="HIP3_ENDPOINT", help="Target endpoint (or HIP3_ENDPOINT)"
+    stork_ws_auth: str = typer.Option(
+        ..., "--stork-ws-auth", "-a", help="Stork WebSocket authentication"
     ),
     verbose: int = typer.Option(
         0, "--verbose", "-v", count=True, help="Increase verbosity (-v, -vv)"
@@ -91,28 +89,19 @@ def push(
         logger.error(f"Configuration validation failed: {config} - {e}")
         raise typer.Exit(1)
 
+    private_key = open(private_key_file, "r").read().strip()
+
     # Log configuration details
     network_type = "testnet" if validated_config.config.dex.testnet else "mainnet"
     logger.info(f"DEX: {validated_config.config.dex.name} ({network_type})")
     logger.info(f"Markets: {len(validated_config.markets)} configured")
+    stork_ws_assets = [market.stork_spot_asset for market in validated_config.markets]
     
     # Log detailed market information in debug mode
     for i, market in enumerate(validated_config.markets, 1):
         logger.debug(f"Market {i}: {market.hip3_name} -> {market.stork_spot_asset} (autocalc: {market.autocalculate_ext})")
-    
-    if creds:
-        logger.info(f"Credentials: {creds}")
-    if endpoint:
-        logger.info(f"Endpoint: {endpoint}")
 
-    if dry_run:
-        logger.info("Dry run completed successfully - no actions executed")
-        typer.echo("✅ Dry run: config validation passed, no actions executed.")
-        raise typer.Exit(0)
-
-    # TODO: Real pushing logic here - use validated_config
-    logger.info("Push operation completed successfully")
-    typer.echo("Pushed successfully.")
+    run(stork_ws_endpoint, stork_ws_auth, stork_ws_assets, private_key, validated_config.config.dex)
 
 @app.callback()
 def main(
