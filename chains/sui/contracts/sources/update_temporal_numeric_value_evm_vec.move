@@ -17,7 +17,7 @@ module stork::update_temporal_numeric_value_evm_input_vec {
     // === Public Functions ===
 
     // Creates a vec of UpdateTemporalNumericValueEvmInput structs
-    // takes vecs of inpults, where equal indices in the vecs corresponds to the same asset
+    // takes vecs of inputs, where equal indices in the vecs corresponds to the same asset
     public fun new(
         ids: vector<vector<u8>>,
         temporal_numeric_value_timestamp_nss: vector<u64>,
