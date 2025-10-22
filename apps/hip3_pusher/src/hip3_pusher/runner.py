@@ -4,7 +4,8 @@ import time
 import json
 import asyncio
 import random
-from hip3_pusher.config import DexConfig
+from typing import List
+from hip3_pusher.config import DexConfig, Hip3Config, MarketConfig, Random, StorkAsset
 from websockets import connect
 import logging
 
@@ -25,16 +26,39 @@ stop_event = threading.Event()
 state = {}
 state_lock = threading.Lock()
 
-def send_to_endpoint(snapshot: dict, exchange: Exchange, dex: str):
-    """Send snapshot data to the configured endpoint."""
-    logger.info(f"Sending data to endpoint: {len(snapshot)} items - {snapshot}")
+def prepare_set_oracle_data(markets: List[MarketConfig], snapshot: dict, dex: str):
+    """Prepare data for set_oracle."""
     oracle_pxs = {}
     market_pxs = []
     external_pxs = {}
-    for asset in snapshot:
-        oracle_pxs[f"{dex}:{asset}"] = snapshot[asset]
-        market_pxs.append({ f"{dex}:{asset}": snapshot[asset] })
-        external_pxs[f"{dex}:{asset}"] = snapshot[asset]
+    for market in markets:
+        if isinstance(market.spot_asset, StorkAsset):
+            oracle_pxs[f"{dex}:{market.hip3_name}"] = snapshot[market.spot_asset.identifier]
+        elif isinstance(market.spot_asset, Random):
+            oracle_pxs[f"{dex}:{market.hip3_name}"] = str(random.uniform(market.spot_asset.min_value, market.spot_asset.max_value))
+
+        if isinstance(market.mark_asset, StorkAsset):
+            market_pxs.append({ f"{dex}:{market.hip3_name}": snapshot[market.mark_asset.identifier] })
+        elif isinstance(market.mark_asset, Random):
+            market_pxs.append({ f"{dex}:{market.hip3_name}": str(random.uniform(market.mark_asset.min_value, market.mark_asset.max_value)) })
+
+        if isinstance(market.external_asset, StorkAsset):
+            external_pxs[f"{dex}:{market.hip3_name}"] = snapshot[market.external_asset.identifier]
+        elif isinstance(market.external_asset, Random):
+            external_pxs[f"{dex}:{market.hip3_name}"] = str(random.uniform(market.external_asset.min_value, market.external_asset.max_value))
+
+    return oracle_pxs, market_pxs, external_pxs
+
+def send_to_endpoint(markets: List[MarketConfig], snapshot: dict, exchange: Exchange, dex: str):
+    """Send snapshot data to the configured endpoint."""
+    logger.info(f"Sending data to endpoint: {len(markets)} markets")
+    
+    oracle_pxs, market_pxs, external_pxs = prepare_set_oracle_data(markets, snapshot, dex)
+
+    logger.info(f"Dex: {dex}")
+    logger.info(f"Oracle prices: {oracle_pxs}")
+    logger.info(f"Market prices: {market_pxs}")
+    logger.info(f"External prices: {external_pxs}")
 
     set_oracle_result = exchange.perp_deploy_set_oracle(
         dex,
@@ -120,13 +144,13 @@ def run_websocket(endpoint: str, auth: str, assets: list[str]):
     elif stop_event.is_set():
         logger.info("WebSocket thread stopped due to stop event")
 
-def coordinator(private_key: str, dex_config: DexConfig):
+def coordinator(private_key: str, hip3_config: Hip3Config):
     """Coordinate message processing and data flushing."""
 
     account: LocalAccount = eth_account.Account.from_key(private_key)
     exchange = Exchange(
         account, 
-        constants.TESTNET_API_URL if dex_config.testnet else constants.MAINNET_API_URL, 
+        constants.TESTNET_API_URL if hip3_config.config.dex.testnet else constants.MAINNET_API_URL, 
         account_address=account.address, perp_dexs=None
     )
 
@@ -140,7 +164,7 @@ def coordinator(private_key: str, dex_config: DexConfig):
             # Time to flush
             with state_lock:
                 snapshot = dict(state)  # shallow copy
-                send_to_endpoint(snapshot, exchange, dex_config.name)
+                send_to_endpoint(hip3_config.markets, snapshot, exchange, hip3_config.config.dex.name)
                 next_flush += FLUSH_INTERVAL_SEC
             continue
 
@@ -175,16 +199,28 @@ def coordinator(private_key: str, dex_config: DexConfig):
     
     with state_lock:
         snapshot = dict(state)
-    send_to_endpoint(snapshot, exchange, dex_config.name)
+    send_to_endpoint(snapshot, exchange, hip3_config.config.dex.name)
     
     logger.info("Coordinator shutdown complete")
 
-def run(stork_ws_endpoint: str, stork_ws_auth: str, stork_ws_assets: list[str], private_key: str, dex_config: DexConfig):
+def run(stork_ws_endpoint: str, stork_ws_auth: str, hip3_config: Hip3Config, private_key: str):
     """Run the hip3_pusher service."""
-    # Configure basic logging for service mode
+
+    # Collect Stork WebSocket assets - only include StorkAsset types, skip Random types
+    # Gather from spot, mark, and external asset fields
+    stork_ws_assets = set()
+    for market in hip3_config.markets:
+        if isinstance(market.spot_asset, StorkAsset):
+            stork_ws_assets.add(market.spot_asset.identifier)
+        if isinstance(market.mark_asset, StorkAsset):
+            stork_ws_assets.add(market.mark_asset.identifier)
+        if isinstance(market.external_asset, StorkAsset):
+            stork_ws_assets.add(market.external_asset.identifier)
+
+    stork_ws_assets = list(stork_ws_assets)  # Convert set to list for WebSocket subscription
 
     ws_t = threading.Thread(target=run_websocket, args=(stork_ws_endpoint, stork_ws_auth, stork_ws_assets), name="ws", daemon=True)
-    coord_t = threading.Thread(target=coordinator, name="coord", args=(private_key, dex_config), daemon=True)
+    coord_t = threading.Thread(target=coordinator, name="coord", args=(private_key, hip3_config), daemon=True)
 
     ws_t.start()
     coord_t.start()

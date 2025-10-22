@@ -4,10 +4,37 @@ Configuration models and validation for HIP3 pusher.
 
 from __future__ import annotations
 from pathlib import Path
-from typing import List
+from typing import List, Union
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
 import typer
+
+
+class StorkAsset(BaseModel):
+    """Configuration for a Stork asset with a fixed identifier."""
+    identifier: str = Field(..., description="Stork asset identifier")
+
+    @field_validator('identifier')
+    @classmethod
+    def validate_non_empty_identifier(cls, v: str) -> str:
+        """Ensure identifier is not empty."""
+        if not v or not v.strip():
+            raise ValueError("Identifier cannot be empty or whitespace-only")
+        return v.strip()
+
+
+class Random(BaseModel):
+    """Configuration for a random value generator that oscillates between min and max."""
+    min_value: float = Field(..., description="Minimum value for random oscillation")
+    max_value: float = Field(..., description="Maximum value for random oscillation")
+
+    @field_validator('max_value')
+    @classmethod
+    def validate_max_greater_than_or_equal_min(cls, v: float, info) -> float:
+        """Ensure max_value is greater than or equal to min_value."""
+        if 'min_value' in info.data and v < info.data['min_value']:
+            raise ValueError("max_value must be greater than or equal to min_value")
+        return v
 
 
 class DexConfig(BaseModel):
@@ -24,11 +51,11 @@ class ConfigSection(BaseModel):
 class MarketConfig(BaseModel):
     """Configuration for a single market."""
     hip3_name: str = Field(..., description="HIP3 market name")
-    stork_spot_asset: str = Field(..., description="Stork spot asset identifier")
-    stork_mark_asset: str = Field(..., description="Stork mark asset identifier")
-    autocalculate_ext: bool = Field(default=False, description="Whether to auto-calculate external data")
+    spot_asset: Union[StorkAsset, Random] = Field(..., description="Stork spot asset configuration")
+    mark_asset: Union[StorkAsset, Random] = Field(..., description="Stork mark asset configuration")
+    external_asset: Union[StorkAsset, Random] = Field(..., description="Stork external asset configuration")
 
-    @field_validator('hip3_name', 'stork_spot_asset', 'stork_mark_asset')
+    @field_validator('hip3_name')
     @classmethod
     def validate_non_empty_string(cls, v: str) -> str:
         """Ensure string fields are not empty."""

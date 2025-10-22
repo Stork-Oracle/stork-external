@@ -8,7 +8,7 @@ import json
 import datetime
 from .runner import run
 
-from .config import validate_config_early
+from .config import validate_config_early, StorkAsset
 
 class JSONFormatter(logging.Formatter):
     """Simple JSON formatter for log records."""
@@ -95,13 +95,8 @@ def push(
     network_type = "testnet" if validated_config.config.dex.testnet else "mainnet"
     logger.info(f"DEX: {validated_config.config.dex.name} ({network_type})")
     logger.info(f"Markets: {len(validated_config.markets)} configured")
-    stork_ws_assets = [market.stork_spot_asset for market in validated_config.markets]
-    
-    # Log detailed market information in debug mode
-    for i, market in enumerate(validated_config.markets, 1):
-        logger.debug(f"Market {i}: {market.hip3_name} -> {market.stork_spot_asset} (autocalc: {market.autocalculate_ext})")
 
-    run(stork_ws_endpoint, stork_ws_auth, stork_ws_assets, private_key, validated_config.config.dex)
+    run(stork_ws_endpoint, stork_ws_auth, validated_config, private_key)
 
 @app.callback()
 def main(
