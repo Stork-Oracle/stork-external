@@ -283,6 +283,16 @@ module stork::stork {
         init_stork(&deployer_signer, evm_pubkey::get_bytes(&pubkey), fee_amount, fee_denom);
         (deployer_signer, user_signer)
     }
+
+    #[test_only]
+    public fun init_stork_for_test(
+        owner: &signer,
+        stork_evm_public_key: vector<u8>,
+        single_update_fee_amount: u64,
+        single_update_fee_denom: String,
+    ) {
+        init_stork(owner, stork_evm_public_key, single_update_fee_amount, single_update_fee_denom) 
+    }
     
     // === Tests ===
 
