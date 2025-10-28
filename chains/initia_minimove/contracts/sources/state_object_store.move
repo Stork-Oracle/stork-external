@@ -64,7 +64,7 @@ module stork::state_object_store {
     // === Test Helpers ===
 
     #[test_only]
-    package fun init_module_for_test(package: &signer) {
+    public fun init_module_for_test(package: &signer) {
         init_module(package);
     }
 
