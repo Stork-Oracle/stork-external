@@ -585,6 +585,7 @@ func (eci *ContractInteractor) retryTransaction(
 			Msg("Retrying with bumped gas prices")
 
 		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
+
 		lastErr = err
 		if err == nil {
 			return tx, nil
