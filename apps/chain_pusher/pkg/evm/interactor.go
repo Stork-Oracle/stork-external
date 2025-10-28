@@ -565,6 +565,7 @@ func (eci *ContractInteractor) retryTransaction(
 	ctx := context.Background()
 
 	var lastErr error
+
 	for retryCount := range MaxTransactionAttempts {
 		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
 		if err != nil {
@@ -578,7 +579,6 @@ func (eci *ContractInteractor) retryTransaction(
 		}
 
 		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
-
 		eci.logger.Info().
 			Str("gasFeeCap", newGasFeeCap.String()).
 			Str("gasTipCap", newGasTipCap.String()).
