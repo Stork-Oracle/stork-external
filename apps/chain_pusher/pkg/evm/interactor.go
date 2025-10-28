@@ -25,9 +25,9 @@ import (
 )
 
 var (
-	GasBumpNumerator             = big.NewInt(120)
-	GasBumpDenominator           = big.NewInt(100)
-	MaxTransactionAttempts int64 = 3
+	GasBumpNumerator             = big.NewInt(120) //nolint:gochecknoglobals,mnd
+	GasBumpDenominator           = big.NewInt(100) //nolint:gochecknoglobals,mnd
+	MaxTransactionAttempts int64 = 3               //nolint:gochecknoglobals
 
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
@@ -409,7 +409,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 				return fmt.Errorf("failed to retry transaction submission: %w", err)
 			}
 		} else {
-			return fmt.Errorf("failed to update temporal numeric values: %w", err)
+			return fmt.Errorf("failed to submit transaction: %w", err)
 		}
 	}
 
@@ -420,94 +420,6 @@ func (eci *ContractInteractor) BatchPushToContract(
 		Msg("Pushed new values to contract")
 
 	return nil
-}
-
-func (eci *ContractInteractor) submitTransaction(
-	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
-	fee *big.Int,
-	gasFeeOverride *big.Int,
-	gasTipOverride *big.Int,
-) (*ethtypes.Transaction, error) {
-	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get auth data: %w", err)
-	}
-
-	auth.GasLimit = eci.gasLimit
-	auth.Value = fee
-
-	if gasFeeOverride != nil {
-		auth.GasFeeCap = gasFeeOverride
-	}
-	if gasTipOverride != nil {
-		auth.GasTipCap = gasTipOverride
-	}
-
-	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-func (eci *ContractInteractor) retryTransaction(
-	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
-	fee *big.Int,
-) (*ethtypes.Transaction, error) {
-	var lastErr error
-	ctx := context.Background()
-
-	for retryCount := range MaxTransactionAttempts {
-		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
-		}
-
-		// gas price is used to estimate gas fee
-		gasPrice, err := eci.client.SuggestGasPrice(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get gas price: %w", err)
-		}
-
-		newGasFeeCap, newGasTipCap, err := eci.getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get bumped gas prices: %w", err)
-		}
-
-		eci.logger.Info().
-			Str("gasFeeCap", newGasFeeCap.String()).
-			Str("gasTipCap", newGasTipCap.String()).
-			Msg("Retrying with bumped gas prices")
-
-		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
-		lastErr = err
-		if err == nil {
-			return tx, nil
-		}
-	}
-
-	return nil, lastErr
-}
-
-// to replace a transaction, the gas price must be bumped by at least 10%
-func (eci *ContractInteractor) getBumpedGasPrices(
-	gasPrice *big.Int,
-	gasTipCap *big.Int,
-	retryCount int64,
-) (*big.Int, *big.Int, error) {
-	retryBig := big.NewInt(retryCount)
-
-	bumpNumeratorPower := new(big.Int).Exp(GasBumpNumerator, retryBig, nil)
-	bumpDenominatorPower := new(big.Int).Exp(GasBumpDenominator, retryBig, nil)
-
-	retryGasFeeCap := new(big.Int).Mul(gasPrice, bumpNumeratorPower)
-	retryGasFeeCap.Div(retryGasFeeCap, bumpDenominatorPower)
-
-	retryGasTipCap := new(big.Int).Mul(gasTipCap, bumpNumeratorPower)
-	retryGasTipCap.Div(retryGasTipCap, bumpDenominatorPower)
-
-	return retryGasFeeCap, retryGasTipCap, nil
 }
 
 func (eci *ContractInteractor) GetWalletBalance() (float64, error) {
@@ -615,6 +527,71 @@ func (eci *ContractInteractor) reconnect(
 	return nil, nil, ErrMaxRetryAttemptsReached
 }
 
+func (eci *ContractInteractor) submitTransaction(
+	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
+	fee *big.Int,
+	gasFeeOverride *big.Int,
+	gasTipOverride *big.Int,
+) (*ethtypes.Transaction, error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get auth data: %w", err)
+	}
+
+	auth.GasLimit = eci.gasLimit
+	auth.Value = fee
+
+	if gasFeeOverride != nil {
+		auth.GasFeeCap = gasFeeOverride
+	}
+	if gasTipOverride != nil {
+		auth.GasTipCap = gasTipOverride
+	}
+
+	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update temporal numeric values: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (eci *ContractInteractor) retryTransaction(
+	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
+	fee *big.Int,
+) (*ethtypes.Transaction, error) {
+	var lastErr error
+	ctx := context.Background()
+
+	for retryCount := range MaxTransactionAttempts {
+		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
+		}
+
+		// gas price is used to estimate gas fee
+		gasPrice, err := eci.client.SuggestGasPrice(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get gas price: %w", err)
+		}
+
+		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
+
+		eci.logger.Info().
+			Str("gasFeeCap", newGasFeeCap.String()).
+			Str("gasTipCap", newGasTipCap.String()).
+			Msg("Retrying with bumped gas prices")
+
+		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
+		lastErr = err
+		if err == nil {
+			return tx, nil
+		}
+	}
+
+	return nil, lastErr
+}
+
 // For simplicity, this function assumes the mnemonic file contains the private key directly.
 func loadPrivateKey(mnemonicFile []byte) (*ecdsa.PrivateKey, error) {
 	// remove any trailing newline characters
@@ -626,4 +603,24 @@ func loadPrivateKey(mnemonicFile []byte) (*ecdsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
+}
+
+// To replace a transaction, the gas price must be bumped by at least 10%.
+func getBumpedGasPrices(
+	gasPrice *big.Int,
+	gasTipCap *big.Int,
+	retryCount int64,
+) (*big.Int, *big.Int) {
+	retryBig := big.NewInt(retryCount)
+
+	bumpNumeratorPower := new(big.Int).Exp(GasBumpNumerator, retryBig, nil)
+	bumpDenominatorPower := new(big.Int).Exp(GasBumpDenominator, retryBig, nil)
+
+	retryGasFeeCap := new(big.Int).Mul(gasPrice, bumpNumeratorPower)
+	retryGasFeeCap.Div(retryGasFeeCap, bumpDenominatorPower)
+
+	retryGasTipCap := new(big.Int).Mul(gasTipCap, bumpNumeratorPower)
+	retryGasTipCap.Div(retryGasTipCap, bumpDenominatorPower)
+
+	return retryGasFeeCap, retryGasTipCap
 }

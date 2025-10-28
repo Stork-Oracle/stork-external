@@ -149,8 +149,6 @@ func TestGetUpdatePayload(t *testing.T) {
 func TestGetBumpedGasPrices(t *testing.T) {
 	t.Parallel()
 
-	eci := &ContractInteractor{}
-
 	tests := []struct {
 		name               string
 		gasPrice           int64
@@ -158,7 +156,7 @@ func TestGetBumpedGasPrices(t *testing.T) {
 		retryCount         int64
 		expectedGasFeeCap  int64
 		expectedGasTipCap  int64
-		expectedMultiplier float64 
+		expectedMultiplier float64
 	}{
 		{
 			name:               "retry 1: 1.2x multiplier",
@@ -223,13 +221,12 @@ func TestGetBumpedGasPrices(t *testing.T) {
 			gasPrice := big.NewInt(tt.gasPrice)
 			gasTipCap := big.NewInt(tt.gasTipCap)
 
-			resultGasFeeCap, resultGasTipCap, err := eci.getBumpedGasPrices(
+			resultGasFeeCap, resultGasTipCap := getBumpedGasPrices(
 				gasPrice,
 				gasTipCap,
 				tt.retryCount,
 			)
 
-			require.NoError(t, err)
 			require.NotNil(t, resultGasFeeCap)
 			require.NotNil(t, resultGasTipCap)
 
