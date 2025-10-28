@@ -2,6 +2,7 @@ package evm
 
 import (
 	"crypto/ecdsa"
+	"math/big"
 	"testing"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
@@ -142,5 +143,103 @@ func TestGetUpdatePayload(t *testing.T) {
 		assert.Equal(t, expectedR, updatePayload.R)
 		assert.Equal(t, expectedS, updatePayload.S)
 		assert.Equal(t, expectedV, updatePayload.V)
+	}
+}
+
+func TestGetBumpedGasPrices(t *testing.T) {
+	t.Parallel()
+
+	eci := &ContractInteractor{}
+
+	tests := []struct {
+		name               string
+		gasPrice           int64
+		gasTipCap          int64
+		retryCount         int64
+		expectedGasFeeCap  int64
+		expectedGasTipCap  int64
+		expectedMultiplier float64 
+	}{
+		{
+			name:               "retry 1: 1.2x multiplier",
+			gasPrice:           1000,
+			gasTipCap:          100,
+			retryCount:         1,
+			expectedGasFeeCap:  1200,
+			expectedGasTipCap:  120,
+			expectedMultiplier: 1.2,
+		},
+		{
+			name:               "retry 2: 1.44x multiplier",
+			gasPrice:           1000,
+			gasTipCap:          100,
+			retryCount:         2,
+			expectedGasFeeCap:  1440,
+			expectedGasTipCap:  144,
+			expectedMultiplier: 1.44,
+		},
+		{
+			name:               "retry 3: 1.728x multiplier",
+			gasPrice:           1000,
+			gasTipCap:          100,
+			retryCount:         3,
+			expectedGasFeeCap:  1728,
+			expectedGasTipCap:  172,
+			expectedMultiplier: 1.728,
+		},
+		{
+			name:               "large values retry 1",
+			gasPrice:           1000000000,
+			gasTipCap:          100000000,
+			retryCount:         1,
+			expectedGasFeeCap:  1200000000,
+			expectedGasTipCap:  120000000,
+			expectedMultiplier: 1.2,
+		},
+		{
+			name:               "large values retry 2",
+			gasPrice:           50000000000,
+			gasTipCap:          2000000000,
+			retryCount:         2,
+			expectedGasFeeCap:  72000000000,
+			expectedGasTipCap:  2880000000,
+			expectedMultiplier: 1.44,
+		},
+		{
+			name:               "small values with rounding",
+			gasPrice:           10,
+			gasTipCap:          5,
+			retryCount:         3,
+			expectedGasFeeCap:  17,
+			expectedGasTipCap:  8,
+			expectedMultiplier: 1.728,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			gasPrice := big.NewInt(tt.gasPrice)
+			gasTipCap := big.NewInt(tt.gasTipCap)
+
+			resultGasFeeCap, resultGasTipCap, err := eci.getBumpedGasPrices(
+				gasPrice,
+				gasTipCap,
+				tt.retryCount,
+			)
+
+			require.NoError(t, err)
+			require.NotNil(t, resultGasFeeCap)
+			require.NotNil(t, resultGasTipCap)
+
+			assert.Equal(t, tt.expectedGasFeeCap, resultGasFeeCap.Int64(),
+				"gasFeeCap: expected %d * %.3f = %d, got %d",
+				tt.gasPrice, tt.expectedMultiplier, tt.expectedGasFeeCap, resultGasFeeCap.Int64())
+
+			assert.Equal(t, tt.expectedGasTipCap, resultGasTipCap.Int64(),
+				"gasTipCap: expected %d * %.3f = %d, got %d",
+				tt.gasTipCap, tt.expectedMultiplier, tt.expectedGasTipCap, resultGasTipCap.Int64())
+		})
 	}
 }
