@@ -404,6 +404,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 	if err != nil {
 		if errors.Is(err, etherrors.ErrReplaceUnderpriced) {
 			eci.logger.Warn().Err(err).Msg("Transaction underpriced, retrying with bumped gas prices")
+
 			tx, err = eci.retryTransaction(updatePayload, fee)
 			if err != nil {
 				return fmt.Errorf("failed to retry transaction submission: %w", err)
@@ -544,6 +545,7 @@ func (eci *ContractInteractor) submitTransaction(
 	if gasFeeOverride != nil {
 		auth.GasFeeCap = gasFeeOverride
 	}
+
 	if gasTipOverride != nil {
 		auth.GasTipCap = gasTipOverride
 	}
@@ -560,9 +562,9 @@ func (eci *ContractInteractor) retryTransaction(
 	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
 	fee *big.Int,
 ) (*ethtypes.Transaction, error) {
-	var lastErr error
 	ctx := context.Background()
 
+	var lastErr error
 	for retryCount := range MaxTransactionAttempts {
 		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
 		if err != nil {
@@ -584,6 +586,7 @@ func (eci *ContractInteractor) retryTransaction(
 
 		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
 		lastErr = err
+
 		if err == nil {
 			return tx, nil
 		}
