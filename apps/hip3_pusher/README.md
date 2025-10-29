@@ -1,6 +1,6 @@
-# Hip3 Pusher
+# HIP-3 Pusher
 
-The Hip3 Pusher is a plug and play tool to facilitate using Stork's data with the Hip3 network.
+The HIP-3 Pusher is a plug and play tool to facilitate using Stork's data with [Hyperliquid's HIP-3 builder deployed perpetuals](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals) product.
 
 ## Getting Started
 
