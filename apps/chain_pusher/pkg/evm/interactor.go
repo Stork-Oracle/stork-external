@@ -17,12 +17,18 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	etherrors "github.com/ethereum/go-ethereum/core/txpool"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 )
 
 var (
+	GasBumpNumerator             = big.NewInt(120) //nolint:gochecknoglobals,mnd
+	GasBumpDenominator           = big.NewInt(100) //nolint:gochecknoglobals,mnd
+	MaxTransactionAttempts int64 = 3               //nolint:gochecknoglobals
+
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 	ErrEventChannelClosed      = errors.New("event channel is closed")
@@ -394,18 +400,18 @@ func (eci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to get update fee: %w", err)
 	}
 
-	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
+	tx, err := eci.submitTransaction(updatePayload, fee, nil, nil)
 	if err != nil {
-		return fmt.Errorf("failed to get auth data : %w", err)
-	}
+		if errors.Is(err, etherrors.ErrReplaceUnderpriced) {
+			eci.logger.Warn().Err(err).Msg("Transaction underpriced, retrying with bumped gas prices")
 
-	// let the library auto-estimate the gas price
-	auth.GasLimit = eci.gasLimit
-	auth.Value = fee
-
-	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
-	if err != nil {
-		return fmt.Errorf("failed to update temporal numeric values: %w", err)
+			tx, err = eci.retryTransaction(updatePayload, fee)
+			if err != nil {
+				return fmt.Errorf("failed to retry transaction submission: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to submit transaction: %w", err)
+		}
 	}
 
 	eci.logger.Info().
@@ -522,6 +528,73 @@ func (eci *ContractInteractor) reconnect(
 	return nil, nil, ErrMaxRetryAttemptsReached
 }
 
+func (eci *ContractInteractor) submitTransaction(
+	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
+	fee *big.Int,
+	gasFeeOverride *big.Int,
+	gasTipOverride *big.Int,
+) (*ethtypes.Transaction, error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get auth data: %w", err)
+	}
+
+	auth.GasLimit = eci.gasLimit
+	auth.Value = fee
+
+	if gasFeeOverride != nil {
+		auth.GasFeeCap = gasFeeOverride
+	}
+
+	if gasTipOverride != nil {
+		auth.GasTipCap = gasTipOverride
+	}
+
+	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update temporal numeric values: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (eci *ContractInteractor) retryTransaction(
+	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
+	fee *big.Int,
+) (*ethtypes.Transaction, error) {
+	ctx := context.Background()
+
+	var lastErr error
+
+	for retryCount := range MaxTransactionAttempts {
+		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
+		}
+
+		// gas price is used to estimate gas fee
+		gasPrice, err := eci.client.SuggestGasPrice(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get gas price: %w", err)
+		}
+
+		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
+		eci.logger.Info().
+			Str("gasFeeCap", newGasFeeCap.String()).
+			Str("gasTipCap", newGasTipCap.String()).
+			Msg("Retrying with bumped gas prices")
+
+		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
+
+		lastErr = err
+		if err == nil {
+			return tx, nil
+		}
+	}
+
+	return nil, lastErr
+}
+
 // For simplicity, this function assumes the mnemonic file contains the private key directly.
 func loadPrivateKey(mnemonicFile []byte) (*ecdsa.PrivateKey, error) {
 	// remove any trailing newline characters
@@ -533,4 +606,24 @@ func loadPrivateKey(mnemonicFile []byte) (*ecdsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
+}
+
+// To replace a transaction, the gas price must be bumped by at least 10%.
+func getBumpedGasPrices(
+	gasPrice *big.Int,
+	gasTipCap *big.Int,
+	retryCount int64,
+) (*big.Int, *big.Int) {
+	retryBig := big.NewInt(retryCount)
+
+	bumpNumeratorPower := new(big.Int).Exp(GasBumpNumerator, retryBig, nil)
+	bumpDenominatorPower := new(big.Int).Exp(GasBumpDenominator, retryBig, nil)
+
+	retryGasFeeCap := new(big.Int).Mul(gasPrice, bumpNumeratorPower)
+	retryGasFeeCap.Div(retryGasFeeCap, bumpDenominatorPower)
+
+	retryGasTipCap := new(big.Int).Mul(gasTipCap, bumpNumeratorPower)
+	retryGasTipCap.Div(retryGasTipCap, bumpDenominatorPower)
+
+	return retryGasFeeCap, retryGasTipCap
 }
