@@ -5,7 +5,7 @@ import json
 import asyncio
 import random
 from typing import List
-from hip3_pusher.config import DexConfig, Hip3Config, MarketConfig, Random, StorkAsset
+from hip3_pusher.config import Hip3Config, MarketConfig, Random, StorkAsset
 from websockets import connect
 import logging
 
@@ -36,16 +36,22 @@ def prepare_set_oracle_data(markets: List[MarketConfig], snapshot: dict, dex: st
             oracle_pxs[f"{dex}:{market.hip3_name}"] = snapshot[market.spot_asset.identifier]
         elif isinstance(market.spot_asset, Random):
             oracle_pxs[f"{dex}:{market.hip3_name}"] = str(random.uniform(market.spot_asset.min_value, market.spot_asset.max_value))
+        else:
+            raise ValueError(f"Invalid spot asset type: {type(market.spot_asset)}")
 
         if isinstance(market.mark_asset, StorkAsset):
             market_pxs.append({ f"{dex}:{market.hip3_name}": snapshot[market.mark_asset.identifier] })
         elif isinstance(market.mark_asset, Random):
             market_pxs.append({ f"{dex}:{market.hip3_name}": str(random.uniform(market.mark_asset.min_value, market.mark_asset.max_value)) })
+        else:
+            raise ValueError(f"Invalid mark asset type: {type(market.mark_asset)}")
 
         if isinstance(market.external_asset, StorkAsset):
             external_pxs[f"{dex}:{market.hip3_name}"] = snapshot[market.external_asset.identifier]
         elif isinstance(market.external_asset, Random):
             external_pxs[f"{dex}:{market.hip3_name}"] = str(random.uniform(market.external_asset.min_value, market.external_asset.max_value))
+        else:
+            raise ValueError(f"Invalid external asset type: {type(market.external_asset)}")
 
     return oracle_pxs, market_pxs, external_pxs
 
@@ -80,31 +86,26 @@ async def connect_with_basic_auth(endpoint: str, auth: str, assets: list[str]):
         await ws.send(json.dumps(subscription_msg))
         logger.info(f"Subscribed to assets: {assets}")
         
-        message_count = 0
         async for msg in ws:
             if stop_event.is_set():
                 logger.info("Stop event received, closing WebSocket connection")
                 break
             
-            message_count += 1
             q.put(msg)
             
 
 def run_websocket(endpoint: str, auth: str, assets: list[str]):
     """Run WebSocket connection with retry logic."""
-    max_retries = 100
     base_delay = 1.0  # Start with 1 second
-    max_delay = 5.0  # Cap at 5 seconds
-    retry_count = 0
     
-    logger.info(f"Starting WebSocket connection manager for {endpoint} (max retries: {max_retries})")
+    logger.info(f"Starting WebSocket connection manager for {endpoint})")
     
-    while not stop_event.is_set() and retry_count < max_retries:
+    while not stop_event.is_set():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
         try:
-            logger.info(f"Attempting WebSocket connection (attempt {retry_count + 1}/{max_retries})")
+            logger.info(f"Attempting WebSocket connection")
             
             start_time = time.monotonic()
             loop.run_until_complete(connect_with_basic_auth(endpoint, auth, assets))
@@ -115,33 +116,15 @@ def run_websocket(endpoint: str, auth: str, assets: list[str]):
             break
             
         except Exception as e:
-            retry_count += 1
-            logger.warning(f"WebSocket connection failed (attempt {retry_count}/{max_retries}): {e}")
+            logger.warning(f"WebSocket connection failed: {e}")
             
-            if retry_count >= max_retries:
-                logger.error("Max retries reached, WebSocket thread exiting")
-                break
-                
-            # Calculate delay with exponential backoff and jitter
-            delay = min(base_delay * (2 ** (retry_count - 1)), max_delay)
-            jitter = random.uniform(0.1, 0.3) * delay  # Add 10-30% jitter
-            total_delay = delay + jitter
-            
-            logger.info(f"Retrying in {total_delay:.1f} seconds (attempt {retry_count + 1})")
-            
-            # Wait for retry delay or stop event
-            if stop_event.wait(timeout=total_delay):
-                logger.info("Stop event received during retry delay")
-                break
+            logger.info(f"Retrying in {base_delay:.1f} seconds")
+            time.sleep(base_delay)
                 
         finally:
             loop.close()
     
-    if retry_count >= max_retries:
-        error_msg = f"WebSocket connection failed permanently after {retry_count} retries"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    elif stop_event.is_set():
+    if stop_event.is_set():
         logger.info("WebSocket thread stopped due to stop event")
 
 def coordinator(private_key: str, hip3_config: Hip3Config):
