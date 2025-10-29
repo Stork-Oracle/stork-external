@@ -28,11 +28,13 @@ class TestStorkAsset:
         """Test creating a valid StorkAsset."""
         asset = StorkAsset(identifier="BTCUSD")
         assert asset.identifier == "BTCUSD"
+        assert asset.type == "stork"
 
     def test_stork_asset_strips_whitespace(self):
         """Test StorkAsset strips whitespace from identifier."""
         asset = StorkAsset(identifier="  BTCUSD  ")
         assert asset.identifier == "BTCUSD"
+        assert asset.type == "stork"
 
     def test_stork_asset_empty_identifier(self):
         """Test StorkAsset validation fails with empty identifier."""
@@ -60,18 +62,21 @@ class TestRandom:
         random = Random(min_value=100.0, max_value=200.0)
         assert random.min_value == 100.0
         assert random.max_value == 200.0
+        assert random.type == "random"
 
     def test_random_negative_values(self):
         """Test Random with negative values."""
         random = Random(min_value=-50.0, max_value=50.0)
         assert random.min_value == -50.0
         assert random.max_value == 50.0
+        assert random.type == "random"
 
     def test_random_max_equals_min(self):
         """Test Random allows max to equal min (constant value)."""
         random = Random(min_value=100.0, max_value=100.0)
         assert random.min_value == 100.0
         assert random.max_value == 100.0
+        assert random.type == "random"
 
     def test_random_max_less_than_min(self):
         """Test Random validation fails when max is less than min."""
@@ -382,12 +387,15 @@ class TestConfigLoading:
                 {
                     'hip3_name': 'BTCUSD',
                     'spot_asset': {
+                        'type': 'stork',
                         'identifier': 'BTCUSD'
                     },
                     'mark_asset': {
+                        'type': 'stork',
                         'identifier': 'BTCUSD'
                     },
                     'external_asset': {
+                        'type': 'stork',
                         'identifier': 'BTCUSD'
                     }
                 }
@@ -422,14 +430,17 @@ class TestConfigLoading:
                 {
                     'hip3_name': 'ETHUSD',
                     'spot_asset': {
+                        'type': 'random',
                         'min_value': 1000.0,
                         'max_value': 2000.0
                     },
                     'mark_asset': {
+                        'type': 'random',
                         'min_value': 1000.0,
                         'max_value': 2000.0
                     },
                     'external_asset': {
+                        'type': 'random',
                         'min_value': 1000.0,
                         'max_value': 2000.0
                     }
@@ -465,13 +476,16 @@ class TestConfigLoading:
                 {
                     'hip3_name': 'SOLUSD',
                     'spot_asset': {
+                        'type': 'random',
                         'min_value': 50.0,
                         'max_value': 150.0
                     },
                     'mark_asset': {
+                        'type': 'stork',
                         'identifier': 'SOLUSD'
                     },
                     'external_asset': {
+                        'type': 'stork',
                         'identifier': 'SOLUSD'
                     }
                 }
@@ -563,6 +577,7 @@ class TestConfigLoading:
                 {
                     'hip3_name': 'BTCUSD',
                     'spot_asset': {
+                        'type': 'stork',
                         'identifier': 'BTCUSD'
                     }
                     # Missing mark_asset and external_asset
@@ -594,12 +609,15 @@ class TestConfigLoading:
                 {
                     'hip3_name': 'ETHUSD',
                     'spot_asset': {
+                        'type': 'stork',
                         'identifier': 'ETHUSD'
                     },
                     'mark_asset': {
+                        'type': 'stork',
                         'identifier': 'ETHUSD'
                     },
                     'external_asset': {
+                        'type': 'stork',
                         'identifier': 'ETHUSD'
                     }
                 }

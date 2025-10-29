@@ -4,14 +4,15 @@ Configuration models and validation for HIP3 pusher.
 
 from __future__ import annotations
 from pathlib import Path
-from typing import List, Union
+from typing import Annotated, List, Literal, Union
 import yaml
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, Tag
 import typer
 
 
 class StorkAsset(BaseModel):
     """Configuration for a Stork asset with a fixed identifier."""
+    type: Literal["stork"] = Field(default="stork", description="Type discriminator for StorkAsset")
     identifier: str = Field(..., description="Stork asset identifier")
 
     @field_validator('identifier')
@@ -25,6 +26,7 @@ class StorkAsset(BaseModel):
 
 class Random(BaseModel):
     """Configuration for a random value generator that oscillates between min and max."""
+    type: Literal["random"] = Field(default="random", description="Type discriminator for Random")
     min_value: float = Field(..., description="Minimum value for random oscillation")
     max_value: float = Field(..., description="Maximum value for random oscillation")
 
@@ -51,9 +53,9 @@ class ConfigSection(BaseModel):
 class MarketConfig(BaseModel):
     """Configuration for a single market."""
     hip3_name: str = Field(..., description="HIP3 market name")
-    spot_asset: Union[StorkAsset, Random] = Field(..., description="Stork spot asset configuration")
-    mark_asset: Union[StorkAsset, Random] = Field(..., description="Stork mark asset configuration")
-    external_asset: Union[StorkAsset, Random] = Field(..., description="Stork external asset configuration")
+    spot_asset: Annotated[Union[Annotated[StorkAsset, Tag("stork")], Annotated[Random, Tag("random")]], Field(discriminator="type", description="Stork spot asset configuration")]
+    mark_asset: Annotated[Union[Annotated[StorkAsset, Tag("stork")], Annotated[Random, Tag("random")]], Field(discriminator="type", description="Stork mark asset configuration")]
+    external_asset: Annotated[Union[Annotated[StorkAsset, Tag("stork")], Annotated[Random, Tag("random")]], Field(discriminator="type", description="Stork external asset configuration")]
 
     @field_validator('hip3_name')
     @classmethod

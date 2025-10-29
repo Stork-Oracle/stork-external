@@ -199,7 +199,7 @@ def coordinator(private_key: str, hip3_config: Hip3Config):
     
     with state_lock:
         snapshot = dict(state)
-    send_to_endpoint(snapshot, exchange, hip3_config.config.dex.name)
+    send_to_endpoint(hip3_config.markets, snapshot, exchange, hip3_config.config.dex.name)
     
     logger.info("Coordinator shutdown complete")
 
