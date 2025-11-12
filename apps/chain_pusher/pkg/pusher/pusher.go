@@ -111,7 +111,9 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			p.handlePushUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
+			updates := p.collateUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
+
+			go p.handlePushUpdates(updates, contractCh)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
@@ -120,6 +122,36 @@ func (p *Pusher) Run(ctx context.Context) {
 			p.handleContractUpdate(chainUpdate, latestContractValueMap)
 		}
 	}
+}
+
+func (p *Pusher) collateUpdates(
+	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+	priceConfig *types.AssetConfig,
+) map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+
+	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
+		latestValue, ok := latestContractValueMap[encodedAssetID]
+		if !ok {
+			p.logger.Debug().
+				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+			updates[encodedAssetID] = latestStorkPrice
+
+			continue
+		}
+
+		if shouldUpdateAsset(
+			latestValue,
+			latestStorkPrice,
+			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+		) {
+			updates[encodedAssetID] = latestStorkPrice
+		}
+	}
+
+	return updates
 }
 
 func shouldUpdateAsset(
@@ -213,32 +245,9 @@ func (p *Pusher) initializeAssets() (*types.AssetConfig, []shared.AssetID, []typ
 
 // handlePushUpdates processes updates and pushes them to the contract.
 func (p *Pusher) handlePushUpdates(
-	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
-	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
-	priceConfig *types.AssetConfig,
+	updates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+	contractCh chan<- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
-	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
-
-	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
-		latestValue, ok := latestContractValueMap[encodedAssetID]
-		if !ok {
-			p.logger.Debug().
-				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
-			updates[encodedAssetID] = latestStorkPrice
-
-			continue
-		}
-
-		if shouldUpdateAsset(
-			latestValue,
-			latestStorkPrice,
-			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
-		) {
-			updates[encodedAssetID] = latestStorkPrice
-		}
-	}
-
 	if len(updates) > 0 {
 		err := p.interactor.BatchPushToContract(updates)
 		if err != nil {
@@ -251,16 +260,21 @@ func (p *Pusher) handlePushUpdates(
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
 			}
 		} else {
+			// assume updates land successfully
+			contractUpdates := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+
 			for encodedAssetID, update := range updates {
 				quantizedValInt := new(big.Int)
 				//nolint:mnd // Base number
 				quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
-				latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
+				contractUpdates[encodedAssetID] = types.InternalTemporalNumericValue{
 					TimestampNs:    update.TimestampNano,
 					QuantizedValue: quantizedValInt,
 				}
 			}
+
+			contractCh <- contractUpdates
 		}
 	}
 }
