@@ -3,6 +3,7 @@ package pusher
 import (
 	"context"
 	"fmt"
+	"maps"
 	"math/big"
 	"time"
 
@@ -111,7 +112,10 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			p.handlePushUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
+			latestContractValueMapCopy := maps.Clone(latestContractValueMap)
+			latestStorkValueMapCopy := maps.Clone(latestStorkValueMap)
+			priceConfigAssetsCopy := maps.Clone(priceConfig.Assets)
+			go p.handlePushUpdates(latestContractValueMapCopy, latestStorkValueMapCopy, priceConfigAssetsCopy, contractCh)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
@@ -215,7 +219,8 @@ func (p *Pusher) initializeAssets() (*types.AssetConfig, []shared.AssetID, []typ
 func (p *Pusher) handlePushUpdates(
 	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
-	priceConfig *types.AssetConfig,
+	priceConfigAssets map[shared.AssetID]types.AssetEntry,
+	contractCh chan<- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
@@ -232,8 +237,8 @@ func (p *Pusher) handlePushUpdates(
 		if shouldUpdateAsset(
 			latestValue,
 			latestStorkPrice,
-			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+			priceConfigAssets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+			priceConfigAssets[latestStorkPrice.AssetID].PercentChangeThreshold,
 		) {
 			updates[encodedAssetID] = latestStorkPrice
 		}
@@ -251,16 +256,20 @@ func (p *Pusher) handlePushUpdates(
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
 			}
 		} else {
+			// assume updates land successfully
+			contractUpdates := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 			for encodedAssetID, update := range updates {
 				quantizedValInt := new(big.Int)
 				//nolint:mnd // Base number
 				quantizedValInt.SetString(string(update.StorkSignedPrice.QuantizedPrice), 10)
 
-				latestContractValueMap[encodedAssetID] = types.InternalTemporalNumericValue{
+				contractUpdates[encodedAssetID] = types.InternalTemporalNumericValue{
 					TimestampNs:    update.TimestampNano,
 					QuantizedValue: quantizedValInt,
 				}
 			}
+
+			contractCh <- contractUpdates
 		}
 	}
 }
