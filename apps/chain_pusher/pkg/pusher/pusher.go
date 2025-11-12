@@ -240,6 +240,9 @@ func (p *Pusher) handlePushUpdates(
 	}
 
 	if len(updates) > 0 {
+		for _, update := range updates {
+			p.logger.Info().Msgf("pushing update: %s %s %d", update.AssetID, update.StorkSignedPrice.QuantizedPrice, update.TimestampNano)
+		}
 		err := p.interactor.BatchPushToContract(updates)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to push batch to contract")
