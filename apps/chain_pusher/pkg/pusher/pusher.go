@@ -240,6 +240,7 @@ func (p *Pusher) handlePushUpdates(
 	}
 
 	if len(updates) > 0 {
+		p.logger.Info().Msgf("pushing %d updates", len(updates))
 		for _, update := range updates {
 			p.logger.Info().Msgf("pushing update: %s %s %d", update.AssetID, update.StorkSignedPrice.QuantizedPrice, update.TimestampNano)
 		}
