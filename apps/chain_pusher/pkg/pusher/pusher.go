@@ -3,7 +3,6 @@ package pusher
 import (
 	"context"
 	"fmt"
-	"maps"
 	"math/big"
 	"time"
 
@@ -112,10 +111,9 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			latestContractValueMapCopy := maps.Clone(latestContractValueMap)
-			latestStorkValueMapCopy := maps.Clone(latestStorkValueMap)
-			priceConfigAssetsCopy := maps.Clone(priceConfig.Assets)
-			go p.handlePushUpdates(latestContractValueMapCopy, latestStorkValueMapCopy, priceConfigAssetsCopy, contractCh)
+			updates := p.collateUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
+
+			go p.handlePushUpdates(updates, contractCh)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
@@ -124,6 +122,36 @@ func (p *Pusher) Run(ctx context.Context) {
 			p.handleContractUpdate(chainUpdate, latestContractValueMap)
 		}
 	}
+}
+
+func (p *Pusher) collateUpdates(
+	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+	priceConfig *types.AssetConfig,
+) map[types.InternalEncodedAssetID]types.AggregatedSignedPrice {
+	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+
+	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
+		latestValue, ok := latestContractValueMap[encodedAssetID]
+		if !ok {
+			p.logger.Debug().
+				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+			updates[encodedAssetID] = latestStorkPrice
+
+			continue
+		}
+
+		if shouldUpdateAsset(
+			latestValue,
+			latestStorkPrice,
+			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+		) {
+			updates[encodedAssetID] = latestStorkPrice
+		}
+	}
+
+	return updates
 }
 
 func shouldUpdateAsset(
@@ -217,33 +245,9 @@ func (p *Pusher) initializeAssets() (*types.AssetConfig, []shared.AssetID, []typ
 
 // handlePushUpdates processes updates and pushes them to the contract.
 func (p *Pusher) handlePushUpdates(
-	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
-	latestStorkValueMap map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
-	priceConfigAssets map[shared.AssetID]types.AssetEntry,
+	updates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 	contractCh chan<- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
-	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
-
-	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
-		latestValue, ok := latestContractValueMap[encodedAssetID]
-		if !ok {
-			p.logger.Debug().
-				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
-			updates[encodedAssetID] = latestStorkPrice
-
-			continue
-		}
-
-		if shouldUpdateAsset(
-			latestValue,
-			latestStorkPrice,
-			priceConfigAssets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-			priceConfigAssets[latestStorkPrice.AssetID].PercentChangeThreshold,
-		) {
-			updates[encodedAssetID] = latestStorkPrice
-		}
-	}
-
 	if len(updates) > 0 {
 		err := p.interactor.BatchPushToContract(updates)
 		if err != nil {
@@ -258,6 +262,7 @@ func (p *Pusher) handlePushUpdates(
 		} else {
 			// assume updates land successfully
 			contractUpdates := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+
 			for encodedAssetID, update := range updates {
 				quantizedValInt := new(big.Int)
 				//nolint:mnd // Base number
