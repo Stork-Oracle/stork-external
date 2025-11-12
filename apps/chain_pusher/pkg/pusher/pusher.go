@@ -127,8 +127,10 @@ func shouldUpdateAsset(
 	latestStorkPrice types.AggregatedSignedPrice,
 	fallbackPeriodSecs uint64,
 	changeThreshold float64,
+	logger *zerolog.Logger,
 ) bool {
 	if latestStorkPrice.TimestampNano-latestValue.TimestampNs > fallbackPeriodSecs*uint64(time.Second) {
+		logger.Info().Msgf("should update asset fallback period: %s %d %d", latestStorkPrice.AssetID, latestStorkPrice.TimestampNano, latestValue.TimestampNs)
 		return true
 	}
 
@@ -155,7 +157,12 @@ func shouldUpdateAsset(
 
 	thresholdBig := big.NewFloat(changeThreshold)
 
-	return percentChange.Cmp(thresholdBig) > 0
+	if percentChange.Cmp(thresholdBig) > 0 {
+		logger.Info().Msgf("should update asset percent change: %s %s %f", latestStorkPrice.AssetID, latestStorkPrice.StorkSignedPrice.QuantizedPrice, percentChange.Text('f', 10))
+		return true
+	}
+
+	return false
 }
 
 func (p *Pusher) poll(
@@ -234,6 +241,7 @@ func (p *Pusher) handlePushUpdates(
 			latestStorkPrice,
 			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
 			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+			p.logger,
 		) {
 			updates[encodedAssetID] = latestStorkPrice
 		}
