@@ -111,7 +111,7 @@ func (p *Pusher) Run(ctx context.Context) {
 
 			return
 		case <-ticker.C:
-			p.handlePushUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
+			go p.handlePushUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
