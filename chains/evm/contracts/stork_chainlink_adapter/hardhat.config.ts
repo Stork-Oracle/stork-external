@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
       chainId: 1,
     },
     plumeMainnet: {
-      url: "https://phoenix-rpc.plumenetwork.xyz",
+      url: "https://rpc.plume.org",
       accounts: [PRIVATE_KEY],
       chainId: 98866
     }
