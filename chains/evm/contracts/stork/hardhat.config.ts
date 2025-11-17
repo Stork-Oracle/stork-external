@@ -208,6 +208,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 169,
     },
+    megaEthTestnetV2: {
+      url: "https://timothy.megaeth.com/rpc",
+      accounts: [PRIVATE_KEY],
+      chainId: 6343,
+    },
     merlinTestnet: {
       url: "https://testnet-rpc.merlinchain.io/",
       accounts: [PRIVATE_KEY],
@@ -440,6 +445,7 @@ const config: HardhatUserConfig = {
       lorenzoTestnet: 'fake',
       mantaSepolia: 'fake',
       mantaPacificMainnet: 'fake',
+      megaEthTestnetV2: 'fake',
       merlinTestnet: 'fake',
       minionsTestnet: 'fake',
       mitosisTestnet: 'fake',
@@ -627,6 +633,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://pacific-explorer.manta.network/api",
           browserURL: "https://pacific-explorer.manta.network/"
+        }
+      },
+      {
+        network: "megaEthTestnetV2",
+        chainId: 6343,
+        urls: {
+          apiURL: "https://megaeth-testnet-v2.blockscout.com/api",
+          browserURL: "https://megaeth-testnet-v2.blockscout.com/"
         }
       },
       {
