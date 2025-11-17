@@ -60,6 +60,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 421614,
     },
+    arbitrumMainnet: {
+      url: "https://arbitrum-one.rpc.grove.city/v1/01fdb492",
+      accounts: [PRIVATE_KEY],
+      chainId: 42161,
+    },
     avalanceCChain: {
       url: "https://avalanche-c-chain-rpc.publicnode.com",
       accounts: [PRIVATE_KEY],
