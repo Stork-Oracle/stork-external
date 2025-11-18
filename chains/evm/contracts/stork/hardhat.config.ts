@@ -106,6 +106,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 200901,
     },
+    bnbSmartChainMainnet: {
+      url: "https://bsc-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 56,
+    },
     bobSepolia: {
       url: "https://bob-sepolia.rpc.gobob.xyz/",
       accounts: [PRIVATE_KEY],
