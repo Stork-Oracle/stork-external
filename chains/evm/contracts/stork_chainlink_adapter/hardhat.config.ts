@@ -31,6 +31,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1,
     },
+    monadMainnet: {
+      url: "https://rpc-mainnet.monadinfra.com/rpc/waeKZEDBq4wtOvuCxVtssXOclMEvzCLa",
+      accounts: [PRIVATE_KEY],
+      chainId: 143,
+    },
     plumeMainnet: {
       url: "https://rpc.plume.org",
       accounts: [PRIVATE_KEY],
