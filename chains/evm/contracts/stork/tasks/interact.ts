@@ -112,6 +112,17 @@ interactScope
     });
 
 interactScope
+    .task('getTemporalNumericValuesUnsafeV1', 'Get the temporal numeric values (unsafe)')
+    .addPositionalParam<string>('assetIds', 'The asset ids to get the values for')
+    .setAction(async ({ assetIds }: { assetIds: string[] }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        // @ts-expect-error ethers is loaded in hardhat/config
+        const encoded = assetIds.split(',').map((id: string) => ethers.keccak256(ethers.toUtf8Bytes(id.trim())));
+        const returnVal = await contract.getTemporalNumericValuesUnsafeV1(encoded);
+        console.log(returnVal);
+    });
+
+interactScope
     .task('updateValidTimePeriodSeconds', 'Update the valid time period seconds')
     .addPositionalParam<string>('seconds', 'The number of seconds to update the valid time period to')
     .setAction(async ({ seconds }: { seconds: number }, hre: HardhatRuntimeEnvironment) => {
