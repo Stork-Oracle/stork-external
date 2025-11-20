@@ -87,6 +87,9 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         values = new StorkStructs.TemporalNumericValue[](ids.length);
         for (uint i = 0; i < ids.length; i++) {
             values[i] = latestCanonicalTemporalNumericValue(ids[i]);
+            if (values[i].timestampNs == 0) {
+                revert StorkErrors.NotFound();
+            }
         }
         return values;
     }
