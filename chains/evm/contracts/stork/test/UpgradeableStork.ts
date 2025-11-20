@@ -23,7 +23,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.3");
+      expect(await deployed.version()).to.equal("1.0.4");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +63,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.3");
+      expect(await upgraded.version()).to.equal("1.0.4");
     });
 
     it("Should revert if not owner", async function () {
@@ -644,6 +644,77 @@ describe("UpgradeableStork", function() {
         1720722087644999936n,
         60000000000000000000000n
       ]);
+    });
+  });
+
+  describe("getTemporalNumericValuesUnsafeV1", function () {
+    it("Should return expected values", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        },
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722554872999936",
+            quantizedValue: "3000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("ETHUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x67018d101bb11542b3b43048a4d171122e7eb25b8cebd2fe6cb7412cf3438620",
+          s: "0x788ca33b146165b588d5e704faf9e4a9fd036d7ae2d88b48e75ee71628ddd657",
+          v: "0x1b"
+        },
+      ], { value: 2 });
+
+      expect(await deployed.getTemporalNumericValuesUnsafeV1(
+        [ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")), ethers.keccak256(ethers.toUtf8Bytes("ETHUSD"))]
+      )).to.deep.equal([
+        [1720722087644999936n, 60000000000000000000000n],
+        [1720722554872999936n, 3000000000000000000000n],
+      ]);
+    });
+
+    it("Should revert if any value is not found", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+
+      await expect(deployed.getTemporalNumericValuesUnsafeV1(
+        [ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")), ethers.keccak256(ethers.toUtf8Bytes("ETHUSD"))]
+      )).to.be.revertedWithCustomError(deployed, "NotFound");
+    });
+
+    it("Should revert if no values are found", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      await expect(deployed.getTemporalNumericValuesUnsafeV1(
+        [ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")), ethers.keccak256(ethers.toUtf8Bytes("ETHUSD"))]
+      )).to.be.revertedWithCustomError(deployed, "NotFound");
     });
   });
 });
