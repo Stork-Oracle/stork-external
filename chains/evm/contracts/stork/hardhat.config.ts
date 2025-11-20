@@ -188,6 +188,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 17000
     },
+    hyperEvmMainnet: {
+      url: "https://rpc.hyperliquid.xyz/evm",
+      accounts: [PRIVATE_KEY],
+      chainId: 999,
+    },
     lightlinkPegasusTestnet: {
       url: "https://replicator.pegasus.lightlink.io/rpc/v1",
       accounts: [PRIVATE_KEY],
