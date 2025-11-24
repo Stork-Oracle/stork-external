@@ -85,9 +85,9 @@ jobs:
       - name: Set up Node.js for FirstPartyStork
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: './chains/evm/contracts/first_party_stork/package-lock.json'
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "./chains/evm/contracts/first_party_stork/package-lock.json"
 
       - name: Install dependencies for FirstPartyStork
         run: npm install
@@ -210,7 +210,7 @@ jobs:
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git sui --features tracing
+            cargo install --locked --git https://github.com/MystenLabs/sui.git --tag sui_v1.58.0_1759789242_release sui --features tracing
           fi
           sui --version
 
