@@ -308,6 +308,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80002,
     },
+    riseTestnet: {
+      url: "https://indexing.testnet.riselabs.xyz/",
+      accounts: [PRIVATE_KEY],
+      chainId: 11155931,
+    },
     rootstockTestnet: {
       url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
       accounts: [PRIVATE_KEY],
