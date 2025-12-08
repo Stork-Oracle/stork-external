@@ -27,7 +27,9 @@ abstract contract StorkFast is StorkFastGetters, StorkFastSetters {
             bytes memory signature,
             bytes memory verifiablePayload
         ) = StorkFastDeserialize.splitSignedECDSAPayload(payload);
+
         bytes32 messageHash = keccak256(verifiablePayload);
+        signature[64] = bytes1(uint8(signature[64]) + 27);
 
         (address signer, , ) = ECDSA.tryRecover(messageHash, signature);
 
@@ -37,7 +39,7 @@ abstract contract StorkFast is StorkFastGetters, StorkFastSetters {
     function verifyAndDeserializeSignedECDSAPayload(
         bytes calldata payload
     ) public payable returns (StorkFastStructs.Update[] memory updates) {
-        bool verified = verifySignedECDSAPayload{value: msg.value}(payload);
+        bool verified = verifySignedECDSAPayload(payload);
         if (!verified) revert StorkFastErrors.InvalidSignature();
         updates = StorkFastDeserialize.deserializeValuesFromSignedECDSAPayload(
             payload

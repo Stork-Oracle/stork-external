@@ -34,6 +34,7 @@ library StorkFastDeserialize {
 
     /// @notice Splits a signed ECDSA payload into a signature and a verifiable payload
     /// @param payload The signed ECDSA payload
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     /// @return signature The signature bytes
     /// @return verifiablePayload The verifiable payload bytes, excluding the signature
     function splitSignedECDSAPayload(
@@ -41,6 +42,7 @@ library StorkFastDeserialize {
     )
         internal
         pure
+        validPayloadLength(payload)
         returns (bytes memory signature, bytes memory verifiablePayload)
     {
         signature = payload[
@@ -53,6 +55,7 @@ library StorkFastDeserialize {
 
     /// @notice Deserializes the header of a signed ECDSA payload
     /// @param payload The signed ECDSA payload
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     /// @return signature The signature bytes
     /// @return taxonomyID The taxonomy ID as a 16-bit unsigned integer
     /// @return timestampNs The timestamp in nanoseconds as a 64-bit unsigned integer
@@ -87,6 +90,7 @@ library StorkFastDeserialize {
 
     /// @notice Deserializes the assets from a signed ECDSA payload
     /// @param payload The signed ECDSA payload
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     /// @return updates The updates as an array of StorkFastStructs.Update
     function deserializeValuesFromSignedECDSAPayload(
         bytes calldata payload
@@ -144,6 +148,7 @@ library StorkFastDeserialize {
         return updates;
     }
 
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     modifier validPayloadLength(bytes calldata payload) {
         if (payload.length < SIGNED_ECDSA_ASSETS_OFFSET) {
             revert StorkFastErrors.InvalidPayload();
