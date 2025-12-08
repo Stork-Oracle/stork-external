@@ -5,7 +5,6 @@ import "./StorkFastStructs.sol";
 
 /// @title IStorkFastEvents
 /// @notice Events emitted by the Stork Fast contract
-/// @dev This interface can be used for listening to updates from the Stork Fast contract
 interface IStorkFastEvents {
     /// @notice Emitted when the Stork Fast Address key is updated
     /// @param newStorkFastAddress The new Stork public key
