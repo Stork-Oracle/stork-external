@@ -11,6 +11,7 @@ interface IStorkFast {
     /// @param payload The signed ECDSA payload
     /// @dev Requires sufficient fee
     /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     /// @return bool True if the signature is valid
     function verifySignedECDSAPayload(
         bytes calldata payload
@@ -21,6 +22,7 @@ interface IStorkFast {
     /// @dev Requires sufficient fee
     /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
     /// @dev Reverts with InvalidSignature if signature verification fails
+    /// @dev Reverts with InvalidPayload if the payload is not valid
     /// @return updates Array of updates
     function verifyAndDeserializeSignedECDSAPayload(
         bytes calldata payload
