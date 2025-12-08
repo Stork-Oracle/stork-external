@@ -97,6 +97,28 @@ jobs:
         run: npx hardhat test
         working-directory: ./chains/evm/contracts/first_party_stork
 
+  test-fast-evm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "./chains/evm/contracts/stork_fast/package-lock.json"
+
+      - name: Install dependencies for StorkFast
+        run: npm install
+        working-directory: ./chains/evm/contracts/stork_fast
+
+      - name: Run hardhat tests for StorkFast
+        run: npx hardhat test
+        working-directory: ./chains/evm/contracts/stork_fast
+
   test-solana:
     runs-on: ubuntu-latest
 
