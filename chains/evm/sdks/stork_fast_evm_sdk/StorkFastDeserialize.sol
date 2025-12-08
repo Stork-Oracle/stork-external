@@ -9,7 +9,7 @@ import "./StorkFastErrors.sol";
 /// @notice Library for deserializing Stork Fast signed ECDSA payloads
 /// @dev This library provides functions for deserializing signed ECDSA payloads
 library StorkFastDeserialize {
-    /// @dev The number of bytes representing the taxonomy ID in the signed ECDSA payload
+    /// @dev The number of bytes representing the taxonomy ID
     uint public constant TAXONOMY_ID_BYTES = 2;
     /// @dev The number of bytes representing the timestamp in nanoseconds
     uint public constant TIMESTAMP_NS_BYTES = 8;
@@ -24,11 +24,15 @@ library StorkFastDeserialize {
     uint public constant SIGNED_ECDSA_ASSET_BYTES =
         ASSET_ID_BYTES + QUANTIZED_VALUE_BYTES;
 
+    /// @dev The offset of the signature in the signed ECDSA payload
     uint public constant SIGNED_ECDSA_SIGNATURE_OFFSET = 0;
+    /// @dev The offset of the taxonomy ID in the signed ECDSA payload
     uint public constant SIGNED_ECDSA_TAXONOMY_ID_OFFSET =
         SIGNED_ECDSA_SIGNATURE_OFFSET + SIGNED_ECDSA_SIGNATURE_BYTES;
+    /// @dev The offset of the timestamp in nanoseconds in the signed ECDSA payload
     uint public constant SIGNED_ECDSA_TIMESTAMP_NS_OFFSET =
         SIGNED_ECDSA_TAXONOMY_ID_OFFSET + TAXONOMY_ID_BYTES;
+    /// @dev The offset of the assets in the signed ECDSA payload
     uint public constant SIGNED_ECDSA_ASSETS_OFFSET =
         SIGNED_ECDSA_TIMESTAMP_NS_OFFSET + TIMESTAMP_NS_BYTES;
 
