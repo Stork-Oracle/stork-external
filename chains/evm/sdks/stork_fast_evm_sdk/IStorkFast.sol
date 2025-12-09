@@ -23,8 +23,8 @@ interface IStorkFast {
     /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
     /// @dev Reverts with InvalidSignature if signature verification fails
     /// @dev Reverts with InvalidPayload if the payload is not valid
-    /// @return updates Array of updates
+    /// @return assets Array of assets
     function verifyAndDeserializeSignedECDSAPayload(
         bytes calldata payload
-    ) external payable returns (StorkFastStructs.Update[] memory updates);
+    ) external payable returns (StorkFastStructs.Asset[] memory assets);
 }

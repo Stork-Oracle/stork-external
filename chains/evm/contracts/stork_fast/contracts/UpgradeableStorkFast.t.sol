@@ -226,7 +226,7 @@ contract UpgradeableStorkFastTest is Test {
     function test_VerifyAndDeserialize_SuccessfulWithSingleAsset() public {
         uint256 initialBalance = address(storkFast).balance;
 
-        StorkFastStructs.Update[] memory updates = storkFast
+        StorkFastStructs.Asset[] memory updates = storkFast
             .verifyAndDeserializeSignedECDSAPayload{value: verificationFee}(
             validPayloadHex_1
         );
@@ -244,7 +244,7 @@ contract UpgradeableStorkFastTest is Test {
         public
     {
         uint256 initialBalance = address(storkFast).balance;
-        StorkFastStructs.Update[] memory updates = storkFast
+        StorkFastStructs.Asset[] memory updates = storkFast
             .verifyAndDeserializeSignedECDSAPayload{value: verificationFee}(
             validNegativePayloadHex_7
         );
@@ -259,7 +259,7 @@ contract UpgradeableStorkFastTest is Test {
 
     function test_VerifyAndDeserialize_SuccessfulWithMultipleAssets() public {
         uint256 initialBalance = address(storkFast).balance;
-        StorkFastStructs.Update[] memory updates = storkFast
+        StorkFastStructs.Asset[] memory updates = storkFast
             .verifyAndDeserializeSignedECDSAPayload{value: verificationFee}(
             validPayloadHex_1_2_3_4_5_6
         );

@@ -38,10 +38,10 @@ abstract contract StorkFast is StorkFastGetters, StorkFastSetters {
 
     function verifyAndDeserializeSignedECDSAPayload(
         bytes calldata payload
-    ) public payable returns (StorkFastStructs.Update[] memory updates) {
+    ) public payable returns (StorkFastStructs.Asset[] memory assets) {
         bool verified = verifySignedECDSAPayload(payload);
         if (!verified) revert StorkFastErrors.InvalidSignature();
-        updates = StorkFastDeserialize.deserializeValuesFromSignedECDSAPayload(
+        assets = StorkFastDeserialize.deserializeAssetsFromSignedECDSAPayload(
             payload
         );
     }

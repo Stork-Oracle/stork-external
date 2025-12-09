@@ -95,14 +95,14 @@ library StorkFastDeserialize {
     /// @notice Deserializes the assets from a signed ECDSA payload
     /// @param payload The signed ECDSA payload
     /// @dev Reverts with InvalidPayload if the payload is not valid
-    /// @return updates The updates as an array of StorkFastStructs.Update
-    function deserializeValuesFromSignedECDSAPayload(
+    /// @return assets The assets as an array of StorkFastStructs.Asset
+    function deserializeAssetsFromSignedECDSAPayload(
         bytes calldata payload
     )
         internal
         pure
         validPayloadLength(payload)
-        returns (StorkFastStructs.Update[] memory updates)
+        returns (StorkFastStructs.Asset[] memory assets)
     {
         uint64 timestampNs = uint64(
             bytes8(
@@ -113,11 +113,11 @@ library StorkFastDeserialize {
         );
 
         uint256 len = payload.length;
-        uint16 numUpdates = uint16(
+        uint16 numAssets = uint16(
             (len - SIGNED_ECDSA_ASSETS_OFFSET) / SIGNED_ECDSA_ASSET_BYTES
         );
 
-        updates = new StorkFastStructs.Update[](numUpdates);
+        assets = new StorkFastStructs.Asset[](numAssets);
 
         uint16 assetIndex = 0;
         for (
@@ -139,7 +139,7 @@ library StorkFastDeserialize {
                 )
             );
 
-            updates[assetIndex] = StorkFastStructs.Update(
+            assets[assetIndex] = StorkFastStructs.Asset(
                 assetID,
                 StorkStructs.TemporalNumericValue(
                     timestampNs,
@@ -149,7 +149,7 @@ library StorkFastDeserialize {
             assetIndex++;
         }
 
-        return updates;
+        return assets;
     }
 
     /// @dev Reverts with InvalidPayload if the payload is not valid
