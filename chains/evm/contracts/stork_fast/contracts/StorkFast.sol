@@ -7,8 +7,9 @@ import "./StorkFastSetters.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastStructs.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastDeserialize.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastErrors.sol";
+import "@storknetwork/stork-fast-evm-sdk/IStorkFast.sol";
 
-abstract contract StorkFast is StorkFastGetters, StorkFastSetters {
+abstract contract StorkFast is StorkFastGetters, StorkFastSetters, IStorkFast {
     function _initialize(
         address storkFastAddress,
         uint verificationFeeInWei
