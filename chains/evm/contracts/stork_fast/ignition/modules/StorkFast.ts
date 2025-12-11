@@ -1,3 +1,5 @@
+// Use this ignition module to deploy the Stork Fast contract for the first time.
+
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const StorkFastProxyModule = buildModule("StorkFastProxyModule", (m) => {
@@ -23,3 +25,6 @@ const StorkFastModule = buildModule("StorkFastModule", (m) => {
 
   return { StorkFast, proxy };
 });
+
+export default StorkFastModule;
+export { StorkFastProxyModule };

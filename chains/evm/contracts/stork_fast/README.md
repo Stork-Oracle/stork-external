@@ -32,7 +32,19 @@ npx hardhat node
 
 ```bash
 npx hardhat compile
-npx hardhat ignition deploy ignition/modules/StorkFast.ts --network inMemoryNode
+npx hardhat ignition deploy ignition/modules/StorkFast.ts --network hardhatLocal --verify
 ```
 
-#### Upgrade
+#### Interact
+
+See `tasks/admin.ts` for available methods.
+
+```bash
+npx hardhat --network hardhatLocal <method>
+```
+
+### Deploy on-chain
+
+1. Configure your `hardhat.config.ts` with the desired network.
+2. Run `npx hardhat --network <network> deploy` to deploy the contract.
+3. Deployment will be saved in the `deployments` directory.

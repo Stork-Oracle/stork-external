@@ -1,10 +1,27 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
-// import "./tasks/admin";
+import {
+  verificationFeeInWei,
+  storkFastAddress,
+  updateVerificationFeeInWei,
+  updateStorkFastAddress,
+  version,
+} from "./tasks/admin";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
+  tasks: [
+    verificationFeeInWei,
+    storkFastAddress,
+    updateVerificationFeeInWei,
+    updateStorkFastAddress,
+    version,
+  ],
   solidity: {
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
+    ],
     profiles: {
       default: {
         version: "0.8.28",
@@ -21,6 +38,11 @@ export default defineConfig({
     },
   },
   networks: {
+    hardhatLocal: {
+      type: "http",
+      url: "http://localhost:8545",
+      chainId: 31337,
+    },
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
