@@ -1,6 +1,6 @@
 # Stork Fast EVM SDK
 
-This is a Solidity SDK for to build EVM contracts that consume Stork Fast signed ECDSA update payloads. This package is maintained by [Stork Labs](https://stork.network).
+This is a Solidity SDK for building EVM contracts that consume Stork Fast signed ECDSA update payloads. This package is maintained by [Stork Labs](https://stork.network).
 
 It is available on [npm](https://www.npmjs.com/package/@storknetwork/stork-fast-evm-sdk).
 
