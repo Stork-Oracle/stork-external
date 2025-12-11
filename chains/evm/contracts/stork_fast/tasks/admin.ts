@@ -11,15 +11,15 @@ export const verificationFeeInWei = task(
   .setAction(() => import("./verificationFeeInWei.js"))
   .build();
 
-export const storkFastAddress = task(
-  "storkFastAddress",
-  "Get the Stork Fast address"
+export const signerAddress = task(
+  "signerAddress",
+  "Get the signer address"
 )
   .addPositionalArgument({
     name: "contractAddress",
     description: "The UpgradeableStorkFast contract address",
   })
-  .setAction(() => import("./storkFastAddress.js"))
+  .setAction(() => import("./signerAddress.js"))
   .build();
 
 export const updateVerificationFeeInWei = task(
@@ -45,9 +45,9 @@ export const version = task("version", "Get the contract version")
   .setAction(() => import("./version.js"))
   .build();
 
-export const updateStorkFastAddress = task(
-  "updateStorkFastAddress",
-  "Update the Stork Fast address"
+export const updateSignerAddress = task(
+  "updateSignerAddress",
+  "Update the signer address"
 )
   .addPositionalArgument({
     name: "contractAddress",
@@ -55,7 +55,7 @@ export const updateStorkFastAddress = task(
   })
   .addPositionalArgument({
     name: "address",
-    description: "The new Stork Fast address",
+    description: "The new signer address",
   })
-  .setAction(() => import("./updateStorkFastAddress.js"))
+  .setAction(() => import("./updateSignerAddress.js"))
   .build();

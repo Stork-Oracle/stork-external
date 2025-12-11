@@ -46,5 +46,6 @@ npx hardhat --network hardhatLocal <method>
 ### Deploy on-chain
 
 1. Configure your `hardhat.config.ts` with the desired network.
-2. Run `npx hardhat --network <network> deploy` to deploy the contract.
-3. Deployment will be saved in the `deployments` directory.
+2. Update the `ignition/parameters.json` file with the desired signer address and verification fee in wei.
+3. Run `npx hardhat --network <network> deploy` to deploy the contract.
+4. Deployment will be saved in the `deployments` directory.

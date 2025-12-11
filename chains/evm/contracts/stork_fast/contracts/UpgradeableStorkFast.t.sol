@@ -18,7 +18,7 @@ contract UpgradeableStorkFastTest is Test {
     address public owner = address(0x1);
     address public otherAccount = address(0x2);
 
-    address public storkFastAddress =
+    address public signerAddress =
         address(0xC4A02e7D370402F4afC36032076B05e74FF81786);
 
     // ==== VERIFICATION FEE ====
@@ -55,7 +55,7 @@ contract UpgradeableStorkFastTest is Test {
         bytes memory initializeData = abi.encodeWithSelector(
             UpgradeableStorkFast.initialize.selector,
             owner,
-            storkFastAddress,
+            signerAddress,
             verificationFee
         );
 
@@ -72,8 +72,8 @@ contract UpgradeableStorkFastTest is Test {
         assertEq(storkFast.owner(), owner);
     }
 
-    function test_ShouldReturnStorkFastAddress() public view {
-        assertEq(storkFast.storkFastAddress(), storkFastAddress);
+    function test_ShouldReturnSignerAddress() public view {
+        assertEq(storkFast.signerAddress(), signerAddress);
     }
 
     function test_ShouldReturnVerificationFee() public view {
@@ -91,29 +91,29 @@ contract UpgradeableStorkFastTest is Test {
         assertEq(version, "1.0.0");
     }
 
-    // ===== UPDATE STORK FAST ADDRESS TESTS =====
+    // ===== UPDATE SIGNER ADDRESS TESTS =====
 
-    function test_UpdateStorkFastAddress_Successful() public {
+    function test_UpdateSignerAddress_Successful() public {
         address newAddress = address(0x123);
 
         vm.prank(owner);
-        storkFast.updateStorkFastAddress(newAddress);
+        storkFast.updateSignerAddress(newAddress);
 
-        assertEq(storkFast.storkFastAddress(), newAddress);
+        assertEq(storkFast.signerAddress(), newAddress);
     }
 
-    function test_UpdateStorkFastAddress_RevertsIfNotOwner() public {
+    function test_UpdateSignerAddress_RevertsIfNotOwner() public {
         address newAddress = address(0x123);
 
         vm.prank(otherAccount);
         vm.expectRevert(); // OwnableUnauthorizedAccount
-        storkFast.updateStorkFastAddress(newAddress);
+        storkFast.updateSignerAddress(newAddress);
     }
 
-    function test_UpdateStorkFastAddress_RevertsIfZeroAddress() public {
+    function test_UpdateSignerAddress_RevertsIfZeroAddress() public {
         vm.prank(owner);
-        vm.expectRevert("Stork Fast address cannot be 0 address");
-        storkFast.updateStorkFastAddress(address(0));
+        vm.expectRevert("Signer address cannot be 0 address");
+        storkFast.updateSignerAddress(address(0));
     }
 
     // ===== UPDATE VERIFICATION FEE TESTS =====

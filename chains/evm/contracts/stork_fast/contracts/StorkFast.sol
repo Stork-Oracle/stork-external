@@ -11,11 +11,11 @@ import "@storknetwork/stork-fast-evm-sdk/IStorkFast.sol";
 
 abstract contract StorkFast is StorkFastGetters, StorkFastSetters, IStorkFast {
     function _initialize(
-        address storkFastAddress,
+        address signerAddress,
         uint verificationFeeInWei
     ) internal {
-        StorkFastSetters.setStorkFastAddress(storkFastAddress);
-        StorkFastSetters.setVerificationFeeInWei(verificationFeeInWei);
+        setSignerAddress(signerAddress);
+        setVerificationFeeInWei(verificationFeeInWei);
     }
 
     function verifySignedECDSAPayload(
@@ -34,7 +34,7 @@ abstract contract StorkFast is StorkFastGetters, StorkFastSetters, IStorkFast {
 
         (address signer, , ) = ECDSA.tryRecover(messageHash, signature);
 
-        return signer == storkFastAddress();
+        return signer == signerAddress();
     }
 
     function verifyAndDeserializeSignedECDSAPayload(
@@ -51,7 +51,7 @@ abstract contract StorkFast is StorkFastGetters, StorkFastSetters, IStorkFast {
         uint verificationFeeInWei
     ) public virtual;
 
-    function updateStorkFastAddress(address storkFastAddress) public virtual;
+    function updateSignerAddress(address signerAddress) public virtual;
 
     function version() public pure returns (string memory) {
         return "1.0.0";

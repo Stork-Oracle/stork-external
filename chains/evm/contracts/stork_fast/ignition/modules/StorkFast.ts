@@ -7,7 +7,7 @@ const StorkFastProxyModule = buildModule("StorkFastProxyModule", (m) => {
 
   const proxyAdminOwner = m.getAccount(0);
 
-  const initializeCalldata = m.encodeFunctionCall(UpgradeableStorkFast, "initialize", [proxyAdminOwner, m.getParameter("storkFastAddress"), m.getParameter("verificationFeeInWei")]);
+  const initializeCalldata = m.encodeFunctionCall(UpgradeableStorkFast, "initialize", [proxyAdminOwner, m.getParameter("signerAddress"), m.getParameter("verificationFeeInWei")]);
 
   const proxy = m.contract("TransparentUpgradeableProxy", [
     UpgradeableStorkFast,

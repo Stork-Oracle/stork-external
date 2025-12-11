@@ -5,13 +5,13 @@ import "./StorkFastState.sol";
 import "@storknetwork/stork-fast-evm-sdk/IStorkFastEvents.sol";
 
 contract StorkFastSetters is StorkFastState, IStorkFastEvents {
-    function setStorkFastAddress(address storkFastAddress) internal {
+    function setSignerAddress(address signerAddress) internal {
         require(
-            storkFastAddress != address(0),
-            "Stork Fast address cannot be 0 address"
+            signerAddress != address(0),
+            "Signer address cannot be 0 address"
         );
-        _state.storkFastAddress = storkFastAddress;
-        emit StorkFastAddressUpdate(storkFastAddress);
+        _state.signerAddress = signerAddress;
+        emit SignerAddressUpdate(signerAddress);
     }
 
     function setVerificationFeeInWei(uint verificationFeeInWei) internal {

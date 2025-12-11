@@ -1,12 +1,12 @@
 import type { HardhatRuntimeEnvironment } from "hardhat/types/hre";
 import type { Address } from "viem";
 
-interface StorkFastAddressArguments {
+interface SignerAddressArguments {
   contractAddress: string;
 }
 
 export default async function (
-  { contractAddress }: StorkFastAddressArguments,
+  { contractAddress }: SignerAddressArguments,
   hre: HardhatRuntimeEnvironment
 ) {
   const { viem } = await hre.network.connect();
@@ -19,8 +19,8 @@ export default async function (
   const address = await publicClient.readContract({
     address: contractAddress as Address,
     abi: contractArtifact.abi,
-    functionName: "storkFastAddress",
+    functionName: "signerAddress",
   });
 
-  console.log(`Stork Fast Address: ${address}`);
+  console.log(`Signer Address: ${address}`);
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 
 /// @title StorkFastStructs
-/// @notice Data structures used by the Stork Fast protocol
+/// @notice Data structures used by the Stork Fast oracle contract
 library StorkFastStructs {
     /// @notice Represents a single update to a temporal numeric value
     struct Asset {
