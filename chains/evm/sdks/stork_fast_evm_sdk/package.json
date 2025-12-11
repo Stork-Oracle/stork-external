@@ -27,5 +27,8 @@
     },
     "dependencies": {
         "@storknetwork/stork-evm-sdk": "^1.0.0"
+    },
+    "devDependencies": {
+        "forge-std": "github:foundry-rs/forge-std#v1.9.4"
     }
 }
