@@ -111,6 +111,10 @@ jobs:
           cache: "npm"
           cache-dependency-path: "./chains/evm/contracts/stork_fast/package-lock.json"
 
+      - name: Install dependencies for StorkFastEVM SDK
+        run: npm install
+        working-directory: ./chains/evm/sdks/stork_fast_evm_sdk
+
       - name: Install dependencies for StorkFast
         run: npm install
         working-directory: ./chains/evm/contracts/stork_fast
