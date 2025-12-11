@@ -21,5 +21,5 @@ npx hardhat --network hardhatMainnet ignition deploy ignition/modules/Example.ts
 ```
 7. Use the Stork Fast contract to verify a signed ECDSA payload:
 ```bash
-npx hardhat --network hardhatMainnet use-stork-fast 0xYOUR_EXAMPLE_CONTRACT_ADDRESS 0xYOUR_SIGNED_PAYLOAD --fee <OptionalFeeInWei>
+npx hardhat --network hardhatMainnet use-stork-fast 0xYOUR_EXAMPLE_CONTRACT_ADDRESS 0xYOUR_SIGNED_PAYLOAD 
 ```
