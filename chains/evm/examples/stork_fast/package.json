@@ -12,6 +12,6 @@
     "viem": "^2.41.2"
   },
   "dependencies": {
-    "@storknetwork/stork-fast-evm-sdk": "file:../../sdks/stork_fast_evm_sdk"
+    "@storknetwork/stork-fast-evm-sdk": "^1.0.0"
   }
 }
