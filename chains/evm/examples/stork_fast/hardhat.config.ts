@@ -14,11 +14,6 @@ const useStorkFastTask = task(
     name: "payload",
     description: "The signed ECDSA payload (hex string)",
   })
-  .addOption({
-    name: "fee",
-    description: "The fee to send in wei (defaults to the verification fee)",
-    defaultValue: "",
-  })
   .setAction(() => import("./tasks/useStorkFastAction.js"))
   .build();
 

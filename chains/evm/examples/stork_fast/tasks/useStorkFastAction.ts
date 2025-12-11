@@ -4,7 +4,6 @@ import { Address, hexToBytes, Hex, toHex } from "viem";
 interface UseStorkFastTaskArguments {
     exampleContractAddress: string;
     payload: string;
-    fee?: string;
 }
 
 export default async function (
@@ -17,6 +16,34 @@ export default async function (
 
     const exampleContractArtifact = await hre.artifacts.readArtifact("Example");
 
+    // Get the Stork Fast contract address from the Example contract
+    const storkFastAddress = await publicClient.readContract({
+        address: taskArguments.exampleContractAddress as Address,
+        abi: exampleContractArtifact.abi,
+        functionName: "storkFast",
+    }) as Address;
+
+    console.log(`Stork Fast contract: ${storkFastAddress}`);
+
+    // Get the verification fee from the Stork Fast contract
+    const verificationFee = await publicClient.readContract({
+        address: storkFastAddress,
+        abi: [
+            {
+                name: "verificationFeeInWei",
+                type: "function",
+                stateMutability: "view",
+                inputs: [],
+                outputs: [{ type: "uint256" }],
+            },
+        ],
+        functionName: "verificationFeeInWei",
+    }) as bigint;
+
+    const feeToUse = taskArguments.fee ? BigInt(taskArguments.fee) : verificationFee;
+    console.log(`Verification fee: ${verificationFee} wei`);
+    console.log(`Using fee: ${feeToUse} wei`);
+
     const payload = taskArguments.payload as Hex;
 
     console.log(`Payload: ${payload}`);
@@ -25,7 +52,7 @@ export default async function (
         abi: exampleContractArtifact.abi,
         functionName: "useStorkFast",
         args: [payload],
-        value: taskArguments.fee ? BigInt(taskArguments.fee) : BigInt(2),
+        value: feeToUse,
     });
 
     console.log(`Transaction hash: ${hash}`);
