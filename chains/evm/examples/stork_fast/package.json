@@ -1,0 +1,17 @@
+{
+  "name": "stork_fast",
+  "version": "1.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
+    "@types/node": "^22.19.2",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.17",
+    "typescript": "~5.8.0",
+    "viem": "^2.41.2"
+  },
+  "dependencies": {
+    "@storknetwork/stork-fast-evm-sdk": "^1.0.0"
+  }
+}
