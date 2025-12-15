@@ -84,13 +84,13 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (eci *ContractInteractor) ConnectHTTP(url string) error {
+func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RPC: %w", err)
 	}
 
-	chainID, err := client.NetworkID(context.Background())
+	chainID, err := client.NetworkID(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get network ID: %w", err)
 	}
@@ -107,13 +107,13 @@ func (eci *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (eci *ContractInteractor) ConnectWs(url string) error {
+func (eci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	var wsClient *ethclient.Client
 
 	var err error
 
 	if url != "" {
-		wsClient, err = ethclient.Dial(url)
+		wsClient, err = ethclient.DialContext(ctx, url)
 		if err != nil {
 			return fmt.Errorf("failed to connect to WS: %w", err)
 		} else {
@@ -143,7 +143,7 @@ func (eci *ContractInteractor) ListenContractEvents(
 		return
 	}
 
-	watchOpts := &bind.WatchOpts{Context: context.Background()}
+	watchOpts := &bind.WatchOpts{Context: ctx}
 
 	sub, eventCh, err := setupSubscription(eci, watchOpts)
 	if err != nil {
@@ -184,6 +184,7 @@ func (eci *ContractInteractor) ListenContractEvents(
 }
 
 func (eci *ContractInteractor) PullValues(
+	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -196,7 +197,9 @@ func (eci *ContractInteractor) PullValues(
 	var failedToGetLatestValueErr error
 
 	for _, encodedAssetID := range encodedAssetIDs {
-		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(nil, encodedAssetID)
+		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(
+			&bind.CallOpts{Context: ctx}, encodedAssetID,
+		)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
@@ -356,6 +359,7 @@ func getVerifyPublishersPayloads(
 }
 
 func (eci *ContractInteractor) BatchPushToContract(
+	ctx context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	if eci.verifyPublishers {
@@ -367,7 +371,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 		var verified bool
 		for i := range publisherVerifyPayloads {
 			verified, err = eci.contract.VerifyPublisherSignaturesV1(
-				nil,
+				&bind.CallOpts{Context: ctx},
 				publisherVerifyPayloads[i].pubSigs,
 				publisherVerifyPayloads[i].merkleRoot,
 			)
@@ -395,17 +399,17 @@ func (eci *ContractInteractor) BatchPushToContract(
 		return err
 	}
 
-	fee, err := eci.contract.GetUpdateFeeV1(nil, updatePayload)
+	fee, err := eci.contract.GetUpdateFeeV1(&bind.CallOpts{Context: ctx}, updatePayload)
 	if err != nil {
 		return fmt.Errorf("failed to get update fee: %w", err)
 	}
 
-	tx, err := eci.submitTransaction(updatePayload, fee, nil, nil)
+	tx, err := eci.submitTransaction(ctx, updatePayload, fee, nil, nil)
 	if err != nil {
 		if errors.Is(err, etherrors.ErrReplaceUnderpriced) {
 			eci.logger.Warn().Err(err).Msg("Transaction underpriced, retrying with bumped gas prices")
 
-			tx, err = eci.retryTransaction(updatePayload, fee)
+			tx, err = eci.retryTransaction(ctx, updatePayload, fee)
 			if err != nil {
 				return fmt.Errorf("failed to retry transaction submission: %w", err)
 			}
@@ -423,7 +427,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-func (eci *ContractInteractor) GetWalletBalance() (float64, error) {
+func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	publicKey := eci.privateKey.Public()
 
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -433,7 +437,7 @@ func (eci *ContractInteractor) GetWalletBalance() (float64, error) {
 
 	address := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	balance, err := eci.client.BalanceAt(context.Background(), address, nil)
+	balance, err := eci.client.BalanceAt(ctx, address, nil)
 	if err != nil {
 		return -1, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
@@ -529,6 +533,7 @@ func (eci *ContractInteractor) reconnect(
 }
 
 func (eci *ContractInteractor) submitTransaction(
+	ctx context.Context,
 	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
 	fee *big.Int,
 	gasFeeOverride *big.Int,
@@ -539,6 +544,7 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to get auth data: %w", err)
 	}
 
+	auth.Context = ctx
 	auth.GasLimit = eci.gasLimit
 	auth.Value = fee
 
@@ -559,11 +565,10 @@ func (eci *ContractInteractor) submitTransaction(
 }
 
 func (eci *ContractInteractor) retryTransaction(
+	ctx context.Context,
 	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
 	fee *big.Int,
 ) (*ethtypes.Transaction, error) {
-	ctx := context.Background()
-
 	var lastErr error
 
 	for retryCount := range MaxTransactionAttempts {
@@ -584,7 +589,7 @@ func (eci *ContractInteractor) retryTransaction(
 			Str("gasTipCap", newGasTipCap.String()).
 			Msg("Retrying with bumped gas prices")
 
-		tx, err := eci.submitTransaction(updatePayload, fee, newGasFeeCap, newGasTipCap)
+		tx, err := eci.submitTransaction(ctx, updatePayload, fee, newGasFeeCap, newGasTipCap)
 
 		lastErr = err
 		if err == nil {

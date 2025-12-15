@@ -63,8 +63,9 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (sci *ContractInteractor) ConnectHTTP(url string) error {
+func (sci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
 	contract, err := bindings.NewStorkContract(
+		ctx,
 		url,
 		sci.contractAddress,
 		sci.mnemonic,
@@ -83,7 +84,7 @@ func (sci *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (sci *ContractInteractor) ConnectWs(url string) error {
+func (sci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	// not implemented
 	return nil
 }
@@ -99,6 +100,7 @@ func (sci *ContractInteractor) ListenContractEvents(
 }
 
 func (sci *ContractInteractor) PullValues(
+	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -111,7 +113,7 @@ func (sci *ContractInteractor) PullValues(
 			encodeAssetIDInt[i] = int(b)
 		}
 
-		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIDInt)
+		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(ctx, encodeAssetIDInt)
 		if err != nil {
 			failedToGetLatestValueErr = err
 
@@ -155,6 +157,7 @@ func (sci *ContractInteractor) PullValues(
 }
 
 func (sci *ContractInteractor) BatchPushToContract(
+	ctx context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := make([]bindings.UpdateData, 0, len(priceUpdates))
@@ -168,7 +171,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 		updateData = append(updateData, update)
 	}
 
-	txHash, err := sci.contract.UpdateTemporalNumericValuesEvm(updateData)
+	txHash, err := sci.contract.UpdateTemporalNumericValuesEvm(ctx, updateData)
 	if err != nil {
 		return fmt.Errorf("failed to update temporal numeric values: %w", err)
 	}
@@ -185,7 +188,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 // todo: implement
 //
 //nolint:godox // This function has unmet criteria to be implemented.
-func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
+func (sci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	return -1, nil
 }
 

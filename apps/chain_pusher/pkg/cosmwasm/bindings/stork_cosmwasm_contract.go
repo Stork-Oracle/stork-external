@@ -138,6 +138,7 @@ type StorkContract struct {
 }
 
 func NewStorkContract(
+	ctx context.Context,
 	rpcUrl string,
 	contractAddress string,
 	mnemonic string,
@@ -219,7 +220,7 @@ func NewStorkContract(
 		WithFromName(keyName).
 		WithSimulateAndExecute(true)
 
-	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
+	singleUpdateFee, err := storkContract.GetSingleUpdateFee(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +231,7 @@ func NewStorkContract(
 }
 
 func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(
-	id [32]int,
+	ctx context.Context, id [32]int,
 ) (*GetTemporalNumericValueResponse, error) {
 	rawQueryData, err := json.Marshal(
 		map[string]any{
@@ -243,7 +244,7 @@ func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(
 		return nil, fmt.Errorf("failed to marshal query data: %w", err)
 	}
 
-	rawResponseData, err := s.queryContract(rawQueryData)
+	rawResponseData, err := s.queryContract(ctx, rawQueryData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query contract: %w", err)
 	}
@@ -258,7 +259,7 @@ func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(
 	return &response, nil
 }
 
-func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
+func (s *StorkContract) UpdateTemporalNumericValuesEvm(ctx context.Context, updateData []UpdateData) (string, error) {
 	rawExecData, err := json.Marshal(
 		map[string]any{
 			"update_temporal_numeric_values_evm": &ExecMsg_UpdateTemporalNumericValuesEvm{UpdateData: updateData},
@@ -271,7 +272,7 @@ func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) 
 	fee := s.singleUpdateFee.toCosmosCoin()
 	fee.Amount = fee.Amount.MulRaw(int64(len(updateData)))
 
-	txHash, err := s.executeContract(rawExecData, []sdktypes.Coin{fee})
+	txHash, err := s.executeContract(ctx, rawExecData, []sdktypes.Coin{fee})
 	if err != nil {
 		return "", fmt.Errorf("failed to execute contract: %w", err)
 	}
@@ -279,13 +280,13 @@ func (s *StorkContract) UpdateTemporalNumericValuesEvm(updateData []UpdateData) 
 	return txHash, nil
 }
 
-func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error) {
+func (s *StorkContract) GetSingleUpdateFee(ctx context.Context) (*GetSingleUpdateFeeResponse, error) {
 	rawQueryData, err := json.Marshal(map[string]any{"get_single_update_fee": new(QueryMsg_GetSingleUpdateFee)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal query data: %w", err)
 	}
 
-	rawResponseData, err := s.queryContract(rawQueryData)
+	rawResponseData, err := s.queryContract(ctx, rawQueryData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query contract: %w", err)
 	}
@@ -300,7 +301,7 @@ func (s *StorkContract) GetSingleUpdateFee() (*GetSingleUpdateFeeResponse, error
 	return &response, nil
 }
 
-func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
+func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) ([]byte, error) {
 	query := &wasmtypes.QuerySmartContractStateRequest{
 		Address:   s.ContractAddress,
 		QueryData: rawQueryData,
@@ -315,7 +316,7 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
-		context.Background(),
+		ctx,
 		"/cosmwasm.wasm.v1.Query/SmartContractState",
 		bz,
 	)
@@ -338,7 +339,7 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 }
 
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
-func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coin) (string, error) {
+func (s *StorkContract) executeContract(ctx context.Context, rawExecData []byte, funds []sdktypes.Coin) (string, error) {
 	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
@@ -361,7 +362,7 @@ func (s *StorkContract) executeContract(rawExecData []byte, funds []sdktypes.Coi
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
-		context.Background(),
+		ctx,
 		"/cosmos.auth.v1beta1.Query/Account",
 		rawAccMsg,
 	)

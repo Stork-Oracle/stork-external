@@ -11,6 +11,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const DefaultNetworkTimeoutSec = 5 * time.Second
+
 // Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
 	storkWsEndpoint string
@@ -50,7 +52,7 @@ func NewPusher(
 func (p *Pusher) Run(ctx context.Context) {
 	p.logger.Info().Str("wsRpcUrl", p.chainWsRpcUrl).Msg("Connecting to WS RPC URL")
 
-	err := p.interactor.ConnectWs(p.chainWsRpcUrl)
+	err := p.interactor.ConnectWs(ctx, p.chainWsRpcUrl)
 	if err != nil {
 		p.logger.Error().Err(err).
 			Str("wsRpcUrl", p.chainWsRpcUrl).
@@ -59,7 +61,7 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Connecting to HTTP RPC URL")
 
-	err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+	err = p.interactor.ConnectHTTP(ctx, p.chainRpcUrl)
 	if err != nil {
 		p.logger.Error().Err(err).
 			Str("httpRpcUrl", p.chainRpcUrl).
@@ -80,13 +82,13 @@ func (p *Pusher) Run(ctx context.Context) {
 	latestContractValueMap := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 	latestStorkValueMap := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
-	initialValues, err := p.interactor.PullValues(encodedAssetIDs)
+	initialValues, err := p.pullWithTimeout(ctx, encodedAssetIDs)
 	if err != nil {
 		p.logger.Error().Err(err).Msg("Failed to pull initial values from contract")
 
 		p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
 
-		err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+		err = p.interactor.ConnectHTTP(ctx, p.chainRpcUrl)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
 		}
@@ -99,7 +101,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
 	go p.interactor.ListenContractEvents(ctx, contractCh)
-	go p.poll(encodedAssetIDs, contractCh)
+	go p.poll(ctx, encodedAssetIDs, contractCh)
 
 	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)
 	defer ticker.Stop()
@@ -113,7 +115,7 @@ func (p *Pusher) Run(ctx context.Context) {
 		case <-ticker.C:
 			updates := p.collateUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
 
-			go p.handlePushUpdates(updates, contractCh)
+			go p.handlePushUpdates(ctx, updates, contractCh)
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
@@ -122,6 +124,24 @@ func (p *Pusher) Run(ctx context.Context) {
 			p.handleContractUpdate(chainUpdate, latestContractValueMap)
 		}
 	}
+}
+
+func (p *Pusher) pullWithTimeout(
+	ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID,
+) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeoutSec)
+	defer pullCancel()
+
+	return p.interactor.PullValues(pullCtx, encodedAssetIDs)
+}
+
+func (p *Pusher) pushWithTimeout(
+	ctx context.Context, nextUpdate map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
+) error {
+	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeoutSec)
+	defer pullCancel()
+
+	return p.interactor.BatchPushToContract(pullCtx, nextUpdate)
 }
 
 func (p *Pusher) collateUpdates(
@@ -191,19 +211,20 @@ func shouldUpdateAsset(
 }
 
 func (p *Pusher) poll(
+	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 	ch chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	p.logger.Info().Msgf("Polling contract for new values for %d assets", len(encodedAssetIDs))
 
 	for range time.Tick(time.Duration(p.pollingPeriod) * time.Second) {
-		polledVals, err := p.interactor.PullValues(encodedAssetIDs)
+		polledVals, err := p.pullWithTimeout(ctx, encodedAssetIDs)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to poll contract")
 
 			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
 
-			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+			err = p.interactor.ConnectHTTP(ctx, p.chainRpcUrl)
 			if err != nil {
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
 			}
@@ -245,17 +266,18 @@ func (p *Pusher) initializeAssets() (*types.AssetConfig, []shared.AssetID, []typ
 
 // handlePushUpdates processes updates and pushes them to the contract.
 func (p *Pusher) handlePushUpdates(
+	ctx context.Context,
 	updates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 	contractCh chan<- map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
 	if len(updates) > 0 {
-		err := p.interactor.BatchPushToContract(updates)
+		err := p.pushWithTimeout(ctx, updates)
 		if err != nil {
 			p.logger.Error().Err(err).Msg("Failed to push batch to contract")
 
 			p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
 
-			err = p.interactor.ConnectHTTP(p.chainRpcUrl)
+			err = p.interactor.ConnectHTTP(ctx, p.chainRpcUrl)
 			if err != nil {
 				p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
 			}

@@ -15,6 +15,7 @@ package bindings
 import "C"
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -149,6 +150,15 @@ func handleFuelClientStatus(status C.enum_FuelClientStatus) error {
 	}
 }
 
+func (s *StorkContract) UpdateTemporalNumericValuesV1WithTimeout(
+	ctx context.Context, inputs []TemporalNumericValueInput,
+) (string, error) {
+	return callWithContext(
+		ctx,
+		func() (string, error) { return s.UpdateTemporalNumericValuesV1(inputs) },
+	)
+}
+
 func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []TemporalNumericValueInput) (string, error) {
 	inputsJSON, err := json.Marshal(inputs)
 	if err != nil {
@@ -187,6 +197,17 @@ func (s *StorkContract) UpdateTemporalNumericValuesV1(inputs []TemporalNumericVa
 	return txHash, nil
 }
 
+func (s *StorkContract) GetTemporalNumericValueUncheckedV1WithTimeout(
+	ctx context.Context, id [32]byte,
+) (*TemporalNumericValue, error) {
+	return callWithContext(
+		ctx,
+		func() (*TemporalNumericValue, error) {
+			return s.GetTemporalNumericValueUncheckedV1(id)
+		},
+	)
+}
+
 func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*TemporalNumericValue, error) {
 	// Convert [32]byte to *C.uint8_t
 	idPtr := (*[32]C.uint8_t)(unsafe.Pointer(&id))
@@ -220,6 +241,10 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*Tempor
 	return &result, nil
 }
 
+func (s *StorkContract) GetWalletBalanceWithTimeout(ctx context.Context) (uint64, error) {
+	return callWithContext(ctx, s.GetWalletBalance)
+}
+
 func (s *StorkContract) GetWalletBalance() (uint64, error) {
 	var balance C.uint64_t
 	var outErrorPtr *C.char
@@ -245,5 +270,32 @@ func (s *StorkContract) Close() {
 	if s.Client != nil {
 		C.fuel_client_free(s.Client)
 		s.Client = nil
+	}
+}
+
+func callWithContext[T any](ctx context.Context, f func() (T, error)) (T, error) {
+	var zero T
+	if err := ctx.Err(); err != nil {
+		return zero, err
+	}
+
+	resultCh := make(chan struct {
+		value T
+		err   error
+	}, 1)
+
+	go func() {
+		value, err := f()
+		resultCh <- struct {
+			value T
+			err   error
+		}{value, err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return zero, fmt.Errorf("call cancelled: %w", ctx.Err())
+	case res := <-resultCh:
+		return res.value, res.err
 	}
 }
