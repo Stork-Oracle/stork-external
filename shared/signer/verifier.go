@@ -16,7 +16,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func VerifyAuth(timestampNano int64, publicKey shared.PublisherKey, signatureType shared.SignatureType, signature string) error {
+func VerifyAuth(
+	timestampNano int64,
+	publicKey shared.PublisherKey,
+	signatureType shared.SignatureType,
+	signature string,
+) error {
 	strippedSignature := strip0x(signature)
 
 	switch signatureType {
@@ -106,7 +111,11 @@ func VerifyEvmPublisherPrice(
 	return nil
 }
 
-func VerifyEvmSignature(publisherAddress common.Address, payload [][]byte, signature shared.EvmSignature) (bool, error) {
+func VerifyEvmSignature(
+	publisherAddress common.Address,
+	payload [][]byte,
+	signature shared.EvmSignature,
+) (bool, error) {
 	_, prefixedHash := getEvmHashes(payload)
 	storkSignatureBytes, err := evmSignatureToBytes(signature)
 	if err != nil {

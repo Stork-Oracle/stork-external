@@ -1,17 +1,16 @@
-package pusher 
+package pusher
 
 import (
 	"context"
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-
 	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog"
 )
 
 type FirstPartyRunner[T shared.Signature] struct {
