@@ -73,9 +73,9 @@ func defaultFirstPartyPriceCase() FirstPartyPriceCase {
 			},
 		},
 		AssetEntry: types.AssetEntry{
-			AssetID:        assetID,
-			PublicKey:      pubKey,
-			Historical:     false,
+			AssetID:    assetID,
+			PublicKey:  pubKey,
+			Historical: false,
 		},
 		ExpectedData: &ExpectedUpdateData{
 			PubKey:         common.HexToAddress(string(pubKey)),

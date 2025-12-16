@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
+    "@types/node": "^22.19.1",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.17",
+    "typescript": "~5.8.0",
+    "viem": "^2.41.2"
+  },
+  "type": "module",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "@storknetwork/stork-fast-evm-sdk": "file:../../sdks/stork_fast_evm_sdk"
+  }
+}

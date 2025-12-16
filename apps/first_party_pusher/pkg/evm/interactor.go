@@ -10,18 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog"
-
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	chain_pusher_types "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/evm/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/first_party_pusher/pkg/types"
 	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
 	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 )
 
 const (

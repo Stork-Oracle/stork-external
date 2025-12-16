@@ -8,12 +8,11 @@ import (
 	"sync"
 	"time"
 
+	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
+	"github.com/Stork-Oracle/stork-external/shared"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	publisher_agent "github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg"
-	"github.com/Stork-Oracle/stork-external/shared"
 )
 
 const (
@@ -33,7 +32,10 @@ type WebsocketServer[T shared.Signature] struct {
 	connections         map[*websocket.Conn]bool
 }
 
-func NewWebsocketServer[T shared.Signature](port string, signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[T]) *WebsocketServer[T] {
+func NewWebsocketServer[T shared.Signature](
+	port string,
+	signedPriceUpdateCh chan publisher_agent.SignedPriceUpdate[T],
+) *WebsocketServer[T] {
 	return &WebsocketServer[T]{
 		port: port,
 		upgrader: websocket.Upgrader{

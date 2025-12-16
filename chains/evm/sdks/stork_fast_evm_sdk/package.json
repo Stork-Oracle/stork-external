@@ -1,0 +1,34 @@
+{
+    "name": "@storknetwork/stork-fast-evm-sdk",
+    "version": "1.0.0",
+    "description": "An EVM Solidity SDK for the Stork Fast Protocol",
+    "files": [
+        "*.sol",
+        "README.md"
+    ],
+    "keywords": [
+        "stork",
+        "oracle",
+        "solidity",
+        "evm",
+        "smart-contracts",
+        "price-feeds",
+        "fast"
+    ],
+    "author": "Stork Labs",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stork-oracle/stork-external.git",
+        "directory": "chains/evm/sdks/stork_fast_evm_sdk"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@storknetwork/stork-evm-sdk": "^1.0.0"
+    },
+    "devDependencies": {
+        "forge-std": "github:foundry-rs/forge-std#v1.9.4"
+    }
+}
