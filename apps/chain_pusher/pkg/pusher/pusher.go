@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const DefaultNetworkTimeoutSec = 5 * time.Second
+const DefaultNetworkTimeout = 5 * time.Second
 
 // Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
@@ -129,19 +129,29 @@ func (p *Pusher) Run(ctx context.Context) {
 func (p *Pusher) pullWithTimeout(
 	ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
-	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeoutSec)
+	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeout)
 	defer pullCancel()
 
-	return p.interactor.PullValues(pullCtx, encodedAssetIDs)
+	values, err := p.interactor.PullValues(pullCtx, encodedAssetIDs)
+	if err != nil {
+		return values, fmt.Errorf("failed to pull values with timeout: %w", err)
+	}
+
+	return values, nil
 }
 
 func (p *Pusher) pushWithTimeout(
 	ctx context.Context, nextUpdate map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
-	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeoutSec)
+	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeout)
 	defer pullCancel()
 
-	return p.interactor.BatchPushToContract(pullCtx, nextUpdate)
+	err := p.interactor.BatchPushToContract(pullCtx, nextUpdate)
+	if err != nil {
+		return fmt.Errorf("failed to push values with timeout: %w", err)
+	}
+
+	return nil
 }
 
 func (p *Pusher) collateUpdates(

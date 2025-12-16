@@ -338,8 +338,13 @@ func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) 
 	return resp.Data, nil
 }
 
+//
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
-func (s *StorkContract) executeContract(ctx context.Context, rawExecData []byte, funds []sdktypes.Coin) (string, error) {
+func (s *StorkContract) executeContract(
+	ctx context.Context,
+	rawExecData []byte,
+	funds []sdktypes.Coin,
+) (string, error) {
 	senderBech32, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
 		return "", fmt.Errorf("failed to bech32ify address: %w", err)
@@ -412,7 +417,7 @@ func (s *StorkContract) executeContract(ctx context.Context, rawExecData []byte,
 		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
-	err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true)
+	err = sdkclient_tx.Sign(ctx, txf, s.clientCtx.FromName, tx, true)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}

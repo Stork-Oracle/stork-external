@@ -172,7 +172,7 @@ func (sci *ContractInteractor) PullValues(
 	for _, encodedAssetID := range encodedAssetIDs {
 		// exit early and give partial result if context is done
 		if ctx.Err() != nil {
-			return polledVals, ctx.Err()
+			return polledVals, fmt.Errorf("PullValues cancelled: %w", ctx.Err())
 		}
 
 		feedAccount := sci.feedAccounts[encodedAssetID]

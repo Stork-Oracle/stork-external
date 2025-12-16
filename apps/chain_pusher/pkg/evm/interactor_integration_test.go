@@ -279,7 +279,8 @@ func (s *InteractorTestSuite) Test_08_PullValues_WithTimeout_ContextDeadlineExce
 	_, err := s.interactor.PullValues(ctx, s.prices.AllEncodedAssetIDs())
 
 	s.Require().Error(err)
-	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
+	s.Require().
+		True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
 }
 
 // Test_09_PullValues_WithTimeout_PartialSuccess tests that PullValues returns partial results
@@ -336,7 +337,8 @@ func (s *InteractorTestSuite) Test_11_GetWalletBalance_WithTimeout_ContextDeadli
 	balance, err := s.interactor.GetWalletBalance(ctx)
 
 	s.Require().Error(err)
-	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
+	s.Require().
+		True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
 
 	s.Require().Less(balance, 0.0, "balance should be invalid when there's an error")
 }

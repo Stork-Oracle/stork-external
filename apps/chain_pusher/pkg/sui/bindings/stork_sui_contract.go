@@ -90,9 +90,9 @@ type U128 struct {
 }
 
 func NewStorkContract(
-	ctx context.Context, 
-	rpcUrl string, 
-	contractAddress string, 
+	ctx context.Context,
+	rpcUrl string,
+	contractAddress string,
 	account *account.Account,
 ) (*StorkContract, error) {
 	client, err := sui_client.Dial(rpcUrl)
@@ -311,7 +311,10 @@ func parseFeedToTemporalNumericValue(feed types.SuiObjectResponse) (EncodedAsset
 }
 
 //nolint:cyclop,funlen,maintidx // This is a long and complex function but does related work.
-func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(ctx context.Context, updateData []UpdateData) (string, error) {
+func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
+	ctx context.Context,
+	updateData []UpdateData,
+) (string, error) {
 	ptb := sui_types.NewProgrammableTransactionBuilder()
 
 	// get reference gas price
@@ -598,8 +601,13 @@ func getOriginalContractAddress(
 	return *address, nil
 }
 
+//
 //nolint:cyclop,funlen // This is a long and complex function due to interface destructuring
-func getStorkState(ctx context.Context, contractAddress sui_types.SuiAddress, client *sui_client.Client) (StorkState, error) {
+func getStorkState(
+	ctx context.Context,
+	contractAddress sui_types.SuiAddress,
+	client *sui_client.Client,
+) (StorkState, error) {
 	originalContractAddress, err := getOriginalContractAddress(ctx, contractAddress, client)
 	if err != nil {
 		return StorkState{}, err
@@ -810,7 +818,10 @@ func (sc *StorkContract) getReferenceGasPrice(ctx context.Context) (uint64, erro
 	return referenceGasPriceResult.Uint64(), nil
 }
 
-func (sc *StorkContract) getFeedIDs(ctx context.Context, feedIDs []EncodedAssetID) (map[EncodedAssetID]sui_types.SuiAddress, error) {
+func (sc *StorkContract) getFeedIDs(
+	ctx context.Context,
+	feedIDs []EncodedAssetID,
+) (map[EncodedAssetID]sui_types.SuiAddress, error) {
 	feedIDsMap := make(map[EncodedAssetID]sui_types.SuiAddress)
 
 	registryID := sc.State.FeedRegistry.ID

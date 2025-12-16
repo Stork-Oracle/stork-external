@@ -19,7 +19,7 @@ import (
 	"github.com/aptos-labs/aptos-go-sdk/crypto"
 )
 
-const DefaultHttpClientTimeout = 5 * time.Second
+const DefaultHTTPClientTimeout = 5 * time.Second
 
 var (
 	ErrInvalidLengths = errors.New("invalid lengths")
@@ -71,11 +71,12 @@ func NewStorkContract(rpcUrl string, contractAddress string, key *crypto.Ed25519
 	// we hardcode our own shorter timeout - this is ultimately an imperfect workaround.
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create cookie jar: %w", err)
 	}
+
 	httpClient := &http.Client{
 		Jar:     jar,
-		Timeout: DefaultHttpClientTimeout,
+		Timeout: DefaultHTTPClientTimeout,
 	}
 
 	client, err := aptos.NewClient(config, httpClient)

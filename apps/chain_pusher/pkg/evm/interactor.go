@@ -143,9 +143,7 @@ func (eci *ContractInteractor) ListenContractEvents(
 		return
 	}
 
-	watchOpts := &bind.WatchOpts{Context: ctx}
-
-	sub, eventCh, err := setupSubscription(eci, watchOpts)
+	sub, eventCh, err := setupSubscription(eci, makeWatchOpts(ctx))
 	if err != nil {
 		eci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
 
@@ -176,7 +174,7 @@ func (eci *ContractInteractor) ListenContractEvents(
 			sub = nil
 		}
 
-		sub, eventCh, err = eci.reconnect(ctx, watchOpts)
+		sub, eventCh, err = eci.reconnect(ctx, makeWatchOpts(ctx))
 		if err != nil {
 			return
 		}
@@ -224,6 +222,14 @@ func (eci *ContractInteractor) PullValues(
 	}
 
 	return polledVals, nil
+}
+
+func makeCallOpts(ctx context.Context) *bind.CallOpts {
+	return &bind.CallOpts{Context: ctx} //nolint:exhaustruct
+}
+
+func makeWatchOpts(ctx context.Context) *bind.WatchOpts {
+	return &bind.WatchOpts{Context: ctx} //nolint:exhaustruct
 }
 
 func getUpdatePayload(
@@ -371,7 +377,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 		var verified bool
 		for i := range publisherVerifyPayloads {
 			verified, err = eci.contract.VerifyPublisherSignaturesV1(
-				&bind.CallOpts{Context: ctx},
+				makeCallOpts(ctx),
 				publisherVerifyPayloads[i].pubSigs,
 				publisherVerifyPayloads[i].merkleRoot,
 			)
@@ -399,7 +405,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 		return err
 	}
 
-	fee, err := eci.contract.GetUpdateFeeV1(&bind.CallOpts{Context: ctx}, updatePayload)
+	fee, err := eci.contract.GetUpdateFeeV1(makeCallOpts(ctx), updatePayload)
 	if err != nil {
 		return fmt.Errorf("failed to get update fee: %w", err)
 	}
