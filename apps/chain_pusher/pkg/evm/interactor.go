@@ -196,7 +196,7 @@ func (eci *ContractInteractor) PullValues(
 
 	for _, encodedAssetID := range encodedAssetIDs {
 		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(
-			&bind.CallOpts{Context: ctx}, encodedAssetID,
+			makeCallOpts(ctx), encodedAssetID,
 		)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
@@ -229,7 +229,7 @@ func makeCallOpts(ctx context.Context) *bind.CallOpts {
 }
 
 func makeWatchOpts(ctx context.Context) *bind.WatchOpts {
-	return &bind.WatchOpts{Context: ctx} //nolint:exhaustruct
+	return &bind.WatchOpts{Context: ctx}
 }
 
 func getUpdatePayload(

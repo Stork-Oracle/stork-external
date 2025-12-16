@@ -276,9 +276,9 @@ func (s *StorkContract) Close() {
 //nolint:ireturn
 func callWithContext[T any](ctx context.Context, f func() (T, error)) (T, error) {
 	var zero T
-	err := ctx.Err()
-	if err != nil {
-		return zero, fmt.Errorf("call cancelled: %w", err)
+	ctxErr := ctx.Err()
+	if ctxErr != nil {
+		return zero, fmt.Errorf("call cancelled: %w", ctxErr)
 	}
 
 	resultCh := make(chan struct {
