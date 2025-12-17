@@ -49,7 +49,9 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (sci *ContractInteractor) ConnectHTTP(url string) error {
+func (sci *ContractInteractor) ConnectHTTP(_ context.Context, url string) error {
+	// TODO: pass ctx
+	// contract, err := bindings.NewStorkContract(ctx, url, sci.contractAddr, sci.account)
 	contract, err := bindings.NewStorkContract(url, sci.contractAddr, sci.account)
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract client: %w", err)
@@ -60,7 +62,7 @@ func (sci *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (sci *ContractInteractor) ConnectWs(url string) error {
+func (sci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	// not implemented
 	return nil
 }
@@ -76,6 +78,7 @@ func (sci *ContractInteractor) ListenContractEvents(
 }
 
 func (sci *ContractInteractor) PullValues(
+	_ context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetID
@@ -84,6 +87,8 @@ func (sci *ContractInteractor) PullValues(
 		bindingsEncodedAssetIDs = append(bindingsEncodedAssetIDs, bindings.EncodedAssetID(encodedAssetID))
 	}
 
+	// TODO: pass ctx
+	// values, err := sci.contract.GetMultipleTemporalNumericValuesUnchecked(ctx, bindingsEncodedAssetIDs)
 	values, err := sci.contract.GetMultipleTemporalNumericValuesUnchecked(bindingsEncodedAssetIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get multiple temporal numeric values unchecked: %w", err)
@@ -104,6 +109,7 @@ func (sci *ContractInteractor) PullValues(
 }
 
 func (sci *ContractInteractor) BatchPushToContract(
+	_ context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := []bindings.UpdateData{}
@@ -117,6 +123,8 @@ func (sci *ContractInteractor) BatchPushToContract(
 		updateData = append(updateData, update)
 	}
 
+	// TODO: pass ctx
+	// digest, err := sci.contract.UpdateMultipleTemporalNumericValuesEvm(ctx, updateData)
 	digest, err := sci.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
 	if err != nil {
 		sci.logger.Error().Err(err).Msg("failed to update multiple temporal numeric values")
@@ -136,7 +144,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 // todo: implement
 //
 //nolint:godox // This function has unmet criteria to be implemented.
-func (sci *ContractInteractor) GetWalletBalance() (float64, error) {
+func (sci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	return -1, nil
 }
 

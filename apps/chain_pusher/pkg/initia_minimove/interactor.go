@@ -57,7 +57,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (ici *ContractInteractor) ConnectHTTP(url string) error {
+func (ici *ContractInteractor) ConnectHTTP(_ context.Context, url string) error {
 	contract, err := bindings.NewStorkContract(
 		url,
 		ici.contractAddress,
@@ -76,7 +76,7 @@ func (ici *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (ici *ContractInteractor) ConnectWs(url string) error {
+func (ici *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	// not implemented
 	return nil
 }
@@ -92,6 +92,7 @@ func (ici *ContractInteractor) ListenContractEvents(
 }
 
 func (ici *ContractInteractor) PullValues(
+	_ context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -99,6 +100,8 @@ func (ici *ContractInteractor) PullValues(
 	var failedToGetLatestValueErr error
 
 	for _, encodedAssetID := range encodedAssetIDs {
+		// TODO: pass ctx
+		// value, err := ici.contract.GetTemporalNumericValueUnchecked(ctx, encodedAssetID[:])
 		value, err := ici.contract.GetTemporalNumericValueUnchecked(encodedAssetID[:])
 		if err != nil {
 			if errors.Is(err, bindings.ErrFeedNotFound) {
@@ -142,6 +145,7 @@ func (ici *ContractInteractor) PullValues(
 }
 
 func (ici *ContractInteractor) BatchPushToContract(
+	_ context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := make([]bindings.UpdateData, 0, len(priceUpdates))
@@ -155,6 +159,8 @@ func (ici *ContractInteractor) BatchPushToContract(
 		updateData = append(updateData, update)
 	}
 
+	// TODO: pass ctx
+	// hash, err := ici.contract.UpdateMultipleTemporalNumericValuesEvm(ctx, updateData)
 	hash, err := ici.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
 	if err != nil {
 		ici.logger.Error().Err(err).Msg("failed to update multiple temporal numeric values")
@@ -174,7 +180,7 @@ func (ici *ContractInteractor) BatchPushToContract(
 // todo: implement
 //
 //nolint:godox // This function has unmet criteria to be implemented.
-func (ici *ContractInteractor) GetWalletBalance() (float64, error) {
+func (ici *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	return -1, nil
 }
 

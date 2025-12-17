@@ -280,6 +280,7 @@ func NewStorkContract(
 
 // GetTemporalNumericValueUnchecked queries the latest temporal numeric value for an asset.
 func (s *StorkContract) GetTemporalNumericValueUnchecked(
+	// TODO: pass ctx context.Context,
 	assetID []byte,
 ) (*TemporalNumericValue, error) {
 	// Serialize the asset ID parameter using Initia's BCS serializer
@@ -288,6 +289,8 @@ func (s *StorkContract) GetTemporalNumericValueUnchecked(
 		return nil, fmt.Errorf("failed to serialize asset ID: %w", err)
 	}
 
+	// TODO: pass ctx
+	// result, err := s.viewFunction(ctx, "stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg})
 	result, err := s.viewFunction("stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg})
 	if err != nil {
 		if strings.Contains(err.Error(), "temporal_numeric_value_feed_registry, code=0") {
@@ -320,7 +323,10 @@ func (s *StorkContract) GetTemporalNumericValueUnchecked(
 // UpdateMultipleTemporalNumericValuesEvm updates multiple feeds with EVM signatures.
 //
 //nolint:funlen // permissible complexity for this function due to lack of nesting.
-func (s *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
+func (s *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
+	// TODO: pass ctx context.Context
+	updateData []UpdateData,
+) (string, error) {
 	if len(updateData) == 0 {
 		return "", ErrNoUpdatesProvided
 	}
@@ -411,6 +417,7 @@ func (s *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upda
 	}
 
 	txHash, err := s.executeContract(
+		// TODO: pass ctx,
 		"stork",
 		"update_multiple_temporal_numeric_values_evm",
 		[]string{},
@@ -424,6 +431,7 @@ func (s *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upda
 }
 
 func (s *StorkContract) viewFunction(
+	// TODO: pass ctx context.Context,
 	moduleName string,
 	functionName string,
 	typeArgs []string,
@@ -443,6 +451,7 @@ func (s *StorkContract) viewFunction(
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
+		// TODO: pass ctx context.Context
 		context.Background(),
 		"/initia.move.v1.Query/View",
 		bz,
@@ -485,6 +494,7 @@ func (s *StorkContract) viewFunction(
 
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
 func (s *StorkContract) executeContract(
+	// TODO: pass ctx context.Context
 	moduleName string,
 	functionName string,
 	typeArgs []string,
@@ -514,6 +524,7 @@ func (s *StorkContract) executeContract(
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
+		// TODO: pass ctx context.Context
 		context.Background(),
 		"/cosmos.auth.v1beta1.Query/Account",
 		rawAccMsg,
@@ -564,6 +575,8 @@ func (s *StorkContract) executeContract(
 		return "", fmt.Errorf("failed to build unsigned transaction: %w", err)
 	}
 
+	// TODO: pass ctx
+	// err = sdkclient_tx.Sign(ctx, txf, s.clientCtx.FromName, tx, true)
 	err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)

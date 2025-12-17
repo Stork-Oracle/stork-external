@@ -66,6 +66,7 @@ func runSolanaPush(cmd *cobra.Command, args []string) {
 	}
 
 	interactor, err := NewContractInteractor(
+		context.Background(),
 		contractAddress,
 		payer,
 		assetConfigFile,

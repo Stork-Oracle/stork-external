@@ -46,7 +46,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (aci *ContractInteractor) ConnectHTTP(url string) error {
+func (aci *ContractInteractor) ConnectHTTP(_ context.Context, url string) error {
 	contract, err := bindings.NewStorkContract(url, aci.contractAddress, aci.privateKey)
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract: %w", err)
@@ -57,7 +57,7 @@ func (aci *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (aci *ContractInteractor) ConnectWs(url string) error {
+func (aci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	// not implemented
 	return nil
 }
@@ -72,6 +72,7 @@ func (aci *ContractInteractor) ListenContractEvents(
 }
 
 func (aci *ContractInteractor) PullValues(
+	_ context.Context, // this satisfies the interface but is not used as aptos client calls are not context aware
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetID
@@ -112,6 +113,7 @@ func (aci *ContractInteractor) PullValues(
 }
 
 func (aci *ContractInteractor) BatchPushToContract(
+	_ context.Context, // this satisfies the interface but is not used as aptos client calls are not context aware
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := make([]bindings.UpdateData, 0, len(priceUpdates))
@@ -144,7 +146,7 @@ func (aci *ContractInteractor) BatchPushToContract(
 // todo: implement
 //
 //nolint:godox // This function has unmet criteria to be implemented.
-func (aci *ContractInteractor) GetWalletBalance() (float64, error) {
+func (aci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	return -1, nil
 }
 

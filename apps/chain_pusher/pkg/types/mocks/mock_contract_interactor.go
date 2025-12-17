@@ -39,16 +39,16 @@ func (_m *MockContractInteractor) EXPECT() *MockContractInteractor_Expecter {
 }
 
 // BatchPushToContract provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) BatchPushToContract(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
-	ret := _mock.Called(priceUpdates)
+func (_mock *MockContractInteractor) BatchPushToContract(ctx context.Context, priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error {
+	ret := _mock.Called(ctx, priceUpdates)
 
 	if len(ret) == 0 {
 		panic("no return value specified for BatchPushToContract")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error); ok {
-		r0 = returnFunc(priceUpdates)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error); ok {
+		r0 = returnFunc(ctx, priceUpdates)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -61,19 +61,25 @@ type MockContractInteractor_BatchPushToContract_Call struct {
 }
 
 // BatchPushToContract is a helper method to define mock.On call
+//   - ctx context.Context
 //   - priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
-func (_e *MockContractInteractor_Expecter) BatchPushToContract(priceUpdates interface{}) *MockContractInteractor_BatchPushToContract_Call {
-	return &MockContractInteractor_BatchPushToContract_Call{Call: _e.mock.On("BatchPushToContract", priceUpdates)}
+func (_e *MockContractInteractor_Expecter) BatchPushToContract(ctx interface{}, priceUpdates interface{}) *MockContractInteractor_BatchPushToContract_Call {
+	return &MockContractInteractor_BatchPushToContract_Call{Call: _e.mock.On("BatchPushToContract", ctx, priceUpdates)}
 }
 
-func (_c *MockContractInteractor_BatchPushToContract_Call) Run(run func(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)) *MockContractInteractor_BatchPushToContract_Call {
+func (_c *MockContractInteractor_BatchPushToContract_Call) Run(run func(ctx context.Context, priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)) *MockContractInteractor_BatchPushToContract_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 map[types.InternalEncodedAssetID]types.AggregatedSignedPrice
+		if args[1] != nil {
+			arg1 = args[1].(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -84,22 +90,22 @@ func (_c *MockContractInteractor_BatchPushToContract_Call) Return(err error) *Mo
 	return _c
 }
 
-func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func(priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error) *MockContractInteractor_BatchPushToContract_Call {
+func (_c *MockContractInteractor_BatchPushToContract_Call) RunAndReturn(run func(ctx context.Context, priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) error) *MockContractInteractor_BatchPushToContract_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ConnectHTTP provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) ConnectHTTP(url string) error {
-	ret := _mock.Called(url)
+func (_mock *MockContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
+	ret := _mock.Called(ctx, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ConnectHTTP")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
-		r0 = returnFunc(url)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, url)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -112,19 +118,25 @@ type MockContractInteractor_ConnectHTTP_Call struct {
 }
 
 // ConnectHTTP is a helper method to define mock.On call
+//   - ctx context.Context
 //   - url string
-func (_e *MockContractInteractor_Expecter) ConnectHTTP(url interface{}) *MockContractInteractor_ConnectHTTP_Call {
-	return &MockContractInteractor_ConnectHTTP_Call{Call: _e.mock.On("ConnectHTTP", url)}
+func (_e *MockContractInteractor_Expecter) ConnectHTTP(ctx interface{}, url interface{}) *MockContractInteractor_ConnectHTTP_Call {
+	return &MockContractInteractor_ConnectHTTP_Call{Call: _e.mock.On("ConnectHTTP", ctx, url)}
 }
 
-func (_c *MockContractInteractor_ConnectHTTP_Call) Run(run func(url string)) *MockContractInteractor_ConnectHTTP_Call {
+func (_c *MockContractInteractor_ConnectHTTP_Call) Run(run func(ctx context.Context, url string)) *MockContractInteractor_ConnectHTTP_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(string)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -135,22 +147,22 @@ func (_c *MockContractInteractor_ConnectHTTP_Call) Return(err error) *MockContra
 	return _c
 }
 
-func (_c *MockContractInteractor_ConnectHTTP_Call) RunAndReturn(run func(url string) error) *MockContractInteractor_ConnectHTTP_Call {
+func (_c *MockContractInteractor_ConnectHTTP_Call) RunAndReturn(run func(ctx context.Context, url string) error) *MockContractInteractor_ConnectHTTP_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ConnectWs provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) ConnectWs(url string) error {
-	ret := _mock.Called(url)
+func (_mock *MockContractInteractor) ConnectWs(ctx context.Context, url string) error {
+	ret := _mock.Called(ctx, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ConnectWs")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
-		r0 = returnFunc(url)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, url)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -163,19 +175,25 @@ type MockContractInteractor_ConnectWs_Call struct {
 }
 
 // ConnectWs is a helper method to define mock.On call
+//   - ctx context.Context
 //   - url string
-func (_e *MockContractInteractor_Expecter) ConnectWs(url interface{}) *MockContractInteractor_ConnectWs_Call {
-	return &MockContractInteractor_ConnectWs_Call{Call: _e.mock.On("ConnectWs", url)}
+func (_e *MockContractInteractor_Expecter) ConnectWs(ctx interface{}, url interface{}) *MockContractInteractor_ConnectWs_Call {
+	return &MockContractInteractor_ConnectWs_Call{Call: _e.mock.On("ConnectWs", ctx, url)}
 }
 
-func (_c *MockContractInteractor_ConnectWs_Call) Run(run func(url string)) *MockContractInteractor_ConnectWs_Call {
+func (_c *MockContractInteractor_ConnectWs_Call) Run(run func(ctx context.Context, url string)) *MockContractInteractor_ConnectWs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(string)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -186,14 +204,14 @@ func (_c *MockContractInteractor_ConnectWs_Call) Return(err error) *MockContract
 	return _c
 }
 
-func (_c *MockContractInteractor_ConnectWs_Call) RunAndReturn(run func(url string) error) *MockContractInteractor_ConnectWs_Call {
+func (_c *MockContractInteractor_ConnectWs_Call) RunAndReturn(run func(ctx context.Context, url string) error) *MockContractInteractor_ConnectWs_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetWalletBalance provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) GetWalletBalance() (float64, error) {
-	ret := _mock.Called()
+func (_mock *MockContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetWalletBalance")
@@ -201,16 +219,16 @@ func (_mock *MockContractInteractor) GetWalletBalance() (float64, error) {
 
 	var r0 float64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func() (float64, error)); ok {
-		return returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (float64, error)); ok {
+		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func() float64); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(context.Context) float64); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		r0 = ret.Get(0).(float64)
 	}
-	if returnFunc, ok := ret.Get(1).(func() error); ok {
-		r1 = returnFunc()
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -223,13 +241,20 @@ type MockContractInteractor_GetWalletBalance_Call struct {
 }
 
 // GetWalletBalance is a helper method to define mock.On call
-func (_e *MockContractInteractor_Expecter) GetWalletBalance() *MockContractInteractor_GetWalletBalance_Call {
-	return &MockContractInteractor_GetWalletBalance_Call{Call: _e.mock.On("GetWalletBalance")}
+//   - ctx context.Context
+func (_e *MockContractInteractor_Expecter) GetWalletBalance(ctx interface{}) *MockContractInteractor_GetWalletBalance_Call {
+	return &MockContractInteractor_GetWalletBalance_Call{Call: _e.mock.On("GetWalletBalance", ctx)}
 }
 
-func (_c *MockContractInteractor_GetWalletBalance_Call) Run(run func()) *MockContractInteractor_GetWalletBalance_Call {
+func (_c *MockContractInteractor_GetWalletBalance_Call) Run(run func(ctx context.Context)) *MockContractInteractor_GetWalletBalance_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -239,7 +264,7 @@ func (_c *MockContractInteractor_GetWalletBalance_Call) Return(f float64, err er
 	return _c
 }
 
-func (_c *MockContractInteractor_GetWalletBalance_Call) RunAndReturn(run func() (float64, error)) *MockContractInteractor_GetWalletBalance_Call {
+func (_c *MockContractInteractor_GetWalletBalance_Call) RunAndReturn(run func(ctx context.Context) (float64, error)) *MockContractInteractor_GetWalletBalance_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -291,8 +316,8 @@ func (_c *MockContractInteractor_ListenContractEvents_Call) RunAndReturn(run fun
 }
 
 // PullValues provides a mock function for the type MockContractInteractor
-func (_mock *MockContractInteractor) PullValues(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
-	ret := _mock.Called(encodedAssetIDs)
+func (_mock *MockContractInteractor) PullValues(ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	ret := _mock.Called(ctx, encodedAssetIDs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PullValues")
@@ -300,18 +325,18 @@ func (_mock *MockContractInteractor) PullValues(encodedAssetIDs []types.Internal
 
 	var r0 map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)); ok {
-		return returnFunc(encodedAssetIDs)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)); ok {
+		return returnFunc(ctx, encodedAssetIDs)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]types.InternalEncodedAssetID) map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue); ok {
-		r0 = returnFunc(encodedAssetIDs)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []types.InternalEncodedAssetID) map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue); ok {
+		r0 = returnFunc(ctx, encodedAssetIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([]types.InternalEncodedAssetID) error); ok {
-		r1 = returnFunc(encodedAssetIDs)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []types.InternalEncodedAssetID) error); ok {
+		r1 = returnFunc(ctx, encodedAssetIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -324,19 +349,25 @@ type MockContractInteractor_PullValues_Call struct {
 }
 
 // PullValues is a helper method to define mock.On call
+//   - ctx context.Context
 //   - encodedAssetIDs []types.InternalEncodedAssetID
-func (_e *MockContractInteractor_Expecter) PullValues(encodedAssetIDs interface{}) *MockContractInteractor_PullValues_Call {
-	return &MockContractInteractor_PullValues_Call{Call: _e.mock.On("PullValues", encodedAssetIDs)}
+func (_e *MockContractInteractor_Expecter) PullValues(ctx interface{}, encodedAssetIDs interface{}) *MockContractInteractor_PullValues_Call {
+	return &MockContractInteractor_PullValues_Call{Call: _e.mock.On("PullValues", ctx, encodedAssetIDs)}
 }
 
-func (_c *MockContractInteractor_PullValues_Call) Run(run func(encodedAssetIDs []types.InternalEncodedAssetID)) *MockContractInteractor_PullValues_Call {
+func (_c *MockContractInteractor_PullValues_Call) Run(run func(ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID)) *MockContractInteractor_PullValues_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 []types.InternalEncodedAssetID
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].([]types.InternalEncodedAssetID)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []types.InternalEncodedAssetID
+		if args[1] != nil {
+			arg1 = args[1].([]types.InternalEncodedAssetID)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -347,7 +378,7 @@ func (_c *MockContractInteractor_PullValues_Call) Return(internalEncodedAssetIDT
 	return _c
 }
 
-func (_c *MockContractInteractor_PullValues_Call) RunAndReturn(run func(encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)) *MockContractInteractor_PullValues_Call {
+func (_c *MockContractInteractor_PullValues_Call) RunAndReturn(run func(ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error)) *MockContractInteractor_PullValues_Call {
 	_c.Call.Return(run)
 	return _c
 }

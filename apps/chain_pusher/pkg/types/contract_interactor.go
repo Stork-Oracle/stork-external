@@ -7,10 +7,11 @@ import (
 type ContractInteractor interface {
 	ListenContractEvents(ctx context.Context, ch chan map[InternalEncodedAssetID]InternalTemporalNumericValue)
 	PullValues(
+		ctx context.Context,
 		encodedAssetIDs []InternalEncodedAssetID,
 	) (map[InternalEncodedAssetID]InternalTemporalNumericValue, error)
-	BatchPushToContract(priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error
-	GetWalletBalance() (float64, error)
-	ConnectHTTP(url string) error
-	ConnectWs(url string) error
+	BatchPushToContract(ctx context.Context, priceUpdates map[InternalEncodedAssetID]AggregatedSignedPrice) error
+	GetWalletBalance(ctx context.Context) (float64, error)
+	ConnectHTTP(ctx context.Context, url string) error
+	ConnectWs(ctx context.Context, url string) error
 }
