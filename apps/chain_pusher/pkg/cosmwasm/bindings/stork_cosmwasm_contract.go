@@ -291,7 +291,7 @@ func (s *StorkContract) UpdateTemporalNumericValuesEvm(
 }
 
 func (s *StorkContract) GetSingleUpdateFee(
-	// TODO: pass ctx context.Context,
+// TODO: pass ctx context.Context,
 ) (*GetSingleUpdateFeeResponse, error) {
 	rawQueryData, err := json.Marshal(map[string]any{"get_single_update_fee": new(QueryMsg_GetSingleUpdateFee)})
 	if err != nil {
@@ -332,9 +332,7 @@ func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
-		// TODO: pass ctx
-		// ctx
-		context.Background(),
+		context.Background(), // TODO: pass ctx
 		"/cosmwasm.wasm.v1.Query/SmartContractState",
 		bz,
 	)
@@ -385,9 +383,7 @@ func (s *StorkContract) executeContract(
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
-		// TODO: pass ctx
-		// ctx
-		context.Background(),
+		context.Background(), // TODO: pass ctx
 		"/cosmos.auth.v1beta1.Query/Account",
 		rawAccMsg,
 	)

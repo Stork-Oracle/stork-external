@@ -179,7 +179,6 @@ func (sci *ContractInteractor) PullValues(
 		// if ctx.Err() != nil {
 		// 	return polledVals, fmt.Errorf("PullValues cancelled: %w", ctx.Err())
 		// }
-
 		feedAccount := sci.feedAccounts[encodedAssetID]
 
 		// TODO: pass ctx

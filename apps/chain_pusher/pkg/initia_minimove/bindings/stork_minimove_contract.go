@@ -280,7 +280,7 @@ func NewStorkContract(
 
 // GetTemporalNumericValueUnchecked queries the latest temporal numeric value for an asset.
 func (s *StorkContract) GetTemporalNumericValueUnchecked(
-	// TODO: pass ctx context.Context, 
+	// TODO: pass ctx context.Context,
 	assetID []byte,
 ) (*TemporalNumericValue, error) {
 	// Serialize the asset ID parameter using Initia's BCS serializer
