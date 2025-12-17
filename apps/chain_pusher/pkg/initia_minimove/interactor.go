@@ -92,7 +92,7 @@ func (ici *ContractInteractor) ListenContractEvents(
 }
 
 func (ici *ContractInteractor) PullValues(
-	ctx context.Context,
+	_ context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -100,7 +100,9 @@ func (ici *ContractInteractor) PullValues(
 	var failedToGetLatestValueErr error
 
 	for _, encodedAssetID := range encodedAssetIDs {
-		value, err := ici.contract.GetTemporalNumericValueUnchecked(ctx, encodedAssetID[:])
+		// TODO: pass ctx
+		// value, err := ici.contract.GetTemporalNumericValueUnchecked(ctx, encodedAssetID[:])
+		value, err := ici.contract.GetTemporalNumericValueUnchecked(encodedAssetID[:])
 		if err != nil {
 			if errors.Is(err, bindings.ErrFeedNotFound) {
 				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
@@ -143,7 +145,7 @@ func (ici *ContractInteractor) PullValues(
 }
 
 func (ici *ContractInteractor) BatchPushToContract(
-	ctx context.Context,
+	_ context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := make([]bindings.UpdateData, 0, len(priceUpdates))
@@ -157,7 +159,9 @@ func (ici *ContractInteractor) BatchPushToContract(
 		updateData = append(updateData, update)
 	}
 
-	hash, err := ici.contract.UpdateMultipleTemporalNumericValuesEvm(ctx, updateData)
+	// TODO: pass ctx
+	// hash, err := ici.contract.UpdateMultipleTemporalNumericValuesEvm(ctx, updateData)
+	hash, err := ici.contract.UpdateMultipleTemporalNumericValuesEvm(updateData)
 	if err != nil {
 		ici.logger.Error().Err(err).Msg("failed to update multiple temporal numeric values")
 

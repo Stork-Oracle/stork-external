@@ -50,7 +50,7 @@ const MaxBatchSize = 4
 const NumConfirmationWorkers = 10
 
 func NewContractInteractor(
-	ctx context.Context,
+	_ context.Context,
 	contractAddr string,
 	payer []byte,
 	assetConfigFile string,
@@ -118,7 +118,9 @@ func NewContractInteractor(
 
 	go sci.runUnboundedConfirmationBuffer(confirmationOutChan)
 
-	sci.startConfirmationWorkers(ctx, confirmationOutChan, NumConfirmationWorkers)
+	// TODO: pass ctx
+	// sci.startConfirmationWorkers(ctx, confirmationOutChan, NumConfirmationWorkers)
+	sci.startConfirmationWorkers(confirmationOutChan, NumConfirmationWorkers)
 
 	return sci, nil
 }
@@ -130,8 +132,10 @@ func (sci *ContractInteractor) ConnectHTTP(_ context.Context, url string) error 
 	return nil
 }
 
-func (sci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
-	wsClient, err := ws.Connect(ctx, url)
+func (sci *ContractInteractor) ConnectWs(_ context.Context, url string) error {
+	// TODO: pass ctx
+	// wsClient, err := ws.Connect(ctx, url)
+	wsClient, err := ws.Connect(context.Background(), url)
 	if err != nil {
 		return fmt.Errorf("failed to connect to Solana WebSocket client: %w", err)
 	}
@@ -162,7 +166,7 @@ func (sci *ContractInteractor) ListenContractEvents(
 }
 
 func (sci *ContractInteractor) PullValues(
-	ctx context.Context,
+	_ context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -170,14 +174,17 @@ func (sci *ContractInteractor) PullValues(
 	var failedToGetLatestValueErr error
 
 	for _, encodedAssetID := range encodedAssetIDs {
-		// exit early and give partial result if context is done
-		if ctx.Err() != nil {
-			return polledVals, fmt.Errorf("PullValues cancelled: %w", ctx.Err())
-		}
+		// TODO: check ctx
+		// // exit early and give partial result if context is done
+		// if ctx.Err() != nil {
+		// 	return polledVals, fmt.Errorf("PullValues cancelled: %w", ctx.Err())
+		// }
 
 		feedAccount := sci.feedAccounts[encodedAssetID]
 
-		accountInfo, err := sci.client.GetAccountInfo(ctx, feedAccount)
+		// TODO: pass ctx
+		// accountInfo, err := sci.client.GetAccountInfo(ctx, feedAccount)
+		accountInfo, err := sci.client.GetAccountInfo(context.Background(), feedAccount)
 		if err != nil {
 			sci.logger.Error().Err(err).Str("account", feedAccount.String()).Msg("Failed to get account info")
 			failedToGetLatestValueErr = err
@@ -220,7 +227,7 @@ func (sci *ContractInteractor) PullValues(
 }
 
 func (sci *ContractInteractor) BatchPushToContract(
-	ctx context.Context,
+	_ context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	var wg sync.WaitGroup
@@ -235,14 +242,18 @@ func (sci *ContractInteractor) BatchPushToContract(
 		go func(priceUpdateBatch map[types.InternalEncodedAssetID]types.AggregatedSignedPrice) {
 			defer wg.Done()
 
-			err := sci.limiter.Wait(ctx)
+			// TODO: pass ctx
+			// err := sci.limiter.Wait(ctx)
+			err := sci.limiter.Wait(context.Background())
 			if err != nil {
 				errChan <- fmt.Errorf("rate limiter error: %w", err)
 
 				return
 			}
 
-			sig, err := sci.pushLimitedBatchUpdateToContract(ctx, priceUpdateBatch)
+			// TODO: pass ctx
+			// sig, err := sci.pushLimitedBatchUpdateToContract(ctx, priceUpdateBatch)
+			sig, err := sci.pushLimitedBatchUpdateToContract(priceUpdateBatch)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to push batch: %w", err)
 			} else {
@@ -379,17 +390,25 @@ func (sci *ContractInteractor) runUnboundedConfirmationBuffer(confirmationOutCha
 	}
 }
 
-func (sci *ContractInteractor) startConfirmationWorkers(ctx context.Context, ch chan solana.Signature, numWorkers int) {
+// TODO: pass ctx
+// func (sci *ContractInteractor) startConfirmationWorkers(ctx context.Context, ch chan solana.Signature, numWorkers int) {
+func (sci *ContractInteractor) startConfirmationWorkers(ch chan solana.Signature, numWorkers int) {
 	for range numWorkers {
-		go sci.confirmationWorker(ctx, ch)
+		// TODO: pass ctx
+		// go sci.confirmationWorker(ctx, ch)
+		go sci.confirmationWorker(ch)
 	}
 
 	sci.logger.Info().Int("numWorkers", numWorkers).Msg("Started confirmation workers")
 }
 
-func (sci *ContractInteractor) confirmationWorker(ctx context.Context, ch chan solana.Signature) {
+// TODO: pass ctx
+// func (sci *ContractInteractor) confirmationWorker(ctx context.Context, ch chan solana.Signature) {
+func (sci *ContractInteractor) confirmationWorker(ch chan solana.Signature) {
 	for sig := range ch {
-		_, err := confirm.WaitForConfirmation(ctx, sci.wsClient, sig, nil)
+		// TODO: pass ctx
+		// _, err := confirm.WaitForConfirmation(ctx, sci.wsClient, sig, nil)
+		_, err := confirm.WaitForConfirmation(context.Background(), sci.wsClient, sig, nil)
 		if err != nil {
 			sci.logger.Error().Str("signature", sig.String()).Err(err).Msg("failed to confirm transaction")
 		} else {
@@ -478,7 +497,7 @@ func (sci *ContractInteractor) batchPriceUpdates(
 }
 
 func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(
-	ctx context.Context,
+	// TODO: pass ctx context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) (solana.Signature, error) {
 	if len(priceUpdates) > MaxBatchSize {
@@ -526,7 +545,9 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(
 		instructions = append(instructions, instruction)
 	}
 
-	recentBlockHash, err := sci.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	// TODO: pass ctx
+	// recentBlockHash, err := sci.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	recentBlockHash, err := sci.client.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 	if err != nil {
 		return solana.Signature{}, fmt.Errorf("failed to get recent blockhash: %w", err)
 	}
@@ -552,7 +573,9 @@ func (sci *ContractInteractor) pushLimitedBatchUpdateToContract(
 		return solana.Signature{}, fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	sig, err := sci.client.SendTransaction(ctx, tx)
+	// TODO: pass ctx
+	// sig, err := sci.client.SendTransaction(ctx, tx)
+	sig, err := sci.client.SendTransaction(context.Background(), tx)
 	if err != nil {
 		return solana.Signature{}, fmt.Errorf("failed to send transaction: %w", err)
 	}

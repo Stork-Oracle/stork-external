@@ -63,9 +63,9 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (sci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
+func (sci *ContractInteractor) ConnectHTTP(_ context.Context, url string) error {
 	contract, err := bindings.NewStorkContract(
-		ctx,
+		// TODO: pass ctx,
 		url,
 		sci.contractAddress,
 		sci.mnemonic,
@@ -100,7 +100,7 @@ func (sci *ContractInteractor) ListenContractEvents(
 }
 
 func (sci *ContractInteractor) PullValues(
-	ctx context.Context,
+	_ context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -113,7 +113,9 @@ func (sci *ContractInteractor) PullValues(
 			encodeAssetIDInt[i] = int(b)
 		}
 
-		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(ctx, encodeAssetIDInt)
+		// TODO: pass ctx
+		// response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(ctx, encodeAssetIDInt)
+		response, err := sci.contract.GetLatestCanonicalTemporalNumericValueUnchecked(encodeAssetIDInt)
 		if err != nil {
 			failedToGetLatestValueErr = err
 
@@ -157,7 +159,7 @@ func (sci *ContractInteractor) PullValues(
 }
 
 func (sci *ContractInteractor) BatchPushToContract(
-	ctx context.Context,
+	_ context.Context,
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	updateData := make([]bindings.UpdateData, 0, len(priceUpdates))
@@ -171,7 +173,9 @@ func (sci *ContractInteractor) BatchPushToContract(
 		updateData = append(updateData, update)
 	}
 
-	txHash, err := sci.contract.UpdateTemporalNumericValuesEvm(ctx, updateData)
+	// TODO: pass ctx
+	// txHash, err := sci.contract.UpdateTemporalNumericValuesEvm(ctx, updateData)
+	txHash, err := sci.contract.UpdateTemporalNumericValuesEvm(updateData)
 	if err != nil {
 		return fmt.Errorf("failed to update temporal numeric values: %w", err)
 	}
