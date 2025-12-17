@@ -74,7 +74,7 @@ func (fci *ContractInteractor) ListenContractEvents(
 }
 
 func (fci *ContractInteractor) PullValues(
-	ctx context.Context,
+	_ context.Context, // a 5 second timeout is hardcoded in the ffi library
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -102,7 +102,7 @@ func (fci *ContractInteractor) PullValues(
 		}
 
 		// Call FFI function
-		valueJSON, err := fci.contract.GetTemporalNumericValueUncheckedV1WithTimeout(ctx, [32]byte(idBytes))
+		valueJSON, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
 		if err != nil {
 			if strings.Contains(err.Error(), "feed not found") {
 				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
@@ -137,7 +137,7 @@ func (fci *ContractInteractor) PullValues(
 }
 
 func (fci *ContractInteractor) BatchPushToContract(
-	ctx context.Context,
+	_ context.Context, // a 5 second timeout is hardcoded in the ffi library
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	if len(priceUpdates) == 0 {
@@ -164,7 +164,7 @@ func (fci *ContractInteractor) BatchPushToContract(
 	}
 
 	// Call FFI function
-	txHash, err := fci.contract.UpdateTemporalNumericValuesV1WithTimeout(ctx, inputs)
+	txHash, err := fci.contract.UpdateTemporalNumericValuesV1(inputs)
 	if err != nil {
 		return fmt.Errorf("failed to update values on fuel contract: %w", err)
 	}
@@ -177,8 +177,9 @@ func (fci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-func (fci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
-	balance, err := fci.contract.GetWalletBalanceWithTimeout(ctx)
+// A 5 second timeout is hardcoded in the ffi library
+func (fci *ContractInteractor) GetWalletBalance(_ context.Context) (float64, error) {
+	balance, err := fci.contract.GetWalletBalance()
 	if err != nil {
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)
 	}
