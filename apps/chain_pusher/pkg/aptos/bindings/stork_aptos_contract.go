@@ -10,14 +10,13 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/aptos-labs/aptos-go-sdk"
 	"github.com/aptos-labs/aptos-go-sdk/bcs"
 	"github.com/aptos-labs/aptos-go-sdk/crypto"
 )
 
-const DefaultHTTPClientTimeout = 5 * time.Second
+// const DefaultHTTPClientTimeout = 5 * time.Second
 
 var (
 	ErrInvalidLengths = errors.New("invalid lengths")

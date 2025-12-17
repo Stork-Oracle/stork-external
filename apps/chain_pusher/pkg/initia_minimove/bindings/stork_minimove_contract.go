@@ -289,11 +289,9 @@ func (s *StorkContract) GetTemporalNumericValueUnchecked(
 		return nil, fmt.Errorf("failed to serialize asset ID: %w", err)
 	}
 
-	result, err := s.viewFunction(
-		// TODO: pass ctx 
-		// ctx, "stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg},
-		"stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg},
-	)
+	// TODO: pass ctx
+	// result, err := s.viewFunction(ctx, "stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg})
+	result, err := s.viewFunction("stork", "get_temporal_numeric_value_unchecked", []string{}, [][]byte{encodedArg})
 	if err != nil {
 		if strings.Contains(err.Error(), "temporal_numeric_value_feed_registry, code=0") {
 			return nil, ErrFeedNotFound
@@ -579,7 +577,7 @@ func (s *StorkContract) executeContract(
 
 	// TODO: pass ctx
 	// err = sdkclient_tx.Sign(ctx, txf, s.clientCtx.FromName, tx, true)
-	err = sdkclient_tx.Sign(context.Background(), txf, s.clientCtx.FromName, tx, true)
+	err = sdkclient_tx.Sign(s.clientCtx.CmdContext, txf, s.clientCtx.FromName, tx, true)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}

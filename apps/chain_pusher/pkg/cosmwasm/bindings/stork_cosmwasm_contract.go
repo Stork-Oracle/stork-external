@@ -222,7 +222,7 @@ func NewStorkContract(
 
 	// TODO: pass parent ctx
 	// singleUpdateFee, err := storkContract.GetSingleUpdateFee(ctx)
-	singleUpdateFee, err := storkContract.GetSingleUpdateFee(context.Background())
+	singleUpdateFee, err := storkContract.GetSingleUpdateFee()
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (s *StorkContract) GetLatestCanonicalTemporalNumericValueUnchecked(
 
 	// TODO: pass parent ctx
 	// rawResponseData, err := s.queryContract(ctx, rawQueryData)
-	rawResponseData, err := s.queryContract(context.Background(), rawQueryData)
+	rawResponseData, err := s.queryContract(rawQueryData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query contract: %w", err)
 	}
@@ -290,13 +290,17 @@ func (s *StorkContract) UpdateTemporalNumericValuesEvm(
 	return txHash, nil
 }
 
-func (s *StorkContract) GetSingleUpdateFee(ctx context.Context) (*GetSingleUpdateFeeResponse, error) {
+func (s *StorkContract) GetSingleUpdateFee(
+	// TODO: pass ctx context.Context,
+) (*GetSingleUpdateFeeResponse, error) {
 	rawQueryData, err := json.Marshal(map[string]any{"get_single_update_fee": new(QueryMsg_GetSingleUpdateFee)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal query data: %w", err)
 	}
 
-	rawResponseData, err := s.queryContract(ctx, rawQueryData)
+	// TODO: pass ctx
+	// rawResponseData, err := s.queryContract(ctx, rawQueryData)
+	rawResponseData, err := s.queryContract(rawQueryData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query contract: %w", err)
 	}
@@ -311,7 +315,9 @@ func (s *StorkContract) GetSingleUpdateFee(ctx context.Context) (*GetSingleUpdat
 	return &response, nil
 }
 
-func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) ([]byte, error) {
+// TODO: pass ctx
+// func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) ([]byte, error) {
+func (s *StorkContract) queryContract(rawQueryData []byte) ([]byte, error) {
 	query := &wasmtypes.QuerySmartContractStateRequest{
 		Address:   s.ContractAddress,
 		QueryData: rawQueryData,
@@ -326,7 +332,9 @@ func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) 
 	}
 
 	result, err := s.clientCtx.Client.ABCIQuery(
-		ctx,
+		// TODO: pass ctx
+		// ctx
+		context.Background(),
 		"/cosmwasm.wasm.v1.Query/SmartContractState",
 		bz,
 	)
