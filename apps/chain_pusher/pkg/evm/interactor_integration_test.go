@@ -102,8 +102,10 @@ func (s *InteractorTestSuite) Test_03_BatchPushToContract_and_PullValues_Single_
 	s.Require().Equal(1, len(values))
 
 	// Check the quantized value and timestamp
-	s.Require().Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
 	s.Require().NoError(err)
 }
 
@@ -125,8 +127,10 @@ func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Single_
 	s.Require().Equal(1, len(values))
 
 	// Check the quantized value and timestamp
-	s.Require().Equal(string(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[negativeAsset1EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[negativeAsset1EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[negativeAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[negativeAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[negativeAsset1EncodedAssetID].TimestampNs)
 	s.Require().NoError(err)
 }
 
@@ -160,20 +164,28 @@ func (s *InteractorTestSuite) Test_05_BatchPushToContract_and_PullValues_Multipl
 
 	// Check the quantized value and timestamps
 	// POSITIVE_ASSET_1
-	s.Require().Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset1EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[positiveAsset1EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset1EncodedAssetID].TimestampNs)
 
 	// POSITIVE_ASSET_2
-	s.Require().Equal(string(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset2EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset2EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset2EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[positiveAsset2EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset2EncodedAssetID].TimestampNs)
 
 	// POSITIVE_ASSET_3
-	s.Require().Equal(string(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset3EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset3EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset3EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[positiveAsset3EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset3EncodedAssetID].TimestampNs)
 
 	// POSITIVE_ASSET_4
-	s.Require().Equal(string(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset4EncodedAssetID].QuantizedValue.String())
-	s.Require().Equal(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset4EncodedAssetID].TimestampNs)
+	s.Require().
+		Equal(string(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.QuantizedPrice), values[positiveAsset4EncodedAssetID].QuantizedValue.String())
+	s.Require().
+		Equal(priceUpdates[positiveAsset4EncodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, values[positiveAsset4EncodedAssetID].TimestampNs)
 	s.Require().NoError(err)
 }
 
@@ -207,23 +219,31 @@ func (s *InteractorTestSuite) Test_06_ListenContractEvents() {
 		for encodedAssetID, value := range update {
 			if encodedAssetID == s.prices.PositiveAsset1EncodedAssetID() {
 				receivedPositiveAsset1 = true
-				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
-				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
+				s.Require().
+					Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
+				s.Require().
+					Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
 			if encodedAssetID == s.prices.PositiveAsset2EncodedAssetID() {
 				receivedPositiveAsset2 = true
-				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
-				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
+				s.Require().
+					Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
+				s.Require().
+					Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
 			if encodedAssetID == s.prices.PositiveAsset3EncodedAssetID() {
 				receivedPositiveAsset3 = true
-				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
-				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
+				s.Require().
+					Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
+				s.Require().
+					Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
 			if encodedAssetID == s.prices.PositiveAsset4EncodedAssetID() {
 				receivedPositiveAsset4 = true
-				s.Require().Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
-				s.Require().Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
+				s.Require().
+					Equal(string(priceUpdates[encodedAssetID].StorkSignedPrice.QuantizedPrice), value.QuantizedValue.String())
+				s.Require().
+					Equal(priceUpdates[encodedAssetID].StorkSignedPrice.TimestampedSignature.TimestampNano, value.TimestampNs)
 			}
 			if receivedPositiveAsset1 && receivedPositiveAsset2 && receivedPositiveAsset3 && receivedPositiveAsset4 {
 				break

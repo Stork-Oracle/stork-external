@@ -107,9 +107,9 @@ func (s *FirstPartyInteractorTestSuite) Test_02_PullValues_Initial() {
 func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
-			AssetID:        "ETHUSD",
-			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historical:     false,
+			AssetID:    "ETHUSD",
+			PublicKey:  shared.PublisherKey(s.pubKey.Hex()),
+			Historical: false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -156,9 +156,9 @@ func (s *FirstPartyInteractorTestSuite) Test_03_BatchPushToContract_Single() {
 func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
-			AssetID:        "ETHUSD",
-			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historical:     false,
+			AssetID:    "ETHUSD",
+			PublicKey:  shared.PublisherKey(s.pubKey.Hex()),
+			Historical: false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -179,9 +179,9 @@ func (s *FirstPartyInteractorTestSuite) Test_04_BatchPushToContract_Multiple() {
 			},
 		},
 		{
-			AssetID:        "BTCUSD",
-			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historical:     false,
+			AssetID:    "BTCUSD",
+			PublicKey:  shared.PublisherKey(s.pubKey.Hex()),
+			Historical: false,
 		}: {
 			OracleID: "local",
 			AssetID:  "BTCUSD",
@@ -249,9 +249,9 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 
 	update := map[types.AssetEntry]publisher_agent.SignedPriceUpdate[*shared.EvmSignature]{
 		{
-			AssetID:        "ETHUSD",
-			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historical:     false,
+			AssetID:    "ETHUSD",
+			PublicKey:  shared.PublisherKey(s.pubKey.Hex()),
+			Historical: false,
 		}: {
 			OracleID: "local",
 			AssetID:  "ETHUSD",
@@ -272,9 +272,9 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 			},
 		},
 		{
-			AssetID:        "BTCUSD",
-			PublicKey:      shared.PublisherKey(s.pubKey.Hex()),
-			Historical:     false,
+			AssetID:    "BTCUSD",
+			PublicKey:  shared.PublisherKey(s.pubKey.Hex()),
+			Historical: false,
 		}: {
 			OracleID: "local",
 			AssetID:  "BTCUSD",
@@ -337,7 +337,8 @@ func (s *FirstPartyInteractorTestSuite) Test_05_ListenContractEvents() {
 			}
 
 		case <-timeout:
-			s.Require().Fail("test timed out after 5 seconds, should have received all contract events. Got %d/%d events", len(receivedAssets), len(expectedValues))
+			s.Require().
+				Fail("test timed out after 5 seconds, should have received all contract events. Got %d/%d events", len(receivedAssets), len(expectedValues))
 		}
 	}
 

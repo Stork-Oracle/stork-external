@@ -246,6 +246,7 @@ func TestCreateStarkBufferFromBigIntAbs(t *testing.T) {
 		expectedBytes [32]byte
 		expectedError error
 	}{
+		//nolint:golines
 		{
 			name:          "negative",
 			intBigInt:     new(big.Int).SetInt64(-1),
