@@ -23,6 +23,8 @@ pub enum FuelClientError {
     WalletBalanceError(String),
     #[error("Null pointer passed: {0}")]
     NullPointer(String),
+    #[error("Timeout: {0}")]
+    Timeout(String),
     // Contract errors, these correspond with custom contract errors defined in the stork-fuel-sdk crate
     #[error("Incorrect fee asset")]
     IncorrectFeeAsset,
@@ -49,11 +51,12 @@ pub enum FuelClientStatus {
     SystemError = 6,
     WalletBalanceError = 7,
     NullPointer = 8,
-    IncorrectFeeAsset = 9,
-    InsufficientFee = 10,
-    NoFreshUpdate = 11,
-    FeedNotFound = 12,
-    InvalidSignature = 13,
+    Timeout = 9,
+    IncorrectFeeAsset = 10,
+    InsufficientFee = 11,
+    NoFreshUpdate = 12,
+    FeedNotFound = 13,
+    InvalidSignature = 14,
 }
 
 impl From<FuelClientError> for FuelClientStatus {
@@ -67,6 +70,7 @@ impl From<FuelClientError> for FuelClientStatus {
             FuelClientError::SystemError(_) => Self::SystemError,
             FuelClientError::WalletBalanceError(_) => Self::WalletBalanceError,
             FuelClientError::NullPointer(_) => Self::NullPointer,
+            FuelClientError::Timeout(_) => Self::Timeout,
             FuelClientError::IncorrectFeeAsset => Self::IncorrectFeeAsset,
             FuelClientError::InsufficientFee => Self::InsufficientFee,
             FuelClientError::NoFreshUpdate => Self::NoFreshUpdate,
