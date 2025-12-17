@@ -86,9 +86,7 @@ interactScope
         await contract.updateTemporalNumericValuesV1.send(updates, {
             value: Object.keys(customData).length === 0 ? updates.length : 0,
             customData,
-            txOptions: {
-                gasLimit: 10000000,
-            },
+            gasLimit: 10000000,
         });
     });
 
