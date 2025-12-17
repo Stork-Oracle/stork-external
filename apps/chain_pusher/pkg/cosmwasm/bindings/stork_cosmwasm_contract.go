@@ -338,7 +338,6 @@ func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) 
 	return resp.Data, nil
 }
 
-//
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
 func (s *StorkContract) executeContract(
 	ctx context.Context,

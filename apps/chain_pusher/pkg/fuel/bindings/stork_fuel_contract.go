@@ -276,22 +276,19 @@ func (s *StorkContract) Close() {
 //nolint:ireturn
 func callWithContext[T any](ctx context.Context, f func() (T, error)) (T, error) {
 	var zero T
-	ctxErr := ctx.Err()
-	if ctxErr != nil {
-		return zero, fmt.Errorf("call cancelled: %w", ctxErr)
-	}
-
-	resultCh := make(chan struct {
+	type result struct {
 		value T
 		err   error
-	}, 1)
+	}
+
+	resultCh := make(chan result, 1)
 
 	go func() {
 		value, err := f()
-		resultCh <- struct {
-			value T
-			err   error
-		}{value, err}
+		select {
+		case resultCh <- result{value, err}:
+		case <-ctx.Done():
+		}
 	}()
 
 	select {
