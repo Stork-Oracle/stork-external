@@ -31,6 +31,7 @@ var (
 	ErrSystemError                  = errors.New("system error")
 	ErrWalletBalanceError           = errors.New("wallet balance error")
 	ErrNullPointer                  = errors.New("null pointer")
+	ErrTimeout                      = errors.New("timeout")
 	ErrIncorrectFeeAsset            = errors.New("incorrect fee asset")
 	ErrInsufficientFee              = errors.New("insufficient fee")
 	ErrNoFreshUpdate                = errors.New("no fresh update")
@@ -134,6 +135,8 @@ func handleFuelClientStatus(status C.enum_FuelClientStatus) error {
 		return ErrWalletBalanceError
 	case C.NullPointer:
 		return ErrNullPointer
+	case C.Timeout:
+		return ErrTimeout
 	case C.IncorrectFeeAsset:
 		return ErrIncorrectFeeAsset
 	case C.InsufficientFee:

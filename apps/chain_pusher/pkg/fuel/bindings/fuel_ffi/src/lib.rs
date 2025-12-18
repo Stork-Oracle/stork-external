@@ -3,9 +3,13 @@ pub mod fuel_client;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::time::Duration;
 
 use error::{FuelClientError, FuelClientStatus};
 use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
+
+// 10 second timeout for all network calls
+const TIMEOUT: Duration = Duration::from_secs(10);
 
 /// # Safety
 ///
@@ -41,7 +45,11 @@ pub unsafe extern "C" fn fuel_client_new(
             .build()
             .map_err(|e| FuelClientError::SystemError(format!("Failed to create runtime: {e}")))?;
 
-        rt.block_on(FuelClient::new(config))
+        rt.block_on(async {
+            tokio::time::timeout(TIMEOUT, FuelClient::new(config))
+                .await
+                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
+        })
     })();
 
     handle_ffi_result(
@@ -104,9 +112,11 @@ pub unsafe extern "C" fn fuel_get_latest_value(
 
         let id: [u8; 32] = unsafe { *id_ptr };
 
-        let value_opt = client
-            .rt
-            .block_on(client.get_latest_temporal_numeric_value(id))?;
+        let value_opt = client.rt.block_on(async {
+            tokio::time::timeout(TIMEOUT, client.get_latest_temporal_numeric_value(id))
+                .await
+                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
+        })?;
 
         match value_opt {
             Some(value) => {
@@ -165,9 +175,11 @@ pub unsafe extern "C" fn fuel_update_values(
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
 
-        client
-            .rt
-            .block_on(client.update_temporal_numeric_values(inputs))
+        client.rt.block_on(async {
+            tokio::time::timeout(TIMEOUT, client.update_temporal_numeric_values(inputs))
+                .await
+                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
+        })
     })();
 
     handle_ffi_result(
@@ -208,7 +220,11 @@ pub unsafe extern "C" fn fuel_get_wallet_balance(
 
     let result = {
         let client = unsafe { &*client };
-        client.rt.block_on(client.get_wallet_balance())
+        client.rt.block_on(async {
+            tokio::time::timeout(TIMEOUT, client.get_wallet_balance())
+                .await
+                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
+        })
     };
 
     handle_ffi_result(

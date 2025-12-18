@@ -4,6 +4,7 @@ package evm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -48,10 +49,10 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
 	s.Require().NoError(err)
 
-	err = s.interactor.ConnectHTTP(s.config.RpcUrl)
+	err = s.interactor.ConnectHTTP(s.ctx, s.config.RpcUrl)
 	s.Require().NoError(err)
 
-	err = s.interactor.ConnectWs(s.config.WsUrl)
+	err = s.interactor.ConnectWs(s.ctx, s.config.WsUrl)
 	s.Require().NoError(err)
 
 	s.prices, err = testutil.LoadAggregatedSignedPrices()
@@ -68,7 +69,7 @@ func TestInteractorTestSuite(t *testing.T) {
 
 // Test_01_GetWalletBalance_Initial tests the initial balance of the wallet before any prices are pushed.
 func (s *InteractorTestSuite) Test_01_GetWalletBalance_Initial() {
-	balance, err := s.interactor.GetWalletBalance()
+	balance, err := s.interactor.GetWalletBalance(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Greater(balance, 0.0, "balance should be greater than 0 for testing")
 
@@ -77,7 +78,7 @@ func (s *InteractorTestSuite) Test_01_GetWalletBalance_Initial() {
 
 // Test_02_PullValues_Initial tests the behavior of pulling values from the contract before any prices are pushed.
 func (s *InteractorTestSuite) Test_02_PullValues_Initial() {
-	values, err := s.interactor.PullValues(s.prices.AllEncodedAssetIDs())
+	values, err := s.interactor.PullValues(s.ctx, s.prices.AllEncodedAssetIDs())
 	s.Require().NoError(err)
 	s.Require().NotNil(values)
 	s.Require().Equal(0, len(values))
@@ -92,11 +93,11 @@ func (s *InteractorTestSuite) Test_03_BatchPushToContract_and_PullValues_Single_
 	s.Require().NotNil(priceUpdates)
 
 	// Push the POSITIVE_ASSET_1 price to the contract
-	err := s.interactor.BatchPushToContract(priceUpdates)
+	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
 	s.Require().NoError(err)
 
 	// Pull the POSITIVE_ASSET_1 price from the contract
-	values, err := s.interactor.PullValues([]types.InternalEncodedAssetID{positiveAsset1EncodedAssetID})
+	values, err := s.interactor.PullValues(s.ctx, []types.InternalEncodedAssetID{positiveAsset1EncodedAssetID})
 	s.Require().NoError(err)
 	s.Require().NotNil(values)
 	s.Require().Equal(1, len(values))
@@ -117,11 +118,11 @@ func (s *InteractorTestSuite) Test_04_BatchPushToContract_and_PullValues_Single_
 	s.Require().NotNil(priceUpdates)
 
 	// Push the prices to the contract
-	err := s.interactor.BatchPushToContract(priceUpdates)
+	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
 	s.Require().NoError(err)
 
 	// Pull the prices from the contract
-	values, err := s.interactor.PullValues([]types.InternalEncodedAssetID{negativeAsset1EncodedAssetID})
+	values, err := s.interactor.PullValues(s.ctx, []types.InternalEncodedAssetID{negativeAsset1EncodedAssetID})
 	s.Require().NoError(err)
 	s.Require().NotNil(values)
 	s.Require().Equal(1, len(values))
@@ -152,11 +153,11 @@ func (s *InteractorTestSuite) Test_05_BatchPushToContract_and_PullValues_Multipl
 	s.Require().NotNil(priceUpdates)
 
 	// Push the prices to the contract
-	err := s.interactor.BatchPushToContract(priceUpdates)
+	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
 	s.Require().NoError(err)
 
 	// Pull the prices from the contract
-	values, err := s.interactor.PullValues(s.prices.AllEncodedAssetIDs())
+	values, err := s.interactor.PullValues(s.ctx, s.prices.AllEncodedAssetIDs())
 	s.Require().NoError(err)
 	s.Require().NotNil(values)
 	s.Require().Equal(len(values), len(s.prices.AllEncodedAssetIDs()))
@@ -205,7 +206,7 @@ func (s *InteractorTestSuite) Test_06_ListenContractEvents() {
 	priceUpdates := s.getAllPriceUpdates()
 	s.Require().NotNil(priceUpdates)
 
-	err := s.interactor.BatchPushToContract(priceUpdates)
+	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
 	s.Require().NoError(err)
 
 	// Bool flags for each asset
@@ -261,9 +262,85 @@ func (s *InteractorTestSuite) Test_06_ListenContractEvents() {
 // As this test runs last, we don't have to push, as we stored the initial balance in Test_01_GetWalletBalance_Initial,
 // and have pushed in the previous tests.
 func (s *InteractorTestSuite) Test_07_GetWalletBalance_After_Push() {
-	balance, err := s.interactor.GetWalletBalance()
+	balance, err := s.interactor.GetWalletBalance(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Less(balance, s.balance, "balance should be less than initial balance")
+}
+
+// Test_08_PullValues_WithTimeout_ContextDeadlineExceeded tests that PullValues returns a context deadline
+// exceeded error when called with a very short timeout.
+func (s *InteractorTestSuite) Test_08_PullValues_WithTimeout_ContextDeadlineExceeded() {
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Nanosecond)
+	defer cancel()
+
+	// Make sure it times out
+	time.Sleep(1 * time.Millisecond)
+
+	_, err := s.interactor.PullValues(ctx, s.prices.AllEncodedAssetIDs())
+
+	s.Require().Error(err)
+	s.Require().
+		True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
+}
+
+// Test_09_PullValues_WithTimeout_PartialSuccess tests that PullValues returns partial results
+// when a timeout occurs mid-operation.
+func (s *InteractorTestSuite) Test_09_PullValues_WithTimeout_PartialSuccess() {
+	priceUpdates := s.getAllPriceUpdates()
+	s.Require().NotNil(priceUpdates)
+
+	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
+	s.Require().NoError(err)
+
+	// Short timeout that will allow for partial success, could be flakey?
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Millisecond)
+	defer cancel()
+
+	allAssetIDs := s.prices.AllEncodedAssetIDs()
+	values, err := s.interactor.PullValues(ctx, allAssetIDs)
+
+	s.Require().Error(err)
+
+	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should indicate timeout, got: %v", err)
+
+	s.Require().NotNil(values)
+}
+
+// Test_10_BatchPushToContract_WithTimeout_ContextDeadlineExceeded tests that BatchPushToContract returns
+// a context deadline exceeded error when called with a very short timeout.
+func (s *InteractorTestSuite) Test_10_BatchPushToContract_WithTimeout_ContextDeadlineExceeded() {
+	priceUpdates := s.getAllPriceUpdates()
+	s.Require().NotNil(priceUpdates)
+
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Nanosecond)
+	defer cancel()
+
+	// Make sure it times out
+	time.Sleep(1 * time.Millisecond)
+
+	err := s.interactor.BatchPushToContract(ctx, priceUpdates)
+
+	s.Require().Error(err)
+
+	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should indicate timeout, got: %v", err)
+}
+
+// Test_11_GetWalletBalance_WithTimeout_ContextDeadlineExceeded tests that GetWalletBalance returns
+// a context deadline exceeded error when called with a very short timeout.
+func (s *InteractorTestSuite) Test_11_GetWalletBalance_WithTimeout_ContextDeadlineExceeded() {
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Nanosecond)
+	defer cancel()
+
+	// Make sure it times out
+	time.Sleep(1 * time.Millisecond)
+
+	balance, err := s.interactor.GetWalletBalance(ctx)
+
+	s.Require().Error(err)
+	s.Require().
+		True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
+
+	s.Require().Less(balance, 0.0, "balance should be invalid when there's an error")
 }
 
 // Helper functions

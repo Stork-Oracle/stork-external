@@ -89,7 +89,12 @@ type U128 struct {
 	Value []byte
 }
 
-func NewStorkContract(rpcUrl string, contractAddress string, account *account.Account) (*StorkContract, error) {
+func NewStorkContract(
+	ctx context.Context,
+	rpcUrl string,
+	contractAddress string,
+	account *account.Account,
+) (*StorkContract, error) {
 	client, err := sui_client.Dial(rpcUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial Sui client: %w", err)
@@ -100,7 +105,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, account *account.Ac
 		return nil, fmt.Errorf("failed to convert contract address to Sui address: %w", err)
 	}
 
-	state, err := getStorkState(*contractAddr, client)
+	state, err := getStorkState(ctx, *contractAddr, client)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +117,7 @@ func NewStorkContract(rpcUrl string, contractAddress string, account *account.Ac
 //
 
 func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
-	feedIDs []EncodedAssetID,
+	ctx context.Context, feedIDs []EncodedAssetID,
 ) (map[EncodedAssetID]TemporalNumericValue, error) {
 	feedIDsMap := sc.State.FeedRegistry.Entries
 
@@ -124,7 +129,7 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 		}
 	}
 
-	resolvedFeedIDs, err := sc.getFeedIDs(unknownFeedIDs)
+	resolvedFeedIDs, err := sc.getFeedIDs(ctx, unknownFeedIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +147,7 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 		ShowContent: true,
 	}
 
-	feeds, err := sc.Client.MultiGetObjects(context.Background(), feedAddresses, options)
+	feeds, err := sc.Client.MultiGetObjects(ctx, feedAddresses, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get feed objects: %w", err)
 	}
@@ -306,11 +311,14 @@ func parseFeedToTemporalNumericValue(feed types.SuiObjectResponse) (EncodedAsset
 }
 
 //nolint:cyclop,funlen,maintidx // This is a long and complex function but does related work.
-func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []UpdateData) (string, error) {
+func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
+	ctx context.Context,
+	updateData []UpdateData,
+) (string, error) {
 	ptb := sui_types.NewProgrammableTransactionBuilder()
 
 	// get reference gas price
-	referenceGasPrice, err := sc.getReferenceGasPrice()
+	referenceGasPrice, err := sc.getReferenceGasPrice(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -481,12 +489,12 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	pt := ptb.Finish()
 
 	//nolint:mnd // 100 is being used as a arbitrarily large limit and thus a permissible magic number
-	coins, err := sc.Client.GetCoins(context.Background(), *address, nil, nil, 100)
+	coins, err := sc.Client.GetCoins(ctx, *address, nil, nil, 100)
 	if err != nil {
 		return "", fmt.Errorf("failed to get coins: %w", err)
 	}
 
-	gasBudget, err := sc.getGasBudgetFromDryRun(&pt, referenceGasPrice)
+	gasBudget, err := sc.getGasBudgetFromDryRun(ctx, &pt, referenceGasPrice)
 	if err != nil {
 		return "", err
 	}
@@ -526,7 +534,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 	}
 
 	txResponse, err := sc.Client.ExecuteTransactionBlock(
-		context.Background(),
+		ctx,
 		txBytes,
 		[]any{signatures},
 		nil,
@@ -542,6 +550,7 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(updateData []Upd
 }
 
 func getOriginalContractAddress(
+	ctx context.Context,
 	contractAddress sui_types.SuiAddress,
 	client *sui_client.Client,
 ) (sui_types.SuiAddress, error) {
@@ -550,7 +559,7 @@ func getOriginalContractAddress(
 	var result interface{}
 
 	err := client.CallContext(
-		context.Background(),
+		ctx,
 		&result,
 		method, // This is the constant defined in method.go
 		contractAddress,
@@ -592,9 +601,14 @@ func getOriginalContractAddress(
 	return *address, nil
 }
 
+//
 //nolint:cyclop,funlen // This is a long and complex function due to interface destructuring
-func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Client) (StorkState, error) {
-	originalContractAddress, err := getOriginalContractAddress(contractAddress, client)
+func getStorkState(
+	ctx context.Context,
+	contractAddress sui_types.SuiAddress,
+	client *sui_client.Client,
+) (StorkState, error) {
+	originalContractAddress, err := getOriginalContractAddress(ctx, contractAddress, client)
 	if err != nil {
 		return StorkState{}, err
 	}
@@ -610,7 +624,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 	}
 	limit := uint(1)
 
-	event, err := client.QueryEvents(context.Background(), eventFilter, nil, &limit, false)
+	event, err := client.QueryEvents(ctx, eventFilter, nil, &limit, false)
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to query events: %w", err)
 	}
@@ -640,7 +654,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 		ShowOwner:   true,
 	}
 
-	object, err := client.GetObject(context.Background(), *storkStateID, options)
+	object, err := client.GetObject(ctx, *storkStateID, options)
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to get object: %w", err)
 	}
@@ -710,7 +724,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 	version := object.Data.Version.Uint64()
 	initialSharedVersion := *object.Data.Owner.Shared.InitialSharedVersion
 	// registry
-	stateDynamicFields, err := client.GetDynamicFields(context.Background(), *storkStateID, nil, nil)
+	stateDynamicFields, err := client.GetDynamicFields(ctx, *storkStateID, nil, nil)
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to get dynamic fields: %w", err)
 	}
@@ -752,6 +766,7 @@ func getStorkState(contractAddress sui_types.SuiAddress, client *sui_client.Clie
 }
 
 func (sc *StorkContract) getGasBudgetFromDryRun(
+	ctx context.Context,
 	pt *sui_types.ProgrammableTransaction,
 	referenceGasPrice uint64,
 ) (uint64, error) {
@@ -774,7 +789,7 @@ func (sc *StorkContract) getGasBudgetFromDryRun(
 		return 0, fmt.Errorf("failed to marshal transaction: %w", err)
 	}
 
-	dryRunResult, err := sc.Client.DryRunTransaction(context.Background(), txBytes)
+	dryRunResult, err := sc.Client.DryRunTransaction(ctx, txBytes)
 	if err != nil {
 		return 0, fmt.Errorf("dry run failed: %w", err)
 	}
@@ -794,8 +809,8 @@ func (sc *StorkContract) getGasBudgetFromDryRun(
 	return gasUsedUint64, nil
 }
 
-func (sc *StorkContract) getReferenceGasPrice() (uint64, error) {
-	referenceGasPriceResult, err := sc.Client.GetReferenceGasPrice(context.Background())
+func (sc *StorkContract) getReferenceGasPrice(ctx context.Context) (uint64, error) {
+	referenceGasPriceResult, err := sc.Client.GetReferenceGasPrice(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get reference gas price: %w", err)
 	}
@@ -803,12 +818,15 @@ func (sc *StorkContract) getReferenceGasPrice() (uint64, error) {
 	return referenceGasPriceResult.Uint64(), nil
 }
 
-func (sc *StorkContract) getFeedIDs(feedIDs []EncodedAssetID) (map[EncodedAssetID]sui_types.SuiAddress, error) {
+func (sc *StorkContract) getFeedIDs(
+	ctx context.Context,
+	feedIDs []EncodedAssetID,
+) (map[EncodedAssetID]sui_types.SuiAddress, error) {
 	feedIDsMap := make(map[EncodedAssetID]sui_types.SuiAddress)
 
 	registryID := sc.State.FeedRegistry.ID
 
-	registryEntries, err := sc.Client.GetDynamicFields(context.Background(), registryID, nil, nil)
+	registryEntries, err := sc.Client.GetDynamicFields(ctx, registryID, nil, nil)
 	if err != nil {
 		return feedIDsMap, fmt.Errorf("failed to get dynamic fields: %w", err)
 	}

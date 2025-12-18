@@ -44,7 +44,7 @@ func NewContractInteractor(
 	}, nil
 }
 
-func (fci *ContractInteractor) ConnectHTTP(url string) error {
+func (fci *ContractInteractor) ConnectHTTP(_ context.Context, url string) error {
 	config := bindings.Config{
 		RpcUrl:          url,
 		ContractAddress: fci.contractAddress,
@@ -61,7 +61,7 @@ func (fci *ContractInteractor) ConnectHTTP(url string) error {
 	return nil
 }
 
-func (fci *ContractInteractor) ConnectWs(url string) error {
+func (fci *ContractInteractor) ConnectWs(ctx context.Context, url string) error {
 	// not implemented
 	return nil
 }
@@ -74,6 +74,7 @@ func (fci *ContractInteractor) ListenContractEvents(
 }
 
 func (fci *ContractInteractor) PullValues(
+	_ context.Context, // a 5 second timeout is hardcoded in the ffi library
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
@@ -136,6 +137,7 @@ func (fci *ContractInteractor) PullValues(
 }
 
 func (fci *ContractInteractor) BatchPushToContract(
+	_ context.Context, // a 5 second timeout is hardcoded in the ffi library
 	priceUpdates map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
 	if len(priceUpdates) == 0 {
@@ -175,7 +177,8 @@ func (fci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-func (fci *ContractInteractor) GetWalletBalance() (float64, error) {
+// GetWalletBalance uses a 5 second timeout is hardcoded in the ffi library.
+func (fci *ContractInteractor) GetWalletBalance(_ context.Context) (float64, error) {
 	balance, err := fci.contract.GetWalletBalance()
 	if err != nil {
 		return 0, fmt.Errorf("failed to get wallet balance: %w", err)

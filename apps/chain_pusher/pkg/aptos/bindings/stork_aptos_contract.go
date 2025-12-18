@@ -8,13 +8,18 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"net/http"
+	"net/http/cookiejar"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/aptos-labs/aptos-go-sdk"
 	"github.com/aptos-labs/aptos-go-sdk/bcs"
 	"github.com/aptos-labs/aptos-go-sdk/crypto"
 )
+
+const DefaultHTTPClientTimeout = 5 * time.Second
 
 var (
 	ErrInvalidLengths = errors.New("invalid lengths")
@@ -62,7 +67,19 @@ func NewStorkContract(rpcUrl string, contractAddress string, key *crypto.Ed25519
 		IndexerUrl: "",
 	}
 
-	client, err := aptos.NewClient(config)
+	// pass custom http client as aptos client calls are not context aware, they hardcode a timeout of 60 seconds
+	// we hardcode our own shorter timeout - this is ultimately an imperfect workaround.
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cookie jar: %w", err)
+	}
+
+	httpClient := &http.Client{
+		Jar:     jar,
+		Timeout: DefaultHTTPClientTimeout,
+	}
+
+	client, err := aptos.NewClient(config, httpClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
