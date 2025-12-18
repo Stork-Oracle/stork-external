@@ -8,8 +8,8 @@ use std::time::Duration;
 use error::{FuelClientError, FuelClientStatus};
 use fuel_client::{FuelClient, FuelConfig, FuelTemporalNumericValueInput};
 
-// 5 second timeout for all network calls
-const TIMEOUT: Duration = Duration::from_secs(5);
+// 10 second timeout for all network calls
+const TIMEOUT: Duration = Duration::from_secs(10);
 
 /// # Safety
 ///
