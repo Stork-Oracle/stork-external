@@ -177,7 +177,7 @@ func (fci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-// A 5 second timeout is hardcoded in the ffi library.
+// GetWalletBalance uses a 5 second timeout is hardcoded in the ffi library.
 func (fci *ContractInteractor) GetWalletBalance(_ context.Context) (float64, error) {
 	balance, err := fci.contract.GetWalletBalance()
 	if err != nil {
