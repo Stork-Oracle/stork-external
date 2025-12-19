@@ -175,11 +175,9 @@ pub unsafe extern "C" fn fuel_update_values(
         let inputs_str = c_str_to_string(inputs_json)?;
         let inputs: Vec<FuelTemporalNumericValueInput> = serde_json::from_str(&inputs_str)?;
 
-        client.rt.block_on(async {
-            tokio::time::timeout(TIMEOUT, client.update_temporal_numeric_values(inputs))
-                .await
-                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
-        })
+        client
+            .rt
+            .block_on(client.update_temporal_numeric_values(inputs))
     })();
 
     handle_ffi_result(
