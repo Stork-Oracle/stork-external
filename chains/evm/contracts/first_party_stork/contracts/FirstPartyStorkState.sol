@@ -8,9 +8,9 @@ import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkStructs.sol";
 contract FirstPartyStorkStorage {
     struct State {
         // Mapping of publisher to encodedAssetId to TemporalNumericValue
-        mapping(address => mapping(bytes32 => FirstPartyStorkStructs.TemporalNumericValue)) latestValues;
+        mapping(address => mapping(bytes32 => StorkStructs.TemporalNumericValue)) latestValues;
         // Mapping of publisher to encodedAssetId to array of TemporalNumericValue
-        mapping(address => mapping(bytes32 => FirstPartyStorkStructs.TemporalNumericValue[])) historicalValues;
+        mapping(address => mapping(bytes32 => StorkStructs.TemporalNumericValue[])) historicalValues;
         // Mapping of publisher to encodedAssetId to current roundId corresponding to the historical values
         mapping(address => mapping(bytes32 => uint256)) currentRoundId;
         // Mapping of publisher to PublisherUser
