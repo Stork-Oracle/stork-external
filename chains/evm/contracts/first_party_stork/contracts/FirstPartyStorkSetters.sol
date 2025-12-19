@@ -18,10 +18,13 @@ contract FirstPartyStorkSetters is
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
-        uint64 latestReceiveTime = _state
-            .latestValues[pubKey][encodedAssetId]
-            .timestampNs;
-        if (input.temporalNumericValue.timestampNs <= latestReceiveTime) {
+        if (
+            !isUpdateNecessary(
+                pubKey,
+                encodedAssetId,
+                input.temporalNumericValue.timestampNs
+            )
+        ) {
             return false;
         }
 
@@ -42,10 +45,13 @@ contract FirstPartyStorkSetters is
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
-        uint64 latestReceiveTime = _state
-            .latestValues[pubKey][encodedAssetId]
-            .timestampNs;
-        if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
+        if (
+            !isUpdateNecessary(
+                pubKey,
+                encodedAssetId,
+                input.temporalNumericValue.timestampNs
+            )
+        ) {
             return false;
         }
 
@@ -65,6 +71,17 @@ contract FirstPartyStorkSetters is
             _state.currentRoundId[pubKey][encodedAssetId]
         );
         return true;
+    }
+
+    function isUpdateNecessary(
+        address pubKey,
+        bytes32 encodedAssetId,
+        uint64 timestampNs
+    ) internal view returns (bool) {
+        uint64 latestReceiveTime = _state
+            .latestValues[pubKey][encodedAssetId]
+            .timestampNs;
+        return timestampNs > latestReceiveTime;
     }
 
     function addPublisherUser(
