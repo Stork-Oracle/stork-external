@@ -25,5 +25,8 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "@storknetwork/stork-evm-sdk": "^1.0.0"
     }
 }

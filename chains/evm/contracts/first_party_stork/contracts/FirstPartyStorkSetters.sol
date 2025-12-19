@@ -50,7 +50,7 @@ contract FirstPartyStorkSetters is
         }
 
         _state.historicalValues[pubKey][encodedAssetId].push(
-            FirstPartyStorkStructs.TemporalNumericValue(
+            StorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
                 input.temporalNumericValue.quantizedValue
             )
