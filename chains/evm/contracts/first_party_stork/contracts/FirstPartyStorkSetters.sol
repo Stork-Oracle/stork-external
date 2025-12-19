@@ -19,11 +19,8 @@ contract FirstPartyStorkSetters is
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
         if (
-            !isUpdateNecessary(
-                pubKey,
-                encodedAssetId,
-                input.temporalNumericValue.timestampNs
-            )
+            input.temporalNumericValue.timestampNs <=
+            _state.latestValues[pubKey][encodedAssetId].timestampNs
         ) {
             return false;
         }
@@ -37,24 +34,19 @@ contract FirstPartyStorkSetters is
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue
         );
+
+        if (input.storeHistorical) {
+            storeHistoricalValue(pubKey, input, encodedAssetId);
+        }
+
         return true;
     }
 
     function storeHistoricalValue(
         address pubKey,
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
-    ) internal returns (bool) {
-        bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
-        if (
-            !isUpdateNecessary(
-                pubKey,
-                encodedAssetId,
-                input.temporalNumericValue.timestampNs
-            )
-        ) {
-            return false;
-        }
-
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input,
+        bytes32 encodedAssetId
+    ) internal {
         _state.historicalValues[pubKey][encodedAssetId].push(
             StorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
@@ -70,18 +62,6 @@ contract FirstPartyStorkSetters is
             input.temporalNumericValue.quantizedValue,
             _state.currentRoundId[pubKey][encodedAssetId]
         );
-        return true;
-    }
-
-    function isUpdateNecessary(
-        address pubKey,
-        bytes32 encodedAssetId,
-        uint64 timestampNs
-    ) internal view returns (bool) {
-        uint64 latestReceiveTime = _state
-            .latestValues[pubKey][encodedAssetId]
-            .timestampNs;
-        return timestampNs > latestReceiveTime;
     }
 
     function addPublisherUser(
