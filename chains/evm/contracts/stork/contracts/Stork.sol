@@ -64,7 +64,8 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
             revert StorkErrors.NotFound();
         }
 
-        if (block.timestamp - (numericValue.timestampNs / 1000000000) > validTimePeriodSeconds()) {
+        uint64 lastTimestampSeconds = numericValue.timestampNs / 1000000000;
+        if (block.timestamp >= lastTimestampSeconds && block.timestamp - lastTimestampSeconds > validTimePeriodSeconds()) {
             revert StorkErrors.StaleValue();
         }
         return numericValue;
