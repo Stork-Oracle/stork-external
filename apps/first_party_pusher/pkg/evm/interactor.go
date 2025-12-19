@@ -271,7 +271,7 @@ func (ci *ContractInteractor) getUpdatePayload(
 		}
 
 		// Create the temporal numeric value using the signed data timestamp
-		temporalValue := bindings.FirstPartyStorkStructsTemporalNumericValue{
+		temporalValue := bindings.StorkStructsTemporalNumericValue{
 			TimestampNs:    signedPriceUpdate.SignedPrice.TimestampedSignature.TimestampNano,
 			QuantizedValue: quantizedValue,
 		}
