@@ -8,19 +8,25 @@ import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkEvents.sol";
 import "./FirstPartyStorkState.sol";
 import "./FirstPartyStorkHelpers.sol";
 
-contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkHelpers, IFirstPartyStorkEvents {
+contract FirstPartyStorkSetters is
+    FirstPartyStorkState,
+    FirstPartyStorkHelpers,
+    IFirstPartyStorkEvents
+{
     function updateLatestValueIfNecessary(
         address pubKey,
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][encodedAssetId].timestampNs;
-        if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
+            .latestValues[pubKey][encodedAssetId]
+            .timestampNs;
+        if (input.temporalNumericValue.timestampNs <= latestReceiveTime) {
             return false;
         }
 
-        _state.latestValues[pubKey][encodedAssetId] = input.temporalNumericValue;
+        _state.latestValues[pubKey][encodedAssetId] = input
+            .temporalNumericValue;
         emit ValueUpdate(
             pubKey,
             input.assetPairId,
@@ -37,7 +43,8 @@ contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkHelpers,
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
         uint64 latestReceiveTime = _state
-        .latestValues[pubKey][encodedAssetId].timestampNs;
+            .latestValues[pubKey][encodedAssetId]
+            .timestampNs;
         if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
             return false;
         }
