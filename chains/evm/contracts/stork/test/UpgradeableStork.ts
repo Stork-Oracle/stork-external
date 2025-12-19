@@ -23,7 +23,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.4");
+      expect(await deployed.version()).to.equal("1.0.5");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +63,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.4");
+      expect(await upgraded.version()).to.equal("1.0.5");
     });
 
     it("Should revert if not owner", async function () {
@@ -534,6 +534,34 @@ describe("UpgradeableStork", function() {
 
       expect(await deployed.getTemporalNumericValueV1(ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")))).to.deep.equal([
         1720722087644999936n,
+        60000000000000000000000n
+      ]);
+    });
+
+    it("Should return expected future value", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      // to avoid time period check
+      await deployed.updateValidTimePeriodSeconds(10);
+
+      // values pulled from sample publisher call
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "2081729362000000000",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: "0xa3330b2fc8da019adc16cfe62cfba5a2494e1e0d82a3410ca8395774565c8f61",
+          valueComputeAlgHash: "0xfed62fd9f254fc484418ff48b6f208b1f430c2d54043df9fd041e787b43e0e3b",
+          r: "0x00972d56a1bd666382f58025e0203770c2166a1fa28eff61bc14dba1e5aab316",
+          s: "0x23ae5757f3b7de44fe0141ccaf922a62ebf1545815c42378b280e2e592b74f5a",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+
+      expect(await deployed.getTemporalNumericValueV1(ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")))).to.deep.equal([
+        2081729362000000000n,
         60000000000000000000000n
       ]);
     });
