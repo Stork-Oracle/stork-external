@@ -40,10 +40,10 @@ The available environment variables are:
 | STORK_ORACLE_ID | Oracle ID | string |
 | STORK_PULL_BASED_AUTH | Pull-based websocket auth token | string |
 
-**You'll need to send your Public keys to Stork before running your publisher agent so that we can whitelist them.
+You will need to send your Public keys to Stork before running your publisher agent so that we can whitelist them.
 
 > [!CAUTION]
-> NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.**
+> NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.
 
 > [!IMPORTANT]
 > When running in production, it is important to use environment variables via your infrastructure's secrets manager rather than a `keys.json` file.
