@@ -4,6 +4,9 @@ The easiest way to become a Stork Publisher is to run the Stork Publisher Agent 
 
 ## Getting Started
 
+> [!IMPORTANT]
+> When running in production, it is important to use environment variables via your infrastructure's secrets manager rather than a `keys.json` file.
+
 ### Setup
 To run the agent on your infrastructure, you'll need to first create a `config.json` file containing all non-secret configuration and a `keys.json` file containing all keys including secret configuration, and then run the Stork Publisher Agent docker container.
 
@@ -44,10 +47,6 @@ You will need to send your Public keys to Stork before running your publisher ag
 
 > [!CAUTION]
 > NEVER SHARE YOUR PRIVATE KEYS WITH ANYONE, INCLUDING ANYONE CLAIMING TO BE A MEMBER OF STORK. WE WILL NEVER ASK YOU FOR IT.
-
-> [!IMPORTANT]
-> When running in production, it is important to use environment variables via your infrastructure's secrets manager rather than a `keys.json` file.
-
 
 You can run the docker container like this using keys.json:
 ```bash
