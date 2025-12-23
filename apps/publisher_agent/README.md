@@ -31,7 +31,7 @@ You can also generate your own keys and build your own `keys.json` file - it fol
 }
 ```
 
-The keys.json file can be substituted or combined with environment variables. If the same property has a value set in both the keys.json and environment variable, the environment variable takes priority.
+Environment variables can be combined with the keys.json file. If the same property has a value set in an environment variable and in the keys.json file, the environment variable takes priority.
 
 The available environment variables are:
 | Key | Description | Type |
