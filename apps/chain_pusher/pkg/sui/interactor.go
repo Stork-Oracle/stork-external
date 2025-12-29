@@ -20,9 +20,8 @@ var ErrPrivateKeyEmpty = errors.New("private key is empty")
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	account          *account.Account
-	pollingPeriodSec int
-	contractAddr     string
+	account      *account.Account
+	contractAddr string
 
 	contract *bindings.StorkContract
 }
@@ -30,7 +29,6 @@ type ContractInteractor struct {
 func NewContractInteractor(
 	contractAddr string,
 	keyFileContent []byte,
-	pollingPeriodSec int,
 	logger zerolog.Logger,
 ) (*ContractInteractor, error) {
 	logger = logger.With().Str("component", "sui-contract-interactor").Logger()
@@ -41,11 +39,10 @@ func NewContractInteractor(
 	}
 
 	return &ContractInteractor{
-		logger:           logger,
-		account:          account,
-		contractAddr:     contractAddr,
-		contract:         nil,
-		pollingPeriodSec: pollingPeriodSec,
+		logger:       logger,
+		account:      account,
+		contractAddr: contractAddr,
+		contract:     nil,
 	}, nil
 }
 
