@@ -12,12 +12,12 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/Stork-Oracle/go-sui-sdk/v2/account"
+	sui_client "github.com/Stork-Oracle/go-sui-sdk/v2/client"
+	"github.com/Stork-Oracle/go-sui-sdk/v2/lib"
+	"github.com/Stork-Oracle/go-sui-sdk/v2/sui_types"
+	"github.com/Stork-Oracle/go-sui-sdk/v2/types"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
-	"github.com/coming-chat/go-sui/v2/account"
-	sui_client "github.com/coming-chat/go-sui/v2/client"
-	"github.com/coming-chat/go-sui/v2/lib"
-	"github.com/coming-chat/go-sui/v2/sui_types"
-	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/fardream/go-bcs/bcs"
 )
 

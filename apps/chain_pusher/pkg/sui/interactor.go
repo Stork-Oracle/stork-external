@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/Stork-Oracle/go-sui-sdk/v2/account"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/Stork-Oracle/stork-external/shared"
-	"github.com/coming-chat/go-sui/v2/account"
 	"github.com/rs/zerolog"
 )
 
