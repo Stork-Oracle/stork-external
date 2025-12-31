@@ -248,6 +248,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 124859
     },
+    mitosisMainnet: {
+      url: "https://rpc.mitosis.org",
+      accounts: [PRIVATE_KEY],
+      chainId: 124816
+    },
     molten: {
       url: "https://molten.calderachain.xyz/http",
       accounts: [PRIVATE_KEY],
@@ -309,7 +314,7 @@ const config: HardhatUserConfig = {
       chainId: 80002,
     },
     riseTestnet: {
-      url: "https://indexing.testnet.riselabs.xyz/",
+      url: "https://node2.testnet.riselabs.xyz/",
       accounts: [PRIVATE_KEY],
       chainId: 11155931,
     },
