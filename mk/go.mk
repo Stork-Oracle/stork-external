@@ -47,29 +47,29 @@ first-party-integration-test: signer_ffi
 
 
 # Individual Go Targets
-chain_pusher: signer_ffi fuel_ffi wasmvm
+chain_pusher: $(if $(NO_RUST),,signer_ffi fuel_ffi) wasmvm
 	@echo "Installing chain pusher..."
 	@$(GO) install -v ./apps/chain_pusher
 
-publisher_agent: signer_ffi
+publisher_agent: $(if $(NO_RUST),,signer_ffi)
 	@echo "Installing publisher agent..."
 	@$(GO) install -v ./apps/publisher_agent
 
-data_provider: 
+data_provider:
 	@echo "Installing data provider..."
 	@$(GO) install -v ./apps/data_provider
 
-generate: 
+generate:
 	@echo "Installing generate..."
 	@$(GO) install -v ./utils/generate
 
-first_party_pusher: signer_ffi
+first_party_pusher: $(if $(NO_RUST),,signer_ffi)
 	@echo "Installing first party pusher..."
 	@$(GO) install -v ./apps/first_party_pusher
 
 .PHONY: install
-## Aggregate target to install all Go binaries	
-install: chain_pusher publisher_agent data_provider generate wasmvm first_party_pusher
+## Aggregate target to install all Go binaries
+install: $(if $(NO_RUST),,signer_ffi fuel_ffi) chain_pusher publisher_agent data_provider generate wasmvm first_party_pusher
 	@echo "All Go binaries have been installed to $(GOBIN) successfully."
 
 .PHONY: clean
