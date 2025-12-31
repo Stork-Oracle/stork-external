@@ -42,8 +42,8 @@ linters:
         - ^gopkg.in/yaml.v3.Node$
         - ^github.com/gorilla/websocket.Dialer$
         - ^github.com/gorilla/websocket.Conn$
-        - ^github.com/coming-chat/go-sui/v2/types.+$
-        - ^github.com/coming-chat/go-sui/v2/sui_types.+$
+        - ^github.com/Stork-Oracle/go-sui-sdk/v2/types.+$
+        - ^github.com/Stork-Oracle/go-sui-sdk/v2/sui_types.+$
         - ^github.com/gagliardetto/binary.Int128$
         - ^github.com/ethereum/go-ethereum/accounts/abi/bind.WatchOpts$
         - ^github.com/cosmos/cosmos-sdk/client.Context$
