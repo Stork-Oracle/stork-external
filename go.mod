@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/math v1.5.0
 	github.com/CosmWasm/wasmd v0.53.2
 	github.com/NethermindEth/juno v0.11.7
+	github.com/Stork-Oracle/go-sui-sdk/v2 v2.1.1
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/aptos-labs/aptos-go-sdk v1.4.1
 	github.com/aptos-labs/serde-reflection/serde-generate/runtime/golang v0.0.0-20231213012317-73b6bbf74833

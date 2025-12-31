@@ -54,7 +54,6 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	interactor, err := NewContractInteractor(
 		contractAddress,
 		keyFileContent,
-		pollingPeriod,
 		logger,
 	)
 	if err != nil {
