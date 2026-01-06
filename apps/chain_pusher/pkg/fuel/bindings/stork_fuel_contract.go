@@ -11,6 +11,7 @@ package bindings
 #include "fuel_ffi.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
 */
 import "C"
 
@@ -221,6 +222,44 @@ func (s *StorkContract) GetTemporalNumericValueUncheckedV1(id [32]byte) (*Tempor
 	}
 
 	return &result, nil
+}
+
+func (s *StorkContract) GetTemporalNumericValuesUncheckedV1(ids [][32]byte) ([]TemporalNumericValue, error) {
+	if len(ids) == 0 {
+		return []TemporalNumericValue{}, nil
+	}
+
+	// Convert [][32]byte to *C.uint8_t
+	idsPtr := (*[32]C.uint8_t)(unsafe.Pointer(&ids[0]))
+	idsLen := C.size_t(len(ids))
+
+	var outValuesJSONPtr *C.char
+	var outErrorPtr *C.char
+	//nolint:gocritic,nlreturn // linters seemingly trip at some C calls..
+	status := C.fuel_get_latest_values(s.Client, idsPtr, idsLen, &outValuesJSONPtr, &outErrorPtr)
+
+	err := handleFuelClientStatus(status)
+	if err != nil {
+		if outErrorPtr != nil {
+			errorStr := C.GoString(outErrorPtr)
+			C.fuel_free_string(outErrorPtr)
+
+			return nil, fmt.Errorf("failed to get latest values: %w: %s", err, errorStr)
+		}
+
+		return nil, fmt.Errorf("failed to get latest values: %w", err)
+	}
+
+	valuesJSON := C.GoString(outValuesJSONPtr)
+	C.fuel_free_string(outValuesJSONPtr)
+
+	var results []TemporalNumericValue
+	err = json.Unmarshal([]byte(valuesJSON), &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal values JSON: %w", err)
+	}
+
+	return results, nil
 }
 
 func (s *StorkContract) GetWalletBalance() (uint64, error) {
