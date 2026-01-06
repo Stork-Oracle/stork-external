@@ -80,7 +80,7 @@ clean: clean-rust clean-misc
 
 # pass in a target to run-local to run a specific binary
 run-local: signer_ffi fuel_ffi wasmvm
-	@$(GO) run ./apps/$(target)/cmd $(args)
+	@$(GO) run ./apps/$(target) $(args)
 
 # Lint Go code using golangci-lint
 .PHONY: lint-go
