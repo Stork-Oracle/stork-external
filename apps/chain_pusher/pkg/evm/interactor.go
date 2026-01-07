@@ -83,6 +83,7 @@ func NewContractInteractor(
 		wsContract: nil,
 		client:     nil,
 		chainID:    nil,
+		version:    "",
 	}, nil
 }
 
@@ -197,65 +198,80 @@ func (eci *ContractInteractor) PullValues(
 		}
 	}
 
-	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
-
 	version, err := semver.NewVersion(eci.version)
 	if err != nil {
 		eci.logger.Error().Err(err).Msg("Failed to parse contract version")
 	}
 	if version != nil && version.Compare(semver.MustParse("1.0.5")) >= 0 {
-		compatibleEncodedAssetIDs := make([][32]byte, 0, len(encodedAssetIDs))
-		for _, encodedAssetID := range encodedAssetIDs {
-			compatibleEncodedAssetIDs = append(compatibleEncodedAssetIDs, encodedAssetID)
+		return eci.batchPullValues(ctx, encodedAssetIDs)
+	} else {
+		return eci.individuallyPullValues(ctx, encodedAssetIDs)
+	}
+}
+
+func (eci *ContractInteractor) batchPullValues(
+	ctx context.Context,
+	encodedAssetIDs []types.InternalEncodedAssetID,
+) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+
+	compatibleEncodedAssetIDs := make([][32]byte, 0, len(encodedAssetIDs))
+	for _, encodedAssetID := range encodedAssetIDs {
+		compatibleEncodedAssetIDs = append(compatibleEncodedAssetIDs, encodedAssetID)
+	}
+
+	storkStructsTemporalNumericValues, err := eci.contract.GetTemporalNumericValuesUnsafeV1(
+		makeCallOpts(ctx), compatibleEncodedAssetIDs,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
+			eci.logger.Warn().Err(err).Msg("No value found")
+
+			return polledVals, nil
 		}
 
-		storkStructsTemporalNumericValues, err := eci.contract.GetTemporalNumericValuesUnsafeV1(
-			makeCallOpts(ctx), compatibleEncodedAssetIDs,
+		return nil, fmt.Errorf("failed to get temporal numeric values: %w", err)
+	}
+
+	for i, storkStructsTemporalNumericValue := range storkStructsTemporalNumericValues {
+		polledVals[encodedAssetIDs[i]] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+	}
+
+	return polledVals, nil
+}
+
+func (eci *ContractInteractor) individuallyPullValues(
+	ctx context.Context,
+	encodedAssetIDs []types.InternalEncodedAssetID,
+) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+	var failedToGetLatestValueErr error
+
+	for _, encodedAssetID := range encodedAssetIDs {
+		storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(
+			makeCallOpts(ctx), encodedAssetID,
 		)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
-				eci.logger.Warn().Err(err).Msg("No value found")
-
-				return polledVals, nil
+				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
+			} else {
+				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+				failedToGetLatestValueErr = err
 			}
 
-			return nil, fmt.Errorf("failed to get temporal numeric values: %w", err)
+			continue
 		}
 
-		for i, storkStructsTemporalNumericValue := range storkStructsTemporalNumericValues {
-			polledVals[encodedAssetIDs[i]] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
-		}
+		polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+	}
 
-		return polledVals, nil
-	} else {
-		var failedToGetLatestValueErr error
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
 
-		for _, encodedAssetID := range encodedAssetIDs {
-			storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(
-				makeCallOpts(ctx), encodedAssetID,
-			)
-			if err != nil {
-				if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
-					eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
-				} else {
-					eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
-					failedToGetLatestValueErr = err
-				}
-
-				continue
-			}
-
-			polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
-		}
-
-		if failedToGetLatestValueErr != nil {
-			err := fmt.Errorf(
-				"failed to pull at least one value from the contract. Last error: %w",
-				failedToGetLatestValueErr,
-			)
-
-			return polledVals, err
-		}
+		return polledVals, err
 	}
 
 	return polledVals, nil
