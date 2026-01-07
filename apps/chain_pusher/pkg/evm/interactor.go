@@ -199,8 +199,11 @@ func (eci *ContractInteractor) PullValues(
 
 	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	version, _ := semver.NewVersion(eci.version)
-	if version.Compare(semver.MustParse("1.0.5")) >= 0 {
+	version, err := semver.NewVersion(eci.version)
+	if err != nil {
+		eci.logger.Error().Err(err).Msg("Failed to parse contract version")
+	}
+	if version != nil && version.Compare(semver.MustParse("1.0.5")) >= 0 {
 		compatibleEncodedAssetIDs := make([][32]byte, 0, len(encodedAssetIDs))
 		for _, encodedAssetID := range encodedAssetIDs {
 			compatibleEncodedAssetIDs = append(compatibleEncodedAssetIDs, encodedAssetID)
