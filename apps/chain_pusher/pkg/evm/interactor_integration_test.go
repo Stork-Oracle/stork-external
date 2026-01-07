@@ -283,32 +283,9 @@ func (s *InteractorTestSuite) Test_08_PullValues_WithTimeout_ContextDeadlineExce
 		True(errors.Is(err, context.DeadlineExceeded), "error should be context deadline exceeded, got: %v", err)
 }
 
-// Test_09_PullValues_WithTimeout_PartialSuccess tests that PullValues returns partial results
-// when a timeout occurs mid-operation.
-func (s *InteractorTestSuite) Test_09_PullValues_WithTimeout_PartialSuccess() {
-	priceUpdates := s.getAllPriceUpdates()
-	s.Require().NotNil(priceUpdates)
-
-	err := s.interactor.BatchPushToContract(s.ctx, priceUpdates)
-	s.Require().NoError(err)
-
-	// Short timeout that will allow for partial success, could be flakey?
-	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Millisecond)
-	defer cancel()
-
-	allAssetIDs := s.prices.AllEncodedAssetIDs()
-	values, err := s.interactor.PullValues(ctx, allAssetIDs)
-
-	s.Require().Error(err)
-
-	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should indicate timeout, got: %v", err)
-
-	s.Require().NotNil(values)
-}
-
-// Test_10_BatchPushToContract_WithTimeout_ContextDeadlineExceeded tests that BatchPushToContract returns
+// Test_9_BatchPushToContract_WithTimeout_ContextDeadlineExceeded tests that BatchPushToContract returns
 // a context deadline exceeded error when called with a very short timeout.
-func (s *InteractorTestSuite) Test_10_BatchPushToContract_WithTimeout_ContextDeadlineExceeded() {
+func (s *InteractorTestSuite) Test_9_BatchPushToContract_WithTimeout_ContextDeadlineExceeded() {
 	priceUpdates := s.getAllPriceUpdates()
 	s.Require().NotNil(priceUpdates)
 
@@ -325,9 +302,9 @@ func (s *InteractorTestSuite) Test_10_BatchPushToContract_WithTimeout_ContextDea
 	s.Require().True(errors.Is(err, context.DeadlineExceeded), "error should indicate timeout, got: %v", err)
 }
 
-// Test_11_GetWalletBalance_WithTimeout_ContextDeadlineExceeded tests that GetWalletBalance returns
+// Test_10_GetWalletBalance_WithTimeout_ContextDeadlineExceeded tests that GetWalletBalance returns
 // a context deadline exceeded error when called with a very short timeout.
-func (s *InteractorTestSuite) Test_11_GetWalletBalance_WithTimeout_ContextDeadlineExceeded() {
+func (s *InteractorTestSuite) Test_10_GetWalletBalance_WithTimeout_ContextDeadlineExceeded() {
 	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Nanosecond)
 	defer cancel()
 

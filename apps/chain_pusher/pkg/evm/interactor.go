@@ -213,6 +213,12 @@ func (eci *ContractInteractor) PullValues(
 			makeCallOpts(ctx), compatibleEncodedAssetIDs,
 		)
 		if err != nil {
+			if strings.Contains(err.Error(), "NotFound()") {
+				eci.logger.Warn().Err(err).Msg("No value found")
+
+				return polledVals, nil
+			}
+
 			return nil, fmt.Errorf("failed to get temporal numeric values: %w", err)
 		}
 
