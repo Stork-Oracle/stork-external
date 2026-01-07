@@ -213,7 +213,7 @@ func (eci *ContractInteractor) PullValues(
 			makeCallOpts(ctx), compatibleEncodedAssetIDs,
 		)
 		if err != nil {
-			if strings.Contains(err.Error(), "NotFound()") {
+			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
 				eci.logger.Warn().Err(err).Msg("No value found")
 
 				return polledVals, nil
