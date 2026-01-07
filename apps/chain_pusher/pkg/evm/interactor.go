@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
@@ -41,6 +42,7 @@ type ContractInteractor struct {
 	contract        *bindings.StorkContract
 	wsContract      *bindings.StorkContract
 	client          *ethclient.Client
+	version         string
 
 	privateKey *ecdsa.PrivateKey
 	chainID    *big.Int
@@ -185,40 +187,66 @@ func (eci *ContractInteractor) PullValues(
 	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
-	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
-
-	var (
-		err                              error
-		storkStructsTemporalNumericValue bindings.StorkStructsTemporalNumericValue
-	)
-
-	var failedToGetLatestValueErr error
-
-	for _, encodedAssetID := range encodedAssetIDs {
-		storkStructsTemporalNumericValue, err = eci.contract.GetTemporalNumericValueUnsafeV1(
-			makeCallOpts(ctx), encodedAssetID,
-		)
+	// load version if not already loaded
+	if eci.version == "" {
+		version, err := eci.contract.Version(makeCallOpts(ctx))
 		if err != nil {
-			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
-				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
-			} else {
-				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
-				failedToGetLatestValueErr = err
-			}
-
-			continue
+			eci.logger.Error().Err(err).Msg("Failed to get contract version")
+		} else {
+			eci.version = version
 		}
-
-		polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
 	}
 
-	if failedToGetLatestValueErr != nil {
-		err = fmt.Errorf(
-			"failed to pull at least one value from the contract. Last error: %w",
-			failedToGetLatestValueErr,
-		)
+	polledVals := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-		return polledVals, err
+	version, _ := semver.NewVersion(eci.version)
+	if version.Compare(semver.MustParse("1.0.5")) >= 0 {
+		compatibleEncodedAssetIDs := make([][32]byte, 0, len(encodedAssetIDs))
+		for _, encodedAssetID := range encodedAssetIDs {
+			compatibleEncodedAssetIDs = append(compatibleEncodedAssetIDs, encodedAssetID)
+		}
+
+		storkStructsTemporalNumericValues, err := eci.contract.GetTemporalNumericValuesUnsafeV1(
+			makeCallOpts(ctx), compatibleEncodedAssetIDs,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get temporal numeric values: %w", err)
+		}
+
+		for i, storkStructsTemporalNumericValue := range storkStructsTemporalNumericValues {
+			polledVals[encodedAssetIDs[i]] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+		}
+
+		return polledVals, nil
+	} else {
+		var failedToGetLatestValueErr error
+
+		for _, encodedAssetID := range encodedAssetIDs {
+			storkStructsTemporalNumericValue, err := eci.contract.GetTemporalNumericValueUnsafeV1(
+				makeCallOpts(ctx), encodedAssetID,
+			)
+			if err != nil {
+				if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
+					eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
+				} else {
+					eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+					failedToGetLatestValueErr = err
+				}
+
+				continue
+			}
+
+			polledVals[encodedAssetID] = types.InternalTemporalNumericValue(storkStructsTemporalNumericValue)
+		}
+
+		if failedToGetLatestValueErr != nil {
+			err := fmt.Errorf(
+				"failed to pull at least one value from the contract. Last error: %w",
+				failedToGetLatestValueErr,
+			)
+
+			return polledVals, err
+		}
 	}
 
 	return polledVals, nil
