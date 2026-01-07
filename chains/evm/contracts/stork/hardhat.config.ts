@@ -294,7 +294,7 @@ const config: HardhatUserConfig = {
       chainId: 98865
     },
     plumeTestnet: {
-      url: "https://testnet-rpc.plumenetwork.xyz",
+      url: "https://testnet-rpc.plume.org",
       accounts: [PRIVATE_KEY],
       chainId: 98867
     },
@@ -476,6 +476,7 @@ const config: HardhatUserConfig = {
       openCampusTestnet: 'fake',
       ozeanTestnet: 'fake',
       plume: 'fake',
+      plumeTestnet: 'fake',
       plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
@@ -749,6 +750,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://test-explorer.plumenetwork.xyz/api",
           browserURL: "https://test-explorer.plumenetwork.xyz/"
+        }
+      },
+      {
+        network: "plumeTestnet",
+        chainId: 98867,
+        urls: {
+          apiURL: "https://explorer-plume-testnet-1.t.conduit.xyz/api",
+          browserURL: "https://testnet-explorer.plume.org/"
         }
       },
       {
