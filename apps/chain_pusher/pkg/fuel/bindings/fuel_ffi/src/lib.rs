@@ -145,6 +145,67 @@ pub unsafe extern "C" fn fuel_get_latest_value(
 /// # Safety
 ///
 /// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
+/// - `ids_ptr` must be a valid pointer to an array of 32-byte arrays
+/// - `ids_len` must be the correct length of the ids array
+/// - `out_values_json` must be a valid, writable pointer
+/// - `out_error` must be a valid, writable pointer
+/// - The caller is responsible for ensuring the pointers remain valid for the duration of the call
+#[no_mangle]
+pub unsafe extern "C" fn fuel_get_latest_values(
+    client: *mut FuelClient,
+    ids_ptr: *const [u8; 32],
+    ids_len: usize,
+    out_values_json: *mut *mut c_char,
+    out_error: *mut *mut c_char,
+) -> FuelClientStatus {
+    if out_values_json.is_null() {
+        return FuelClientError::NullPointer("out_values_json is null".to_string()).into();
+    }
+    if client.is_null() {
+        return FuelClientError::NullPointer("client is null".to_string()).into();
+    }
+    if ids_ptr.is_null() {
+        return FuelClientError::NullPointer("ids_ptr is null".to_string()).into();
+    }
+
+    // Initialize output to null
+    unsafe {
+        *out_values_json = std::ptr::null_mut();
+    }
+
+    let result = (|| -> Result<String, FuelClientError> {
+        let client = unsafe { &*client };
+
+        // Convert pointer to slice of ids
+        let ids_slice = unsafe { std::slice::from_raw_parts(ids_ptr, ids_len) };
+        let ids: Vec<[u8; 32]> = ids_slice.to_vec();
+
+        let values = client.rt.block_on(async {
+            tokio::time::timeout(TIMEOUT, client.get_latest_temporal_numeric_values(ids))
+                .await
+                .map_err(|_| FuelClientError::Timeout(format!("Timed out after {TIMEOUT:?}")))?
+        })?;
+
+        let json_str = serde_json::to_string(&values)?;
+        Ok(json_str)
+    })();
+
+    handle_ffi_result(
+        result,
+        |json_str| {
+            let c_str = string_to_c_char(json_str)?;
+            unsafe {
+                *out_values_json = c_str;
+            }
+            Ok(())
+        },
+        out_error,
+    )
+}
+
+/// # Safety
+///
+/// - `client` must be a valid pointer to a FuelClient created by `fuel_client_new`
 /// - `inputs_json` must be a valid pointer to a null-terminated C string containing valid JSON
 /// - `out_tx_hash` must be a valid, writable pointer
 /// - `out_error` must be a valid, writable pointer

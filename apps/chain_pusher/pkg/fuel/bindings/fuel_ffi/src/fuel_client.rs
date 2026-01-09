@@ -127,6 +127,39 @@ impl FuelClient {
         Ok(Some(tnv))
     }
 
+    pub async fn get_latest_temporal_numeric_values(
+        &self,
+        ids: Vec<[u8; 32]>,
+    ) -> Result<Vec<FuelTemporalNumericValue>, FuelClientError> {
+        let ids_bits256: Vec<Bits256> = ids.into_iter().map(Bits256).collect();
+
+        let response = self
+            .proxy_contract
+            .methods()
+            .get_temporal_numeric_values_unchecked_v1(ids_bits256)
+            .determine_missing_contracts()
+            .await
+            .map_err(|e| {
+                FuelClientError::ContractCallFailed(format!(
+                    "Failed to determine missing contracts: {e}"
+                ))
+            })?
+            .simulate(Execution::state_read_only())
+            .await
+            .map_err(|e| process_contract_error(e, &self.proxy_contract.log_decoder()))?;
+
+        let values = response
+            .value
+            .into_iter()
+            .map(|contract_tnv| FuelTemporalNumericValue {
+                timestamp_ns: contract_tnv.timestamp_ns,
+                quantized_value: contract_tnv.quantized_value.into(),
+            })
+            .collect();
+
+        Ok(values)
+    }
+
     pub async fn update_temporal_numeric_values(
         &self,
         inputs: Vec<FuelTemporalNumericValueInput>,
