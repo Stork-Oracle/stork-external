@@ -39,6 +39,18 @@ const config: HardhatUserConfig = {
       chainId: 98867,
       accounts: [PRIVATE_KEY],
     },
+    goatTestnet: {
+      type: "http",
+      url: "https://rpc.testnet3.goat.network/",
+      accounts: [PRIVATE_KEY],
+      chainId: 48816,
+    },
+    riseTestnet: {
+      type: "http",
+      url: "https://indexing.testnet.riselabs.xyz/",
+      accounts: [PRIVATE_KEY],
+      chainId: 11155931,
+    },
     bakerlooTestnet: {
       type: "http",
       url: "https://autonity.rpc.web3cdn.network/testnet",
