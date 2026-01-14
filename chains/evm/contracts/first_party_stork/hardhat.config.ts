@@ -39,6 +39,12 @@ const config: HardhatUserConfig = {
       chainId: 98867,
       accounts: [PRIVATE_KEY],
     },
+    bakerlooTestnet: {
+      type: "http",
+      url: "https://autonity.rpc.web3cdn.network/testnet",
+      chainId: 65010004,
+      accounts: [PRIVATE_KEY],
+    },
   },
 };
 
