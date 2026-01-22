@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
       london: {
         version: "0.8.28",
         settings: {
-          evmVersion: "cancun",
+          evmVersion: "london",
           optimizer: {
             enabled: true,
             runs: 200,
