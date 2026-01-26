@@ -24,7 +24,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	pushCmd.Flags().BoolP(pusher.VerifyPublishersFlag, "v", false, pusher.VerifyPublishersDesc)
 	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
-	pushCmd.Flags().StringP(pusher.BatchingWindowStrFlag, "s", "", pusher.BatchingWindowStrDesc)
+	pushCmd.Flags().String(pusher.BatchingWindowStrFlag, "", pusher.BatchingWindowStrDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
 

@@ -22,7 +22,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
 	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
-	pushCmd.Flags().StringP(pusher.BatchingWindowStrFlag, "s", "", pusher.BatchingWindowStrDesc)
+	pushCmd.Flags().String(pusher.BatchingWindowStrFlag, "", pusher.BatchingWindowStrDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
 	pushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
