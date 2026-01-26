@@ -21,7 +21,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.MnemonicFileFlag, "m", "", pusher.MnemonicFileDesc)
-	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().StringP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Float64P(pusher.GasPriceFlag, "g", 0.0, pusher.GasPriceDesc)
 	pushCmd.Flags().Float64P(pusher.GasAdjustmentFlag, "j", 1.0, pusher.GasAdjustmentDesc)
@@ -46,7 +46,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	contractAddress, _ := cmd.Flags().GetString(pusher.ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
 	mnemonicFile, _ := cmd.Flags().GetString(pusher.MnemonicFileFlag)
-	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
+	batchingWindow, _ := cmd.Flags().GetString(pusher.BatchingWindowFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 
 	gasPrice, _ := cmd.Flags().GetFloat64(pusher.GasPriceFlag)
@@ -64,7 +64,6 @@ func runPush(cmd *cobra.Command, args []string) {
 	interactor, err := NewContractInteractor(
 		contractAddress,
 		mnemonic,
-		batchingWindow,
 		pollingPeriod,
 		logger,
 		gasPrice,

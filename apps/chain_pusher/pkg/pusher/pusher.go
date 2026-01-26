@@ -15,36 +15,41 @@ const DefaultNetworkTimeout = 5 * time.Second
 
 // Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
-	storkWsEndpoint string
-	storkAuth       string
-	chainRpcUrl     string
-	chainWsRpcUrl   string
-	contractAddress string
-	assetConfigFile string
-	batchingWindow  int
-	pollingPeriod   int
-	interactor      types.ContractInteractor
-	logger          *zerolog.Logger
+	storkWsEndpoint        string
+	storkAuth              string
+	chainRpcUrl            string
+	chainWsRpcUrl          string
+	contractAddress        string
+	assetConfigFile        string
+	batchingWindowDuration time.Duration
+	pollingPeriod          int
+	interactor             types.ContractInteractor
+	logger                 *zerolog.Logger
 }
 
 // NewPusher creates a new Pusher with the given parameters.
 func NewPusher(
-	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile string,
-	batchingWindow, pollingPeriod int,
+	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile, batchingWindow string,
+	pollingPeriod int,
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
 ) *Pusher {
+	batchingWindowDuration, err := time.ParseDuration(batchingWindow)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to parse batching window duration")
+	}
+
 	return &Pusher{
-		storkWsEndpoint: storkWsEndpoint,
-		storkAuth:       storkAuth,
-		chainRpcUrl:     chainRpcUrl,
-		chainWsRpcUrl:   chainWsRpcUrl,
-		contractAddress: contractAddress,
-		assetConfigFile: assetConfigFile,
-		batchingWindow:  batchingWindow,
-		pollingPeriod:   pollingPeriod,
-		interactor:      interactor,
-		logger:          logger,
+		storkWsEndpoint:        storkWsEndpoint,
+		storkAuth:              storkAuth,
+		chainRpcUrl:            chainRpcUrl,
+		chainWsRpcUrl:          chainWsRpcUrl,
+		contractAddress:        contractAddress,
+		assetConfigFile:        assetConfigFile,
+		batchingWindowDuration: batchingWindowDuration,
+		pollingPeriod:          pollingPeriod,
+		interactor:             interactor,
+		logger:                 logger,
 	}
 }
 
@@ -103,7 +108,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	go p.interactor.ListenContractEvents(ctx, contractCh)
 	go p.poll(ctx, encodedAssetIDs, contractCh)
 
-	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)
+	ticker := time.NewTicker(p.batchingWindowDuration)
 	defer ticker.Stop()
 
 	for {

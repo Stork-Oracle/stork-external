@@ -21,7 +21,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
-	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().StringP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 
 	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
@@ -41,7 +41,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	contractAddress, _ := cmd.Flags().GetString(pusher.ContractAddressFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
-	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
+	batchingWindow, _ := cmd.Flags().GetString(pusher.BatchingWindowFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)

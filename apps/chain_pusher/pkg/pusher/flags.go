@@ -2,7 +2,7 @@ package pusher
 
 // Utility defaults for the pusher.
 const (
-	DefaultBatchingWindow = 5
+	DefaultBatchingWindow = "5s"
 	DefaultPollingPeriod  = 3
 )
 
@@ -51,7 +51,7 @@ const (
 	MnemonicFileDesc         = "Mnemonic file"
 	PrivateKeyFileDesc       = "Private key file"
 	VerifyPublishersDesc     = "Verify the publisher signed prices before pushing stork signed value to contract"
-	BatchingWindowDesc       = "Batching window (seconds)"
+	BatchingWindowDesc       = "Batching window (duration string, e.g. '5s', '5m', '500ms')"
 	PollingPeriodDesc        = "Asset Polling Period (seconds)"
 	LimitPerSecondDesc       = "JSON RPC call limit per second"
 	BurstLimitDesc           = "JSON RPC call Burst limit"

@@ -23,7 +23,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	pushCmd.Flags().BoolP(pusher.VerifyPublishersFlag, "v", false, pusher.VerifyPublishersDesc)
-	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().StringP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
 
@@ -46,7 +46,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
 	verifyPublishers, _ := cmd.Flags().GetBool(pusher.VerifyPublishersFlag)
-	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
+	batchingWindow, _ := cmd.Flags().GetString(pusher.BatchingWindowFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
 
