@@ -164,7 +164,7 @@ func (p *Pusher) collateUpdates(
 	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
 		pushEveryBatch := priceConfig.Assets[latestStorkPrice.AssetID].PushEveryBatch
 		if pushEveryBatch {
-			return latestStorkValueMap
+			updates[encodedAssetID] = latestStorkPrice
 		} else {
 			latestValue, ok := latestContractValueMap[encodedAssetID]
 			if !ok {
