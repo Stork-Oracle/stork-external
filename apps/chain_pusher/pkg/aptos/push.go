@@ -22,7 +22,10 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
+	pushCmd.Flags().String(pusher.BatchingWindowStrFlag, "", pusher.BatchingWindowStrDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
+
+	pushCmd.MarkFlagsMutuallyExclusive(pusher.BatchingWindowFlag, pusher.BatchingWindowStrFlag)
 
 	_ = pushCmd.MarkFlagRequired(pusher.StorkWebsocketEndpointFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
@@ -42,6 +45,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
+	batchingWindowStr, _ := cmd.Flags().GetString(pusher.BatchingWindowStrFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)
@@ -63,6 +67,7 @@ func runPush(cmd *cobra.Command, args []string) {
 		"",
 		contractAddress,
 		assetConfigFile,
+		batchingWindowStr,
 		batchingWindow,
 		pollingPeriod,
 		interactor,

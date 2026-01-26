@@ -20,7 +20,6 @@ type ContractInteractor struct {
 	logger zerolog.Logger
 
 	pollingPeriodSec int
-	batchingWindow   int
 	mnemonic         string
 	contractAddress  string
 	gasPrice         float64
@@ -35,7 +34,6 @@ type ContractInteractor struct {
 func NewContractInteractor(
 	contractAddress string,
 	mnemonic []byte,
-	batchingWindow int,
 	pollingPeriod int,
 	logger zerolog.Logger,
 	gasPrice float64,
@@ -53,7 +51,6 @@ func NewContractInteractor(
 		contract:         nil,
 		contractAddress:  contractAddress,
 		mnemonic:         mnemonicString,
-		batchingWindow:   batchingWindow,
 		gasPrice:         gasPrice,
 		gasAdjustment:    gasAdjustment,
 		denom:            denom,
