@@ -29,14 +29,20 @@ type Pusher struct {
 
 // NewPusher creates a new Pusher with the given parameters.
 func NewPusher(
-	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile, batchingWindow string,
-	pollingPeriod int,
+	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile, batchingWindowStr string,
+	batchingWindow, pollingPeriod int,
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
 ) *Pusher {
-	batchingWindowDuration, err := time.ParseDuration(batchingWindow)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to parse batching window duration")
+	var batchingWindowDuration time.Duration
+	if len(batchingWindowStr) > 0 {
+		var err error
+		batchingWindowDuration, err = time.ParseDuration(batchingWindowStr)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to parse batching window duration")
+		}
+	} else {
+		batchingWindowDuration = time.Duration(batchingWindow) * time.Second
 	}
 
 	return &Pusher{
