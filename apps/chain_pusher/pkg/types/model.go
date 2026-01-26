@@ -21,6 +21,7 @@ type AssetEntry struct {
 	EncodedAssetID         shared.EncodedAssetID `yaml:"encoded_asset_id"`
 	PercentChangeThreshold float64               `yaml:"percent_change_threshold"`
 	FallbackPeriodSecs     uint64                `yaml:"fallback_period_sec"` //nolint:tagliatelle // Legacy
+	PushEveryBatch         bool                  `yaml:"push_every_batch"`
 }
 
 // LoadConfig loads the asset config from the given filename.

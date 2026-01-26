@@ -162,22 +162,27 @@ func (p *Pusher) collateUpdates(
 	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
 	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
-		latestValue, ok := latestContractValueMap[encodedAssetID]
-		if !ok {
-			p.logger.Debug().
-				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+		pushEveryBatch := priceConfig.Assets[latestStorkPrice.AssetID].PushEveryBatch
+		if pushEveryBatch {
 			updates[encodedAssetID] = latestStorkPrice
+		} else {
+			latestValue, ok := latestContractValueMap[encodedAssetID]
+			if !ok {
+				p.logger.Debug().
+					Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+				updates[encodedAssetID] = latestStorkPrice
 
-			continue
-		}
+				continue
+			}
 
-		if shouldUpdateAsset(
-			latestValue,
-			latestStorkPrice,
-			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
-		) {
-			updates[encodedAssetID] = latestStorkPrice
+			if shouldUpdateAsset(
+				latestValue,
+				latestStorkPrice,
+				priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+				priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+			) {
+				updates[encodedAssetID] = latestStorkPrice
+			}
 		}
 	}
 
