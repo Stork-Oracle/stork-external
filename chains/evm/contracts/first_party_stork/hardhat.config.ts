@@ -25,6 +25,16 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      london: {
+        version: "0.8.28",
+        settings: {
+          evmVersion: "london",
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     },
   },
   networks: {
@@ -37,6 +47,24 @@ const config: HardhatUserConfig = {
       type: "http",
       url: "https://testnet-rpc.plume.org",
       chainId: 98867,
+      accounts: [PRIVATE_KEY],
+    },
+    goatTestnet: {
+      type: "http",
+      url: "https://rpc.testnet3.goat.network/",
+      accounts: [PRIVATE_KEY],
+      chainId: 48816,
+    },
+    riseTestnet: {
+      type: "http",
+      url: "https://indexing.testnet.riselabs.xyz/",
+      accounts: [PRIVATE_KEY],
+      chainId: 11155931,
+    },
+    bakerlooTestnet: {
+      type: "http",
+      url: "https://autonity.rpc.web3cdn.network/testnet",
+      chainId: 65010004,
       accounts: [PRIVATE_KEY],
     },
   },

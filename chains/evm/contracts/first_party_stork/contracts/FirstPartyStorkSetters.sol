@@ -8,19 +8,25 @@ import "@storknetwork/first-party-stork-evm-sdk/IFirstPartyStorkEvents.sol";
 import "./FirstPartyStorkState.sol";
 import "./FirstPartyStorkHelpers.sol";
 
-contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkHelpers, IFirstPartyStorkEvents {
+contract FirstPartyStorkSetters is
+    FirstPartyStorkState,
+    FirstPartyStorkHelpers,
+    IFirstPartyStorkEvents
+{
     function updateLatestValueIfNecessary(
         address pubKey,
         FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
     ) internal returns (bool) {
         bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
-        uint64 latestReceiveTime = _state
-        .latestValues[pubKey][encodedAssetId].timestampNs;
-        if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
+        if (
+            input.temporalNumericValue.timestampNs <=
+            _state.latestValues[pubKey][encodedAssetId].timestampNs
+        ) {
             return false;
         }
 
-        _state.latestValues[pubKey][encodedAssetId] = input.temporalNumericValue;
+        _state.latestValues[pubKey][encodedAssetId] = input
+            .temporalNumericValue;
         emit ValueUpdate(
             pubKey,
             input.assetPairId,
@@ -28,22 +34,21 @@ contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkHelpers,
             input.temporalNumericValue.timestampNs,
             input.temporalNumericValue.quantizedValue
         );
+
+        if (input.storeHistorical) {
+            storeHistoricalValue(pubKey, input, encodedAssetId);
+        }
+
         return true;
     }
 
     function storeHistoricalValue(
         address pubKey,
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input
-    ) internal returns (bool) {
-        bytes32 encodedAssetId = getEncodedAssetId(input.assetPairId);
-        uint64 latestReceiveTime = _state
-        .latestValues[pubKey][encodedAssetId].timestampNs;
-        if (input.temporalNumericValue.timestampNs < latestReceiveTime) {
-            return false;
-        }
-
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput memory input,
+        bytes32 encodedAssetId
+    ) internal {
         _state.historicalValues[pubKey][encodedAssetId].push(
-            FirstPartyStorkStructs.TemporalNumericValue(
+            StorkStructs.TemporalNumericValue(
                 input.temporalNumericValue.timestampNs,
                 input.temporalNumericValue.quantizedValue
             )
@@ -57,7 +62,6 @@ contract FirstPartyStorkSetters is FirstPartyStorkState, FirstPartyStorkHelpers,
             input.temporalNumericValue.quantizedValue,
             _state.currentRoundId[pubKey][encodedAssetId]
         );
-        return true;
     }
 
     function addPublisherUser(
