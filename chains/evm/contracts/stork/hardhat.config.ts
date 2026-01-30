@@ -218,6 +218,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 169,
     },
+    megaEthMainnet: {
+      url: "https://mainnet.megaeth.com/rpc",
+      accounts: [PRIVATE_KEY],
+      chainId: 4326,
+    },
     megaEthTestnetV2: {
       url: "https://timothy.megaeth.com/rpc",
       accounts: [PRIVATE_KEY],
