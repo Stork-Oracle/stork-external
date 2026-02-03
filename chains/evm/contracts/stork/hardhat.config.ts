@@ -17,6 +17,7 @@ import './tasks/get-impl';
 import { vars } from "hardhat/config";
 
 const PRIVATE_KEY = vars.get("PRIVATE_KEY");
+const QUAI_PRIVATE_KEY = vars.get("QUAI_PRIVATE_KEY");
 const ARBISCAN_API_KEY = vars.get("ARBISCAN_API_KEY");
 const POLYGON_API_KEY = vars.get("POLYGON_API_KEY");
 const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
@@ -335,7 +336,7 @@ const config: HardhatUserConfig = {
     },
     quaiMainnet: {
       url: "https://rpc.quai.network/cyprus1",
-      accounts: [PRIVATE_KEY],
+      accounts: [QUAI_PRIVATE_KEY],
       chainId: 9
     },
     scrollSepolia: {

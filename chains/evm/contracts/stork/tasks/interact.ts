@@ -14,12 +14,14 @@ const initializeContract = async (hre: HardhatRuntimeEnvironment) => {
         "https://rpc.quai.network",
         undefined,
         { usePathing: true }
-      );
+    );
+    // @ts-expect-error ethers is loaded in hardhat/config
+    const wallet = new quais.Wallet(hre.network.config.accounts[0], provider)
 
     // @ts-expect-error artifacts is loaded in hardhat/config
     const contractArtifact = await artifacts.readArtifact('UpgradeableStork');
 
-    const contract = new quais.Contract(contractAddress, contractArtifact.abi, provider);
+    const contract = new quais.Contract(contractAddress, contractArtifact.abi, wallet);
 
     console.log(`Network: ${hre.network.name} - ${hre.network.config.chainId}`);
     console.log(`Contract: ${contractAddress}`);
