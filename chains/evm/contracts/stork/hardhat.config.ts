@@ -333,6 +333,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 534352
     },
+    quaiMainnet: {
+      url: "https://rpc.quai.network/cyprus1",
+      accounts: [PRIVATE_KEY],
+      chainId: 9
+    },
     scrollSepolia: {
       url: "https://sepolia-rpc.scroll.io/",
       accounts: [PRIVATE_KEY],

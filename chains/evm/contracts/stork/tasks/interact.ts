@@ -2,6 +2,7 @@ import { scope } from 'hardhat/config';
 import { loadContractDeploymentAddress } from './utils/helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { utils } from 'zksync-ethers';
+import { quais } from 'quais';
 
 const initializeContract = async (hre: HardhatRuntimeEnvironment) => {
     const contractAddress = await loadContractDeploymentAddress();
@@ -9,14 +10,16 @@ const initializeContract = async (hre: HardhatRuntimeEnvironment) => {
         throw new Error('Contract address not found. Please deploy the contract first.');
     }
 
-    // @ts-expect-error ethers is loaded in hardhat/config
-    const [deployer] = await ethers.getSigners();
+    const provider = new quais.JsonRpcProvider(
+        "https://rpc.quai.network",
+        undefined,
+        { usePathing: true }
+      );
 
     // @ts-expect-error artifacts is loaded in hardhat/config
     const contractArtifact = await artifacts.readArtifact('UpgradeableStork');
 
-    // @ts-expect-error ethers is loaded in hardhat/config
-    const contract = new ethers.Contract(contractAddress, contractArtifact.abi, deployer);
+    const contract = new quais.Contract(contractAddress, contractArtifact.abi, provider);
 
     console.log(`Network: ${hre.network.name} - ${hre.network.config.chainId}`);
     console.log(`Contract: ${contractAddress}`);
