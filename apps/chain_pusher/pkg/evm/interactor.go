@@ -410,7 +410,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 		}
 	}
 
-	eci.logger.Info().
+	eci.logger.Debug().
 		Str("txHash", tx.Hash().Hex()).
 		Int("numUpdates", len(updatePayload)).
 		Uint64("gasPrice", tx.GasPrice().Uint64()).
@@ -645,7 +645,7 @@ func (eci *ContractInteractor) retryTransaction(
 		}
 
 		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
-		eci.logger.Info().
+		eci.logger.Debug().
 			Str("gasFeeCap", newGasFeeCap.String()).
 			Str("gasTipCap", newGasTipCap.String()).
 			Msg("Retrying with bumped gas prices")

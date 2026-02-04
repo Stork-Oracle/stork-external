@@ -173,7 +173,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to update temporal numeric values: %w", err)
 	}
 
-	sci.logger.Info().
+	sci.logger.Debug().
 		Int("numUpdates", len(priceUpdates)).
 		Str("txHash", txHash).
 		Msg("Successfully pushed batch update to contract")

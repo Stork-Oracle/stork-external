@@ -169,7 +169,7 @@ func (fci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to update values on fuel contract: %w", err)
 	}
 
-	fci.logger.Info().
+	fci.logger.Debug().
 		Str("tx_hash", txHash).
 		Int("num_updates", len(priceUpdates)).
 		Msg("Successfully pushed updates to Fuel contract")

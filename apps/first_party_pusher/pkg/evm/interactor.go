@@ -229,7 +229,7 @@ func (ci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to call UpdateTemporalNumericValues: %w", err)
 	}
 
-	ci.logger.Info().
+	ci.logger.Debug().
 		Str("tx_hash", tx.Hash().Hex()).
 		Int("num_updates", len(updates)).
 		Uint64("gasPrice", tx.GasPrice().Uint64()).
@@ -254,7 +254,7 @@ func (ci *ContractInteractor) getUpdatePayload(
 	updates := make([]bindings.FirstPartyStorkStructsPublisherTemporalNumericValueInput, 0, len(updatesByEntry))
 
 	for entry, signedPriceUpdate := range updatesByEntry {
-		ci.logger.Info().
+		ci.logger.Debug().
 			Str("asset", string(signedPriceUpdate.AssetID)).
 			Str("price", string(signedPriceUpdate.SignedPrice.QuantizedPrice)).
 			Msg("Pushing signed price update to first party contract")
