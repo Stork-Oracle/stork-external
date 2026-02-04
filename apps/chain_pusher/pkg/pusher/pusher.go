@@ -35,8 +35,10 @@ func NewPusher(
 	logger *zerolog.Logger,
 ) *Pusher {
 	var batchingWindowDuration time.Duration
+
 	if len(batchingWindowStr) > 0 {
 		var err error
+
 		batchingWindowDuration, err = time.ParseDuration(batchingWindowStr)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("failed to parse batching window duration")
