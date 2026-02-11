@@ -323,6 +323,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 11155931,
     },
+    robinhoodTestnet: {
+      url: "https://rpc.testnet.chain.robinhood.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 46630,
+    },
     rootstockTestnet: {
       url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
       accounts: [PRIVATE_KEY],
@@ -485,6 +490,7 @@ const config: HardhatUserConfig = {
       plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
+      robinhoodTestnet: 'fake',
       rootstockTestnet: 'fake',
       scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
@@ -763,6 +769,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-plume-testnet-1.t.conduit.xyz/api",
           browserURL: "https://testnet-explorer.plume.org/"
+        }
+      },
+      {
+        network: "robinhoodTestnet",
+        chainId: 46630,
+        urls: {
+          apiURL: "https://explorer.testnet.chain.robinhood.com/api",
+          browserURL: "https://explorer.testnet.chain.robinhood.com/"
         }
       },
       {
