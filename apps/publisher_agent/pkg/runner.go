@@ -122,7 +122,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			delete(r.assetsByBroker, url)
 		}
 	}
-	
+
 	r.logger.Debug().Msg("Broker connection updater finished")
 }
 

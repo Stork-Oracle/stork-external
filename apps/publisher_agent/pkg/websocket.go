@@ -245,10 +245,7 @@ func NewOutgoingWebsocketConnection[T shared.Signature](
 func (owc *OutgoingWebsocketConnection[T]) Remove() {
 	owc.logger.Warn().Msg("Removal requested for outgoing websocket connection")
 	owc.removed = true
-	owc.logger.Warn().Msg("about to call Close()")
 	owc.Close()
-	owc.logger.Warn().Msg("finished calling Close()")
-
 }
 
 func (owc *OutgoingWebsocketConnection[T]) Writer() {
