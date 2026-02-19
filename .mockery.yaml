@@ -1,7 +1,5 @@
-dir: '{{.InterfaceDirRelative}}/mocks'
 structname: Mock{{.InterfaceName | camelcase | firstUpper}}
 filename: "mock_{{.InterfaceName | snakecase | lower}}.go"
-pkgname: mocks
 template: testify
 template-data:
   unroll-variadic: true
@@ -9,3 +7,10 @@ packages:
   github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types:
     interfaces:
       ContractInteractor:
+        config:
+          dir: '{{.InterfaceDirRelative}}/mocks'
+          pkgname: mocks
+  github.com/Stork-Oracle/stork-external/apps/publisher_agent/pkg:
+    interfaces:
+      RegistryClientI:
+      connI:
