@@ -111,14 +111,16 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 		}
 		r.assetsByBroker[brokerUrl] = newAssetIDMap
 	}
-
 	r.outgoingConnectionsLock.RUnlock()
-
+	
 	// remove undesired connections
 	for url := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
-			r.outgoingConnectionsByBroker[url].Remove()
+			r.outgoingConnectionsLock.RLock()
+			outgoingConnection := r.outgoingConnectionsByBroker[url]
+			r.outgoingConnectionsLock.RUnlock()
+			outgoingConnection.Remove()
 			delete(r.assetsByBroker, url)
 		}
 	}
