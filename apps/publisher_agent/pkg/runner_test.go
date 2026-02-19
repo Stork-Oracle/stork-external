@@ -1,11 +1,17 @@
 package publisher_agent
 
 import (
+	"net/http"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/Stork-Oracle/stork-external/shared/signer"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMergeBrokers_UnionWhenOverlapping(t *testing.T) {
@@ -64,4 +70,58 @@ func TestMergeBrokers_NilRegistry(t *testing.T) {
 	assert.Contains(t, result, broker1, "Should have broker1")
 	assert.Len(t, result[broker1], 1, "Should have exactly 1 asset")
 	assert.Contains(t, result[broker1], asset1, "Should have BTCUSD from seeded")
+}
+
+func TestRemoveBrokerConnections(t *testing.T) {
+	brokerPublishUrl1 := BrokerPublishUrl("wss://broker1.example.com")
+	brokerPublishUrl2 := BrokerPublishUrl("wss://broker2.example.com")
+
+	registry := NewMockRegistryClientI(t)
+	evmSigner, err := signer.NewEvmSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+	evmAuthSigner, err := signer.NewEvmAuthSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+
+	conn := NewMockConnI(t)
+	conn.On("Close").Return(nil).Once()
+
+	wsConnectFn := func(urlStr string, requestHeader http.Header) (connI, error) {
+		return conn, nil
+	}
+
+	runner := &PublisherAgentRunner[*shared.EvmSignature]{
+		registryClient:              registry,
+		signer:                      evmSigner,
+		storkAuthSigner:             evmAuthSigner,
+		seededBrokers:               make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		assetsByBroker:              make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[*shared.EvmSignature]),
+		outgoingConnectionsLock:     sync.RWMutex{},
+		wsConnectFn:                 wsConnectFn,
+		logger:                      zerolog.Logger{},
+	}
+
+	registry.On("GetBrokersForPublisher", mock.Anything).Return(map[BrokerPublishUrl]map[shared.AssetID]struct{}{
+		brokerPublishUrl1: {"BTCUSD": {}},
+		brokerPublishUrl2: {"BTCUSD": {}},
+	}, nil).Once()
+	runner.UpdateBrokerConnections()
+	time.Sleep(100 * time.Millisecond)
+
+	registry.On("GetBrokersForPublisher", mock.Anything).Return(map[BrokerPublishUrl]map[shared.AssetID]struct{}{
+		brokerPublishUrl1: {"BTCUSD": {}},
+	}, nil).Once()
+
+	done := make(chan struct{})
+	go func() {
+		runner.UpdateBrokerConnections()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("timeout waiting for update broker connections")
+	}
+
 }

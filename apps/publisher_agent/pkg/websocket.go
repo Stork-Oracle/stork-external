@@ -27,14 +27,23 @@ const (
 	OutgoingWriteTimeout  = time.Second * 10
 )
 
+type connI interface {
+	Close() error
+	WriteControl(messageType int, data []byte, deadline time.Time) error
+	NextWriter(messageType int) (io.WriteCloser, error)
+	SetReadDeadline(t time.Time) error
+	NextReader() (messageType int, r io.Reader, err error)
+	SetWriteDeadline(t time.Time) error
+}
+
 type WebsocketConnection struct {
-	conn    *websocket.Conn
+	conn    connI
 	logger  zerolog.Logger
 	onClose func()
 	closed  chan struct{}
 }
 
-func NewWebsocketConnection(conn *websocket.Conn, logger zerolog.Logger, onClose func()) *WebsocketConnection {
+func NewWebsocketConnection(conn connI, logger zerolog.Logger, onClose func()) *WebsocketConnection {
 	return &WebsocketConnection{
 		conn:    conn,
 		logger:  logger,
@@ -236,7 +245,10 @@ func NewOutgoingWebsocketConnection[T shared.Signature](
 func (owc *OutgoingWebsocketConnection[T]) Remove() {
 	owc.logger.Warn().Msg("Removal requested for outgoing websocket connection")
 	owc.removed = true
+	owc.logger.Warn().Msg("about to call Close()")
 	owc.Close()
+	owc.logger.Warn().Msg("finished calling Close()")
+
 }
 
 func (owc *OutgoingWebsocketConnection[T]) Writer() {
@@ -283,7 +295,7 @@ func (owc *OutgoingWebsocketConnection[T]) Writer() {
 // readLoop is a generalized function for the use case of read looping a websocket connection while enforcing rate limits.
 // The callback handles the actual websocket message bytes (only TextMessage type is allowed).
 func readLoop(
-	conn *websocket.Conn,
+	conn connI,
 	readTimeout *time.Duration,
 	logger zerolog.Logger,
 	callback func(wsMsgReader io.Reader) error,
@@ -336,7 +348,7 @@ func readLoop(
 }
 
 func SendWebsocketMsg[T any](
-	conn *websocket.Conn,
+	conn connI,
 	msgType string,
 	data T,
 	traceId string,
@@ -355,7 +367,7 @@ func SendWebsocketMsg[T any](
 }
 
 func sendWebsocketResponse[T any](
-	conn *websocket.Conn,
+	conn connI,
 	msg T,
 	logger zerolog.Logger,
 	writeTimeout time.Duration,

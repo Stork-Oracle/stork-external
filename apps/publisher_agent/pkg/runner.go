@@ -1,6 +1,7 @@
 package publisher_agent
 
 import (
+	"net/http"
 	"sync"
 	"time"
 
@@ -16,10 +17,11 @@ type PublisherAgentRunner[T shared.Signature] struct {
 	logger                      zerolog.Logger
 	ValueUpdateCh               chan ValueUpdate
 	signedPriceBatchCh          chan SignedPriceUpdateBatch[T]
-	registryClient              *RegistryClient
+	registryClient              RegistryClientI
 	seededBrokers               map[BrokerPublishUrl]map[shared.AssetID]struct{}
 	assetsByBroker              map[BrokerPublishUrl]map[shared.AssetID]struct{}
 	outgoingConnectionsByBroker map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]
+	wsConnectFn                 func(urlStr string, requestHeader http.Header) (connI, error)
 	outgoingConnectionsLock     sync.RWMutex
 	signer                      signer.Signer[T]
 	storkAuthSigner             signer.StorkAuthSigner
@@ -59,6 +61,11 @@ func NewPublisherAgentRunner[T shared.Signature](
 		seededBrokers[broker.PublishUrl] = assetIDs
 	}
 
+	wsConnectFn := func(urlStr string, requestHeader http.Header) (connI, error) {
+		conn, _, err := websocket.DefaultDialer.Dial(urlStr, requestHeader)
+		return conn, err
+	}
+
 	return &PublisherAgentRunner[T]{
 		config:                      config,
 		signatureType:               signatureType,
@@ -70,6 +77,7 @@ func NewPublisherAgentRunner[T shared.Signature](
 		assetsByBroker:              make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
 		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[T]),
 		outgoingConnectionsLock:     sync.RWMutex{},
+		wsConnectFn:                 wsConnectFn,
 		signer:                      signer,
 		storkAuthSigner:             storkAuthSigner,
 		publisherMetadataReporter:   publisherMetadataReporter,
@@ -107,8 +115,6 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	r.outgoingConnectionsLock.RUnlock()
 
 	// remove undesired connections
-	r.outgoingConnectionsLock.Lock()
-
 	for url := range r.assetsByBroker {
 		_, exists := newBrokerMap[url]
 		if !exists {
@@ -116,9 +122,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 			delete(r.assetsByBroker, url)
 		}
 	}
-
-	r.outgoingConnectionsLock.Unlock()
-
+	
 	r.logger.Debug().Msg("Broker connection updater finished")
 }
 
@@ -176,7 +180,7 @@ func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, as
 			r.logger.Error().Err(err).Msgf("Failed to get auth headers for outgoing WebSocket: %v", err)
 		}
 
-		conn, _, err := websocket.DefaultDialer.Dial(string(url), headers)
+		conn, err := r.wsConnectFn(string(url), headers)
 		if err != nil {
 			r.logger.Error().Err(err).Msgf("Failed to connect to outgoing WebSocket: %v", err)
 			time.Sleep(r.config.BrokerReconnectDelay)
