@@ -35,6 +35,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.plume.org",
       accounts: [PRIVATE_KEY],
       chainId: 98866
+    },
+    tacMainnet: {
+      url: "https://rpc.tac.build",
+      accounts: [PRIVATE_KEY],
+      chainId: 239
     }
   },
   etherscan: {
