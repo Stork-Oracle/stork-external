@@ -1,6 +1,7 @@
 package publisher_agent
 
 import (
+	"errors"
 	"net/http"
 	"sync"
 	"testing"
@@ -124,4 +125,46 @@ func TestRemoveBrokerConnections(t *testing.T) {
 		t.Fatal("timeout waiting for update broker connections")
 	}
 
+}
+
+func TestRemoveClosedConnection(t *testing.T) {
+	brokerPublishUrl1 := BrokerPublishUrl("wss://broker1.example.com")
+
+	registry := NewMockRegistryClientI(t)
+	evmSigner, err := signer.NewEvmSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+	evmAuthSigner, err := signer.NewEvmAuthSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+
+	conn := NewMockConnI(t)
+
+	wsConnectFn := func(urlStr string, requestHeader http.Header) (connI, error) {
+		return conn, nil
+	}
+
+	runner := &PublisherAgentRunner[*shared.EvmSignature]{
+		registryClient:              registry,
+		signer:                      evmSigner,
+		storkAuthSigner:             evmAuthSigner,
+		seededBrokers:               make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		assetsByBroker:              make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[*shared.EvmSignature]),
+		outgoingConnectionsLock:     sync.RWMutex{},
+		wsConnectFn:                 wsConnectFn,
+		logger:                      zerolog.Logger{},
+	}
+
+	registry.On("GetBrokersForPublisher", mock.Anything).Return(map[BrokerPublishUrl]map[shared.AssetID]struct{}{
+		brokerPublishUrl1: {"BTCUSD": {}},
+	}, nil).Once()
+	runner.UpdateBrokerConnections()
+	time.Sleep(100 * time.Millisecond)
+
+	// close connection (disconnected by stork)
+	runner.outgoingConnectionsByBroker[brokerPublishUrl1].onClose()
+
+	// removing the only connection means that we get an auth error when hitting the broker
+	registry.On("GetBrokersForPublisher", mock.Anything).Return(nil, errors.New("fake error")).Once()
+
+	runner.UpdateBrokerConnections()
 }
