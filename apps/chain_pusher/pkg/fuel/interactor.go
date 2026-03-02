@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/fuel/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
@@ -78,13 +79,7 @@ func (fci *ContractInteractor) PullValues(
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	result := make(map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
 
-	if len(encodedAssetIDs) == 0 {
-		return result, nil
-	}
-
-	// Convert all asset IDs to [32]byte format
-	ids := make([][32]byte, 0, len(encodedAssetIDs))
-	validAssetIDs := make([]types.InternalEncodedAssetID, 0, len(encodedAssetIDs))
+	var failedToGetLatestValueErr error
 
 	for _, assetID := range encodedAssetIDs {
 		// Convert asset ID to hex string
@@ -94,6 +89,7 @@ func (fci *ContractInteractor) PullValues(
 		idBytes, err := hex.DecodeString(idHex)
 		if err != nil {
 			fci.logger.Error().Err(err).Str("asset_id", idHex).Msg("Failed to decode asset ID")
+
 			continue
 		}
 
@@ -101,36 +97,40 @@ func (fci *ContractInteractor) PullValues(
 		//nolint:mnd // 32 bytes is the expected length for a Fuel asset ID.
 		if len(idBytes) != 32 {
 			fci.logger.Error().Str("asset_id", idHex).Msg("Asset ID must be 32 bytes")
+
 			continue
 		}
 
-		ids = append(ids, [32]byte(idBytes))
-		validAssetIDs = append(validAssetIDs, assetID)
-	}
+		// Call FFI function
+		valueJSON, err := fci.contract.GetTemporalNumericValueUncheckedV1([32]byte(idBytes))
+		if err != nil {
+			if strings.Contains(err.Error(), "feed not found") {
+				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("No value found")
+			} else {
+				fci.logger.Warn().Err(err).Str("asset_id", idHex).Msg("Failed to get temporal numeric value")
+				failedToGetLatestValueErr = err
+			}
 
-	if len(ids) == 0 {
-		return result, nil
-	}
-
-	// Call batch FFI function
-	values, err := fci.contract.GetTemporalNumericValuesUncheckedV1(ids)
-	if err != nil {
-		return result, fmt.Errorf("failed to get temporal numeric values: %w", err)
-	}
-
-	// Map results back to asset IDs
-	for i, value := range values {
-		if i >= len(validAssetIDs) {
-			fci.logger.Warn().Int("index", i).Msg("Received more values than requested")
-			break
+			continue
 		}
+
+		// Convert to internal format
 
 		internalValue := types.InternalTemporalNumericValue{
-			TimestampNs:    value.TimestampNs,
-			QuantizedValue: value.QuantizedValue,
+			TimestampNs:    valueJSON.TimestampNs,
+			QuantizedValue: valueJSON.QuantizedValue,
 		}
 
-		result[validAssetIDs[i]] = internalValue
+		result[assetID] = internalValue
+	}
+
+	if failedToGetLatestValueErr != nil {
+		err := fmt.Errorf(
+			"failed to pull at least one value from the contract. Last error: %w",
+			failedToGetLatestValueErr,
+		)
+
+		return result, err
 	}
 
 	return result, nil
@@ -169,7 +169,7 @@ func (fci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to update values on fuel contract: %w", err)
 	}
 
-	fci.logger.Info().
+	fci.logger.Debug().
 		Str("tx_hash", txHash).
 		Int("num_updates", len(priceUpdates)).
 		Msg("Successfully pushed updates to Fuel contract")
