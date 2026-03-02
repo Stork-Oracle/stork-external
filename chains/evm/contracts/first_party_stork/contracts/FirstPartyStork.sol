@@ -10,15 +10,13 @@ import "./FirstPartyStorkGetters.sol";
 import "./FirstPartyStorkSetters.sol";
 import "./FirstPartyStorkVerify.sol";
 
-
 abstract contract FirstPartyStork is
     FirstPartyStorkGetters,
     FirstPartyStorkSetters,
     FirstPartyStorkVerify
 {
     function updateTemporalNumericValues(
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
-            calldata updateData
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] calldata updateData
     ) public payable {
         uint16 numUpdates = 0;
         uint256 requiredFee = 0;
@@ -43,10 +41,6 @@ abstract contract FirstPartyStork is
                 numUpdates++;
                 requiredFee += getSingleUpdateFee(input.pubKey);
             }
-
-            if (input.storeHistorical) {
-                storeHistoricalValue(input.pubKey, input);
-            }
         }
 
         if (numUpdates == 0) {
@@ -58,8 +52,7 @@ abstract contract FirstPartyStork is
     }
 
     function getUpdateFeeV1(
-        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]
-            calldata updateData
+        FirstPartyStorkStructs.PublisherTemporalNumericValueInput[] calldata updateData
     ) public view returns (uint) {
         uint256 feeAmount = 0;
         for (uint i = 0; i < updateData.length; i++) {

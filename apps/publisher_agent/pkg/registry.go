@@ -10,6 +10,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type RegistryClientI interface {
+	GetBrokersForPublisher(
+		publisherKey shared.PublisherKey,
+	) (map[BrokerPublishUrl]map[shared.AssetID]struct{}, error)
+}
+
 type RegistryClient struct {
 	baseUrl         string
 	storkAuthSigner signer.StorkAuthSigner

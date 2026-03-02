@@ -218,6 +218,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 169,
     },
+    megaEthMainnet: {
+      url: "https://mainnet.megaeth.com/rpc",
+      accounts: [PRIVATE_KEY],
+      chainId: 4326,
+    },
     megaEthTestnetV2: {
       url: "https://timothy.megaeth.com/rpc",
       accounts: [PRIVATE_KEY],
@@ -294,7 +299,7 @@ const config: HardhatUserConfig = {
       chainId: 98865
     },
     plumeTestnet: {
-      url: "https://testnet-rpc.plumenetwork.xyz",
+      url: "https://testnet-rpc.plume.org",
       accounts: [PRIVATE_KEY],
       chainId: 98867
     },
@@ -317,6 +322,11 @@ const config: HardhatUserConfig = {
       url: "https://node2.testnet.riselabs.xyz/",
       accounts: [PRIVATE_KEY],
       chainId: 11155931,
+    },
+    robinhoodTestnet: {
+      url: "https://rpc.testnet.chain.robinhood.com",
+      accounts: [PRIVATE_KEY],
+      chainId: 46630,
     },
     rootstockTestnet: {
       url: `https://rpc.testnet.rootstock.io/${ROOTSTOCK_TESTNET_API_KEY}`,
@@ -476,9 +486,11 @@ const config: HardhatUserConfig = {
       openCampusTestnet: 'fake',
       ozeanTestnet: 'fake',
       plume: 'fake',
+      plumeTestnet: 'fake',
       plumeDevnet: 'fake',
       polygon: POLYGON_API_KEY,
       polygonAmoy: POLYGON_API_KEY,
+      robinhoodTestnet: 'fake',
       rootstockTestnet: 'fake',
       scrollMainnet: SCROLL_MAINNET_API_KEY,
       soneiumMainnet: 'fake',
@@ -749,6 +761,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://test-explorer.plumenetwork.xyz/api",
           browserURL: "https://test-explorer.plumenetwork.xyz/"
+        }
+      },
+      {
+        network: "plumeTestnet",
+        chainId: 98867,
+        urls: {
+          apiURL: "https://explorer-plume-testnet-1.t.conduit.xyz/api",
+          browserURL: "https://testnet-explorer.plume.org/"
+        }
+      },
+      {
+        network: "robinhoodTestnet",
+        chainId: 46630,
+        urls: {
+          apiURL: "https://explorer.testnet.chain.robinhood.com/api",
+          browserURL: "https://explorer.testnet.chain.robinhood.com/"
         }
       },
       {

@@ -1,0 +1,578 @@
+[
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoFreshUpdate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotFound",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "string",
+        "name": "encodedAssetId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "assetId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "timestampNs",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "int192",
+        "name": "quantizedValue",
+        "type": "int192"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "roundId",
+        "type": "uint256"
+      }
+    ],
+    "name": "HistoricalValueStored",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "singleUpdateFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "PublisherUserAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      }
+    ],
+    "name": "PublisherUserRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "string",
+        "name": "encodedAssetId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "assetId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "timestampNs",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "int192",
+        "name": "quantizedValue",
+        "type": "int192"
+      }
+    ],
+    "name": "ValueUpdate",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "singleUpdateFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPublisherUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      }
+    ],
+    "name": "deletePublisherUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      }
+    ],
+    "name": "getCurrentRoundId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      }
+    ],
+    "name": "getEncodedAssetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      }
+    ],
+    "name": "getHistoricalRecordsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "roundId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHistoricalTemporalNumericValue",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "timestampNs",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int192",
+            "name": "quantizedValue",
+            "type": "int192"
+          }
+        ],
+        "internalType": "struct StorkStructs.TemporalNumericValue",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      }
+    ],
+    "name": "getLatestTemporalNumericValue",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "timestampNs",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int192",
+            "name": "quantizedValue",
+            "type": "int192"
+          }
+        ],
+        "internalType": "struct StorkStructs.TemporalNumericValue",
+        "name": "value",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      }
+    ],
+    "name": "getPublisherUser",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "pubKey",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "singleUpdateFee",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct FirstPartyStorkStructs.PublisherUser",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "pubKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSingleUpdateFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "timestampNs",
+                "type": "uint64"
+              },
+              {
+                "internalType": "int192",
+                "name": "quantizedValue",
+                "type": "int192"
+              }
+            ],
+            "internalType": "struct StorkStructs.TemporalNumericValue",
+            "name": "temporalNumericValue",
+            "type": "tuple"
+          },
+          {
+            "internalType": "address",
+            "name": "pubKey",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "assetPairId",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "storeHistorical",
+            "type": "bool"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]",
+        "name": "updateData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getUpdateFeeV1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "timestampNs",
+                "type": "uint64"
+              },
+              {
+                "internalType": "int192",
+                "name": "quantizedValue",
+                "type": "int192"
+              }
+            ],
+            "internalType": "struct StorkStructs.TemporalNumericValue",
+            "name": "temporalNumericValue",
+            "type": "tuple"
+          },
+          {
+            "internalType": "address",
+            "name": "pubKey",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "assetPairId",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "storeHistorical",
+            "type": "bool"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct FirstPartyStorkStructs.PublisherTemporalNumericValueInput[]",
+        "name": "updateData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "updateTemporalNumericValues",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "publisherPubKey",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "assetPairId",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "value",
+        "type": "int256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "v",
+        "type": "uint8"
+      }
+    ],
+    "name": "verifyPublisherSignatureV1",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

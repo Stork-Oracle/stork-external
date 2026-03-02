@@ -1,6 +1,6 @@
 {
     "name": "@storknetwork/stork-evm-sdk",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "description": "An EVM Solidity SDK for Stork Protocol",
     "files": [
         "*.sol",

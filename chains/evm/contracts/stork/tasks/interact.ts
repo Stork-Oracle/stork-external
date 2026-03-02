@@ -83,10 +83,15 @@ interactScope
 
         const customData = getCustomData(args.paymasterAddress);
 
-        await contract.updateTemporalNumericValuesV1.send(updates, {
+        const tx = await contract.updateTemporalNumericValuesV1.send(updates, {
             value: Object.keys(customData).length === 0 ? updates.length : 0,
             customData,
         });
+        const receipt = await tx.wait();
+        console.log('tx.hash:', tx.hash);
+        console.log('tx.gasPrice:', tx.gasPrice);
+        console.log('tx.gasLimit:', tx.gasLimit);
+        console.log('receipt.gasUsed:', receipt.gasUsed);
     });
 
 interactScope

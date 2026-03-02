@@ -164,7 +164,7 @@ func (ici *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to update multiple temporal numeric values: %w", err)
 	}
 
-	ici.logger.Info().
+	ici.logger.Debug().
 		Int("numUpdates", len(priceUpdates)).
 		Str("txnHash", hash).
 		Msg("Successfully pushed batch update to contract")

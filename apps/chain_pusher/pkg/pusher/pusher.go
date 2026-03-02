@@ -15,36 +15,49 @@ const DefaultNetworkTimeout = 5 * time.Second
 
 // Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
-	storkWsEndpoint string
-	storkAuth       string
-	chainRpcUrl     string
-	chainWsRpcUrl   string
-	contractAddress string
-	assetConfigFile string
-	batchingWindow  int
-	pollingPeriod   int
-	interactor      types.ContractInteractor
-	logger          *zerolog.Logger
+	storkWsEndpoint        string
+	storkAuth              string
+	chainRpcUrl            string
+	chainWsRpcUrl          string
+	contractAddress        string
+	assetConfigFile        string
+	batchingWindowDuration time.Duration
+	pollingPeriod          int
+	interactor             types.ContractInteractor
+	logger                 *zerolog.Logger
 }
 
 // NewPusher creates a new Pusher with the given parameters.
 func NewPusher(
-	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile string,
+	storkWsEndpoint, storkAuth, chainRpcUrl, chainWsRpcUrl, contractAddress, assetConfigFile, batchingWindowStr string,
 	batchingWindow, pollingPeriod int,
 	interactor types.ContractInteractor,
 	logger *zerolog.Logger,
 ) *Pusher {
+	var batchingWindowDuration time.Duration
+
+	if len(batchingWindowStr) > 0 {
+		var err error
+
+		batchingWindowDuration, err = time.ParseDuration(batchingWindowStr)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to parse batching window duration")
+		}
+	} else {
+		batchingWindowDuration = time.Duration(batchingWindow) * time.Second
+	}
+
 	return &Pusher{
-		storkWsEndpoint: storkWsEndpoint,
-		storkAuth:       storkAuth,
-		chainRpcUrl:     chainRpcUrl,
-		chainWsRpcUrl:   chainWsRpcUrl,
-		contractAddress: contractAddress,
-		assetConfigFile: assetConfigFile,
-		batchingWindow:  batchingWindow,
-		pollingPeriod:   pollingPeriod,
-		interactor:      interactor,
-		logger:          logger,
+		storkWsEndpoint:        storkWsEndpoint,
+		storkAuth:              storkAuth,
+		chainRpcUrl:            chainRpcUrl,
+		chainWsRpcUrl:          chainWsRpcUrl,
+		contractAddress:        contractAddress,
+		assetConfigFile:        assetConfigFile,
+		batchingWindowDuration: batchingWindowDuration,
+		pollingPeriod:          pollingPeriod,
+		interactor:             interactor,
+		logger:                 logger,
 	}
 }
 
@@ -103,7 +116,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	go p.interactor.ListenContractEvents(ctx, contractCh)
 	go p.poll(ctx, encodedAssetIDs, contractCh)
 
-	ticker := time.NewTicker(time.Duration(p.batchingWindow) * time.Second)
+	ticker := time.NewTicker(p.batchingWindowDuration)
 	defer ticker.Stop()
 
 	for {
@@ -162,22 +175,27 @@ func (p *Pusher) collateUpdates(
 	updates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
 
 	for encodedAssetID, latestStorkPrice := range latestStorkValueMap {
-		latestValue, ok := latestContractValueMap[encodedAssetID]
-		if !ok {
-			p.logger.Debug().
-				Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+		pushEveryBatch := priceConfig.Assets[latestStorkPrice.AssetID].PushEveryBatch
+		if pushEveryBatch {
 			updates[encodedAssetID] = latestStorkPrice
+		} else {
+			latestValue, ok := latestContractValueMap[encodedAssetID]
+			if !ok {
+				p.logger.Debug().
+					Msgf("No current value for asset %s", latestStorkPrice.StorkSignedPrice.EncodedAssetID)
+				updates[encodedAssetID] = latestStorkPrice
 
-			continue
-		}
+				continue
+			}
 
-		if shouldUpdateAsset(
-			latestValue,
-			latestStorkPrice,
-			priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
-			priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
-		) {
-			updates[encodedAssetID] = latestStorkPrice
+			if shouldUpdateAsset(
+				latestValue,
+				latestStorkPrice,
+				priceConfig.Assets[latestStorkPrice.AssetID].FallbackPeriodSecs,
+				priceConfig.Assets[latestStorkPrice.AssetID].PercentChangeThreshold,
+			) {
+				updates[encodedAssetID] = latestStorkPrice
+			}
 		}
 	}
 

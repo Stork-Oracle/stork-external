@@ -20,7 +20,6 @@ type ContractInteractor struct {
 	logger zerolog.Logger
 
 	pollingPeriodSec int
-	batchingWindow   int
 	mnemonic         string
 	contractAddress  string
 	gasPrice         float64
@@ -35,7 +34,6 @@ type ContractInteractor struct {
 func NewContractInteractor(
 	contractAddress string,
 	mnemonic []byte,
-	batchingWindow int,
 	pollingPeriod int,
 	logger zerolog.Logger,
 	gasPrice float64,
@@ -53,7 +51,6 @@ func NewContractInteractor(
 		contract:         nil,
 		contractAddress:  contractAddress,
 		mnemonic:         mnemonicString,
-		batchingWindow:   batchingWindow,
 		gasPrice:         gasPrice,
 		gasAdjustment:    gasAdjustment,
 		denom:            denom,
@@ -176,7 +173,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 		return fmt.Errorf("failed to update temporal numeric values: %w", err)
 	}
 
-	sci.logger.Info().
+	sci.logger.Debug().
 		Int("numUpdates", len(priceUpdates)).
 		Str("txHash", txHash).
 		Msg("Successfully pushed batch update to contract")

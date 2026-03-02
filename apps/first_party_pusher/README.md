@@ -57,7 +57,28 @@ go run main.go evm \
     -f <asset-config-file> 
 ```
 
-### Running with Docker
+### EVM Development Setup
+
+1. Download abigen
+```bash
+go install github.com/ethereum/go-ethereum/cmd/abigen@latest
+```
+
+2. Compile the contract
+```bash
+cd ../../chains/evm/contracts/first_party_stork && npx hardhat compile
+```
+
+3. Extract the contract ABI fro the artifacts
+```bash
+jq '.abi' ../../chains/evm/contracts/first_party_stork/artifacts/contracts/FirstPartyStork.sol/FirstPartyStork.json > ../../chains/evm/contracts/first_party_stork/FirstPartyStork.abi
+```
+
+2. Generate the contract bindings (you may need to compile the contract first)
+```bash
+abigen --abi ../../chains/evm/contracts/first_party_stork/FirstPartyStork.abi --pkg bindings --type FirstPartyStorkContract --out ./pkg/evm/bindings/first_party_stork_evm_contract.go
+```
+## Running with Docker
 
 For local development with a full stack: Data Provider -> Publisher Agent -> First Party Pusher -> First Party Stork Contract:
 

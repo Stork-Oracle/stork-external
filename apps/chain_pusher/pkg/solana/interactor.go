@@ -270,7 +270,7 @@ func (sci *ContractInteractor) BatchPushToContract(
 		sigs = append(sigs, sig.String())
 	}
 
-	sci.logger.Info().
+	sci.logger.Debug().
 		Int("numUpdates", len(priceUpdates)).
 		Strs("batchTransactionSigs", sigs).
 		Msg("Successfully pushed batch updates to contract")

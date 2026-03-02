@@ -89,6 +89,10 @@ jobs:
           cache: "npm"
           cache-dependency-path: "./chains/evm/contracts/first_party_stork/package-lock.json"
 
+      - name: Install dependencies for FirstPartyStorkEVM SDK
+        run: npm install
+        working-directory: ./chains/evm/sdks/first_party_stork_evm_sdk
+
       - name: Install dependencies for FirstPartyStork
         run: npm install
         working-directory: ./chains/evm/contracts/first_party_stork

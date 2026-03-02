@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24 <0.9.0;
 
 import "./FirstPartyStorkStructs.sol";
+import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 
 /// @title IFirstPartyStorkGetters
 /// @notice Getter functions for the First Party Stork contract
@@ -14,7 +15,7 @@ interface IFirstPartyStorkGetters {
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId
-    ) external view returns (FirstPartyStorkStructs.TemporalNumericValue memory);
+    ) external view returns (StorkStructs.TemporalNumericValue memory);
 
     /// @notice Retrieves a historical temporal numeric value for the specified publisher, asset pair, and round ID
     /// @param pubKey The publisher's public key
@@ -26,7 +27,7 @@ interface IFirstPartyStorkGetters {
         address pubKey,
         string memory assetPairId,
         uint256 roundId
-    ) external view returns (FirstPartyStorkStructs.TemporalNumericValue memory);
+    ) external view returns (StorkStructs.TemporalNumericValue memory);
 
     /// @notice Retrieves the count of historical records for the specified publisher and asset pair
     /// @param pubKey The publisher's public key
@@ -53,11 +54,9 @@ interface IFirstPartyStorkGetters {
     function getPublisherUser(
         address pubKey
     ) external view returns (FirstPartyStorkStructs.PublisherUser memory);
-    
+
     /// @notice Retrieves the single update fee for a publisher
     /// @param pubKey The publisher's public key
     /// @return fee The single update fee
-    function getSingleUpdateFee(
-        address pubKey
-    ) external view returns (uint);
+    function getSingleUpdateFee(address pubKey) external view returns (uint);
 }

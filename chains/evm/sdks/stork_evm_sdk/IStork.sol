@@ -37,6 +37,15 @@ interface IStork is IStorkEvents {
         bytes32 id
     ) external view returns (StorkStructs.TemporalNumericValue memory value);
 
+    /// @notice Retrieves the latest temporal numeric values for the specified feed IDs without checking freshness
+    /// @param ids The identifiers of the feeds
+    /// @return values The latest TemporalNumericValue structs for the feeds
+    /// @dev Does not check for staleness - use with caution
+    /// @dev Reverts with NotFound if no value exists for the given feed ID
+    function getTemporalNumericValuesUnsafeV1(
+        bytes32[] calldata ids
+    ) external view returns (StorkStructs.TemporalNumericValue[] memory values);
+
     /// @notice Calculates the total fee required for the given updates
     /// @param updateData Array of TemporalNumericValueInput structs representing updates
     /// @return feeAmount The total fee required for the updates

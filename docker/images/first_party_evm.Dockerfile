@@ -3,6 +3,10 @@ FROM node:22-alpine
 # Copy in first party stork contract
 COPY chains/evm/contracts/first_party_stork /usr/src/app
 COPY chains/evm/sdks/first_party_stork_evm_sdk /usr/sdks/first_party_stork_evm_sdk
+COPY chains/evm/sdks/stork_evm_sdk /usr/sdks/stork_evm_sdk
+
+WORKDIR /usr/sdks/first_party_stork_evm_sdk
+RUN npm install
 
 WORKDIR /usr/src/app
 

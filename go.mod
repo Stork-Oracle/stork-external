@@ -5,6 +5,7 @@ go 1.24.3
 require (
 	cosmossdk.io/math v1.5.0
 	github.com/CosmWasm/wasmd v0.53.2
+	github.com/Masterminds/semver v1.5.0
 	github.com/NethermindEth/juno v0.11.7
 	github.com/Stork-Oracle/go-sui-sdk/v2 v2.1.1
 	github.com/alecthomas/participle/v2 v2.1.1
@@ -12,7 +13,6 @@ require (
 	github.com/aptos-labs/serde-reflection/serde-generate/runtime/golang v0.0.0-20231213012317-73b6bbf74833
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cometbft/cometbft v0.38.17
-	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/gnark-crypto v0.13.0
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/gogoproto v1.7.0
@@ -204,7 +204,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect

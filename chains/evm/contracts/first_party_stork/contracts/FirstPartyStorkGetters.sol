@@ -9,11 +9,15 @@ import "@storknetwork/first-party-stork-evm-sdk/FirstPartyStorkErrors.sol";
 import "./FirstPartyStorkState.sol";
 import "./FirstPartyStorkHelpers.sol";
 
-contract FirstPartyStorkGetters is FirstPartyStorkState, FirstPartyStorkHelpers, IFirstPartyStorkGetters {
+contract FirstPartyStorkGetters is
+    FirstPartyStorkState,
+    FirstPartyStorkHelpers,
+    IFirstPartyStorkGetters
+{
     function getLatestTemporalNumericValue(
         address pubKey,
         string memory assetPairId
-    ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory value) {
+    ) public view returns (StorkStructs.TemporalNumericValue memory value) {
         bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
         if (_state.latestValues[pubKey][encodedAssetId].timestampNs == 0) {
             revert FirstPartyStorkErrors.NotFound();
@@ -26,7 +30,7 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, FirstPartyStorkHelpers,
         address pubKey,
         string memory assetPairId,
         uint256 roundId
-    ) public view returns (FirstPartyStorkStructs.TemporalNumericValue memory) {
+    ) public view returns (StorkStructs.TemporalNumericValue memory) {
         bytes32 encodedAssetId = getEncodedAssetId(assetPairId);
         if (roundId >= _state.historicalValues[pubKey][encodedAssetId].length) {
             revert FirstPartyStorkErrors.NotFound();
@@ -61,9 +65,7 @@ contract FirstPartyStorkGetters is FirstPartyStorkState, FirstPartyStorkHelpers,
         return _state.publisherUsers[pubKey];
     }
 
-    function getSingleUpdateFee(
-        address pubKey
-    ) public view returns (uint) {
+    function getSingleUpdateFee(address pubKey) public view returns (uint) {
         return getPublisherUser(pubKey).singleUpdateFee;
     }
 }

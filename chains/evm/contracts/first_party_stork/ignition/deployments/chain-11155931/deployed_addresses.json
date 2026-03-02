@@ -1,0 +1,5 @@
+{
+  "ProxyModule#UpgradeableFirstPartyStork": "0xA0a7F1109AB72ac4D98AE5eD74620def55725752",
+  "ProxyModule#TransparentUpgradeableProxy": "0xFffbceA0830EfDf7d7204B1734748E9f5E2880E6",
+  "FirstPartyStorkModule#UpgradeableFirstPartyStork": "0xFffbceA0830EfDf7d7204B1734748E9f5E2880E6"
+}
