@@ -93,7 +93,7 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 		return fmt.Errorf("failed to connect to RPC: %w", err)
 	}
 
-	chainID, err := client.NetworkID(ctx)
+	chainID, err := client.ChainID(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get network ID: %w", err)
 	}
