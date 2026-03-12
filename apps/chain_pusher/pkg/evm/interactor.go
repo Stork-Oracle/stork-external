@@ -664,10 +664,6 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	deadline, _ := ctx.Deadline()
-	timeLeft := deadline.Sub(time.Now())
-	fmt.Println("timeLeft", timeLeft)
-
 	if eci.supportsSyncSend {
 		receipt, err := eci.client.SendTransactionSync(ctx, tx, nil)
 		if err != nil {
