@@ -47,9 +47,11 @@ type ContractInteractor struct {
 	nonce            *big.Int
 	gasFeeCap        *big.Int
 	gasTipCap        *big.Int
-	gasLimit         uint64
-	singleUpdateFee  *big.Int
-	lastSetGasCaps   time.Time
+	// gas varies based on the number of updates, but not in an easily calculable way
+	// so we store the gas limits for each number of updates, and clear it periodically so it doesn't get stale.
+	gasLimits       map[uint64]uint64
+	singleUpdateFee *big.Int
+	lastSetGasCaps  time.Time
 
 	chainID *big.Int
 
@@ -61,7 +63,7 @@ const (
 	maxRetryAttempts         = 10
 	initialBackoff           = 1 * time.Second
 	exponentialBackoffFactor = 1.5
-	gasCalcResetInterval     = 1 * time.Minute
+	gasCalcResetInterval     = 5 * time.Minute
 	maxTransactionAttempts   = 3
 	gasBumpNumerator         = 120
 	gasBumpDenominator       = 100
@@ -99,7 +101,7 @@ func NewContractInteractor(
 		// optimistic default, falls back to async send if first attempt fails
 		// there is no deterministic way to check if send sync is supported
 		supportsSyncSend: true,
-		gasLimit:         gasLimit,
+		gasLimits:        make(map[uint64]uint64),
 		singleUpdateFee:  nil,
 		lastSetGasCaps:   time.Time{},
 	}, nil
@@ -636,7 +638,11 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.Nonce = eci.nonce
 
 	if time.Since(eci.lastSetGasCaps) <= gasCalcResetInterval {
-		auth.GasLimit = eci.gasLimit
+		if eci.initialGasLimit != 0 {
+			auth.GasLimit = eci.initialGasLimit
+		} else if gasLimit, ok := eci.gasLimits[uint64(len(updatePayload))]; ok {
+			auth.GasLimit = gasLimit
+		}
 
 		if eci.gasFeeCap != nil {
 			auth.GasFeeCap = eci.gasFeeCap
@@ -654,6 +660,8 @@ func (eci *ContractInteractor) submitTransaction(
 		}
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
+
+	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * 1.1)
 
 	if eci.supportsSyncSend {
 		err := eci.sendTransactionSync(ctx, tx)
@@ -740,9 +748,7 @@ func (eci *ContractInteractor) getSingleUpdateFee(ctx context.Context) (*big.Int
 func (eci *ContractInteractor) setGasCaps(tx *ethtypes.Transaction) {
 	eci.gasFeeCap = tx.GasFeeCap()
 	eci.gasTipCap = tx.GasTipCap()
-	if eci.initialGasLimit == 0 {
-		eci.gasLimit = uint64(float64(tx.Gas()) * 1.1)
-	}
+	clear(eci.gasLimits) // reset the gas limits
 	eci.lastSetGasCaps = time.Now()
 }
 
