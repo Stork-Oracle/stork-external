@@ -720,6 +720,8 @@ func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *etht
 				return fmt.Errorf("failed to get latest nonce: %w", err)
 			}
 			eci.nonce = nonce
+
+			return errors.New("nonce mismatch, getting latest nonce")
 		}
 
 		return fmt.Errorf("%w: %w", errSendSyncUnsupported, err)
