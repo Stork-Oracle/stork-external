@@ -693,13 +693,16 @@ func (eci *ContractInteractor) submitTransaction(
 	}
 
 	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
-		eci.setGasCaps(tx)
+		eci.gasFeeCap = tx.GasFeeCap()
+		eci.gasTipCap = tx.GasTipCap()
+		clear(eci.gasLimits) // reset the gas limits
 
 		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
 		if err != nil {
 			eci.logger.Error().Err(err).Msg("failed to get single update fee")
 		}
 		eci.singleUpdateFee = singleUpdateFee
+		eci.lastSetGasCaps = time.Now()
 	}
 
 	eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
@@ -743,13 +746,6 @@ func (eci *ContractInteractor) getSingleUpdateFee(ctx context.Context) (*big.Int
 		return nil, fmt.Errorf("failed to get single update fee: %w", err)
 	}
 	return singleUpdateFee, nil
-}
-
-func (eci *ContractInteractor) setGasCaps(tx *ethtypes.Transaction) {
-	eci.gasFeeCap = tx.GasFeeCap()
-	eci.gasTipCap = tx.GasTipCap()
-	clear(eci.gasLimits) // reset the gas limits
-	eci.lastSetGasCaps = time.Now()
 }
 
 func (eci *ContractInteractor) retryTransaction(
