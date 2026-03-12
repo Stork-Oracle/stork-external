@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -26,10 +27,6 @@ import (
 )
 
 var (
-	GasBumpNumerator             = big.NewInt(120) //nolint:gochecknoglobals,mnd
-	GasBumpDenominator           = big.NewInt(100) //nolint:gochecknoglobals,mnd
-	MaxTransactionAttempts int64 = 3               //nolint:gochecknoglobals
-
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 	ErrEventChannelClosed      = errors.New("event channel is closed")
@@ -39,14 +36,22 @@ type ContractInteractor struct {
 	logger zerolog.Logger
 
 	contractAddress common.Address
-	contract        *bindings.StorkContract
-	wsContract      *bindings.StorkContract
-	client          *ethclient.Client
-	version         string
+	privateKey      *ecdsa.PrivateKey
+	initialGasLimit uint64
 
-	privateKey *ecdsa.PrivateKey
-	chainID    *big.Int
-	gasLimit   uint64
+	contract         *bindings.StorkContract
+	wsContract       *bindings.StorkContract
+	client           *ethclient.Client
+	supportsSyncSend bool
+	version          *semver.Version
+	nonce            *big.Int
+	gasFeeCap        *big.Int
+	gasTipCap        *big.Int
+	gasLimit         uint64
+	singleUpdateFee  *big.Int
+	lastSetGasCaps   time.Time
+
+	chainID *big.Int
 
 	verifyPublishers bool
 }
@@ -56,6 +61,10 @@ const (
 	maxRetryAttempts         = 10
 	initialBackoff           = 1 * time.Second
 	exponentialBackoffFactor = 1.5
+	gasCalcResetInterval     = 1 * time.Minute
+	maxTransactionAttempts   = 3
+	gasBumpNumerator         = 120
+	gasBumpDenominator       = 100
 )
 
 func NewContractInteractor(
@@ -75,15 +84,21 @@ func NewContractInteractor(
 
 		contractAddress: common.HexToAddress(contractAddr),
 		privateKey:      privateKey,
-		gasLimit:        gasLimit,
+		initialGasLimit: gasLimit,
 
 		verifyPublishers: verifyPublishers,
 
-		contract:   nil,
-		wsContract: nil,
-		client:     nil,
-		chainID:    nil,
-		version:    "",
+		contract:        nil,
+		wsContract:      nil,
+		client:          nil,
+		chainID:         nil,
+		version:         nil,
+		nonce:           nil,
+		gasFeeCap:       nil,
+		gasTipCap:       nil,
+		gasLimit:        gasLimit,
+		singleUpdateFee: nil,
+		lastSetGasCaps:  time.Time{},
 	}, nil
 }
 
@@ -106,6 +121,40 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 	eci.contract = contract
 	eci.client = client
 	eci.chainID = chainID
+
+	// load version
+	versionStr, err := eci.contract.Version(makeCallOpts(ctx))
+	if err != nil {
+		eci.logger.Error().Err(err).Msg("Failed to get contract version")
+	}
+	version, err := semver.NewVersion(versionStr)
+	if err != nil {
+		eci.logger.Error().Err(err).Msg("Failed to parse contract version")
+	}
+	eci.version = version
+	eci.logger.Info().Interface("version", eci.version).Msg("contract version")
+
+	// Probe for eth_sendRawTransactionSync support
+	var raw json.RawMessage
+	probeErr := eci.client.Client().CallContext(ctx, &raw, "eth_sendRawTransactionSync", "0x", nil)
+	eci.supportsSyncSend = probeErr == nil || !isRpcMethodNotFoundError(probeErr)
+
+	eci.logger.Info().Err(probeErr).Bool("supportsSyncSend", eci.supportsSyncSend).
+		Msg("probed node for sync send support")
+
+	// load latest nonce, this will not work in HA setup for the same wallet address
+	nonce, err := eci.getLatestNonce(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to latest nonce: %w", err)
+	}
+	eci.nonce = nonce
+
+	// set single update fee
+	singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get single update fee: %w", err)
+	}
+	eci.singleUpdateFee = singleUpdateFee
 
 	return nil
 }
@@ -188,22 +237,7 @@ func (eci *ContractInteractor) PullValues(
 	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
-	// load version if not already loaded
-	if eci.version == "" {
-		version, err := eci.contract.Version(makeCallOpts(ctx))
-		if err != nil {
-			eci.logger.Error().Err(err).Msg("Failed to get contract version")
-		} else {
-			eci.version = version
-		}
-	}
-
-	version, err := semver.NewVersion(eci.version)
-	if err != nil {
-		eci.logger.Error().Err(err).Msg("Failed to parse contract version")
-	}
-
-	if version != nil && version.Compare(semver.MustParse("1.0.5")) >= 0 {
+	if eci.version != nil && eci.version.Compare(semver.MustParse("1.0.5")) >= 0 {
 		return eci.batchPullValues(ctx, encodedAssetIDs)
 	} else {
 		return eci.individuallyPullValues(ctx, encodedAssetIDs)
@@ -391,12 +425,10 @@ func (eci *ContractInteractor) BatchPushToContract(
 		return err
 	}
 
-	fee, err := eci.contract.GetUpdateFeeV1(makeCallOpts(ctx), updatePayload)
-	if err != nil {
-		return fmt.Errorf("failed to get update fee: %w", err)
-	}
+	// this is the same logic as whats on the contract, but do it locally to avoid an rpc call
+	fee := new(big.Int).Mul(eci.singleUpdateFee, big.NewInt(int64(len(updatePayload))))
 
-	tx, err := eci.submitTransaction(ctx, updatePayload, fee, nil, nil)
+	tx, err := eci.submitTransaction(ctx, updatePayload, fee)
 	if err != nil {
 		if errors.Is(err, etherrors.ErrReplaceUnderpriced) {
 			eci.logger.Warn().Err(err).Msg("Transaction underpriced, retrying with bumped gas prices")
@@ -437,6 +469,10 @@ func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, e
 	balanceFloat, _ := balance.Float64()
 
 	return balanceFloat, nil
+}
+
+func isRpcMethodNotFoundError(err error) bool {
+	return strings.Contains(err.Error(), "method is not available") || strings.Contains(err.Error(), "-32601")
 }
 
 func (eci *ContractInteractor) batchPullValues(
@@ -597,8 +633,6 @@ func (eci *ContractInteractor) submitTransaction(
 	ctx context.Context,
 	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
 	fee *big.Int,
-	gasFeeOverride *big.Int,
-	gasTipOverride *big.Int,
 ) (*ethtypes.Transaction, error) {
 	auth, err := bind.NewKeyedTransactorWithChainID(eci.privateKey, eci.chainID)
 	if err != nil {
@@ -606,23 +640,106 @@ func (eci *ContractInteractor) submitTransaction(
 	}
 
 	auth.Context = ctx
-	auth.GasLimit = eci.gasLimit
 	auth.Value = fee
+	auth.NoSend = true // always send the transaction manually
+	auth.Nonce = eci.nonce
 
-	if gasFeeOverride != nil {
-		auth.GasFeeCap = gasFeeOverride
-	}
+	if time.Since(eci.lastSetGasCaps) <= gasCalcResetInterval {
+		auth.GasLimit = eci.gasLimit
 
-	if gasTipOverride != nil {
-		auth.GasTipCap = gasTipOverride
+		if eci.gasFeeCap != nil {
+			auth.GasFeeCap = eci.gasFeeCap
+		}
+
+		if eci.gasTipCap != nil {
+			auth.GasTipCap = eci.gasTipCap
+		}
 	}
 
 	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update temporal numeric values: %w", err)
+		if revertData, ok := ethclient.RevertErrorData(err); ok {
+			eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
+		}
+		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
+	deadline, _ := ctx.Deadline()
+	timeLeft := deadline.Sub(time.Now())
+	fmt.Println("timeLeft", timeLeft)
+
+	if eci.supportsSyncSend {
+		receipt, err := eci.client.SendTransactionSync(ctx, tx, nil)
+		if err != nil {
+			if strings.Contains(err.Error(), "nonce") {
+				eci.logger.Warn().Msg("Nonce mismatch, getting latest nonce")
+				nonce, err := eci.getLatestNonce(ctx)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get latest nonce: %w", err)
+				}
+				eci.nonce = nonce
+			}
+			return nil, fmt.Errorf("failed to send transaction: %w", err)
+		}
+
+		if receipt.Status != 1 {
+			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
+		}
+	} else {
+		err := eci.client.SendTransaction(ctx, tx)
+		if err != nil {
+			if revertData, ok := ethclient.RevertErrorData(err); ok {
+				eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
+			} else if strings.Contains(err.Error(), "nonce") {
+				eci.logger.Warn().Msg("Nonce mismatch, getting latest nonce")
+				nonce, err := eci.getLatestNonce(ctx)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get latest nonce: %w", err)
+				}
+				eci.nonce = nonce
+			}
+			return nil, fmt.Errorf("failed to send transaction: %w", err)
+		}
+	}
+
+	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
+		eci.setGasCaps(tx)
+
+		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
+		if err != nil {
+			eci.logger.Error().Err(err).Msg("failed to get single update fee")
+		}
+		eci.singleUpdateFee = singleUpdateFee
+	}
+
+	eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
+
 	return tx, nil
+}
+
+func (eci *ContractInteractor) getLatestNonce(ctx context.Context) (*big.Int, error) {
+	nonce, err := eci.client.NonceAt(ctx, crypto.PubkeyToAddress(eci.privateKey.PublicKey), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest nonce: %w", err)
+	}
+	return new(big.Int).SetUint64(nonce), nil
+}
+
+func (eci *ContractInteractor) getSingleUpdateFee(ctx context.Context) (*big.Int, error) {
+	singleUpdateFee, err := eci.contract.SingleUpdateFeeInWei(makeCallOpts(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get single update fee: %w", err)
+	}
+	return singleUpdateFee, nil
+}
+
+func (eci *ContractInteractor) setGasCaps(tx *ethtypes.Transaction) {
+	eci.gasFeeCap = tx.GasFeeCap()
+	eci.gasTipCap = tx.GasTipCap()
+	if eci.initialGasLimit == 0 {
+		eci.gasLimit = uint64(float64(tx.Gas()) * 1.1)
+	}
+	eci.lastSetGasCaps = time.Now()
 }
 
 func (eci *ContractInteractor) retryTransaction(
@@ -632,7 +749,7 @@ func (eci *ContractInteractor) retryTransaction(
 ) (*ethtypes.Transaction, error) {
 	var lastErr error
 
-	for retryCount := range MaxTransactionAttempts {
+	for retryCount := range maxTransactionAttempts {
 		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
@@ -644,13 +761,16 @@ func (eci *ContractInteractor) retryTransaction(
 			return nil, fmt.Errorf("failed to get gas price: %w", err)
 		}
 
-		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, retryCount+1)
+		newGasFeeCap, newGasTipCap := getBumpedGasPrices(gasPrice, gasTipCap, int64(retryCount+1))
 		eci.logger.Debug().
 			Str("gasFeeCap", newGasFeeCap.String()).
 			Str("gasTipCap", newGasTipCap.String()).
 			Msg("Retrying with bumped gas prices")
 
-		tx, err := eci.submitTransaction(ctx, updatePayload, fee, newGasFeeCap, newGasTipCap)
+		eci.gasFeeCap = newGasFeeCap
+		eci.gasTipCap = newGasTipCap
+
+		tx, err := eci.submitTransaction(ctx, updatePayload, fee)
 
 		lastErr = err
 		if err == nil {
@@ -682,8 +802,8 @@ func getBumpedGasPrices(
 ) (*big.Int, *big.Int) {
 	retryBig := big.NewInt(retryCount)
 
-	bumpNumeratorPower := new(big.Int).Exp(GasBumpNumerator, retryBig, nil)
-	bumpDenominatorPower := new(big.Int).Exp(GasBumpDenominator, retryBig, nil)
+	bumpNumeratorPower := new(big.Int).Exp(big.NewInt(gasBumpNumerator), retryBig, nil)
+	bumpDenominatorPower := new(big.Int).Exp(big.NewInt(gasBumpDenominator), retryBig, nil)
 
 	retryGasFeeCap := new(big.Int).Mul(gasPrice, bumpNumeratorPower)
 	retryGasFeeCap.Div(retryGasFeeCap, bumpDenominatorPower)

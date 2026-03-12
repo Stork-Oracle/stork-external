@@ -11,7 +11,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const DefaultNetworkTimeout = 5 * time.Second
+const (
+	defaultNetworkTimeout       = 5 * time.Second
+	storkWsChannelBufferSize    = 128
+	contractChChannelBufferSize = 128
+)
 
 // Pusher is a struct that contains the configuration for the Pusher.
 type Pusher struct {
@@ -86,8 +90,8 @@ func (p *Pusher) Run(ctx context.Context) {
 		p.logger.Fatal().Err(err).Msg("Failed to initialize assets")
 	}
 
-	storkWsCh := make(chan types.AggregatedSignedPrice)
-	contractCh := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue)
+	storkWsCh := make(chan types.AggregatedSignedPrice, storkWsChannelBufferSize)
+	contractCh := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, contractChChannelBufferSize)
 
 	storkWs := NewStorkAggregatorWebsocketClient(p.storkWsEndpoint, p.storkAuth, assetIDs, p.logger)
 	go storkWs.Run(storkWsCh)
@@ -119,6 +123,21 @@ func (p *Pusher) Run(ctx context.Context) {
 	ticker := time.NewTicker(p.batchingWindowDuration)
 	defer ticker.Stop()
 
+	pushCh := make(chan map[types.InternalEncodedAssetID]types.AggregatedSignedPrice, 128)
+
+	// use separate goroutine to handle push updates to avoid blocking the main loop
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case pushUpdates := <-pushCh:
+				// synchronous push updates to ensure update order is maintained
+				p.handlePushUpdates(ctx, pushUpdates, contractCh)
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -127,8 +146,7 @@ func (p *Pusher) Run(ctx context.Context) {
 			return
 		case <-ticker.C:
 			updates := p.collateUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
-
-			go p.handlePushUpdates(ctx, updates, contractCh)
+			pushCh <- updates
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)
@@ -142,7 +160,7 @@ func (p *Pusher) Run(ctx context.Context) {
 func (p *Pusher) pullWithTimeout(
 	ctx context.Context, encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
-	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeout)
+	pullCtx, pullCancel := context.WithTimeout(ctx, defaultNetworkTimeout)
 	defer pullCancel()
 
 	values, err := p.interactor.PullValues(pullCtx, encodedAssetIDs)
@@ -156,7 +174,7 @@ func (p *Pusher) pullWithTimeout(
 func (p *Pusher) pushWithTimeout(
 	ctx context.Context, nextUpdate map[types.InternalEncodedAssetID]types.AggregatedSignedPrice,
 ) error {
-	pullCtx, pullCancel := context.WithTimeout(ctx, DefaultNetworkTimeout)
+	pullCtx, pullCancel := context.WithTimeout(ctx, defaultNetworkTimeout)
 	defer pullCancel()
 
 	err := p.interactor.BatchPushToContract(pullCtx, nextUpdate)
