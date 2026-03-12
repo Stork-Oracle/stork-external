@@ -721,7 +721,7 @@ func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *etht
 			}
 			eci.nonce = nonce
 
-			return errors.New("nonce mismatch, getting latest nonce")
+			return errors.New("nonce mismatch error")
 		}
 
 		return fmt.Errorf("%w: %w", errSendSyncUnsupported, err)
