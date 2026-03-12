@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -30,6 +29,7 @@ var (
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 	ErrEventChannelClosed      = errors.New("event channel is closed")
+	errSendSyncUnsupported     = errors.New("send sync is not supported")
 )
 
 type ContractInteractor struct {
@@ -88,17 +88,20 @@ func NewContractInteractor(
 
 		verifyPublishers: verifyPublishers,
 
-		contract:        nil,
-		wsContract:      nil,
-		client:          nil,
-		chainID:         nil,
-		version:         nil,
-		nonce:           nil,
-		gasFeeCap:       nil,
-		gasTipCap:       nil,
-		gasLimit:        gasLimit,
-		singleUpdateFee: nil,
-		lastSetGasCaps:  time.Time{},
+		contract:   nil,
+		wsContract: nil,
+		client:     nil,
+		chainID:    nil,
+		version:    nil,
+		nonce:      nil,
+		gasFeeCap:  nil,
+		gasTipCap:  nil,
+		// optimistic default, falls back to async send if first attempt fails
+		// there is no deterministic way to check if send sync is supported
+		supportsSyncSend: true,
+		gasLimit:         gasLimit,
+		singleUpdateFee:  nil,
+		lastSetGasCaps:   time.Time{},
 	}, nil
 }
 
@@ -133,14 +136,6 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 	}
 	eci.version = version
 	eci.logger.Info().Interface("version", eci.version).Msg("contract version")
-
-	// Probe for eth_sendRawTransactionSync support
-	var raw json.RawMessage
-	probeErr := eci.client.Client().CallContext(ctx, &raw, "eth_sendRawTransactionSync", "0x", nil)
-	eci.supportsSyncSend = probeErr == nil || !isRpcMethodNotFoundError(probeErr)
-
-	eci.logger.Info().Err(probeErr).Bool("supportsSyncSend", eci.supportsSyncSend).
-		Msg("probed node for sync send support")
 
 	// load latest nonce, this will not work in HA setup for the same wallet address
 	nonce, err := eci.getLatestNonce(ctx)
@@ -471,10 +466,6 @@ func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, e
 	return balanceFloat, nil
 }
 
-func isRpcMethodNotFoundError(err error) bool {
-	return strings.Contains(err.Error(), "method is not available") || strings.Contains(err.Error(), "-32601")
-}
-
 func (eci *ContractInteractor) batchPullValues(
 	ctx context.Context,
 	encodedAssetIDs []types.InternalEncodedAssetID,
@@ -665,23 +656,18 @@ func (eci *ContractInteractor) submitTransaction(
 	}
 
 	if eci.supportsSyncSend {
-		receipt, err := eci.client.SendTransactionSync(ctx, tx, nil)
+		err := eci.sendTransactionSync(ctx, tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "nonce") {
-				eci.logger.Warn().Msg("Nonce mismatch, getting latest nonce")
-				nonce, err := eci.getLatestNonce(ctx)
-				if err != nil {
-					return nil, fmt.Errorf("failed to get latest nonce: %w", err)
-				}
-				eci.nonce = nonce
+			if errors.Is(err, errSendSyncUnsupported) {
+				eci.supportsSyncSend = false
+				eci.logger.Warn().Msg("send sync is not supported, falling back to async send")
+			} else {
+				return nil, fmt.Errorf("failed to send transaction: %w", err)
 			}
-			return nil, fmt.Errorf("failed to send transaction: %w", err)
 		}
-
-		if receipt.Status != 1 {
-			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
-		}
-	} else {
+	}
+	// separate if statement since supportsSyncSend is set to false if the first attempt fails
+	if !eci.supportsSyncSend {
 		err := eci.client.SendTransaction(ctx, tx)
 		if err != nil {
 			if revertData, ok := ethclient.RevertErrorData(err); ok {
@@ -711,6 +697,28 @@ func (eci *ContractInteractor) submitTransaction(
 	eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
 
 	return tx, nil
+}
+
+func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *ethtypes.Transaction) error {
+	receipt, err := eci.client.SendTransactionSync(ctx, tx, nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "nonce") {
+			eci.logger.Warn().Msg("Nonce mismatch, getting latest nonce")
+			nonce, err := eci.getLatestNonce(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to get latest nonce: %w", err)
+			}
+			eci.nonce = nonce
+		}
+
+		return fmt.Errorf("%w: %w", errSendSyncUnsupported, err)
+	}
+
+	if receipt.Status != 1 {
+		return fmt.Errorf("eth_sendRawTransactionSync transaction failed")
+	}
+
+	return nil
 }
 
 func (eci *ContractInteractor) getLatestNonce(ctx context.Context) (*big.Int, error) {
