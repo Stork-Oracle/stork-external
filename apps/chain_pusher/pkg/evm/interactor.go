@@ -29,27 +29,23 @@ var (
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 	ErrEventChannelClosed      = errors.New("event channel is closed")
-	errSendSyncUnsupported     = errors.New("send sync is not supported")
 )
 
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	contractAddress     common.Address
-	privateKey          *ecdsa.PrivateKey
-	userDefinedGasLimit uint64
-	nonceManager        NonceManagerI
+	contractAddress common.Address
+	privateKey      *ecdsa.PrivateKey
+	gasLimit        uint64
+	nonceManager    NonceManagerI
 
-	contract         *bindings.StorkContract
-	wsContract       *bindings.StorkContract
-	client           *ethclient.Client
-	supportsSyncSend bool
-	version          *semver.Version
-	gasFeeCap        *big.Int
-	gasTipCap        *big.Int
-	// gas varies based on the number of updates, but not in an easily calculable way
-	// so we store the gas limits for each number of updates, and clear it periodically so it doesn't get stale.
-	gasLimits       map[uint64]uint64
+	contract        *bindings.StorkContract
+	wsContract      *bindings.StorkContract
+	client          *ethclient.Client
+	useSyncSend     bool
+	version         *semver.Version
+	gasFeeCap       *big.Int
+	gasTipCap       *big.Int
 	singleUpdateFee *big.Int
 	lastSetGasCaps  time.Time
 
@@ -77,6 +73,7 @@ func NewContractInteractor(
 	verifyPublishers bool,
 	logger zerolog.Logger,
 	gasLimit uint64,
+	useSyncSend bool,
 ) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(keyFileContent)
 	if err != nil {
@@ -86,26 +83,23 @@ func NewContractInteractor(
 	return &ContractInteractor{
 		logger: logger,
 
-		contractAddress:     common.HexToAddress(contractAddr),
-		privateKey:          privateKey,
-		nonceManager:        nonceManager,
-		userDefinedGasLimit: gasLimit,
+		contractAddress: common.HexToAddress(contractAddr),
+		privateKey:      privateKey,
+		nonceManager:    nonceManager,
+		gasLimit:        gasLimit,
 
 		verifyPublishers: verifyPublishers,
 
-		contract:   nil,
-		wsContract: nil,
-		client:     nil,
-		chainID:    nil,
-		version:    nil,
-		gasFeeCap:  nil,
-		gasTipCap:  nil,
-		// optimistic default, falls back to async send if first attempt fails
-		// there is no deterministic way to check if send sync is supported
-		supportsSyncSend: true,
-		gasLimits:        make(map[uint64]uint64),
-		singleUpdateFee:  nil,
-		lastSetGasCaps:   time.Time{},
+		contract:        nil,
+		wsContract:      nil,
+		client:          nil,
+		chainID:         nil,
+		version:         nil,
+		gasFeeCap:       nil,
+		gasTipCap:       nil,
+		useSyncSend:     useSyncSend,
+		singleUpdateFee: nil,
+		lastSetGasCaps:  time.Time{},
 	}, nil
 }
 
@@ -635,7 +629,6 @@ func (eci *ContractInteractor) submitTransaction(
 	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
 		eci.gasFeeCap = nil
 		eci.gasTipCap = nil
-		clear(eci.gasLimits) // reset the gas limits
 
 		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
 		if err != nil {
@@ -654,14 +647,7 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.Value = fee
 	auth.NoSend = true // always send the transaction manually
 	auth.Nonce = nonce
-
-	if eci.userDefinedGasLimit != 0 {
-		auth.GasLimit = eci.userDefinedGasLimit
-	} else if gasLimit, ok := eci.gasLimits[uint64(len(updatePayload))]; ok {
-		auth.GasLimit = gasLimit
-	} else {
-		auth.GasLimit = 0
-	}
+	auth.GasLimit = eci.gasLimit // default 0
 
 	if eci.gasFeeCap != nil {
 		auth.GasFeeCap = eci.gasFeeCap
@@ -679,19 +665,30 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	if eci.supportsSyncSend {
-		err := eci.sendTransactionSync(ctx, tx)
+	if eci.useSyncSend {
+		receipt, txErr := eci.client.SendTransactionSync(ctx, tx, nil)
+		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
 		if err != nil {
-			if errors.Is(err, errSendSyncUnsupported) {
-				eci.supportsSyncSend = false
-				eci.logger.Warn().Msg("send sync is not supported, falling back to async send")
-			} else {
-				return nil, fmt.Errorf("failed to send transaction: %w", err)
-			}
+			return nil, fmt.Errorf("failed to increment nonce: %w", err)
 		}
-	}
-	// separate if statement since supportsSyncSend is set to false if the first attempt fails
-	if !eci.supportsSyncSend {
+
+		if txErr != nil {
+			if strings.Contains(txErr.Error(), "nonce") {
+				eci.logger.Warn().Msg("Nonce mismatch, resetting nonce")
+				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+				if err != nil {
+					return nil, fmt.Errorf("failed to reset nonce: %w", err)
+				}
+			}
+			return nil, fmt.Errorf("failed to send transaction: %w", txErr)
+		}
+
+		if receipt.Status != 1 {
+			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
+		}
+
+		return tx, nil
+	} else {
 		txErr := eci.client.SendTransaction(ctx, tx)
 		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
 		if err != nil {
@@ -714,7 +711,6 @@ func (eci *ContractInteractor) submitTransaction(
 
 	eci.gasFeeCap = tx.GasFeeCap()
 	eci.gasTipCap = tx.GasTipCap()
-	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * gasLimitMultiplier)
 
 	return tx, nil
 }
@@ -732,7 +728,7 @@ func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *etht
 			return errors.New("nonce mismatch error")
 		}
 
-		return fmt.Errorf("%w: %w", errSendSyncUnsupported, txErr)
+		return fmt.Errorf("failed to send transaction: %w", txErr)
 	}
 
 	err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))

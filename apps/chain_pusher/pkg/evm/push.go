@@ -53,6 +53,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
 	pushCmd.Flags().String(pusher.NonceManagerFlag, "", pusher.NonceManagerTypeDesc)
+	pushCmd.Flags().BoolP(pusher.UseSyncSendFlag, "", false, pusher.UseSyncSendDesc)
 
 	pushCmd.MarkFlagsMutuallyExclusive(pusher.BatchingWindowFlag, pusher.BatchingWindowStrFlag)
 
@@ -80,6 +81,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
 	nonceManagerType, _ := cmd.Flags().GetString(pusher.NonceManagerFlag)
+	useSyncSend, _ := cmd.Flags().GetBool(pusher.UseSyncSendFlag)
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)
 
@@ -100,6 +102,7 @@ func runPush(cmd *cobra.Command, args []string) {
 		verifyPublishers,
 		logger,
 		gasLimit,
+		useSyncSend,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")
