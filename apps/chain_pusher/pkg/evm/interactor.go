@@ -183,7 +183,7 @@ func (eci *ContractInteractor) ListenContractEvents(
 
 	sub, eventCh, err := setupSubscription(eci, makeWatchOpts(ctx))
 	if err != nil {
-		eci.logger.Error().Err(err).Msg("Failed to establish initial subscription")
+		eci.logger.Warn().Err(err).Msg("Failed to establish initial subscription")
 
 		return
 	}
