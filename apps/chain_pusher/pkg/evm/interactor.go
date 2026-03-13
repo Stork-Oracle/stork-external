@@ -35,10 +35,10 @@ var (
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	contractAddress common.Address
-	privateKey      *ecdsa.PrivateKey
-	initialGasLimit uint64
-	nonceManager    NonceManagerI
+	contractAddress     common.Address
+	privateKey          *ecdsa.PrivateKey
+	userDefinedGasLimit uint64
+	nonceManager        NonceManagerI
 
 	contract         *bindings.StorkContract
 	wsContract       *bindings.StorkContract
@@ -86,10 +86,10 @@ func NewContractInteractor(
 	return &ContractInteractor{
 		logger: logger,
 
-		contractAddress: common.HexToAddress(contractAddr),
-		privateKey:      privateKey,
-		nonceManager:    nonceManager,
-		initialGasLimit: gasLimit,
+		contractAddress:     common.HexToAddress(contractAddr),
+		privateKey:          privateKey,
+		nonceManager:        nonceManager,
+		userDefinedGasLimit: gasLimit,
 
 		verifyPublishers: verifyPublishers,
 
@@ -418,7 +418,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 	}
 
 	// this is the same logic as whats on the contract, but do it locally to avoid an rpc call
-	fee := new(big.Int).Mul(eci.singleUpdateFee, big.NewInt(int64(len(updatePayload))))
+	fee := eci.getUpdateFee(updatePayload)
 
 	tx, err := eci.submitTransaction(ctx, updatePayload, fee)
 	if err != nil {
@@ -441,6 +441,11 @@ func (eci *ContractInteractor) BatchPushToContract(
 		Msg("Pushed new values to contract")
 
 	return nil
+}
+
+func (eci *ContractInteractor) getUpdateFee(updatePayload []bindings.StorkStructsTemporalNumericValueInput) *big.Int {
+	fee := new(big.Int).Mul(eci.singleUpdateFee, big.NewInt(int64(len(updatePayload))))
+	return fee
 }
 
 func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
@@ -635,8 +640,9 @@ func (eci *ContractInteractor) submitTransaction(
 		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
 		if err != nil {
 			eci.logger.Error().Err(err).Msg("failed to get single update fee")
+		} else {
+			eci.singleUpdateFee = singleUpdateFee
 		}
-		eci.singleUpdateFee = singleUpdateFee
 		eci.lastSetGasCaps = time.Now()
 	}
 	nonce, err := eci.nonceManager.GetLatestNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
@@ -649,8 +655,8 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.NoSend = true // always send the transaction manually
 	auth.Nonce = nonce
 
-	if eci.initialGasLimit != 0 {
-		auth.GasLimit = eci.initialGasLimit
+	if eci.userDefinedGasLimit != 0 {
+		auth.GasLimit = eci.userDefinedGasLimit
 	} else if gasLimit, ok := eci.gasLimits[uint64(len(updatePayload))]; ok {
 		auth.GasLimit = gasLimit
 	} else {

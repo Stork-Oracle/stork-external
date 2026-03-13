@@ -146,7 +146,11 @@ func (p *Pusher) Run(ctx context.Context) {
 			return
 		case <-ticker.C:
 			updates := p.collateUpdates(latestContractValueMap, latestStorkValueMap, priceConfig)
-			pushCh <- updates
+			select {
+			case pushCh <- updates:
+			default:
+				p.logger.Error().Msg("pushCh is full, skipping push")
+			}
 		// Handle stork updates
 		case valueUpdate := <-storkWsCh:
 			p.handleStorkUpdate(valueUpdate, latestStorkValueMap)

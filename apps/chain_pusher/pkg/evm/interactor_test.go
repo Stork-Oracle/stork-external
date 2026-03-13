@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
@@ -237,6 +238,50 @@ func TestGetBumpedGasPrices(t *testing.T) {
 			assert.Equal(t, tt.expectedGasTipCap, resultGasTipCap.Int64(),
 				"gasTipCap: expected %d * %.3f = %d, got %d",
 				tt.gasTipCap, tt.expectedMultiplier, tt.expectedGasTipCap, resultGasTipCap.Int64())
+		})
+	}
+}
+
+func TestGetUpdateFee(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		updatePayload []bindings.StorkStructsTemporalNumericValueInput
+		expectedFee   *big.Int
+	}{
+		{
+			name: "single update",
+			updatePayload: []bindings.StorkStructsTemporalNumericValueInput{
+				{
+					Id: [32]byte{0x01},
+				},
+			},
+			expectedFee: big.NewInt(100),
+		},
+		{
+			name: "multiple updates",
+			updatePayload: []bindings.StorkStructsTemporalNumericValueInput{
+				{
+					Id: [32]byte{0x01},
+				},
+				{
+					Id: [32]byte{0x02},
+				},
+			},
+			expectedFee: big.NewInt(200),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			eci := &ContractInteractor{
+				singleUpdateFee: big.NewInt(100),
+			}
+
+			result := eci.getUpdateFee(tt.updatePayload)
+			assert.Equal(t, tt.expectedFee, result)
 		})
 	}
 }
