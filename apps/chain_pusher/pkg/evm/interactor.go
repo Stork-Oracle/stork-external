@@ -715,34 +715,6 @@ func (eci *ContractInteractor) submitTransaction(
 	return tx, nil
 }
 
-func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *ethtypes.Transaction) error {
-	receipt, txErr := eci.client.SendTransactionSync(ctx, tx, nil)
-	if txErr != nil {
-		if strings.Contains(txErr.Error(), "nonce") {
-			eci.logger.Warn().Msg("Nonce mismatch, resetting nonce")
-			err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-			if err != nil {
-				return fmt.Errorf("failed to reset nonce: %w", err)
-			}
-
-			return errors.New("nonce mismatch error")
-		}
-
-		return fmt.Errorf("failed to send transaction: %w", txErr)
-	}
-
-	err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-	if err != nil {
-		return fmt.Errorf("failed to increment nonce: %w", err)
-	}
-
-	if receipt.Status != 1 {
-		return fmt.Errorf("eth_sendRawTransactionSync transaction failed")
-	}
-
-	return nil
-}
-
 func (eci *ContractInteractor) getSingleUpdateFee(ctx context.Context) (*big.Int, error) {
 	singleUpdateFee, err := eci.contract.SingleUpdateFeeInWei(makeCallOpts(ctx))
 	if err != nil {
