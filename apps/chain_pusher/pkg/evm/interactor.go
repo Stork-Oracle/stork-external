@@ -632,6 +632,19 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to get auth data: %w", err)
 	}
 
+	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
+		eci.gasFeeCap = nil
+		eci.gasTipCap = nil
+		clear(eci.gasLimits) // reset the gas limits
+
+		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
+		if err != nil {
+			eci.logger.Error().Err(err).Msg("failed to get single update fee")
+		}
+		eci.singleUpdateFee = singleUpdateFee
+		eci.lastSetGasCaps = time.Now()
+	}
+
 	auth.Context = ctx
 	auth.Value = fee
 	auth.NoSend = true // always send the transaction manually
@@ -677,6 +690,8 @@ func (eci *ContractInteractor) submitTransaction(
 	// separate if statement since supportsSyncSend is set to false if the first attempt fails
 	if !eci.supportsSyncSend {
 		err := eci.client.SendTransaction(ctx, tx)
+		eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
+
 		if err != nil {
 			if revertData, ok := ethclient.RevertErrorData(err); ok {
 				eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
@@ -692,20 +707,9 @@ func (eci *ContractInteractor) submitTransaction(
 		}
 	}
 
-	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
-		eci.gasFeeCap = tx.GasFeeCap()
-		eci.gasTipCap = tx.GasTipCap()
-		clear(eci.gasLimits) // reset the gas limits
-
-		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
-		if err != nil {
-			eci.logger.Error().Err(err).Msg("failed to get single update fee")
-		}
-		eci.singleUpdateFee = singleUpdateFee
-		eci.lastSetGasCaps = time.Now()
-	}
-
-	eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
+	eci.gasFeeCap = tx.GasFeeCap()
+	eci.gasTipCap = tx.GasTipCap()
+	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * 1.1)
 
 	return tx, nil
 }
@@ -727,6 +731,7 @@ func (eci *ContractInteractor) sendTransactionSync(ctx context.Context, tx *etht
 		return fmt.Errorf("%w: %w", errSendSyncUnsupported, err)
 	}
 
+	eci.nonce = new(big.Int).Add(eci.nonce, big.NewInt(1))
 	if receipt.Status != 1 {
 		return fmt.Errorf("eth_sendRawTransactionSync transaction failed")
 	}
