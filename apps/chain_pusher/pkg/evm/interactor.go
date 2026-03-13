@@ -650,20 +650,20 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.NoSend = true // always send the transaction manually
 	auth.Nonce = eci.nonce
 
-	if time.Since(eci.lastSetGasCaps) <= gasCalcResetInterval {
-		if eci.initialGasLimit != 0 {
-			auth.GasLimit = eci.initialGasLimit
-		} else if gasLimit, ok := eci.gasLimits[uint64(len(updatePayload))]; ok {
-			auth.GasLimit = gasLimit
-		}
+	if eci.initialGasLimit != 0 {
+		auth.GasLimit = eci.initialGasLimit
+	} else if gasLimit, ok := eci.gasLimits[uint64(len(updatePayload))]; ok {
+		auth.GasLimit = gasLimit
+	} else {
+		auth.GasLimit = 0
+	}
 
-		if eci.gasFeeCap != nil {
-			auth.GasFeeCap = eci.gasFeeCap
-		}
+	if eci.gasFeeCap != nil {
+		auth.GasFeeCap = eci.gasFeeCap
+	}
 
-		if eci.gasTipCap != nil {
-			auth.GasTipCap = eci.gasTipCap
-		}
+	if eci.gasTipCap != nil {
+		auth.GasTipCap = eci.gasTipCap
 	}
 
 	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
