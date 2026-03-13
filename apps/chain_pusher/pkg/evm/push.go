@@ -61,9 +61,12 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
+	nonceManager := NewLocalNonceManager()
+
 	interactor, err := NewContractInteractor(
 		contractAddress,
 		keyFileContent,
+		nonceManager,
 		verifyPublishers,
 		logger,
 		gasLimit,
