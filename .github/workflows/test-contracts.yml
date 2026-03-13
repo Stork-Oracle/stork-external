@@ -387,8 +387,9 @@ jobs:
       - name: Install Minitiad if not cached
         run: |
           if ! command -v minitiad &> /dev/null; then
-            git clone -b feat/initia-main --single-branch https://github.com/initia-labs/minimove.git
+            git clone -b main --single-branch https://github.com/initia-labs/minimove.git
             cd minimove
+            git checkout f035e437833412f098db00e8082d6450853759f2
             make install
           fi
 
