@@ -28,6 +28,8 @@ const (
 	BurstLimitFlag        = "burst-limit"
 	BatchSizeFlag         = "batch-size"
 	GasLimitFlag          = "gas-limit"
+	NonceManagerFlag      = "nonce-manager"
+	UseSyncSendFlag       = "use-sync-send"
 )
 
 // Cosmwasm flags.
@@ -59,6 +61,8 @@ const (
 	BurstLimitDesc           = "JSON RPC call Burst limit"
 	BatchSizeDesc            = "Batch size between 1 and 4"
 	GasLimitDesc             = "Gas limit (0 to use estimate)"
+	NonceManagerTypeDesc     = "Nonce manager type (server|serverPending|local), defaults to noop"
+	UseSyncSendDesc          = "Use sync send for transactions, defaults to false"
 )
 
 // Cosmwasm descriptions.

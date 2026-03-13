@@ -46,7 +46,8 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
 	var err error
-	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), false, s.logger, 0)
+	nonceManager := NewNoopNonceManager()
+	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), nonceManager, false, s.logger, 0, false)
 	s.Require().NoError(err)
 
 	err = s.interactor.ConnectHTTP(s.ctx, s.config.RpcUrl)
