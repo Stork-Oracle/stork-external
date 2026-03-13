@@ -67,6 +67,7 @@ const (
 	maxTransactionAttempts   = 3
 	gasBumpNumerator         = 120
 	gasBumpDenominator       = 100
+	gasLimitMultiplier       = 1.1
 )
 
 func NewContractInteractor(
@@ -674,8 +675,6 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * 1.1)
-
 	if eci.supportsSyncSend {
 		err := eci.sendTransactionSync(ctx, tx)
 		if err != nil {
@@ -709,7 +708,7 @@ func (eci *ContractInteractor) submitTransaction(
 
 	eci.gasFeeCap = tx.GasFeeCap()
 	eci.gasTipCap = tx.GasTipCap()
-	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * 1.1)
+	eci.gasLimits[uint64(len(updatePayload))] = uint64(float64(tx.Gas()) * gasLimitMultiplier)
 
 	return tx, nil
 }
