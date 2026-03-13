@@ -2,11 +2,36 @@ package evm
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/spf13/cobra"
 )
+
+type NonceManagerType string
+
+const (
+	NonceManagerTypeNoop          NonceManagerType = "noop"
+	NonceManagerTypeServer        NonceManagerType = "server"
+	NonceManagerTypeServerPending NonceManagerType = "serverPending"
+	NonceManagerTypeLocal         NonceManagerType = "local"
+)
+
+func NewNonceManagerFromType(t NonceManagerType) (NonceManagerI, error) {
+	switch t {
+	case NonceManagerTypeNoop, "":
+		return NewNoopNonceManager(), nil
+	case NonceManagerTypeServer:
+		return NewServerNonceManager(false), nil
+	case NonceManagerTypeServerPending:
+		return NewServerNonceManager(true), nil
+	case NonceManagerTypeLocal:
+		return NewLocalNonceManager(), nil
+	default:
+		return nil, fmt.Errorf("unknown nonce manager type: %s", string(t))
+	}
+}
 
 func NewPushCmd() *cobra.Command {
 	pushCmd := &cobra.Command{
@@ -27,6 +52,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().String(pusher.BatchingWindowStrFlag, "", pusher.BatchingWindowStrDesc)
 	pushCmd.Flags().IntP(pusher.PollingPeriodFlag, "p", pusher.DefaultPollingPeriod, pusher.PollingPeriodDesc)
 	pushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
+	pushCmd.Flags().String(pusher.NonceManagerFlag, "", pusher.NonceManagerTypeDesc)
 
 	pushCmd.MarkFlagsMutuallyExclusive(pusher.BatchingWindowFlag, pusher.BatchingWindowStrFlag)
 
@@ -53,6 +79,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	batchingWindowStr, _ := cmd.Flags().GetString(pusher.BatchingWindowStrFlag)
 	pollingPeriod, _ := cmd.Flags().GetInt(pusher.PollingPeriodFlag)
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
+	nonceManagerType, _ := cmd.Flags().GetString(pusher.NonceManagerFlag)
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)
 
@@ -61,7 +88,10 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger.Fatal().Err(err).Msg("Failed to read private key file")
 	}
 
-	nonceManager := NewLocalNonceManager()
+	nonceManager, err := NewNonceManagerFromType(NonceManagerType(nonceManagerType))
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize nonce manager")
+	}
 
 	interactor, err := NewContractInteractor(
 		contractAddress,

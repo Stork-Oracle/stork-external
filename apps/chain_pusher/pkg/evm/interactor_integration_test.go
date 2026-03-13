@@ -46,7 +46,7 @@ func (s *InteractorTestSuite) SetupSuite() {
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
 	var err error
-	nonceManager := NewServerNonceManager(true)
+	nonceManager := NewNoopNonceManager()
 	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), nonceManager, false, s.logger, 0)
 	s.Require().NoError(err)
 

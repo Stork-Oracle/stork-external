@@ -15,6 +15,24 @@ type NonceManagerI interface {
 	ResetNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error
 }
 
+type NoopNonceManager struct{}
+
+func NewNoopNonceManager() *NoopNonceManager {
+	return &NoopNonceManager{}
+}
+
+func (n *NoopNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) (*big.Int, error) {
+	return nil, nil
+}
+
+func (n *NoopNonceManager) IncrementNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+	return nil
+}
+
+func (n *NoopNonceManager) ResetNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+	return nil
+}
+
 type ServerNonceManager struct {
 	usePendingNonce bool
 }
