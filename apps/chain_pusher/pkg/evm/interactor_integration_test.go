@@ -47,7 +47,16 @@ func (s *InteractorTestSuite) SetupSuite() {
 
 	var err error
 	nonceManager := NewNoopNonceManager()
-	s.interactor, err = NewContractInteractor(s.config.ContractAddress, []byte(s.config.PrivateKey), nonceManager, false, s.logger, 0, false)
+	s.interactor, err = NewContractInteractor(
+		s.config.ContractAddress,
+		[]byte(s.config.PrivateKey),
+		nonceManager,
+		false,
+		s.logger,
+		0,
+		false,
+		false,
+	)
 	s.Require().NoError(err)
 
 	err = s.interactor.ConnectHTTP(s.ctx, s.config.RpcUrl)
