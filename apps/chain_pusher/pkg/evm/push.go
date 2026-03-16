@@ -102,7 +102,6 @@ func runPush(cmd *cobra.Command, args []string) {
 		verifyPublishers,
 		logger,
 		gasLimit,
-		false,
 		useSyncSend,
 	)
 	if err != nil {
