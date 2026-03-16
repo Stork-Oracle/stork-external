@@ -40,6 +40,7 @@ const (
 	maxTransactionAttempts   = 3
 	gasBumpNumerator         = 120
 	gasBumpDenominator       = 100
+	gasLimitMultiplier       = 1.3
 )
 
 type ContractInteractor struct {
@@ -49,7 +50,6 @@ type ContractInteractor struct {
 	privateKey      *ecdsa.PrivateKey
 	gasLimit        uint64
 	nonceManager    NonceManagerI
-	useMaxGasLimit  bool
 
 	contract        *bindings.StorkContract
 	wsContract      *bindings.StorkContract
@@ -60,6 +60,7 @@ type ContractInteractor struct {
 	gasTipCap       *big.Int
 	singleUpdateFee *big.Int
 	lastSetGasCaps  time.Time
+	gasLimits       map[int]uint64
 
 	chainID *big.Int
 
@@ -73,7 +74,6 @@ func NewContractInteractor(
 	verifyPublishers bool,
 	logger zerolog.Logger,
 	gasLimit uint64,
-	useMaxGasLimit bool,
 	useSyncSend bool,
 ) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(keyFileContent)
@@ -88,7 +88,6 @@ func NewContractInteractor(
 		privateKey:      privateKey,
 		nonceManager:    nonceManager,
 		gasLimit:        gasLimit,
-		useMaxGasLimit:  useMaxGasLimit,
 
 		verifyPublishers: verifyPublishers,
 
@@ -100,6 +99,7 @@ func NewContractInteractor(
 		gasFeeCap:       nil,
 		gasTipCap:       nil,
 		useSyncSend:     useSyncSend,
+		gasLimits:       make(map[int]uint64),
 		singleUpdateFee: nil,
 		lastSetGasCaps:  time.Time{},
 	}, nil
@@ -143,15 +143,6 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 		return fmt.Errorf("failed to get single update fee: %w", err)
 	}
 	eci.singleUpdateFee = singleUpdateFee
-
-	if eci.useMaxGasLimit {
-		block, err := eci.client.BlockByNumber(ctx, nil)
-		if err != nil {
-			return fmt.Errorf("failed to get latest block: %w", err)
-		}
-
-		eci.gasLimit = block.GasLimit()
-	}
 
 	return nil
 }
@@ -640,6 +631,7 @@ func (eci *ContractInteractor) submitTransaction(
 	if time.Since(eci.lastSetGasCaps) > gasCalcResetInterval {
 		eci.gasFeeCap = nil
 		eci.gasTipCap = nil
+		clear(eci.gasLimits)
 
 		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
 		if err != nil {
@@ -658,7 +650,14 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.Value = fee
 	auth.NoSend = true // always send the transaction manually
 	auth.Nonce = nonce
-	auth.GasLimit = eci.gasLimit // default 0 or max if useMaxGasLimit is true
+
+	if eci.gasLimit != 0 {
+		auth.GasLimit = eci.gasLimit
+	} else if gasLimit, ok := eci.gasLimits[len(updatePayload)]; ok {
+		auth.GasLimit = gasLimit
+	} else {
+		auth.GasLimit = 0
+	}
 
 	if eci.gasFeeCap != nil {
 		auth.GasFeeCap = eci.gasFeeCap
@@ -697,8 +696,6 @@ func (eci *ContractInteractor) submitTransaction(
 		if receipt.Status != 1 {
 			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
 		}
-
-		return tx, nil
 	} else {
 		txErr := eci.client.SendTransaction(ctx, tx)
 		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
@@ -722,6 +719,9 @@ func (eci *ContractInteractor) submitTransaction(
 
 	eci.gasFeeCap = tx.GasFeeCap()
 	eci.gasTipCap = tx.GasTipCap()
+	if _, ok := eci.gasLimits[len(updatePayload)]; !ok {
+		eci.gasLimits[len(updatePayload)] = uint64(float64(tx.Gas()) * gasLimitMultiplier)
+	}
 
 	return tx, nil
 }
@@ -742,15 +742,6 @@ func (eci *ContractInteractor) retryTransaction(
 	var lastErr error
 
 	for retryCount := range maxTransactionAttempts {
-		if eci.useMaxGasLimit {
-			block, err := eci.client.BlockByNumber(ctx, nil)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get latest block: %w", err)
-			}
-
-			eci.gasLimit = block.GasLimit()
-		}
-
 		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
@@ -770,6 +761,7 @@ func (eci *ContractInteractor) retryTransaction(
 
 		eci.gasFeeCap = newGasFeeCap
 		eci.gasTipCap = newGasTipCap
+		eci.gasLimits[len(updatePayload)] = uint64(float64(gasPrice.Uint64()) * gasLimitMultiplier)
 
 		tx, err := eci.submitTransaction(ctx, updatePayload, fee)
 
