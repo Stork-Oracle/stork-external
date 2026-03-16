@@ -31,6 +31,17 @@ var (
 	ErrEventChannelClosed      = errors.New("event channel is closed")
 )
 
+const (
+	// 1 * (1.5 ^ 10) = 57.66 seconds (last attempt delay).
+	maxRetryAttempts         = 10
+	initialBackoff           = 1 * time.Second
+	exponentialBackoffFactor = 1.5
+	gasCalcResetInterval     = 5 * time.Minute
+	maxTransactionAttempts   = 3
+	gasBumpNumerator         = 120
+	gasBumpDenominator       = 100
+)
+
 type ContractInteractor struct {
 	logger zerolog.Logger
 
@@ -38,6 +49,7 @@ type ContractInteractor struct {
 	privateKey      *ecdsa.PrivateKey
 	gasLimit        uint64
 	nonceManager    NonceManagerI
+	useMaxGasLimit  bool
 
 	contract        *bindings.StorkContract
 	wsContract      *bindings.StorkContract
@@ -54,18 +66,6 @@ type ContractInteractor struct {
 	verifyPublishers bool
 }
 
-const (
-	// 1 * (1.5 ^ 10) = 57.66 seconds (last attempt delay).
-	maxRetryAttempts         = 10
-	initialBackoff           = 1 * time.Second
-	exponentialBackoffFactor = 1.5
-	gasCalcResetInterval     = 5 * time.Minute
-	maxTransactionAttempts   = 3
-	gasBumpNumerator         = 120
-	gasBumpDenominator       = 100
-	gasLimitMultiplier       = 1.1
-)
-
 func NewContractInteractor(
 	contractAddr string,
 	keyFileContent []byte,
@@ -73,6 +73,7 @@ func NewContractInteractor(
 	verifyPublishers bool,
 	logger zerolog.Logger,
 	gasLimit uint64,
+	useMaxGasLimit bool,
 	useSyncSend bool,
 ) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(keyFileContent)
@@ -87,6 +88,7 @@ func NewContractInteractor(
 		privateKey:      privateKey,
 		nonceManager:    nonceManager,
 		gasLimit:        gasLimit,
+		useMaxGasLimit:  useMaxGasLimit,
 
 		verifyPublishers: verifyPublishers,
 
@@ -141,6 +143,15 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 		return fmt.Errorf("failed to get single update fee: %w", err)
 	}
 	eci.singleUpdateFee = singleUpdateFee
+
+	if eci.useMaxGasLimit {
+		block, err := eci.client.BlockByNumber(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get latest block: %w", err)
+		}
+
+		eci.gasLimit = block.GasLimit()
+	}
 
 	return nil
 }
@@ -647,7 +658,7 @@ func (eci *ContractInteractor) submitTransaction(
 	auth.Value = fee
 	auth.NoSend = true // always send the transaction manually
 	auth.Nonce = nonce
-	auth.GasLimit = eci.gasLimit // default 0
+	auth.GasLimit = eci.gasLimit // default 0 or max if useMaxGasLimit is true
 
 	if eci.gasFeeCap != nil {
 		auth.GasFeeCap = eci.gasFeeCap
@@ -731,6 +742,15 @@ func (eci *ContractInteractor) retryTransaction(
 	var lastErr error
 
 	for retryCount := range maxTransactionAttempts {
+		if eci.useMaxGasLimit {
+			block, err := eci.client.BlockByNumber(ctx, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get latest block: %w", err)
+			}
+
+			eci.gasLimit = block.GasLimit()
+		}
+
 		gasTipCap, err := eci.client.SuggestGasTipCap(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get gas tip cap: %w", err)
