@@ -68,7 +68,6 @@ func runPush(cmd *cobra.Command, args []string) {
 	interactor, err := NewContractInteractor(
 		contractAddress,
 		mnemonic,
-		pollingPeriod,
 		logger,
 		gasPrice,
 		gasAdjustment,
