@@ -6,7 +6,7 @@ WASMVM_LIB_DEST := $(LIB_DIR)/$(WASMVM_LIB_NAME)
 
 $(WASMVM_LIB_DEST):
 	@echo "Installing CosmWasm libraries..."
-	@curl -L https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/$(WASMVM_LIB_NAME) -o $(WASMVM_LIB_DEST)
+	@curl -L https://github.com/CosmWasm/wasmvm/releases/download/v3.0.3/$(WASMVM_LIB_NAME) -o $(WASMVM_LIB_DEST)
 	@echo "Successfully installed CosmWasm libraries to $(WASMVM_LIB_DEST)"
 
 wasmvm: $(WASMVM_LIB_DEST)
