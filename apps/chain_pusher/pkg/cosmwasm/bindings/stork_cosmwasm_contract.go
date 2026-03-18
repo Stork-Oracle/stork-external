@@ -439,7 +439,7 @@ func (s *StorkContract) executeContract(
 	}
 
 	if res.Code != 0 {
-		return "", ErrTxFailed
+		return "", fmt.Errorf("%w: code=%d codespace=%s log=%s", ErrTxFailed, res.Code, res.Codespace, res.RawLog)
 	}
 
 	return res.TxHash, nil
