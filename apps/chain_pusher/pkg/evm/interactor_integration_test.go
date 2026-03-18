@@ -5,7 +5,6 @@ package evm
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -37,11 +36,6 @@ type InteractorTestSuite struct {
 func (s *InteractorTestSuite) SetupSuite() {
 	s.Require().NoError(env.Parse(&s.config))
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-
-	fmt.Println("RpcUrl: ", s.config.RpcUrl)
-	fmt.Println("WsUrl: ", s.config.WsUrl)
-	fmt.Println("ContractAddress: ", s.config.ContractAddress)
-	fmt.Println("PrivateKey: ", s.config.PrivateKey)
 
 	s.logger = PusherLogger(s.config.RpcUrl, s.config.ContractAddress)
 
