@@ -19,14 +19,13 @@ var ErrFailedToConvertBigInt = errors.New("failed to convert Uint128 string to b
 type ContractInteractor struct {
 	logger zerolog.Logger
 
-	pollingPeriodSec int
-	mnemonic         string
-	contractAddress  string
-	gasPrice         float64
-	gasAdjustment    float64
-	denom            string
-	chainID          string
-	chainPrefix      string
+	mnemonic        string
+	contractAddress string
+	gasPrice        float64
+	gasAdjustment   float64
+	denom           string
+	chainID         string
+	chainPrefix     string
 
 	contract *bindings.StorkContract
 }
@@ -34,7 +33,6 @@ type ContractInteractor struct {
 func NewContractInteractor(
 	contractAddress string,
 	mnemonic []byte,
-	pollingPeriod int,
 	logger zerolog.Logger,
 	gasPrice float64,
 	gasAdjustment float64,
@@ -47,16 +45,15 @@ func NewContractInteractor(
 	mnemonicString := strings.TrimSpace(string(mnemonic))
 
 	return &ContractInteractor{
-		logger:           logger,
-		contract:         nil,
-		contractAddress:  contractAddress,
-		mnemonic:         mnemonicString,
-		gasPrice:         gasPrice,
-		gasAdjustment:    gasAdjustment,
-		denom:            denom,
-		chainID:          chainID,
-		chainPrefix:      chainPrefix,
-		pollingPeriodSec: pollingPeriod,
+		logger:          logger,
+		contract:        nil,
+		contractAddress: contractAddress,
+		mnemonic:        mnemonicString,
+		gasPrice:        gasPrice,
+		gasAdjustment:   gasAdjustment,
+		denom:           denom,
+		chainID:         chainID,
+		chainPrefix:     chainPrefix,
 	}, nil
 }
 
