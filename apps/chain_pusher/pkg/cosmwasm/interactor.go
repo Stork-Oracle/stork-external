@@ -178,12 +178,13 @@ func (sci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-// GetWalletBalance is a placeholder function to get the balance of the wallet being used to push to the contract.
-// todo: implement
-//
-//nolint:godox // This function has unmet criteria to be implemented.
 func (sci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
-	return -1, nil
+	balance, err := sci.contract.GetWalletBalance(ctx, sci.denom)
+	if err != nil {
+		return -1, fmt.Errorf("failed to get wallet balance: %w", err)
+	}
+
+	return balance, nil
 }
 
 func aggregatedSignedPriceToUpdateData(

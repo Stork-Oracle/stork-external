@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -332,6 +333,51 @@ func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) 
 	}
 
 	return resp.Data, nil
+}
+
+func (s *StorkContract) GetWalletBalance(ctx context.Context, denom string) (float64, error) {
+	addr, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
+	if err != nil {
+		return 0, fmt.Errorf("failed to bech32ify address: %w", err)
+	}
+
+	balanceReq := &banktypes.QueryBalanceRequest{
+		Address: addr,
+		Denom:   denom,
+	}
+
+	bz, err := s.marshaler.Marshal(balanceReq)
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal balance request: %w", err)
+	}
+
+	result, err := s.clientCtx.Client.ABCIQuery(
+		ctx,
+		"/cosmos.bank.v1beta1.Query/Balance",
+		bz,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query balance: %w", err)
+	}
+
+	if result.Response.Code != 0 {
+		return 0, ErrQueryFailed
+	}
+
+	var resp banktypes.QueryBalanceResponse
+
+	err = s.marshaler.Unmarshal(result.Response.Value, &resp)
+	if err != nil {
+		return 0, fmt.Errorf("failed to unmarshal balance response: %w", err)
+	}
+
+	if resp.Balance == nil {
+		return 0, nil
+	}
+
+	balanceFloat, _ := resp.Balance.Amount.BigInt().Float64()
+
+	return balanceFloat, nil
 }
 
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.
