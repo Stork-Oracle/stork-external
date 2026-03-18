@@ -106,6 +106,8 @@ func NewContractInteractor(
 }
 
 func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
+	eci.logger.Info().Str("url", url).Msg("ConnectHTTP")
+
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RPC: %w", err)
@@ -129,13 +131,14 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 	versionStr, err := eci.contract.Version(makeCallOpts(ctx))
 	if err != nil {
 		eci.logger.Error().Err(err).Msg("Failed to get contract version")
+	} else {
+		version, err := semver.NewVersion(versionStr)
+		if err != nil {
+			eci.logger.Error().Err(err).Msg("Failed to parse contract version")
+		}
+		eci.version = version
+		eci.logger.Info().Interface("version", eci.version).Msg("contract version")
 	}
-	version, err := semver.NewVersion(versionStr)
-	if err != nil {
-		eci.logger.Error().Err(err).Msg("Failed to parse contract version")
-	}
-	eci.version = version
-	eci.logger.Info().Interface("version", eci.version).Msg("contract version")
 
 	// set single update fee
 	singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
@@ -143,6 +146,10 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 		return fmt.Errorf("failed to get single update fee: %w", err)
 	}
 	eci.singleUpdateFee = singleUpdateFee
+
+	if err = eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey)); err != nil {
+		eci.logger.Error().Err(err).Msg("Failed to reset nonce")
+	}
 
 	return nil
 }
