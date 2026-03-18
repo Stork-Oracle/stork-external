@@ -195,10 +195,6 @@ func NewStorkContract(
 	denom string,
 	chainID string,
 ) (*StorkContract, error) {
-	config := sdktypes.GetConfig()
-	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountAddressPrefix+"pub")
-	config.Seal()
-
 	// Note: rpcUrl should be a Tendermint RPC endpoint (e.g., https://rpc.testnet.initia.xyz)
 	// not a REST endpoint, despite the parameter name
 	rpcClient, err := http.New(rpcUrl, "/websocket")
@@ -511,8 +507,13 @@ func (s *StorkContract) executeContract(
 		Args:          args,
 	}
 
+	senderBech32Acc, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
+	if err != nil {
+		return "", fmt.Errorf("%w: failed to bech32ify account address", err)
+	}
+
 	accMsg := &authtypes.QueryAccountRequest{
-		Address: s.clientCtx.FromAddress.String(),
+		Address: senderBech32Acc,
 	}
 
 	rawAccMsg, err := s.marshaler.Marshal(accMsg)

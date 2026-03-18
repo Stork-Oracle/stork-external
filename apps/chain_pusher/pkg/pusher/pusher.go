@@ -101,14 +101,7 @@ func (p *Pusher) Run(ctx context.Context) {
 
 	initialValues, err := p.pullWithTimeout(ctx, encodedAssetIDs)
 	if err != nil {
-		p.logger.Error().Err(err).Msg("Failed to pull initial values from contract")
-
-		p.logger.Info().Str("httpRpcUrl", p.chainRpcUrl).Msg("Reconnecting to HTTP RPC URL")
-
-		err = p.interactor.ConnectHTTP(ctx, p.chainRpcUrl)
-		if err != nil {
-			p.logger.Error().Err(err).Msg("failed to reconnect to HTTP RPC")
-		}
+		p.logger.Warn().Err(err).Msg("Failed to pull initial values from contract")
 	}
 
 	for encodedAssetID, value := range initialValues {

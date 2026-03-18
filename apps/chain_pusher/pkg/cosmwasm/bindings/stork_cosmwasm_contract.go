@@ -148,10 +148,6 @@ func NewStorkContract(
 	chainID string,
 	chainPrefix string,
 ) (*StorkContract, error) {
-	config := sdktypes.GetConfig()
-	config.SetBech32PrefixForAccount(chainPrefix, chainPrefix+"pub")
-	config.Seal()
-
 	rpcClient, err := http.New(rpcUrl, "/websocket")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rpc http client: %w", err)
@@ -356,8 +352,13 @@ func (s *StorkContract) executeContract(
 		Funds:    funds,
 	}
 
+	senderBech32Acc, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
+	if err != nil {
+		return "", fmt.Errorf("%w: failed to bech32ify account address", err)
+	}
+
 	accMsg := &authtypes.QueryAccountRequest{
-		Address: s.clientCtx.FromAddress.String(),
+		Address: senderBech32Acc,
 	}
 
 	rawAccMsg, err := s.marshaler.Marshal(accMsg)
