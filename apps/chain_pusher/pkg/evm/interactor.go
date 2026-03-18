@@ -691,7 +691,7 @@ func (eci *ContractInteractor) submitTransaction(
 
 		if txErr != nil {
 			if strings.Contains(txErr.Error(), "nonce") {
-				eci.logger.Warn().Msg("Nonce mismatch, resetting nonce")
+				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
 				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
 				if err != nil {
 					return nil, fmt.Errorf("failed to reset nonce: %w", err)
@@ -714,7 +714,7 @@ func (eci *ContractInteractor) submitTransaction(
 			if revertData, ok := ethclient.RevertErrorData(txErr); ok {
 				eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
 			} else if strings.Contains(txErr.Error(), "nonce") {
-				eci.logger.Warn().Msg("Nonce mismatch, resetting nonce")
+				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
 				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
 				if err != nil {
 					return nil, fmt.Errorf("failed to reset nonce: %w", err)
