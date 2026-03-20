@@ -1,0 +1,14 @@
+[profile.default]
+src = "contracts"
+out = "foundry-out"
+libs = ["node_modules", "lib"]
+
+remappings = [
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "@storknetwork/stork-evm-sdk/=node_modules/@storknetwork/stork-evm-sdk/",
+]
+
+solc_version = "0.8.24"
+
+[fuzz]
+runs = 1000

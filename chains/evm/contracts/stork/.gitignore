@@ -26,3 +26,7 @@ cache-zk
 
 upgrade_success.log
 upgrade_error.log
+
+# Foundry
+/foundry-out
+/lib
