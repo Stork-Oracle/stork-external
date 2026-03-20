@@ -164,11 +164,14 @@ func drainAndMerge(initial updateBatch, ch <-chan updateBatch) updateBatch {
 	merged := make(updateBatch, len(initial))
 	maps.Copy(merged, initial)
 
-	for batch := range ch {
-		maps.Copy(merged, batch)
+	for {
+		select {
+		case batch := <-ch:
+			maps.Copy(merged, batch)
+		default:
+			return merged
+		}
 	}
-
-	return merged
 }
 
 func (p *Pusher) pullWithTimeout(
