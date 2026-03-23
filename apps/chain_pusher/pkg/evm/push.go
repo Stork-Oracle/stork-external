@@ -2,36 +2,11 @@ package evm
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
 	"github.com/spf13/cobra"
 )
-
-type NonceManagerType string
-
-const (
-	NonceManagerTypeNoop          NonceManagerType = "noop"
-	NonceManagerTypeServer        NonceManagerType = "server"
-	NonceManagerTypeServerPending NonceManagerType = "serverPending"
-	NonceManagerTypeLocal         NonceManagerType = "local"
-)
-
-func NewNonceManagerFromType(t NonceManagerType) (NonceManagerI, error) {
-	switch t {
-	case NonceManagerTypeNoop, "":
-		return NewNoopNonceManager(), nil
-	case NonceManagerTypeServer:
-		return NewServerNonceManager(false), nil
-	case NonceManagerTypeServerPending:
-		return NewServerNonceManager(true), nil
-	case NonceManagerTypeLocal:
-		return NewLocalNonceManager(), nil
-	default:
-		return nil, fmt.Errorf("unknown nonce manager type: %s", string(t))
-	}
-}
 
 func NewPushCmd() *cobra.Command {
 	pushCmd := &cobra.Command{
