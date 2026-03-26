@@ -22,6 +22,7 @@ library LibCodec {
 
     error InvalidLength();
     error InvalidV();
+    error TimestampOverflow();
 
     /// @notice Encode an array of TemporalNumericValueInput into a flat uint256 array.
     /// @dev Intended for off-chain use to produce compact calldata.
@@ -37,6 +38,7 @@ library LibCodec {
 
             uint8 v = inp.v;
             if (v != 27 && v != 28) revert InvalidV();
+            if (inp.temporalNumericValue.timestampNs >= 1 << 63) revert TimestampOverflow();
 
             // bit 255: v_flag (v - 27), bits [254:192]: timestampNs, bits [191:0]: quantizedValue
             words[base] = (uint256(v - 27) << 255)

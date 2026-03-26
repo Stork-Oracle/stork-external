@@ -30,7 +30,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     }
 
     /// @notice Same as updateTemporalNumericValuesV1 but accepts flat uint256[] calldata.
-    /// @dev Each entry is 7 consecutive uint256 words (see LibCodec for layout).
+    /// @dev Each entry is 6 consecutive uint256 words (see LibCodec for layout).
     ///      Saves ~24% calldata bytes (~8% calldata gas) vs ABI-encoded struct array.
     function updateTemporalNumericValuesV1Packed(
         uint256[] calldata packedData
@@ -152,7 +152,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.5";
+        return "1.0.6";
     }
 
     function getTotalFee(
