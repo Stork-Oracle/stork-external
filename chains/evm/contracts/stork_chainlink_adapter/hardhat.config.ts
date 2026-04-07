@@ -26,6 +26,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 84532,
     },
+    hyperEvmMainnet: {
+      url: "https://rpc.hyperliquid.xyz/evm",
+      accounts: [PRIVATE_KEY],
+      chainId: 999,
+    },
     mainnet: {
       url: "https://ethereum-rpc.publicnode.com",
       accounts: [PRIVATE_KEY],
@@ -51,6 +56,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-plume-mainnet-1.t.conduit.xyz/api",
           browserURL: "https://explorer.plume.org"
+        }
+      },
+      {
+        network: "hyperEvmMainnet",
+        chainId: 999,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api",
+          browserURL: "https://hyperevmscan.io"
         }
       }
     ]
