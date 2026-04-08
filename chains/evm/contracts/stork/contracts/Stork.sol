@@ -22,13 +22,32 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         StorkSetters.setStorkPublicKey(storkPublicKey);
     }
 
+    function _isValidStorkSigner(
+        bytes32 id,
+        uint256 recvTime,
+        int256 quantizedValue,
+        bytes32 publisherMerkleRoot,
+        bytes32 valueComputeAlgHash,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    ) private view returns (bool) {
+        address[] memory list = _state.signingAddressList;
+        for (uint i = 0; i < list.length; i++) {
+            if (verifyStorkSignatureV1(list[i], id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)) {
+                return true;
+            }
+        }
+        // Legacy fallback: the storkPublicKey slot always authorizes until the owner migrates
+        return verifyStorkSignatureV1(storkPublicKey(), id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v);
+    }
+
     function updateTemporalNumericValuesV1(
         StorkStructs.TemporalNumericValueInput[] calldata updateData
     ) public payable {
         uint16 numUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
-            bool verified = verifyStorkSignatureV1(
-                storkPublicKey(),
+            if (!_isValidStorkSigner(
                 updateData[i].id,
                 updateData[i].temporalNumericValue.timestampNs,
                 updateData[i].temporalNumericValue.quantizedValue,
@@ -37,8 +56,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
                 updateData[i].r,
                 updateData[i].s,
                 updateData[i].v
-            );
-            if (!verified) revert StorkErrors.InvalidSignature();
+            )) revert StorkErrors.InvalidSignature();
             bool updated = updateLatestValueIfNecessary(updateData[i]);
             if (updated) {
                 numUpdates++;
