@@ -175,6 +175,31 @@ interactScope
         console.log(returnVal);
     });
 
+interactScope
+    .task('addSigningAddress', 'Add a signing address to the allowed set')
+    .addPositionalParam<string>('address', 'The signing address to add')
+    .setAction(async ({ address }: { address: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        await contract.addSigningAddress(address);
+    });
+
+interactScope
+    .task('removeSigningAddress', 'Remove a signing address from the allowed set')
+    .addPositionalParam<string>('address', 'The signing address to remove')
+    .setAction(async ({ address }: { address: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        await contract.removeSigningAddress(address);
+    });
+
+interactScope
+    .task('isSigningAddress', 'Check if an address is in the signing address set')
+    .addPositionalParam<string>('address', 'The address to check')
+    .setAction(async ({ address }: { address: string }, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const returnVal = await contract.isSigningAddress(address);
+        console.log(returnVal);
+    });
+
 const getLatestUpdateData = async (endpoint: string, authKey: string, assetIds: string) => {
     const response = await fetch(`${endpoint}/v1/prices/latest?assets=${assetIds}`, {
         headers: {

@@ -23,7 +23,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.5");
+      expect(await deployed.version()).to.equal("1.0.6");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +63,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.5");
+      expect(await upgraded.version()).to.equal("1.0.6");
     });
 
     it("Should revert if not owner", async function () {
@@ -679,9 +679,14 @@ describe("UpgradeableStork", function() {
     const STORK_PUBLIC_KEY = "0xC4A02e7D370402F4afC36032076B05e74FF81786";
     const OTHER_ADDRESS = "0x1234567890123456789012345678901234567890";
 
-    it("isSigningAddress returns false before any address is added", async function () {
+    it("isSigningAddress returns false for unknown address before any address is added", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
-      expect(await deployed.isSigningAddress(STORK_PUBLIC_KEY)).to.equal(false);
+      expect(await deployed.isSigningAddress(OTHER_ADDRESS)).to.equal(false);
+    });
+
+    it("isSigningAddress returns true for legacy storkPublicKey even before any address is added", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      expect(await deployed.isSigningAddress(STORK_PUBLIC_KEY)).to.equal(true);
     });
 
     it("addSigningAddress sets isSigningAddress to true", async function () {
@@ -714,9 +719,11 @@ describe("UpgradeableStork", function() {
 
     it("removeSigningAddress sets isSigningAddress to false", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
-      await deployed.addSigningAddress(STORK_PUBLIC_KEY);
-      await deployed.removeSigningAddress(STORK_PUBLIC_KEY);
-      expect(await deployed.isSigningAddress(STORK_PUBLIC_KEY)).to.equal(false);
+      // Use OTHER_ADDRESS (not the legacy storkPublicKey) so the legacy fallback in isSigningAddress
+      // doesn't interfere with the post-removal check.
+      await deployed.addSigningAddress(OTHER_ADDRESS);
+      await deployed.removeSigningAddress(OTHER_ADDRESS);
+      expect(await deployed.isSigningAddress(OTHER_ADDRESS)).to.equal(false);
     });
 
     it("removeSigningAddress reverts if not owner", async function () {
@@ -736,13 +743,14 @@ describe("UpgradeableStork", function() {
 
     it("can add and remove multiple addresses", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
-      await deployed.addSigningAddress(STORK_PUBLIC_KEY);
+      const THIRD_ADDRESS = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
       await deployed.addSigningAddress(OTHER_ADDRESS);
-      expect(await deployed.isSigningAddress(STORK_PUBLIC_KEY)).to.equal(true);
+      await deployed.addSigningAddress(THIRD_ADDRESS);
       expect(await deployed.isSigningAddress(OTHER_ADDRESS)).to.equal(true);
-      await deployed.removeSigningAddress(STORK_PUBLIC_KEY);
-      expect(await deployed.isSigningAddress(STORK_PUBLIC_KEY)).to.equal(false);
-      expect(await deployed.isSigningAddress(OTHER_ADDRESS)).to.equal(true);
+      expect(await deployed.isSigningAddress(THIRD_ADDRESS)).to.equal(true);
+      await deployed.removeSigningAddress(OTHER_ADDRESS);
+      expect(await deployed.isSigningAddress(OTHER_ADDRESS)).to.equal(false);
+      expect(await deployed.isSigningAddress(THIRD_ADDRESS)).to.equal(true);
     });
 
     it("updateTemporalNumericValuesV1 accepts update signed by address in the set (legacy key changed away)", async function () {

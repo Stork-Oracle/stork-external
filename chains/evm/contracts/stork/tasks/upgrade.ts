@@ -20,6 +20,7 @@ async function main() {
     {
       pollingInterval: 1000,
       timeout: 60000,
+      unsafeAllowCustomTypes: true,
     }
   );
 
@@ -43,6 +44,7 @@ task("prepare-upgrade", "Deploy a new implementation for use with either direct 
     // @ts-expect-error upgrades is loaded in hardhat/config
     const newImplAddress = await upgrades.prepareUpgrade(contractAddress, factory, {
       kind: "uups",
+      unsafeAllowCustomTypes: true,
     });
 
     console.log(`New implementation: ${newImplAddress}`);

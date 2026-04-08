@@ -16,7 +16,7 @@ contract StorkStorage {
         uint validTimePeriodSeconds;
         // Mapping of cached numeric temporal data
         mapping(bytes32 => StorkStructs.TemporalNumericValue) latestCanonicalTemporalNumericValues;
-        // Set of valid signing addresses (for key rotation with backwards compatibility)
+        // Set of valid signing addresses for key rotation with backwards compatibility.
         // signingAddresses provides O(1) membership check; signingAddressList enables iteration
         // during signature verification (since the signer address is embedded in the message hash).
         mapping(address => bool) signingAddresses;
