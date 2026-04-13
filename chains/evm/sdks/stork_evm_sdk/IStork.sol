@@ -62,6 +62,13 @@ interface IStork is IStorkEvents {
         bytes32 merkleRoot
     ) external pure returns (bool);
 
+    /// @notice Packs an array of TemporalNumericValueInput into a flat uint256 array
+    /// @param inputs Array of TemporalNumericValueInput structs
+    /// @return packedData The packed data
+    function packTemporalNumericValueInputs(
+        StorkStructs.TemporalNumericValueInput[] memory inputs
+    ) external pure returns (uint256[] memory);
+
     /// @notice Retrieves the current version of the contract
     /// @return string The version string (e.g., "1.0.3")
     function version() external pure returns (string memory);

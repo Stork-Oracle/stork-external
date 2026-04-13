@@ -6,11 +6,11 @@ import "@storknetwork/stork-evm-sdk/IStorkEvents.sol";
 import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 import "@storknetwork/stork-evm-sdk/StorkErrors.sol";
 import "@storknetwork/stork-evm-sdk/IStork.sol";
+import "@storknetwork/stork-evm-sdk/LibCodec.sol";
 
 import "./StorkGetters.sol";
 import "./StorkSetters.sol";
 import "./StorkVerify.sol";
-import "./LibCodec.sol";
 
 abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     function _initialize(
@@ -149,6 +149,12 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
             hashes[i] = computed;
         }
         return verifyMerkleRoot(hashes, merkleRoot);
+    }
+
+    function packTemporalNumericValueInputs(
+        StorkStructs.TemporalNumericValueInput[] memory inputs
+    ) external pure returns (uint256[] memory) {
+        return LibCodec.encode(inputs);
     }
 
     function version() public pure returns (string memory) {

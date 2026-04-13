@@ -2,7 +2,7 @@
 
 pragma solidity >=0.8.24 <0.9.0;
 
-import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
+import "./StorkStructs.sol";
 
 /// @title LibCodec
 /// @notice Flat uint256[] codec for TemporalNumericValueInput to minimize calldata cost.
