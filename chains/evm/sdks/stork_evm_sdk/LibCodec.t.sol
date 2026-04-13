@@ -158,6 +158,25 @@ contract LibCodecTest is Test {
         harness.decode(bad);
     }
 
+    function test_timestampOverflow_reverts() public {
+        // timestampNs == 2^63 should revert
+        StorkStructs.TemporalNumericValueInput[] memory inputs =
+            new StorkStructs.TemporalNumericValueInput[](1);
+        inputs[0] = _makeInput(uint64(1 << 63), int192(0), bytes32(0), 27);
+        vm.expectRevert(LibCodec.TimestampOverflow.selector);
+        harness.encode(inputs);
+    }
+
+    function testFuzz_timestampOverflow_reverts(uint64 timestampNs) public {
+        // Any value >= 2^63 must revert
+        vm.assume(timestampNs >= uint64(1 << 63));
+        StorkStructs.TemporalNumericValueInput[] memory inputs =
+            new StorkStructs.TemporalNumericValueInput[](1);
+        inputs[0] = _makeInput(timestampNs, int192(0), bytes32(0), 27);
+        vm.expectRevert(LibCodec.TimestampOverflow.selector);
+        harness.encode(inputs);
+    }
+
     function test_invalidV_reverts() public {
         StorkStructs.TemporalNumericValueInput[] memory inputs =
             new StorkStructs.TemporalNumericValueInput[](1);
