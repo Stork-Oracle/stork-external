@@ -33,11 +33,11 @@ contract UpgradeableStork is Initializable, UUPSUpgradeable, Ownable2StepUpgrade
         setStorkPublicKey(storkPublicKey);
     }
 
-    function addSigningAddress(address signingAddress) public onlyOwner {
+    function addSigningAddress(address signingAddress) public onlyOwner override {
         storeAddSigningAddress(signingAddress);
     }
 
-    function removeSigningAddress(address signingAddress) public onlyOwner {
+    function removeSigningAddress(address signingAddress) public onlyOwner override {
         storeRemoveSigningAddress(signingAddress);
     }
 

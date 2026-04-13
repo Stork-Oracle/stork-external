@@ -159,4 +159,8 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     ) public virtual;
 
     function updateStorkPublicKey(address storkPublicKey) public virtual;
+
+    function addSigningAddress(address signingAddress) public virtual;
+
+    function removeSigningAddress(address signingAddress) public virtual;
 }
