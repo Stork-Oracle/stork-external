@@ -23,7 +23,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.5");
+      expect(await deployed.version()).to.equal("1.0.6");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +63,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.5");
+      expect(await upgraded.version()).to.equal("1.0.6");
     });
 
     it("Should revert if not owner", async function () {
@@ -459,6 +459,125 @@ describe("UpgradeableStork", function() {
           v: "0x1c"
         }
       ], { value: 1 })).to.be.revertedWithCustomError(deployed, "InvalidSignature");
+    });
+  });
+
+  describe("updateTemporalNumericValuesV1Packed", function () {
+    it("Should update successfully", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const packed = await deployed.packTemporalNumericValueInputs([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ]);
+      // values pulled from sample publisher call
+      await deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 1 });
+    });
+
+    it("Should update with negative value successfully", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // set to dev key
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+
+      const packed = await deployed.packTemporalNumericValueInputs([{
+        temporalNumericValue: {
+          timestampNs: "1750794968021348308",
+          quantizedValue: "-3020199000000",
+        },
+        id: ethers.keccak256(ethers.toUtf8Bytes("HL_BTC_CURRENT_FUNDING")),
+        publisherMerkleRoot: "0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878",
+        valueComputeAlgHash: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
+        r: "0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696",
+        s: "0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0",
+        v: "0x1b"
+      }]);
+      await deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 1 });
+    });
+
+    it("Should update multiple successfully", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const packed = await deployed.packTemporalNumericValueInputs([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        },
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722554872999936",
+            quantizedValue: "3000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("ETHUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x67018d101bb11542b3b43048a4d171122e7eb25b8cebd2fe6cb7412cf3438620",
+          s: "0x788ca33b146165b588d5e704faf9e4a9fd036d7ae2d88b48e75ee71628ddd657",
+          v: "0x1b"
+        },
+      ]);
+
+      // values pulled from sample publisher call
+      await deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 2 });
+    });
+
+    it("Should revert if insufficient fee", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const packed = await deployed.packTemporalNumericValueInputs([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ]);
+
+      await expect(deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 0 })).to.be.revertedWithCustomError(deployed, "InsufficientFee");
+    });
+
+    it("Should revert if invalid signature", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+
+      const packed = await deployed.packTemporalNumericValueInputs([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "70000000000000000000000", // changed value
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ]);
+
+      await expect(deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 1 })).to.be.revertedWithCustomError(deployed, "InvalidSignature");
     });
   });
 

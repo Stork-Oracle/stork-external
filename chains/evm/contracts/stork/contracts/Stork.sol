@@ -6,6 +6,7 @@ import "@storknetwork/stork-evm-sdk/IStorkEvents.sol";
 import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 import "@storknetwork/stork-evm-sdk/StorkErrors.sol";
 import "@storknetwork/stork-evm-sdk/IStork.sol";
+import "@storknetwork/stork-evm-sdk/LibCodec.sol";
 
 import "./StorkGetters.sol";
 import "./StorkSetters.sol";
@@ -39,13 +40,39 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
                 updateData[i].v
             );
             if (!verified) revert StorkErrors.InvalidSignature();
-            bool updated = updateLatestValueIfNecessary(updateData[i]);
-            if (updated) {
-                numUpdates++;
-            }
+            if (updateLatestValueIfNecessary(updateData[i])) numUpdates++;
         }
-        if (numUpdates == 0) revert StorkErrors.NoFreshUpdate();
+        _validateUpdatesAndFee(numUpdates);
+    }
 
+    /// @notice Same as updateTemporalNumericValuesV1 but accepts flat uint256[] calldata.
+    /// @dev Each entry is 6 consecutive uint256 words (see LibCodec for layout).
+    ///      Saves ~24% calldata bytes (~8% calldata gas) vs ABI-encoded struct array.
+    function updateTemporalNumericValuesV1Packed(
+        uint256[] calldata packedData
+    ) public payable {
+        StorkStructs.TemporalNumericValueInput[] memory updateData = LibCodec.decode(packedData);
+        uint16 numUpdates = 0;
+        for (uint i = 0; i < updateData.length; i++) {
+            bool verified = verifyStorkSignatureV1(
+                storkPublicKey(),
+                updateData[i].id,
+                updateData[i].temporalNumericValue.timestampNs,
+                updateData[i].temporalNumericValue.quantizedValue,
+                updateData[i].publisherMerkleRoot,
+                updateData[i].valueComputeAlgHash,
+                updateData[i].r,
+                updateData[i].s,
+                updateData[i].v
+            );
+            if (!verified) revert StorkErrors.InvalidSignature();
+            if (updateLatestValueIfNecessary(updateData[i])) numUpdates++;
+        }
+        _validateUpdatesAndFee(numUpdates);
+    }
+
+    function _validateUpdatesAndFee(uint16 numUpdates) private {
+        if (numUpdates == 0) revert StorkErrors.NoFreshUpdate();
         uint requiredFee = getTotalFee(numUpdates);
         if (msg.value < requiredFee) revert StorkErrors.InsufficientFee();
     }
@@ -122,8 +149,14 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         return verifyMerkleRoot(hashes, merkleRoot);
     }
 
+    function packTemporalNumericValueInputs(
+        StorkStructs.TemporalNumericValueInput[] calldata inputs
+    ) external pure returns (uint256[] memory) {
+        return LibCodec.encode(inputs);
+    }
+
     function version() public pure returns (string memory) {
-        return "1.0.5";
+        return "1.0.6";
     }
 
     function getTotalFee(

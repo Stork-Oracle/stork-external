@@ -62,6 +62,23 @@ interface IStork is IStorkEvents {
         bytes32 merkleRoot
     ) external pure returns (bool);
 
+    /// @notice Same as updateTemporalNumericValuesV1 but accepts flat uint256[] calldata.
+    /// @dev Each entry is 6 consecutive uint256 words (see LibCodec for layout).
+    ///      Saves ~24% calldata bytes (~8% calldata gas) vs ABI-encoded struct array.
+    /// @dev Reverts with InvalidSignature if any feed update fails signature verification
+    /// @dev Reverts with NoFreshUpdate if none of the provided updates are fresher than current values
+    /// @dev Reverts with InsufficientFee if the provided fee is less than the required amount
+    function updateTemporalNumericValuesV1Packed(
+        uint256[] calldata packedData
+    ) external payable;
+
+    /// @notice Packs an array of TemporalNumericValueInput into a flat uint256 array
+    /// @param inputs Array of TemporalNumericValueInput structs
+    /// @return packedData The packed data
+    function packTemporalNumericValueInputs(
+        StorkStructs.TemporalNumericValueInput[] calldata inputs
+    ) external pure returns (uint256[] memory);
+
     /// @notice Retrieves the current version of the contract
     /// @return string The version string (e.g., "1.0.3")
     function version() external pure returns (string memory);

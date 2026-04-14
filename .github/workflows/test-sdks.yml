@@ -30,6 +30,36 @@ jobs:
         run: npm install
         working-directory: ./chains/evm/sdks/stork_fast_evm_sdk
 
-      - name: Run hardhat tests for StorkFastEVM SDK
+      - name: Run forge tests for StorkFastEVM SDK
         run: forge test
         working-directory: ./chains/evm/sdks/stork_fast_evm_sdk
+
+  test-stork-evm-sdk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ./chains/evm/sdks/stork_evm_sdk/package-lock.json
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: "v1.2.3"
+
+      - name: Show Forge Version
+        run: forge --version
+
+      - name: Install dependencies for StorkEVM SDK
+        run: npm install
+        working-directory: ./chains/evm/sdks/stork_evm_sdk
+
+      - name: Run forge tests for StorkEVM SDK
+        run: forge test
+        working-directory: ./chains/evm/sdks/stork_evm_sdk
