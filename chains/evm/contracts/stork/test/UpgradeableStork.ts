@@ -95,6 +95,13 @@ describe("UpgradeableStork", function() {
 
       expect(await deployed.storkPublicKey()).to.equal("0xC4A02e7D370402F4afC36032076B05e74FF81786");
     });
+
+    it("Should revert for zero address", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.updateStorkPublicKey(ethers.ZeroAddress)
+      ).to.be.revertedWith("Stork public key cannot be 0 address");
+    });
   });
 
   describe("updateSingleUpdateFeeInWei", function () {
@@ -950,51 +957,6 @@ describe("UpgradeableStork", function() {
       ], { value: 1 });
     });
 
-    it("legacy fallback is disabled when storkPublicKey is set to address(0)", async function () {
-      const { deployed } = await loadFixture(deployUpgradeableStork);
-      // Add the real signer to the set, then zero out the legacy key
-      await deployed.addSigningAddress(STORK_PUBLIC_KEY);
-      await deployed.updateStorkPublicKey(ethers.ZeroAddress);
-
-      expect(await deployed.storkPublicKey()).to.equal(ethers.ZeroAddress);
-      expect(await deployed.isSigningAddress(ethers.ZeroAddress)).to.equal(false);
-
-      // Updates should still work via the signing address set
-      await deployed.updateTemporalNumericValuesV1([
-        {
-          temporalNumericValue: {
-            timestampNs: "1720722087644999936",
-            quantizedValue: "60000000000000000000000",
-          },
-          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
-          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
-          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
-          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
-          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
-          v: "0x1c"
-        }
-      ], { value: 1 });
-    });
-
-    it("updates are rejected when storkPublicKey is address(0) and signing set is empty", async function () {
-      const { deployed } = await loadFixture(deployUpgradeableStork);
-      await deployed.updateStorkPublicKey(ethers.ZeroAddress);
-
-      await expect(deployed.updateTemporalNumericValuesV1([
-        {
-          temporalNumericValue: {
-            timestampNs: "1720722087644999936",
-            quantizedValue: "60000000000000000000000",
-          },
-          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
-          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
-          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
-          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
-          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
-          v: "0x1c"
-        }
-      ], { value: 1 })).to.be.revertedWithCustomError(deployed, "InvalidSignature");
-    });
   });
 
   describe("getTemporalNumericValuesUnsafeV1", function () {
