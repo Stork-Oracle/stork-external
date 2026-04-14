@@ -21,6 +21,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         StorkSetters.setValidTimePeriodSeconds(validTimePeriodSeconds);
         StorkSetters.setSingleUpdateFeeInWei(singleUpdateFeeInWei);
         StorkSetters.setStorkPublicKey(storkPublicKey);
+        StorkSetters.storeAddSigningAddress(storkPublicKey);
     }
 
     function _isValidStorkSigner(
