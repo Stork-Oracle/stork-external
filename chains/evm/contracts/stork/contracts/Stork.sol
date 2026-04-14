@@ -66,19 +66,6 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         if (msg.value < requiredFee) revert StorkErrors.InsufficientFee();
     }
 
-    /// @notice Compress struct array into flat uint256[] for updateTemporalNumericValuesV1Packed.
-    function compress(
-        StorkStructs.TemporalNumericValueInput[] calldata updateData
-    ) external pure returns (uint256[] memory) {
-        uint256 len = updateData.length;
-        StorkStructs.TemporalNumericValueInput[] memory inputs =
-            new StorkStructs.TemporalNumericValueInput[](len);
-        for (uint256 i; i < len; ++i) {
-            inputs[i] = updateData[i];
-        }
-        return LibCodec.encode(inputs);
-    }
-
     function getUpdateFeeV1(
         StorkStructs.TemporalNumericValueInput[] calldata updateData
     ) public view returns (uint feeAmount) {
@@ -152,7 +139,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     }
 
     function packTemporalNumericValueInputs(
-        StorkStructs.TemporalNumericValueInput[] memory inputs
+        StorkStructs.TemporalNumericValueInput[] calldata inputs
     ) external pure returns (uint256[] memory) {
         return LibCodec.encode(inputs);
     }

@@ -18,7 +18,6 @@ import "./StorkStructs.sol";
 ///   Calldata per entry: 6 × 32 = 192 bytes.
 library LibCodec {
     uint256 internal constant WORDS_PER_ENTRY = 6;
-    uint256 internal constant V_FLAG_BIT = 1 << 255;
 
     error InvalidLength();
     error InvalidV();
