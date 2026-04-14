@@ -30,9 +30,12 @@ contract StorkSetters is StorkState, IStorkEvents {
         emit StorkPublicKeyUpdate(storkPublicKey);
     }
 
+    uint256 private constant MAX_SIGNING_ADDRESSES = 8;
+
     function storeAddSigningAddress(address signingAddress) internal {
         require(signingAddress != address(0), "Signing address cannot be 0 address");
         require(!_state.signingAddresses[signingAddress], "Signing address already exists");
+        require(_state.signingAddressList.length < MAX_SIGNING_ADDRESSES, "Signing address limit reached");
         _state.signingAddresses[signingAddress] = true;
         _state.signingAddressList.push(signingAddress);
         emit SigningAddressAdded(signingAddress);

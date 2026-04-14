@@ -717,6 +717,20 @@ describe("UpgradeableStork", function() {
       ).to.be.revertedWith("Signing address already exists");
     });
 
+    it("addSigningAddress reverts when signing address limit is reached", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const addresses = Array.from({ length: 8 }, (_, i) =>
+        ethers.getAddress(ethers.zeroPadValue(ethers.toBeHex(i + 1), 20))
+      );
+      for (const addr of addresses) {
+        await deployed.addSigningAddress(addr);
+      }
+      const overflow = ethers.getAddress(ethers.zeroPadValue(ethers.toBeHex(9), 20));
+      await expect(
+        deployed.addSigningAddress(overflow)
+      ).to.be.revertedWith("Signing address limit reached");
+    });
+
     it("removeSigningAddress sets isSigningAddress to false", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
       // Use OTHER_ADDRESS (not the legacy storkPublicKey) so the legacy fallback in isSigningAddress
