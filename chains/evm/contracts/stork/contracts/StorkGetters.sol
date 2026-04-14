@@ -26,4 +26,8 @@ contract StorkGetters is StorkState, IStorkGetters {
     function storkPublicKey() public view returns (address) {
         return _state.storkPublicKey;
     }
+
+    function getSigningAddresses() public view returns (address[] memory) {
+        return _state.signingAddressList;
+    }
 }

@@ -21,6 +21,27 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         StorkSetters.setValidTimePeriodSeconds(validTimePeriodSeconds);
         StorkSetters.setSingleUpdateFeeInWei(singleUpdateFeeInWei);
         StorkSetters.setStorkPublicKey(storkPublicKey);
+        StorkSetters.storeAddSigningAddress(storkPublicKey);
+    }
+
+    function _isValidStorkSigner(
+        bytes32 id,
+        uint256 recvTime,
+        int256 quantizedValue,
+        bytes32 publisherMerkleRoot,
+        bytes32 valueComputeAlgHash,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    ) private view returns (bool) {
+        address[] memory list = _state.signingAddressList;
+        for (uint i = 0; i < list.length; i++) {
+            if (verifyStorkSignatureV1(list[i], id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v)) {
+                return true;
+            }
+        }
+        // Legacy fallback: storkPublicKey always reflects the current canonical signing key
+        return verifyStorkSignatureV1(storkPublicKey(), id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v);
     }
 
     function updateTemporalNumericValuesV1(
@@ -28,8 +49,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     ) public payable {
         uint16 numUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
-            bool verified = verifyStorkSignatureV1(
-                storkPublicKey(),
+            if (!_isValidStorkSigner(
                 updateData[i].id,
                 updateData[i].temporalNumericValue.timestampNs,
                 updateData[i].temporalNumericValue.quantizedValue,
@@ -38,8 +58,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
                 updateData[i].r,
                 updateData[i].s,
                 updateData[i].v
-            );
-            if (!verified) revert StorkErrors.InvalidSignature();
+            )) revert StorkErrors.InvalidSignature();
             if (updateLatestValueIfNecessary(updateData[i])) numUpdates++;
         }
         _validateUpdatesAndFee(numUpdates);
@@ -54,8 +73,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         StorkStructs.TemporalNumericValueInput[] memory updateData = LibCodec.decode(packedData);
         uint16 numUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
-            bool verified = verifyStorkSignatureV1(
-                storkPublicKey(),
+            if (!_isValidStorkSigner(
                 updateData[i].id,
                 updateData[i].temporalNumericValue.timestampNs,
                 updateData[i].temporalNumericValue.quantizedValue,
@@ -64,8 +82,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
                 updateData[i].r,
                 updateData[i].s,
                 updateData[i].v
-            );
-            if (!verified) revert StorkErrors.InvalidSignature();
+            )) revert StorkErrors.InvalidSignature();
             if (updateLatestValueIfNecessary(updateData[i])) numUpdates++;
         }
         _validateUpdatesAndFee(numUpdates);
@@ -174,4 +191,8 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     ) public virtual;
 
     function updateStorkPublicKey(address storkPublicKey) public virtual;
+
+    function addSigningAddress(address signingAddress) public virtual;
+
+    function removeSigningAddress(address signingAddress) public virtual;
 }

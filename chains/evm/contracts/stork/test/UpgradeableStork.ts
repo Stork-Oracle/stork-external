@@ -95,6 +95,13 @@ describe("UpgradeableStork", function() {
 
       expect(await deployed.storkPublicKey()).to.equal("0xC4A02e7D370402F4afC36032076B05e74FF81786");
     });
+
+    it("Should revert for zero address", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.updateStorkPublicKey(ethers.ZeroAddress)
+      ).to.be.revertedWith("Stork public key cannot be 0 address");
+    });
   });
 
   describe("updateSingleUpdateFeeInWei", function () {
@@ -792,6 +799,191 @@ describe("UpgradeableStork", function() {
         60000000000000000000000n
       ]);
     });
+  });
+
+  describe("addSigningAddress / removeSigningAddress", function () {
+    const STORK_PUBLIC_KEY = "0xC4A02e7D370402F4afC36032076B05e74FF81786";
+    const OTHER_ADDRESS = "0x1234567890123456789012345678901234567890";
+
+    // Case-insensitive membership check since ethers may return checksummed addresses
+    const includesAddress = (list: string[], addr: string) =>
+      list.map(a => a.toLowerCase()).includes(addr.toLowerCase());
+
+    it("getSigningAddresses returns only the initial storkPublicKey on deploy", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const list = await deployed.getSigningAddresses();
+      expect(list.length).to.equal(1);
+      expect(includesAddress(list, STORK_PUBLIC_KEY)).to.equal(true);
+    });
+
+    it("getSigningAddresses does not include an address that was never added", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, OTHER_ADDRESS)).to.equal(false);
+    });
+
+    it("addSigningAddress adds address to getSigningAddresses", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await deployed.addSigningAddress(OTHER_ADDRESS);
+      const list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, OTHER_ADDRESS)).to.equal(true);
+    });
+
+    it("addSigningAddress reverts if not owner", async function () {
+      const { deployed, otherAccount } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.connect(otherAccount).addSigningAddress(OTHER_ADDRESS)
+      ).to.be.revertedWithCustomError(deployed, "OwnableUnauthorizedAccount");
+    });
+
+    it("addSigningAddress reverts for zero address", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.addSigningAddress(ethers.ZeroAddress)
+      ).to.be.revertedWith("Signing address cannot be 0 address");
+    });
+
+    it("addSigningAddress reverts if address already exists", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await deployed.addSigningAddress(OTHER_ADDRESS);
+      await expect(
+        deployed.addSigningAddress(OTHER_ADDRESS)
+      ).to.be.revertedWith("Signing address already exists");
+    });
+
+    it("addSigningAddress reverts when signing address limit is reached", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // storkPublicKey was added during initialization, filling one of the 8 slots
+      const addresses = Array.from({ length: 7 }, (_, i) =>
+        ethers.getAddress(ethers.zeroPadValue(ethers.toBeHex(i + 1), 20))
+      );
+      for (const addr of addresses) {
+        await deployed.addSigningAddress(addr);
+      }
+      const overflow = ethers.getAddress(ethers.zeroPadValue(ethers.toBeHex(8), 20));
+      await expect(
+        deployed.addSigningAddress(overflow)
+      ).to.be.revertedWith("Signing address limit reached");
+    });
+
+    it("removeSigningAddress removes address from getSigningAddresses", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await deployed.addSigningAddress(OTHER_ADDRESS);
+      await deployed.removeSigningAddress(OTHER_ADDRESS);
+      const list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, OTHER_ADDRESS)).to.equal(false);
+    });
+
+    it("removeSigningAddress reverts if not owner", async function () {
+      const { deployed, otherAccount } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.connect(otherAccount).removeSigningAddress(STORK_PUBLIC_KEY)
+      ).to.be.revertedWithCustomError(deployed, "OwnableUnauthorizedAccount");
+    });
+
+    it("removeSigningAddress reverts if address does not exist", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.removeSigningAddress(OTHER_ADDRESS)
+      ).to.be.revertedWith("Signing address does not exist");
+    });
+
+    it("removeSigningAddress reverts if address is current storkPublicKey", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      await expect(
+        deployed.removeSigningAddress(STORK_PUBLIC_KEY)
+      ).to.be.revertedWith("Cannot remove current storkPublicKey; rotate the key first");
+    });
+
+    it("removeSigningAddress allows removing old key after storkPublicKey rotation", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const NEW_KEY = "0x3db9E960ECfCcb11969509FAB000c0c96DC51830";
+      await deployed.addSigningAddress(NEW_KEY);
+      await deployed.updateStorkPublicKey(NEW_KEY);
+      // STORK_PUBLIC_KEY is no longer the current key, so removal is now allowed
+      await deployed.removeSigningAddress(STORK_PUBLIC_KEY);
+      const list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, STORK_PUBLIC_KEY)).to.equal(false);
+    });
+
+    it("can add and remove multiple addresses", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const THIRD_ADDRESS = "0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF";
+      await deployed.addSigningAddress(OTHER_ADDRESS);
+      await deployed.addSigningAddress(THIRD_ADDRESS);
+      let list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, OTHER_ADDRESS)).to.equal(true);
+      expect(includesAddress(list, THIRD_ADDRESS)).to.equal(true);
+      await deployed.removeSigningAddress(OTHER_ADDRESS);
+      list = await deployed.getSigningAddresses();
+      expect(includesAddress(list, OTHER_ADDRESS)).to.equal(false);
+      expect(includesAddress(list, THIRD_ADDRESS)).to.equal(true);
+    });
+
+    it("updateTemporalNumericValuesV1 accepts update signed by address in the set (legacy key changed away)", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // The original stork public key was added to the signing set during initialization.
+      // Change legacy storkPublicKey to a different address so the only valid path is via the set.
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+    });
+
+    it("updateTemporalNumericValuesV1 rejects update when signer is in neither set nor legacy key", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // Rotate the legacy key away from the one that signed the test data, then remove
+      // the original key from the set so no valid path remains.
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+      await deployed.removeSigningAddress(STORK_PUBLIC_KEY);
+
+      await expect(deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 })).to.be.revertedWithCustomError(deployed, "InvalidSignature");
+    });
+
+    it("updateTemporalNumericValuesV1 works for key added during initialization", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      // storkPublicKey is in the signing set from initialization; no extra setup needed
+      await deployed.updateTemporalNumericValuesV1([
+        {
+          temporalNumericValue: {
+            timestampNs: "1720722087644999936",
+            quantizedValue: "60000000000000000000000",
+          },
+          id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+          publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+          valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+          r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+          s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+          v: "0x1c"
+        }
+      ], { value: 1 });
+    });
+
   });
 
   describe("getTemporalNumericValuesUnsafeV1", function () {

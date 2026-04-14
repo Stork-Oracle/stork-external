@@ -14,4 +14,8 @@ interface IStorkGetters {
     /// @notice Retrieves the Stork public key
     /// @return address The Stork public key
     function storkPublicKey() external view returns (address);
+
+    /// @notice Returns all addresses in the signing address set
+    /// @return address[] The list of valid signing addresses
+    function getSigningAddresses() external view returns (address[] memory);
 }

@@ -19,6 +19,14 @@ interface IStorkEvents {
     /// @param newStorkPublicKey The new Stork public key
     event StorkPublicKeyUpdate(address indexed newStorkPublicKey);
 
+    /// @notice Emitted when a signing address is added to the allowed set
+    /// @param signingAddress The signing address that was added
+    event SigningAddressAdded(address indexed signingAddress);
+
+    /// @notice Emitted when a signing address is removed from the allowed set
+    /// @param signingAddress The signing address that was removed
+    event SigningAddressRemoved(address indexed signingAddress);
+
     /// @notice Emitted when the Stork single update fee is updated
     /// @param newSingleUpdateFee The new Stork single update fee
     event SingleUpdateFeeUpdate(uint256 newSingleUpdateFee);
