@@ -43,6 +43,7 @@ contract StorkSetters is StorkState, IStorkEvents {
 
     function storeRemoveSigningAddress(address signingAddress) internal {
         require(signingAddress != address(0), "Signing address cannot be 0 address");
+        require(signingAddress != _state.storkPublicKey, "Cannot remove current storkPublicKey; rotate the key first");
         require(_state.signingAddresses[signingAddress], "Signing address does not exist");
         _state.signingAddresses[signingAddress] = false;
         for (uint i = 0; i < _state.signingAddressList.length; i++) {

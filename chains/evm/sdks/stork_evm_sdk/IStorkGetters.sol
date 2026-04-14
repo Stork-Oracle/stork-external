@@ -15,8 +15,7 @@ interface IStorkGetters {
     /// @return address The Stork public key
     function storkPublicKey() external view returns (address);
 
-    /// @notice Returns whether the given address is in the signing address set
-    /// @param addr The address to check
-    /// @return bool True if the address is a valid signing address
-    function isSigningAddress(address addr) external view returns (bool);
+    /// @notice Returns all addresses in the signing address set
+    /// @return address[] The list of valid signing addresses
+    function getSigningAddresses() external view returns (address[] memory);
 }

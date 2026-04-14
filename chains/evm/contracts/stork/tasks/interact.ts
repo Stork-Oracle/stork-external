@@ -192,11 +192,10 @@ interactScope
     });
 
 interactScope
-    .task('isSigningAddress', 'Check if an address is in the signing address set')
-    .addPositionalParam<string>('address', 'The address to check')
-    .setAction(async ({ address }: { address: string }, hre: HardhatRuntimeEnvironment) => {
+    .task('getSigningAddresses', 'List all addresses in the signing address set')
+    .setAction(async (_: unknown, hre: HardhatRuntimeEnvironment) => {
         const contract = await initializeContract(hre);
-        const returnVal = await contract.isSigningAddress(address);
+        const returnVal = await contract.getSigningAddresses();
         console.log(returnVal);
     });
 
