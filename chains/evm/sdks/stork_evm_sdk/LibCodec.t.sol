@@ -340,13 +340,13 @@ contract LibCodecTest is Test {
         StorkStructs.TemporalNumericValueInput memory a,
         StorkStructs.TemporalNumericValueInput memory b
     ) internal pure {
-        assert(a.temporalNumericValue.timestampNs == b.temporalNumericValue.timestampNs);
-        assert(a.temporalNumericValue.quantizedValue == b.temporalNumericValue.quantizedValue);
-        assert(a.id == b.id);
-        assert(a.publisherMerkleRoot == b.publisherMerkleRoot);
-        assert(a.valueComputeAlgHash == b.valueComputeAlgHash);
-        assert(a.r == b.r);
-        assert(a.s == b.s);
-        assert(a.v == b.v);
+        assertEq(a.temporalNumericValue.timestampNs, b.temporalNumericValue.timestampNs, "timestampNs");
+        assertEq(a.temporalNumericValue.quantizedValue, b.temporalNumericValue.quantizedValue, "quantizedValue");
+        assertEq(a.id, b.id, "id");
+        assertEq(a.publisherMerkleRoot, b.publisherMerkleRoot, "publisherMerkleRoot");
+        assertEq(a.valueComputeAlgHash, b.valueComputeAlgHash, "valueComputeAlgHash");
+        assertEq(a.r, b.r, "r");
+        assertEq(a.s, b.s, "s");
+        assertEq(a.v, b.v, "v");
     }
 }

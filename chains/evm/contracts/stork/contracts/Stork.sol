@@ -40,7 +40,7 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
 
     function _verifyAndUpdate(
         StorkStructs.TemporalNumericValueInput[] memory updateData
-    ) private {
+    ) internal {
         uint16 numUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
             bool verified = verifyStorkSignatureV1(
