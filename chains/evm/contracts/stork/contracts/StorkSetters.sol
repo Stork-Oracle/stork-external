@@ -25,7 +25,6 @@ contract StorkSetters is StorkState, IStorkEvents {
     }
 
     function setStorkPublicKey(address storkPublicKey) internal {
-        require(storkPublicKey != address(0), "Stork public key cannot be 0 address");
         _state.storkPublicKey = storkPublicKey;
         emit StorkPublicKeyUpdate(storkPublicKey);
     }

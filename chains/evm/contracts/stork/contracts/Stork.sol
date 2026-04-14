@@ -39,8 +39,10 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
                 return true;
             }
         }
-        // Legacy fallback: the storkPublicKey slot always authorizes until the owner migrates
-        return verifyStorkSignatureV1(storkPublicKey(), id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v);
+        // Legacy fallback: disabled once the owner sets storkPublicKey to address(0)
+        address legacyKey = storkPublicKey();
+        if (legacyKey == address(0)) return false;
+        return verifyStorkSignatureV1(legacyKey, id, recvTime, quantizedValue, publisherMerkleRoot, valueComputeAlgHash, r, s, v);
     }
 
     function updateTemporalNumericValuesV1(
