@@ -241,6 +241,23 @@ impl Stork for Contract {
         latest_value
     }
 
+    #[storage(read)]
+    fn get_temporal_numeric_values_unchecked_v1(ids: Vec<b256>) -> Vec<TemporalNumericValue> {
+        let mut values = Vec::new();
+        let mut i = 0;
+        while i < ids.len() {
+            let id = ids.get(i).unwrap();
+            values.push(match latest_canonical_temporal_numeric_value(id) {
+                Ok(value) => value,
+                Err(error) => {
+                    panic error;
+                }
+            });
+            i += 1;
+        }
+        values
+    }
+
     fn version() -> String {
         return String::from_ascii_str("1.0.0");
     }
