@@ -49,6 +49,8 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
     ) public payable {
         uint16 numUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
+            // Include symmetrical invariant with packed data code path
+            if (updateData[i].v != 27 && updateData[i].v != 28) revert StorkErrors.InvalidSignature();
             if (!_isValidStorkSigner(
                 updateData[i].id,
                 updateData[i].temporalNumericValue.timestampNs,
