@@ -13,6 +13,9 @@ async function main() {
   }
 
   // @ts-expect-error upgrades is loaded in hardhat/config
+  await upgrades.forceImport(contractAddress, UpgradeableStork, { kind: "uups" });
+
+  // @ts-expect-error upgrades is loaded in hardhat/config
   // Upgrade the proxy to the new implementation
   const upgraded = await upgrades.upgradeProxy(
     contractAddress,
@@ -20,7 +23,7 @@ async function main() {
     {
       pollingInterval: 1000,
       timeout: 60000,
-      unsafeSkipStorageCheck: true,
+      redeployImplementation: "always",
     }
   );
 
@@ -45,6 +48,7 @@ task("prepare-upgrade", "Deploy a new implementation for use with either direct 
     const newImplAddress = await upgrades.prepareUpgrade(contractAddress, factory, {
       kind: "uups",
       unsafeSkipStorageCheck: true,
+      redeployImplementation: "always",
     });
 
     console.log(`New implementation: ${newImplAddress}`);
