@@ -1,7 +1,6 @@
 package signer
 
 import (
-	"encoding/hex"
 	"math/big"
 	"testing"
 	"unsafe"
@@ -210,31 +209,6 @@ func BenchmarkSigner_SignPublisherPrice_Stark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		signer.SignPublisherPrice(1708940577123456789, "DYDXUSD", "3335950349880000000")
 	}
-}
-
-func TestBigIntBytesToTwosComplement(t *testing.T) {
-	// negative
-	intString := "-17725899000000"
-	intBigInt := new(big.Int)
-	intBigInt.SetString(intString, 10)
-
-	twosComplement := bigIntToTwosComplement32(intBigInt)
-	assert.Equal(
-		t,
-		"ffffffffffffffffffffffffffffffffffffffffffffffffffffefe0de163740",
-		hex.EncodeToString(twosComplement),
-	)
-
-	// positive
-	intString = "12500000000000"
-	intBigInt.SetString(intString, 10)
-
-	twosComplement = bigIntToTwosComplement32(intBigInt)
-	assert.Equal(
-		t,
-		"00000000000000000000000000000000000000000000000000000b5e620f4800",
-		hex.EncodeToString(twosComplement),
-	)
 }
 
 func TestCreateStarkBufferFromBigIntAbs(t *testing.T) {

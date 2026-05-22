@@ -12,8 +12,13 @@ import (
 	"strings"
 
 	"github.com/Stork-Oracle/stork-external/shared"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/Stork-Oracle/stork-external/shared/signer/evm"
+)
+
+// Re-exports of EVM verifier functions from the evm subpackage.
+var (
+	VerifyEvmPublisherPrice = evm.VerifyPublisherPrice
+	VerifyEvmSignature      = evm.VerifySignature
 )
 
 func VerifyAuth(
@@ -22,44 +27,24 @@ func VerifyAuth(
 	signatureType shared.SignatureType,
 	signature string,
 ) error {
-	strippedSignature := strip0x(signature)
-
 	switch signatureType {
 	case shared.EvmSignatureType:
-		if len(strippedSignature) != 130 {
-			return errors.New("invalid EVM signature length")
-		}
-		r := "0x" + strippedSignature[:64]
-		s := "0x" + strippedSignature[64:128]
-		v := "0x" + strippedSignature[128:]
-		evmSignature := shared.EvmSignature{
-			R: r,
-			S: s,
-			V: v,
-		}
-		err := VerifyEvmPublisherPrice(timestampNano, StorkAuthAssetId, StorkMagicNumber, publicKey, evmSignature)
-		if err != nil {
-			return fmt.Errorf("invalid evm auth signature: %w", err)
-		}
-		return nil
+		return evm.VerifyAuth(timestampNano, publicKey, signature)
 	case shared.StarkSignatureType:
+		strippedSignature := strip0x(signature)
 		if len(strippedSignature) != 128 {
 			return errors.New("invalid Stark signature length")
 		}
 		r := "0x" + strippedSignature[:64]
 		s := "0x" + strippedSignature[64:128]
-		starkSignature := shared.StarkSignature{
-			R: r,
-			S: s,
-		}
-		err := VerifyStarkPublisherPrice(
+		starkSignature := shared.StarkSignature{R: r, S: s}
+		if err := VerifyStarkPublisherPrice(
 			timestampNano,
 			StarkEncodedStorkAuthAssetId,
 			StorkMagicNumber,
 			publicKey,
 			starkSignature,
-		)
-		if err != nil {
+		); err != nil {
 			return fmt.Errorf("invalid stark auth signature: %w", err)
 		}
 		return nil
@@ -78,62 +63,20 @@ func VerifyPublisherPrice(
 ) error {
 	switch signatureType {
 	case shared.EvmSignatureType:
-		return VerifyEvmPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, signature)
+		evmSig, ok := signature.(shared.EvmSignature)
+		if !ok {
+			return errors.New("expected shared.EvmSignature for EVM signature type")
+		}
+		return evm.VerifyPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, evmSig)
 	case shared.StarkSignatureType:
-		return VerifyStarkPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, signature)
+		starkSig, ok := signature.(shared.StarkSignature)
+		if !ok {
+			return errors.New("expected shared.StarkSignature for Stark signature type")
+		}
+		return VerifyStarkPublisherPrice(publishTimestampNano, externalAssetId, quantizedValue, publisherKey, starkSig)
 	default:
 		return fmt.Errorf("invalid signature type: %s", signatureType)
 	}
-}
-
-func VerifyEvmPublisherPrice(
-	publishTimestampNano int64,
-	externalAssetId string,
-	quantizedValue string,
-	publisherKey shared.PublisherKey,
-	signature any,
-) error {
-	evmSignature := signature.(shared.EvmSignature)
-	publisherAddress := common.HexToAddress(string(publisherKey))
-	payload := getPublisherEvmPricePayload(
-		publishTimestampNano,
-		quantizedValue,
-		externalAssetId,
-		publisherAddress,
-	)
-	isValid, err := VerifyEvmSignature(publisherAddress, payload, evmSignature)
-	if err != nil {
-		return fmt.Errorf("failed to verify signature: %w", err)
-	}
-	if !isValid {
-		return fmt.Errorf("invalid publisher signature")
-	}
-	return nil
-}
-
-func VerifyEvmSignature(
-	publisherAddress common.Address,
-	payload [][]byte,
-	signature shared.EvmSignature,
-) (bool, error) {
-	_, prefixedHash := getEvmHashes(payload)
-	storkSignatureBytes, err := evmSignatureToBytes(signature)
-	if err != nil {
-		return false, fmt.Errorf("failed to convert signature to bytes: %v", err)
-	}
-
-	// get the public key that generated this signature and convert it to a public address
-	foundPubKey, err := crypto.Ecrecover(prefixedHash.Bytes(), storkSignatureBytes)
-	if err != nil {
-		return false, fmt.Errorf("failed to recover publisher signature: %v", err)
-	}
-	pubKey, err := crypto.UnmarshalPubkey(foundPubKey)
-	if err != nil {
-		return false, fmt.Errorf("error unmarshalling public key: %v", err)
-	}
-	address := crypto.PubkeyToAddress(*pubKey)
-
-	return address == publisherAddress, nil
 }
 
 func VerifyStarkPublisherPrice(
@@ -141,30 +84,24 @@ func VerifyStarkPublisherPrice(
 	externalAssetId string,
 	quantizedValue string,
 	publisherKey shared.PublisherKey,
-	signature any,
+	signature shared.StarkSignature,
 ) error {
 	xInt, yInt := getPublisherPriceStarkXY(publishTimestampNano, externalAssetId, quantizedValue)
-	isValid := verifyStarkSignature(xInt, yInt, publisherKey, signature)
-	if !isValid {
+	if !verifyStarkSignature(xInt, yInt, publisherKey, signature) {
 		return errors.New("invalid stark signature")
-	} else {
-		return nil
 	}
+	return nil
 }
 
-func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey shared.PublisherKey, signature any) bool {
-	starkSignature := signature.(shared.StarkSignature)
+func verifyStarkSignature(xInt, yInt *big.Int, publicKey shared.PublisherKey, signature shared.StarkSignature) bool {
 	publicKeyStr, _ := strings.CutPrefix(string(publicKey), "0x")
-	pubKeyInt := new(big.Int)
-	pubKeyInt.SetString(publicKeyStr, 16)
+	pubKeyInt, _ := new(big.Int).SetString(publicKeyStr, 16)
 
-	rStr, _ := strings.CutPrefix(starkSignature.R, "0x")
-	rInt := new(big.Int)
-	rInt.SetString(rStr, 16)
+	rStr, _ := strings.CutPrefix(signature.R, "0x")
+	rInt, _ := new(big.Int).SetString(rStr, 16)
 
-	sStr, _ := strings.CutPrefix(starkSignature.S, "0x")
-	sInt := new(big.Int)
-	sInt.SetString(sStr, 16)
+	sStr, _ := strings.CutPrefix(signature.S, "0x")
+	sInt, _ := new(big.Int).SetString(sStr, 16)
 
 	xIntBuf, err := createStarkBufferFromBigIntAbs(xInt)
 	if err != nil {
@@ -186,14 +123,5 @@ func verifyStarkSignature(xInt *big.Int, yInt *big.Int, publicKey shared.Publish
 	if err != nil {
 		return false
 	}
-	isValidInt := C.validate_stark_signature(
-		xIntBuf,
-		yIntBuf,
-		pubKeyIntBuf,
-		rIntBuf,
-		sIntBuf,
-	)
-	isValid := isValidInt != 0
-
-	return isValid
+	return C.validate_stark_signature(xIntBuf, yIntBuf, pubKeyIntBuf, rIntBuf, sIntBuf) != 0
 }
