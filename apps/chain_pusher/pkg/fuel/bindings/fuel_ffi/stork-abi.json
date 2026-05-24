@@ -55,11 +55,27 @@
       "metadataTypeId": 13
     },
     {
+      "type": "struct std::vec::Vec<b256>",
+      "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
+      "metadataTypeId": 16,
+      "typeArguments": [
+        "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+      ]
+    },
+    {
       "type": "struct std::vec::Vec<struct stork_sway_sdk::interface::TemporalNumericValueInput>",
       "concreteTypeId": "e67278f564f3da524afebc87950681dff66e11946370df7f4c68b5f01329590b",
       "metadataTypeId": 16,
       "typeArguments": [
         "672654baba0e998dd82f818c92c2b544c9275ee09007b0f65f59195a94a916d6"
+      ]
+    },
+    {
+      "type": "struct std::vec::Vec<struct stork_sway_sdk::temporal_numeric_value::TemporalNumericValue>",
+      "concreteTypeId": "872137d0d4d329e1a5711b34dd5a31a31277c08d54727a431ddc614863a15eda",
+      "metadataTypeId": 16,
+      "typeArguments": [
+        "6972e006137b782c482ffc099e21cc55fce9151a2096dd6582df22c9dc81bd9c"
       ]
     },
     {
@@ -407,6 +423,24 @@
       ]
     },
     {
+      "name": "get_temporal_numeric_values_unchecked_v1",
+      "inputs": [
+        {
+          "name": "ids",
+          "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198"
+        }
+      ],
+      "output": "872137d0d4d329e1a5711b34dd5a31a31277c08d54727a431ddc614863a15eda",
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
+    },
+    {
       "name": "get_update_fee_v1",
       "inputs": [
         {
@@ -651,13 +685,23 @@
       "pos": {
         "pkg": "stork",
         "file": "src/main.sw",
+        "line": 253,
+        "column": 21
+      },
+      "logId": "5142315946124958513",
+      "msg": null
+    },
+    "18446744069414584322": {
+      "pos": {
+        "pkg": "stork",
+        "file": "src/main.sw",
         "line": 206,
         "column": 17
       },
       "logId": "5142315946124958513",
       "msg": null
     },
-    "18446744069414584322": {
+    "18446744069414584323": {
       "pos": {
         "pkg": "stork",
         "file": "src/main.sw",
@@ -667,7 +711,7 @@
       "logId": "5142315946124958513",
       "msg": null
     },
-    "18446744069414584323": {
+    "18446744069414584324": {
       "pos": {
         "pkg": "stork",
         "file": "src/main.sw",
@@ -677,7 +721,7 @@
       "logId": "5142315946124958513",
       "msg": null
     },
-    "18446744069414584324": {
+    "18446744069414584325": {
       "pos": {
         "pkg": "stork",
         "file": "src/main.sw",
