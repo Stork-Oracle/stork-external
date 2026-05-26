@@ -17,7 +17,7 @@ const config: HardhatUserConfig = {
       loggingEnabled: true,
     },
     base: {
-      url: "https://base.llamarpc.com",
+      url: "https://mainnet.base.org",
       accounts: [PRIVATE_KEY],
       chainId: 8453,
     },
