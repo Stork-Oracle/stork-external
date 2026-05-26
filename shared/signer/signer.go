@@ -6,7 +6,6 @@ package signer
 import "C"
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -18,18 +17,18 @@ import (
 
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/Stork-Oracle/stork-external/shared"
+	"github.com/Stork-Oracle/stork-external/shared/signer/evm"
 	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 )
 
 var ErrBigIntTooLarge = errors.New("big int is larger than the modulus of the Stark curve")
 
-// gmorkworld in ascii
+// Stork auth constants. Magic number / asset id constants are re-exported from
+// the evm subpackage to keep a single source of truth.
 const (
-	StorkMagicNumber             = "103109111114107119111114108100"
-	StorkAuthAssetId             = "STORKAUTH"
+	StorkMagicNumber             = evm.StorkMagicNumber
+	StorkAuthAssetId             = evm.StorkAuthAssetID
 	StarkEncodedStorkAuthAssetId = "0x53544f524b41555448000000000000007361757468"
 	StorkAuthOracleId            = "sauth"
 )
@@ -51,31 +50,24 @@ type Signer[T shared.Signature] interface {
 	GetSignatureType() shared.SignatureType
 }
 
-type EvmSigner struct {
-	privateKey       *ecdsa.PrivateKey
-	publicKeyAddress common.Address
-	logger           zerolog.Logger
-}
+// Re-exports of the EVM signer types/constructors from the evm subpackage.
+// External consumers that previously imported these symbols from this package
+// continue to work unchanged.
+type (
+	EvmSigner     = evm.Signer
+	EvmAuthSigner = evm.AuthSigner
+)
+
+var (
+	NewEvmSigner     = evm.NewSigner
+	NewEvmAuthSigner = evm.NewAuthSigner
+)
 
 type StarkSigner struct {
 	pkBytes       []byte
 	publicKey     string
 	oracleNameInt *big.Int
 	logger        zerolog.Logger
-}
-
-func NewEvmSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmSigner, error) {
-	evmPrivateKey, err := convertHexToECDSA(privateKeyStr)
-	if err != nil {
-		return nil, err
-	}
-
-	publicKeyAddress := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
-	return &EvmSigner{
-		privateKey:       evmPrivateKey,
-		publicKeyAddress: publicKeyAddress,
-		logger:           logger,
-	}, nil
 }
 
 func NewStarkSigner(
@@ -103,51 +95,6 @@ func NewStarkSigner(
 		oracleNameInt: oracleNameInt,
 		logger:        logger,
 	}, nil
-}
-
-func (s *EvmSigner) SignPublisherPrice(
-	publishTimestamp int64,
-	asset string,
-	quantizedValue string,
-) (timestampedSig *shared.TimestampedSignature[*shared.EvmSignature], encodedAssetId string, err error) {
-	timestampBigInt := big.NewInt(publishTimestamp / 1_000_000_000)
-
-	quantizedPriceBigInt := new(big.Int)
-	quantizedPriceBigInt.SetString(string(quantizedValue), 10)
-	quantizedPriceBytes := bigIntToTwosComplement32(quantizedPriceBigInt)
-
-	publicAddress := crypto.PubkeyToAddress(s.privateKey.PublicKey)
-	payload := [][]byte{
-		publicAddress.Bytes(),
-		[]byte(asset),
-		common.LeftPadBytes(timestampBigInt.Bytes(), 32),
-		quantizedPriceBytes,
-	}
-
-	msgHash, signature, err := signData(s.privateKey, payload)
-	if err != nil {
-		return nil, "", err
-	}
-
-	rsv, err := bytesToRsvSignature(signature)
-	if err != nil {
-		return nil, "", err
-	}
-
-	timestampedSignature := shared.TimestampedSignature[*shared.EvmSignature]{
-		Signature:     rsv,
-		TimestampNano: uint64(publishTimestamp),
-		MsgHash:       msgHash,
-	}
-	return &timestampedSignature, asset, nil
-}
-
-func (s *EvmSigner) GetPublisherKey() shared.PublisherKey {
-	return shared.PublisherKey(s.publicKeyAddress.Hex())
-}
-
-func (s *EvmSigner) GetSignatureType() shared.SignatureType {
-	return shared.EvmSignatureType
 }
 
 func (s *StarkSigner) SignPublisherPrice(
@@ -210,7 +157,6 @@ func (s *StarkSigner) SignPublisherPrice(
 		R: "0" + trimLeadingZeros(sigRFelt.String()),
 		S: "0" + trimLeadingZeros(sigSFelt.String()),
 	}
-	// trim leading 0s
 	msgHash := add0x(trimLeadingZeros(strip0x(pedersenHashFelt.String())))
 	timestampedSignature := shared.TimestampedSignature[*shared.StarkSignature]{
 		Signature:     starkSignature,
@@ -233,48 +179,6 @@ func (s *StarkSigner) GetSignatureType() shared.SignatureType {
 type StorkAuthSigner interface {
 	SignAuth(publishTimestamp int64) (string, error)
 	GetAuthHeaders() (http.Header, error)
-}
-
-type EvmAuthSigner struct {
-	evmSigner *EvmSigner
-}
-
-func NewEvmAuthSigner(privateKeyStr EvmPrivateKey, logger zerolog.Logger) (*EvmAuthSigner, error) {
-	evmSigner, err := NewEvmSigner(privateKeyStr, logger)
-	if err != nil {
-		return nil, err
-	}
-	return &EvmAuthSigner{evmSigner: evmSigner}, nil
-}
-
-func (s *EvmAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
-	timestampedSignature, _, err := s.evmSigner.SignPublisherPrice(publishTimestamp, StorkAuthAssetId, StorkMagicNumber)
-	if err != nil {
-		return "", fmt.Errorf("failed to sign auth: %v", err)
-	}
-	signature := timestampedSignature.Signature
-	rHex := fmt.Sprintf("%064s", strip0x(signature.R))
-	sHex := fmt.Sprintf("%064s", strip0x(signature.S))
-	vHex := fmt.Sprintf("%02s", strip0x(signature.V))
-	signatureStr := "0x" + rHex + sHex + vHex
-	return signatureStr, nil
-}
-
-func (s *EvmAuthSigner) GetAuthHeaders() (http.Header, error) {
-	publicKey := s.evmSigner.GetPublisherKey()
-	signatureType := s.evmSigner.GetSignatureType()
-	timestamp := time.Now().UnixNano()
-	signatureString, err := s.SignAuth(timestamp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to sign auth header: %v", err)
-	}
-	header := http.Header{}
-	header.Set(publicKeyHeader, string(publicKey))
-	header.Set(timestampHeader, fmt.Sprintf("%d", timestamp))
-	header.Set(signatureHeader, signatureString)
-	header.Set(signatureTypeHeader, string(signatureType))
-
-	return header, nil
 }
 
 type StarkAuthSigner struct {
@@ -305,8 +209,7 @@ func (s *StarkAuthSigner) SignAuth(publishTimestamp int64) (string, error) {
 	signature := timestampedSignature.Signature
 	rHex := fmt.Sprintf("%064s", strip0x(signature.R))
 	sHex := fmt.Sprintf("%064s", strip0x(signature.S))
-	signatureStr := "0x" + rHex + sHex
-	return signatureStr, nil
+	return "0x" + rHex + sHex, nil
 }
 
 func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
@@ -323,47 +226,6 @@ func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
 	header.Set(signatureHeader, signatureString)
 	header.Set(signatureTypeHeader, string(signatureType))
 	return header, nil
-}
-
-func convertHexToECDSA(privateKey EvmPrivateKey) (*ecdsa.PrivateKey, error) {
-	privateKeyStr := strings.Replace(string(privateKey), "0x", "", 1)
-
-	// Create a new ecdsa.PrivateKey object
-	evmPrivateKey, err := crypto.HexToECDSA(privateKeyStr)
-	if err != nil {
-		return nil, err
-	}
-
-	return evmPrivateKey, nil
-}
-
-// getHashes returns the keccak hash of the payload and the keccak hash of the prefixed data hash
-func getHashes(payload [][]byte) (common.Hash, common.Hash) {
-	payloadHash := crypto.Keccak256Hash(payload...)
-
-	prefixedHash := crypto.Keccak256Hash(
-		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(payloadHash))),
-		payloadHash.Bytes(),
-	)
-	return payloadHash, prefixedHash
-}
-
-func signData(privateKey *ecdsa.PrivateKey, payload [][]byte) (string, []byte, error) {
-	payloadHash, prefixedHash := getHashes(payload)
-	signature, err := crypto.Sign(prefixedHash.Bytes(), privateKey)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return payloadHash.String(), signature, nil
-}
-
-func bytesToRsvSignature(signature []byte) (rsv *shared.EvmSignature, err error) {
-	r := hex.EncodeToString(signature[:32])
-	s := hex.EncodeToString(signature[32:64])
-	v := hex.EncodeToString([]byte{signature[64] + 27})
-
-	return &shared.EvmSignature{R: "0x" + r, S: "0x" + s, V: "0x" + v}, nil
 }
 
 func bytesToFieldElement(b []byte) (*felt.Felt, error) {
@@ -387,10 +249,10 @@ func createBufferFromBytes(buf []byte) *C.uint8_t {
 	return (*C.uint8_t)(unsafe.Pointer(&buf[0]))
 }
 
-// createStarkBufferFromBigIntAbs creates a 32-byte buffer from a big.Int and returns a pointer to the buffer in the form of a C uint8_t.
-// We enforce that the big.Int is less than the modulus of the Stark curve (a 251-bit prime).
-// Returns an error if the big.Int is too large to fit in the Stark curve.
-// This function assumes the big.Int is positive, and uses the absolute value of the big.Int regardless of sign.
+// createStarkBufferFromBigIntAbs creates a 32-byte buffer from a big.Int and
+// returns a pointer to the buffer as a C uint8_t. The big.Int must be less
+// than the modulus of the Stark curve (251-bit prime); the absolute value is
+// used regardless of sign.
 func createStarkBufferFromBigIntAbs(i *big.Int) (*C.uint8_t, error) {
 	absI := new(big.Int).Abs(i)
 	if absI.Cmp(fp.Modulus()) >= 0 {
@@ -399,28 +261,4 @@ func createStarkBufferFromBigIntAbs(i *big.Int) (*C.uint8_t, error) {
 	bytes := make([]byte, 32)
 	absI.FillBytes(bytes)
 	return (*C.uint8_t)(unsafe.Pointer(&bytes[0])), nil
-}
-
-// bigIntToTwosComplement32 converts a big.Int to a 32-byte two's complement representation.
-// This matches Ethereum's signed integer encoding where negative numbers are represented in two's complement.
-func bigIntToTwosComplement32(x *big.Int) []byte {
-	if x.Sign() >= 0 {
-		return common.LeftPadBytes(x.Bytes(), 32)
-	}
-
-	// For negative numbers:
-	// First, get the absolute value
-	absX := new(big.Int).Abs(x)
-
-	// Create a 256-bit (32 byte) mask
-	mask := new(big.Int).Lsh(big.NewInt(1), 256)
-	mask.Sub(mask, big.NewInt(1))
-
-	// Perform two's complement on full 256 bits
-	// First invert (subtract from 2^256 - 1)
-	inverted := new(big.Int).Sub(mask, absX)
-	// Then add 1
-	twosComp := new(big.Int).Add(inverted, big.NewInt(1))
-
-	return twosComp.Bytes()
 }
