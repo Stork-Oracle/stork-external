@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
-	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
-	ErrEventChannelClosed      = errors.New("event channel is closed")
+	ErrCastingPublicKeyToECDSA       = errors.New("error casting public key to ECDSA")
+	ErrMaxRetryAttemptsReached       = errors.New("max retry attempts reached")
+	ErrEventChannelClosed            = errors.New("event channel is closed")
+	ErrPublisherSignaturesNotVerified = errors.New("publisher signatures not verified")
 )
 
 const (
@@ -405,7 +406,7 @@ func (eci *ContractInteractor) BatchPushToContract(
 			if !verified {
 				eci.logger.Error().Msg("Publisher signatures not verified, skipping update")
 
-				return nil
+				return ErrPublisherSignaturesNotVerified
 			}
 		}
 	}
@@ -682,17 +683,14 @@ func (eci *ContractInteractor) submitTransaction(
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
+	signerAddress := crypto.PubkeyToAddress(eci.privateKey.PublicKey)
+
 	if eci.useSyncSend {
 		receipt, txErr := eci.client.SendTransactionSync(ctx, tx, nil)
-		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-		if err != nil {
-			return nil, fmt.Errorf("failed to increment nonce: %w", err)
-		}
-
 		if txErr != nil {
 			if strings.Contains(txErr.Error(), "nonce") {
 				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
-				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+				err := eci.nonceManager.ResetNonce(ctx, eci.client, signerAddress)
 				if err != nil {
 					return nil, fmt.Errorf("failed to reset nonce: %w", err)
 				}
@@ -701,27 +699,32 @@ func (eci *ContractInteractor) submitTransaction(
 		}
 
 		if receipt.Status != 1 {
+			err := eci.nonceManager.IncrementNonce(ctx, eci.client, signerAddress)
+			if err != nil {
+				return nil, fmt.Errorf("failed to increment nonce: %w", err)
+			}
+
 			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
 		}
 	} else {
 		txErr := eci.client.SendTransaction(ctx, tx)
-		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-		if err != nil {
-			return nil, fmt.Errorf("failed to increment nonce: %w", err)
-		}
-
 		if txErr != nil {
 			if revertData, ok := ethclient.RevertErrorData(txErr); ok {
 				eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
 			} else if strings.Contains(txErr.Error(), "nonce") {
 				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
-				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+				err := eci.nonceManager.ResetNonce(ctx, eci.client, signerAddress)
 				if err != nil {
 					return nil, fmt.Errorf("failed to reset nonce: %w", err)
 				}
 			}
 			return nil, fmt.Errorf("failed to send transaction: %w", txErr)
 		}
+	}
+
+	err = eci.nonceManager.IncrementNonce(ctx, eci.client, signerAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to increment nonce: %w", err)
 	}
 
 	eci.gasFeeCap = tx.GasFeeCap()
