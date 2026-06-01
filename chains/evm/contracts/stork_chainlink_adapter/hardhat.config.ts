@@ -26,6 +26,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 84532,
     },
+    berachainMainnet: {
+      url: "https://rpc.berachain.com/",
+      accounts: [PRIVATE_KEY],
+      chainId: 80094,
+    },
     hyperEvmMainnet: {
       url: "https://rpc.hyperliquid.xyz/evm",
       accounts: [PRIVATE_KEY],
@@ -50,6 +55,14 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
     customChains: [
+      {
+        network: "berachainMainnet",
+        chainId: 80094,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chain_id=80094",
+          browserURL: "https://explorer.berachain.com"
+        }
+      },
       {
         network: "plumeMainnet",
         chainId: 98866,
