@@ -31,6 +31,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 80094,
     },
+    citreaMainnet: {
+      url: "https://rpc.mainnet.citrea.xyz",
+      accounts: [PRIVATE_KEY],
+      chainId: 4114,
+    },
     hyperEvmMainnet: {
       url: "https://rpc.hyperliquid.xyz/evm",
       accounts: [PRIVATE_KEY],
@@ -54,6 +59,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+    // Uncomment this for verifications not using v2 API
+    // apiKey: {
+    //   citreaMainnet: 'fake',
+    // },
     customChains: [
       {
         network: "berachainMainnet",
@@ -61,6 +70,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.etherscan.io/v2/api?chain_id=80094",
           browserURL: "https://explorer.berachain.com"
+        }
+      },
+      {
+        network: "citreaMainnet",
+        chainId: 4114,
+        urls: {
+          apiURL: "https://explorer.mainnet.citrea.xyz/api",
+          browserURL: "https://explorer.mainnet.citrea.xyz/"
         }
       },
       {
