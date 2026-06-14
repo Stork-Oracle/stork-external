@@ -273,6 +273,8 @@ func (r *FirstPartyRunner[T]) pushBatch(
 		r.logger.Error().
 			Err(err).
 			Msg("Failed to push batch to contract")
+
+		return
 	}
 
 	r.logger.Debug().
