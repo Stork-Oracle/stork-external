@@ -49,6 +49,7 @@ func (s *InteractorTestSuite) SetupSuite() {
 		s.logger,
 		0,
 		false,
+		false,
 	)
 	s.Require().NoError(err)
 

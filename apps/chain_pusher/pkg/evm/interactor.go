@@ -71,6 +71,7 @@ type ContractInteractor struct {
 	wsContract      *bindings.StorkContract
 	client          *ethclient.Client
 	useSyncSend     bool
+	usePackedUpdate bool
 	version         *semver.Version
 	gasFeeCap       *big.Int
 	gasTipCap       *big.Int
@@ -91,6 +92,7 @@ func NewContractInteractor(
 	logger zerolog.Logger,
 	gasLimit uint64,
 	useSyncSend bool,
+	usePackedUpdate bool,
 ) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(keyFileContent)
 	if err != nil {
@@ -115,6 +117,7 @@ func NewContractInteractor(
 		gasFeeCap:       nil,
 		gasTipCap:       nil,
 		useSyncSend:     useSyncSend,
+		usePackedUpdate: usePackedUpdate,
 		gasLimits:       make(map[int]uint64),
 		singleUpdateFee: nil,
 		lastSetGasCaps:  time.Time{},
@@ -738,7 +741,7 @@ func (eci *ContractInteractor) submitTransaction(
 
 	var tx *ethtypes.Transaction
 
-	if eci.version != nil && eci.version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
+	if eci.usePackedUpdate && eci.version != nil && eci.version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
 		packed, packErr := packUpdatePayload(updatePayload)
 		if packErr != nil {
 			return nil, fmt.Errorf("failed to pack update payload: %w", packErr)
