@@ -242,6 +242,110 @@ func TestGetBumpedGasPrices(t *testing.T) {
 	}
 }
 
+func TestPackUpdatePayload(t *testing.T) {
+	t.Parallel()
+
+	id := [32]byte{0xAA}
+	id[31] = 0xBB
+	merkle := [32]byte{0x11, 0x22, 0x33}
+	algHash := [32]byte{0x44, 0x55}
+	rBytes := [32]byte{0x66}
+	sBytes := [32]byte{0x77}
+
+	updates := []bindings.StorkStructsTemporalNumericValueInput{
+		{
+			TemporalNumericValue: bindings.StorkStructsTemporalNumericValue{
+				TimestampNs:    1_700_000_000_000_000_000,
+				QuantizedValue: big.NewInt(123456789),
+			},
+			Id:                  id,
+			PublisherMerkleRoot: merkle,
+			ValueComputeAlgHash: algHash,
+			R:                   rBytes,
+			S:                   sBytes,
+			V:                   28,
+		},
+		{
+			TemporalNumericValue: bindings.StorkStructsTemporalNumericValue{
+				TimestampNs:    1_700_000_000_000_000_001,
+				QuantizedValue: big.NewInt(-987654321),
+			},
+			Id:                  [32]byte{0xCC},
+			PublisherMerkleRoot: [32]byte{0xDD},
+			ValueComputeAlgHash: [32]byte{0xEE},
+			R:                   [32]byte{0xFF},
+			S:                   [32]byte{0x01},
+			V:                   27,
+		},
+	}
+
+	packed, err := packUpdatePayload(updates)
+	require.NoError(t, err)
+	require.Len(t, packed, 2*packedWordsPerEntry)
+
+	// Entry 0: v=28 → v_flag=1, positive value.
+	expectedWord0 := new(big.Int).Lsh(big.NewInt(1), packedShiftVFlag)
+	ts0 := new(big.Int).SetUint64(updates[0].TemporalNumericValue.TimestampNs)
+	expectedWord0.Or(expectedWord0, ts0.Lsh(ts0, packedShiftTimestampNs))
+	expectedWord0.Or(expectedWord0, big.NewInt(123456789))
+	assert.Equal(t, 0, expectedWord0.Cmp(packed[0]), "entry 0 word[0] mismatch")
+	assert.Equal(t, new(big.Int).SetBytes(id[:]), packed[1])
+	assert.Equal(t, new(big.Int).SetBytes(merkle[:]), packed[2])
+	assert.Equal(t, new(big.Int).SetBytes(algHash[:]), packed[3])
+	assert.Equal(t, new(big.Int).SetBytes(rBytes[:]), packed[4])
+	assert.Equal(t, new(big.Int).SetBytes(sBytes[:]), packed[5])
+
+	// Entry 1: v=27 → v_flag=0, negative value encoded as 192-bit two's complement.
+	twoPow192 := new(big.Int).Lsh(big.NewInt(1), packedQuantizedValueBits)
+	expectedWord6 := new(big.Int).SetUint64(updates[1].TemporalNumericValue.TimestampNs)
+	expectedWord6.Lsh(expectedWord6, packedShiftTimestampNs)
+	qv := new(big.Int).Add(big.NewInt(-987654321), twoPow192)
+	expectedWord6.Or(expectedWord6, qv)
+	assert.Equal(t, 0, expectedWord6.Cmp(packed[packedWordsPerEntry]), "entry 1 word[0] mismatch")
+}
+
+func TestPackUpdatePayloadErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		update  bindings.StorkStructsTemporalNumericValueInput
+		wantErr error
+	}{
+		{
+			name: "invalid v",
+			update: bindings.StorkStructsTemporalNumericValueInput{
+				TemporalNumericValue: bindings.StorkStructsTemporalNumericValue{
+					TimestampNs:    1,
+					QuantizedValue: big.NewInt(1),
+				},
+				V: 26,
+			},
+			wantErr: ErrInvalidSignatureV,
+		},
+		{
+			name: "timestamp overflow",
+			update: bindings.StorkStructsTemporalNumericValueInput{
+				TemporalNumericValue: bindings.StorkStructsTemporalNumericValue{
+					TimestampNs:    1 << 63,
+					QuantizedValue: big.NewInt(1),
+				},
+				V: 27,
+			},
+			wantErr: ErrTimestampOverflow,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := packUpdatePayload([]bindings.StorkStructsTemporalNumericValueInput{tt.update})
+			require.ErrorIs(t, err, tt.wantErr)
+		})
+	}
+}
+
 func TestGetUpdateFee(t *testing.T) {
 	t.Parallel()
 

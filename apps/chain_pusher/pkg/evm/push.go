@@ -29,6 +29,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().Uint64P(pusher.GasLimitFlag, "g", 0, pusher.GasLimitDesc)
 	pushCmd.Flags().String(pusher.NonceManagerFlag, "", pusher.NonceManagerTypeDesc)
 	pushCmd.Flags().BoolP(pusher.UseSyncSendFlag, "", false, pusher.UseSyncSendDesc)
+	pushCmd.Flags().BoolP(pusher.UsePackedUpdateFlag, "", false, pusher.UsePackedUpdateDesc)
 
 	pushCmd.MarkFlagsMutuallyExclusive(pusher.BatchingWindowFlag, pusher.BatchingWindowStrFlag)
 
@@ -57,6 +58,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	gasLimit, _ := cmd.Flags().GetUint64(pusher.GasLimitFlag)
 	nonceManagerType, _ := cmd.Flags().GetString(pusher.NonceManagerFlag)
 	useSyncSend, _ := cmd.Flags().GetBool(pusher.UseSyncSendFlag)
+	usePackedUpdate, _ := cmd.Flags().GetBool(pusher.UsePackedUpdateFlag)
 
 	logger := PusherLogger(chainRpcUrl, contractAddress)
 
@@ -78,6 +80,7 @@ func runPush(cmd *cobra.Command, args []string) {
 		logger,
 		gasLimit,
 		useSyncSend,
+		usePackedUpdate,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize contract interactor")

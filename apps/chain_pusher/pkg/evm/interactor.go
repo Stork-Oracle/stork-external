@@ -29,6 +29,8 @@ var (
 	ErrCastingPublicKeyToECDSA = errors.New("error casting public key to ECDSA")
 	ErrMaxRetryAttemptsReached = errors.New("max retry attempts reached")
 	ErrEventChannelClosed      = errors.New("event channel is closed")
+	ErrInvalidSignatureV       = errors.New("invalid signature v value, expected 27 or 28")
+	ErrTimestampOverflow       = errors.New("timestampNs exceeds 63-bit limit")
 )
 
 const (
@@ -41,7 +43,21 @@ const (
 	gasBumpNumerator         = 120
 	gasBumpDenominator       = 100
 	gasLimitMultiplier       = 1.3
+
+	// LibCodec packed encoding: 6 uint256 words per entry, with word[0] packing
+	// v_flag (bit 255), timestampNs (bits 254:192), and quantizedValue (bits 191:0).
+	packedWordsPerEntry      = 6
+	packedShiftVFlag         = 255
+	packedShiftTimestampNs   = 192
+	packedQuantizedValueBits = 192
+	packedTimestampNsBits    = 63
+	sigV27                   = 27
+	sigV28                   = 28
 )
+
+// packedUpdateMinVersion is the first contract version that supports
+// updateTemporalNumericValuesV1Packed.
+const packedUpdateMinVersion = "1.0.6"
 
 type ContractInteractor struct {
 	logger zerolog.Logger
@@ -55,6 +71,7 @@ type ContractInteractor struct {
 	wsContract      *bindings.StorkContract
 	client          *ethclient.Client
 	useSyncSend     bool
+	usePackedUpdate bool
 	version         *semver.Version
 	gasFeeCap       *big.Int
 	gasTipCap       *big.Int
@@ -75,6 +92,7 @@ func NewContractInteractor(
 	logger zerolog.Logger,
 	gasLimit uint64,
 	useSyncSend bool,
+	usePackedUpdate bool,
 ) (*ContractInteractor, error) {
 	privateKey, err := loadPrivateKey(keyFileContent)
 	if err != nil {
@@ -99,6 +117,7 @@ func NewContractInteractor(
 		gasFeeCap:       nil,
 		gasTipCap:       nil,
 		useSyncSend:     useSyncSend,
+		usePackedUpdate: usePackedUpdate,
 		gasLimits:       make(map[int]uint64),
 		singleUpdateFee: nil,
 		lastSetGasCaps:  time.Time{},
@@ -304,6 +323,52 @@ func getUpdatePayload(
 	}
 
 	return updates, nil
+}
+
+// packUpdatePayload encodes updates into the flat uint256[] layout expected by
+// updateTemporalNumericValuesV1Packed. See LibCodec.sol for the bit layout.
+func packUpdatePayload(
+	updates []bindings.StorkStructsTemporalNumericValueInput,
+) ([]*big.Int, error) {
+	twoPow192 := new(big.Int).Lsh(big.NewInt(1), packedQuantizedValueBits)
+	mask192 := new(big.Int).Sub(twoPow192, big.NewInt(1))
+	maxTimestamp := new(big.Int).Lsh(big.NewInt(1), packedTimestampNsBits)
+
+	packed := make([]*big.Int, len(updates)*packedWordsPerEntry)
+	for i := range updates {
+		update := &updates[i]
+		if update.V != sigV27 && update.V != sigV28 {
+			return nil, fmt.Errorf("%w: got %d", ErrInvalidSignatureV, update.V)
+		}
+
+		tsBig := new(big.Int).SetUint64(update.TemporalNumericValue.TimestampNs)
+		if tsBig.Cmp(maxTimestamp) >= 0 {
+			return nil, fmt.Errorf("%w: got %d", ErrTimestampOverflow, update.TemporalNumericValue.TimestampNs)
+		}
+
+		// word[0]: v_flag (bit 255) | timestampNs (bits 254:192) | quantizedValue (bits 191:0).
+		word0 := new(big.Int).SetUint64(uint64(update.V - sigV27))
+		word0.Lsh(word0, packedShiftVFlag)
+		word0.Or(word0, tsBig.Lsh(tsBig, packedShiftTimestampNs))
+
+		qv := new(big.Int).Set(update.TemporalNumericValue.QuantizedValue)
+		if qv.Sign() < 0 {
+			qv.Add(qv, twoPow192)
+		}
+
+		qv.And(qv, mask192)
+		word0.Or(word0, qv)
+
+		base := i * packedWordsPerEntry
+		packed[base] = word0
+		packed[base+1] = new(big.Int).SetBytes(update.Id[:])
+		packed[base+2] = new(big.Int).SetBytes(update.PublisherMerkleRoot[:])
+		packed[base+3] = new(big.Int).SetBytes(update.ValueComputeAlgHash[:])
+		packed[base+4] = new(big.Int).SetBytes(update.R[:])
+		packed[base+5] = new(big.Int).SetBytes(update.S[:])
+	}
+
+	return packed, nil
 }
 
 type verifyPayload struct {
@@ -674,11 +739,24 @@ func (eci *ContractInteractor) submitTransaction(
 		auth.GasTipCap = eci.gasTipCap
 	}
 
-	tx, err := eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
+	var tx *ethtypes.Transaction
+
+	if eci.usePackedUpdate && eci.version != nil && eci.version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
+		packed, packErr := packUpdatePayload(updatePayload)
+		if packErr != nil {
+			return nil, fmt.Errorf("failed to pack update payload: %w", packErr)
+		}
+
+		tx, err = eci.contract.UpdateTemporalNumericValuesV1Packed(auth, packed)
+	} else {
+		tx, err = eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
+	}
+
 	if err != nil {
 		if revertData, ok := ethclient.RevertErrorData(err); ok {
 			eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
 		}
+
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 

@@ -59,7 +59,7 @@ type StorkStructsTemporalNumericValueInput struct {
 
 // StorkContractMetaData contains all meta data concerning the StorkContract contract.
 var StorkContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"StaleValue\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newSingleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"SingleUpdateFeeUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newStorkPublicKey\",\"type\":\"address\"}],\"name\":\"StorkPublicKeyUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newValidTimePeriod\",\"type\":\"uint256\"}],\"name\":\"ValidTimePeriodUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"acceptOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueUnsafeV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"ids\",\"type\":\"bytes32[]\"}],\"name\":\"getTemporalNumericValuesUnsafeV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue[]\",\"name\":\"values\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"getUpdateFeeV1\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFeeInWei\",\"type\":\"uint256\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pendingOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"singleUpdateFeeInWei\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"storkPublicKey\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxStorkPerBlock\",\"type\":\"uint256\"}],\"name\":\"updateSingleUpdateFeeInWei\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"}],\"name\":\"updateStorkPublicKey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"updateTemporalNumericValuesV1\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"}],\"name\":\"updateValidTimePeriodSeconds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validTimePeriodSeconds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"leaves\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"verifyMerkleRoot\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"timestamp\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"quantizedValue\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.PublisherSignature[]\",\"name\":\"signatures\",\"type\":\"tuple[]\"},{\"internalType\":\"bytes32\",\"name\":\"merkleRoot\",\"type\":\"bytes32\"}],\"name\":\"verifyPublisherSignaturesV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"recvTime\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"quantizedValue\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyStorkSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ECDSAInvalidSignature\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"ECDSAInvalidSignatureLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"ECDSAInvalidSignatureS\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFee\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidLength\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidV\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoFreshUpdate\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotFound\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"StaleValue\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"TimestampOverflow\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"signingAddress\",\"type\":\"address\"}],\"name\":\"SigningAddressAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"signingAddress\",\"type\":\"address\"}],\"name\":\"SigningAddressRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newSingleUpdateFee\",\"type\":\"uint256\"}],\"name\":\"SingleUpdateFeeUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newStorkPublicKey\",\"type\":\"address\"}],\"name\":\"StorkPublicKeyUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newValidTimePeriod\",\"type\":\"uint256\"}],\"name\":\"ValidTimePeriodUpdate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"name\":\"ValueUpdate\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"acceptOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"signingAddress\",\"type\":\"address\"}],\"name\":\"addSigningAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSigningAddresses\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueUnsafeV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getTemporalNumericValueV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"value\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"ids\",\"type\":\"bytes32[]\"}],\"name\":\"getTemporalNumericValuesUnsafeV1\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue[]\",\"name\":\"values\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"getUpdateFeeV1\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"singleUpdateFeeInWei\",\"type\":\"uint256\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"inputs\",\"type\":\"tuple[]\"}],\"name\":\"packTemporalNumericValueInputs\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pendingOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"signingAddress\",\"type\":\"address\"}],\"name\":\"removeSigningAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"singleUpdateFeeInWei\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"storkPublicKey\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxStorkPerBlock\",\"type\":\"uint256\"}],\"name\":\"updateSingleUpdateFeeInWei\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPublicKey\",\"type\":\"address\"}],\"name\":\"updateStorkPublicKey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"timestampNs\",\"type\":\"uint64\"},{\"internalType\":\"int192\",\"name\":\"quantizedValue\",\"type\":\"int192\"}],\"internalType\":\"structStorkStructs.TemporalNumericValue\",\"name\":\"temporalNumericValue\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.TemporalNumericValueInput[]\",\"name\":\"updateData\",\"type\":\"tuple[]\"}],\"name\":\"updateTemporalNumericValuesV1\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"packedData\",\"type\":\"uint256[]\"}],\"name\":\"updateTemporalNumericValuesV1Packed\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"validTimePeriodSeconds\",\"type\":\"uint256\"}],\"name\":\"updateValidTimePeriodSeconds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validTimePeriodSeconds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"leaves\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"verifyMerkleRoot\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oraclePubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyPublisherSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"pubKey\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"assetPairId\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"timestamp\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"quantizedValue\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"internalType\":\"structStorkStructs.PublisherSignature[]\",\"name\":\"signatures\",\"type\":\"tuple[]\"},{\"internalType\":\"bytes32\",\"name\":\"merkleRoot\",\"type\":\"bytes32\"}],\"name\":\"verifyPublisherSignaturesV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"storkPubKey\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"recvTime\",\"type\":\"uint256\"},{\"internalType\":\"int256\",\"name\":\"quantizedValue\",\"type\":\"int256\"},{\"internalType\":\"bytes32\",\"name\":\"publisherMerkleRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"valueComputeAlgHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"}],\"name\":\"verifyStorkSignatureV1\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // StorkContractABI is the input ABI used to generate the binding from.
@@ -239,6 +239,37 @@ func (_StorkContract *StorkContractCallerSession) UPGRADEINTERFACEVERSION() (str
 	return _StorkContract.Contract.UPGRADEINTERFACEVERSION(&_StorkContract.CallOpts)
 }
 
+// GetSigningAddresses is a free data retrieval call binding the contract method 0xa97f94cd.
+//
+// Solidity: function getSigningAddresses() view returns(address[])
+func (_StorkContract *StorkContractCaller) GetSigningAddresses(opts *bind.CallOpts) ([]common.Address, error) {
+	var out []interface{}
+	err := _StorkContract.contract.Call(opts, &out, "getSigningAddresses")
+
+	if err != nil {
+		return *new([]common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+
+	return out0, err
+
+}
+
+// GetSigningAddresses is a free data retrieval call binding the contract method 0xa97f94cd.
+//
+// Solidity: function getSigningAddresses() view returns(address[])
+func (_StorkContract *StorkContractSession) GetSigningAddresses() ([]common.Address, error) {
+	return _StorkContract.Contract.GetSigningAddresses(&_StorkContract.CallOpts)
+}
+
+// GetSigningAddresses is a free data retrieval call binding the contract method 0xa97f94cd.
+//
+// Solidity: function getSigningAddresses() view returns(address[])
+func (_StorkContract *StorkContractCallerSession) GetSigningAddresses() ([]common.Address, error) {
+	return _StorkContract.Contract.GetSigningAddresses(&_StorkContract.CallOpts)
+}
+
 // GetTemporalNumericValueUnsafeV1 is a free data retrieval call binding the contract method 0xf69058c1.
 //
 // Solidity: function getTemporalNumericValueUnsafeV1(bytes32 id) view returns((uint64,int192) value)
@@ -392,6 +423,37 @@ func (_StorkContract *StorkContractSession) Owner() (common.Address, error) {
 // Solidity: function owner() view returns(address)
 func (_StorkContract *StorkContractCallerSession) Owner() (common.Address, error) {
 	return _StorkContract.Contract.Owner(&_StorkContract.CallOpts)
+}
+
+// PackTemporalNumericValueInputs is a free data retrieval call binding the contract method 0x9e432005.
+//
+// Solidity: function packTemporalNumericValueInputs(((uint64,int192),bytes32,bytes32,bytes32,bytes32,bytes32,uint8)[] inputs) pure returns(uint256[])
+func (_StorkContract *StorkContractCaller) PackTemporalNumericValueInputs(opts *bind.CallOpts, inputs []StorkStructsTemporalNumericValueInput) ([]*big.Int, error) {
+	var out []interface{}
+	err := _StorkContract.contract.Call(opts, &out, "packTemporalNumericValueInputs", inputs)
+
+	if err != nil {
+		return *new([]*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
+
+	return out0, err
+
+}
+
+// PackTemporalNumericValueInputs is a free data retrieval call binding the contract method 0x9e432005.
+//
+// Solidity: function packTemporalNumericValueInputs(((uint64,int192),bytes32,bytes32,bytes32,bytes32,bytes32,uint8)[] inputs) pure returns(uint256[])
+func (_StorkContract *StorkContractSession) PackTemporalNumericValueInputs(inputs []StorkStructsTemporalNumericValueInput) ([]*big.Int, error) {
+	return _StorkContract.Contract.PackTemporalNumericValueInputs(&_StorkContract.CallOpts, inputs)
+}
+
+// PackTemporalNumericValueInputs is a free data retrieval call binding the contract method 0x9e432005.
+//
+// Solidity: function packTemporalNumericValueInputs(((uint64,int192),bytes32,bytes32,bytes32,bytes32,bytes32,uint8)[] inputs) pure returns(uint256[])
+func (_StorkContract *StorkContractCallerSession) PackTemporalNumericValueInputs(inputs []StorkStructsTemporalNumericValueInput) ([]*big.Int, error) {
+	return _StorkContract.Contract.PackTemporalNumericValueInputs(&_StorkContract.CallOpts, inputs)
 }
 
 // PendingOwner is a free data retrieval call binding the contract method 0xe30c3978.
@@ -725,6 +787,27 @@ func (_StorkContract *StorkContractTransactorSession) AcceptOwnership() (*types.
 	return _StorkContract.Contract.AcceptOwnership(&_StorkContract.TransactOpts)
 }
 
+// AddSigningAddress is a paid mutator transaction binding the contract method 0xf9c58b2d.
+//
+// Solidity: function addSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractTransactor) AddSigningAddress(opts *bind.TransactOpts, signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.contract.Transact(opts, "addSigningAddress", signingAddress)
+}
+
+// AddSigningAddress is a paid mutator transaction binding the contract method 0xf9c58b2d.
+//
+// Solidity: function addSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractSession) AddSigningAddress(signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.Contract.AddSigningAddress(&_StorkContract.TransactOpts, signingAddress)
+}
+
+// AddSigningAddress is a paid mutator transaction binding the contract method 0xf9c58b2d.
+//
+// Solidity: function addSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractTransactorSession) AddSigningAddress(signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.Contract.AddSigningAddress(&_StorkContract.TransactOpts, signingAddress)
+}
+
 // Initialize is a paid mutator transaction binding the contract method 0xeb990c59.
 //
 // Solidity: function initialize(address initialOwner, address storkPublicKey, uint256 validTimePeriodSeconds, uint256 singleUpdateFeeInWei) returns()
@@ -744,6 +827,27 @@ func (_StorkContract *StorkContractSession) Initialize(initialOwner common.Addre
 // Solidity: function initialize(address initialOwner, address storkPublicKey, uint256 validTimePeriodSeconds, uint256 singleUpdateFeeInWei) returns()
 func (_StorkContract *StorkContractTransactorSession) Initialize(initialOwner common.Address, storkPublicKey common.Address, validTimePeriodSeconds *big.Int, singleUpdateFeeInWei *big.Int) (*types.Transaction, error) {
 	return _StorkContract.Contract.Initialize(&_StorkContract.TransactOpts, initialOwner, storkPublicKey, validTimePeriodSeconds, singleUpdateFeeInWei)
+}
+
+// RemoveSigningAddress is a paid mutator transaction binding the contract method 0x06dc7747.
+//
+// Solidity: function removeSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractTransactor) RemoveSigningAddress(opts *bind.TransactOpts, signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.contract.Transact(opts, "removeSigningAddress", signingAddress)
+}
+
+// RemoveSigningAddress is a paid mutator transaction binding the contract method 0x06dc7747.
+//
+// Solidity: function removeSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractSession) RemoveSigningAddress(signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.Contract.RemoveSigningAddress(&_StorkContract.TransactOpts, signingAddress)
+}
+
+// RemoveSigningAddress is a paid mutator transaction binding the contract method 0x06dc7747.
+//
+// Solidity: function removeSigningAddress(address signingAddress) returns()
+func (_StorkContract *StorkContractTransactorSession) RemoveSigningAddress(signingAddress common.Address) (*types.Transaction, error) {
+	return _StorkContract.Contract.RemoveSigningAddress(&_StorkContract.TransactOpts, signingAddress)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -849,6 +953,27 @@ func (_StorkContract *StorkContractSession) UpdateTemporalNumericValuesV1(update
 // Solidity: function updateTemporalNumericValuesV1(((uint64,int192),bytes32,bytes32,bytes32,bytes32,bytes32,uint8)[] updateData) payable returns()
 func (_StorkContract *StorkContractTransactorSession) UpdateTemporalNumericValuesV1(updateData []StorkStructsTemporalNumericValueInput) (*types.Transaction, error) {
 	return _StorkContract.Contract.UpdateTemporalNumericValuesV1(&_StorkContract.TransactOpts, updateData)
+}
+
+// UpdateTemporalNumericValuesV1Packed is a paid mutator transaction binding the contract method 0x540c270e.
+//
+// Solidity: function updateTemporalNumericValuesV1Packed(uint256[] packedData) payable returns()
+func (_StorkContract *StorkContractTransactor) UpdateTemporalNumericValuesV1Packed(opts *bind.TransactOpts, packedData []*big.Int) (*types.Transaction, error) {
+	return _StorkContract.contract.Transact(opts, "updateTemporalNumericValuesV1Packed", packedData)
+}
+
+// UpdateTemporalNumericValuesV1Packed is a paid mutator transaction binding the contract method 0x540c270e.
+//
+// Solidity: function updateTemporalNumericValuesV1Packed(uint256[] packedData) payable returns()
+func (_StorkContract *StorkContractSession) UpdateTemporalNumericValuesV1Packed(packedData []*big.Int) (*types.Transaction, error) {
+	return _StorkContract.Contract.UpdateTemporalNumericValuesV1Packed(&_StorkContract.TransactOpts, packedData)
+}
+
+// UpdateTemporalNumericValuesV1Packed is a paid mutator transaction binding the contract method 0x540c270e.
+//
+// Solidity: function updateTemporalNumericValuesV1Packed(uint256[] packedData) payable returns()
+func (_StorkContract *StorkContractTransactorSession) UpdateTemporalNumericValuesV1Packed(packedData []*big.Int) (*types.Transaction, error) {
+	return _StorkContract.Contract.UpdateTemporalNumericValuesV1Packed(&_StorkContract.TransactOpts, packedData)
 }
 
 // UpdateValidTimePeriodSeconds is a paid mutator transaction binding the contract method 0x785bdda0.
@@ -1327,6 +1452,294 @@ func (_StorkContract *StorkContractFilterer) WatchOwnershipTransferred(opts *bin
 func (_StorkContract *StorkContractFilterer) ParseOwnershipTransferred(log types.Log) (*StorkContractOwnershipTransferred, error) {
 	event := new(StorkContractOwnershipTransferred)
 	if err := _StorkContract.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// StorkContractSigningAddressAddedIterator is returned from FilterSigningAddressAdded and is used to iterate over the raw logs and unpacked data for SigningAddressAdded events raised by the StorkContract contract.
+type StorkContractSigningAddressAddedIterator struct {
+	Event *StorkContractSigningAddressAdded // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *StorkContractSigningAddressAddedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(StorkContractSigningAddressAdded)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(StorkContractSigningAddressAdded)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *StorkContractSigningAddressAddedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *StorkContractSigningAddressAddedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// StorkContractSigningAddressAdded represents a SigningAddressAdded event raised by the StorkContract contract.
+type StorkContractSigningAddressAdded struct {
+	SigningAddress common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// FilterSigningAddressAdded is a free log retrieval operation binding the contract event 0xef833cfb03d21372105e9c515b950ec38c1c91661e7672ea28a69128d0ec41d7.
+//
+// Solidity: event SigningAddressAdded(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) FilterSigningAddressAdded(opts *bind.FilterOpts, signingAddress []common.Address) (*StorkContractSigningAddressAddedIterator, error) {
+
+	var signingAddressRule []interface{}
+	for _, signingAddressItem := range signingAddress {
+		signingAddressRule = append(signingAddressRule, signingAddressItem)
+	}
+
+	logs, sub, err := _StorkContract.contract.FilterLogs(opts, "SigningAddressAdded", signingAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return &StorkContractSigningAddressAddedIterator{contract: _StorkContract.contract, event: "SigningAddressAdded", logs: logs, sub: sub}, nil
+}
+
+// WatchSigningAddressAdded is a free log subscription operation binding the contract event 0xef833cfb03d21372105e9c515b950ec38c1c91661e7672ea28a69128d0ec41d7.
+//
+// Solidity: event SigningAddressAdded(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) WatchSigningAddressAdded(opts *bind.WatchOpts, sink chan<- *StorkContractSigningAddressAdded, signingAddress []common.Address) (event.Subscription, error) {
+
+	var signingAddressRule []interface{}
+	for _, signingAddressItem := range signingAddress {
+		signingAddressRule = append(signingAddressRule, signingAddressItem)
+	}
+
+	logs, sub, err := _StorkContract.contract.WatchLogs(opts, "SigningAddressAdded", signingAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(StorkContractSigningAddressAdded)
+				if err := _StorkContract.contract.UnpackLog(event, "SigningAddressAdded", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSigningAddressAdded is a log parse operation binding the contract event 0xef833cfb03d21372105e9c515b950ec38c1c91661e7672ea28a69128d0ec41d7.
+//
+// Solidity: event SigningAddressAdded(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) ParseSigningAddressAdded(log types.Log) (*StorkContractSigningAddressAdded, error) {
+	event := new(StorkContractSigningAddressAdded)
+	if err := _StorkContract.contract.UnpackLog(event, "SigningAddressAdded", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// StorkContractSigningAddressRemovedIterator is returned from FilterSigningAddressRemoved and is used to iterate over the raw logs and unpacked data for SigningAddressRemoved events raised by the StorkContract contract.
+type StorkContractSigningAddressRemovedIterator struct {
+	Event *StorkContractSigningAddressRemoved // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *StorkContractSigningAddressRemovedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(StorkContractSigningAddressRemoved)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(StorkContractSigningAddressRemoved)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *StorkContractSigningAddressRemovedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *StorkContractSigningAddressRemovedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// StorkContractSigningAddressRemoved represents a SigningAddressRemoved event raised by the StorkContract contract.
+type StorkContractSigningAddressRemoved struct {
+	SigningAddress common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// FilterSigningAddressRemoved is a free log retrieval operation binding the contract event 0xb152ff5694780525e2b4cc514775b34465a6483a085350caf36e4850e172a208.
+//
+// Solidity: event SigningAddressRemoved(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) FilterSigningAddressRemoved(opts *bind.FilterOpts, signingAddress []common.Address) (*StorkContractSigningAddressRemovedIterator, error) {
+
+	var signingAddressRule []interface{}
+	for _, signingAddressItem := range signingAddress {
+		signingAddressRule = append(signingAddressRule, signingAddressItem)
+	}
+
+	logs, sub, err := _StorkContract.contract.FilterLogs(opts, "SigningAddressRemoved", signingAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return &StorkContractSigningAddressRemovedIterator{contract: _StorkContract.contract, event: "SigningAddressRemoved", logs: logs, sub: sub}, nil
+}
+
+// WatchSigningAddressRemoved is a free log subscription operation binding the contract event 0xb152ff5694780525e2b4cc514775b34465a6483a085350caf36e4850e172a208.
+//
+// Solidity: event SigningAddressRemoved(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) WatchSigningAddressRemoved(opts *bind.WatchOpts, sink chan<- *StorkContractSigningAddressRemoved, signingAddress []common.Address) (event.Subscription, error) {
+
+	var signingAddressRule []interface{}
+	for _, signingAddressItem := range signingAddress {
+		signingAddressRule = append(signingAddressRule, signingAddressItem)
+	}
+
+	logs, sub, err := _StorkContract.contract.WatchLogs(opts, "SigningAddressRemoved", signingAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(StorkContractSigningAddressRemoved)
+				if err := _StorkContract.contract.UnpackLog(event, "SigningAddressRemoved", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSigningAddressRemoved is a log parse operation binding the contract event 0xb152ff5694780525e2b4cc514775b34465a6483a085350caf36e4850e172a208.
+//
+// Solidity: event SigningAddressRemoved(address indexed signingAddress)
+func (_StorkContract *StorkContractFilterer) ParseSigningAddressRemoved(log types.Log) (*StorkContractSigningAddressRemoved, error) {
+	event := new(StorkContractSigningAddressRemoved)
+	if err := _StorkContract.contract.UnpackLog(event, "SigningAddressRemoved", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
