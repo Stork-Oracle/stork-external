@@ -75,7 +75,17 @@
   },
   {
     "inputs": [],
+    "name": "InvalidLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidV",
     "type": "error"
   },
   {
@@ -118,6 +128,11 @@
   {
     "inputs": [],
     "name": "StaleValue",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TimestampOverflow",
     "type": "error"
   },
   {
@@ -185,6 +200,32 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "signingAddress",
+        "type": "address"
+      }
+    ],
+    "name": "SigningAddressAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "signingAddress",
+        "type": "address"
+      }
+    ],
+    "name": "SigningAddressRemoved",
     "type": "event"
   },
   {
@@ -282,6 +323,32 @@
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "signingAddress",
+        "type": "address"
+      }
+    ],
+    "name": "addSigningAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSigningAddresses",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -487,6 +554,74 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "timestampNs",
+                "type": "uint64"
+              },
+              {
+                "internalType": "int192",
+                "name": "quantizedValue",
+                "type": "int192"
+              }
+            ],
+            "internalType": "struct StorkStructs.TemporalNumericValue",
+            "name": "temporalNumericValue",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "id",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "publisherMerkleRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "valueComputeAlgHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct StorkStructs.TemporalNumericValueInput[]",
+        "name": "inputs",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "packTemporalNumericValueInputs",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "pendingOwner",
     "outputs": [
@@ -510,6 +645,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "signingAddress",
+        "type": "address"
+      }
+    ],
+    "name": "removeSigningAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -642,6 +790,19 @@
       }
     ],
     "name": "updateTemporalNumericValuesV1",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "packedData",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "updateTemporalNumericValuesV1Packed",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"

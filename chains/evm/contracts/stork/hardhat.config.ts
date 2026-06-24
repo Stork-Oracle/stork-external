@@ -324,7 +324,7 @@ const config: HardhatUserConfig = {
       chainId: 80002,
     },
     riseTestnet: {
-      url: "https://node2.testnet.riselabs.xyz/",
+      url: "https://testnet.riselabs.xyz",
       accounts: [PRIVATE_KEY],
       chainId: 11155931,
     },
