@@ -16,7 +16,7 @@ module stork::i128 {
     // positive 1 is represented as (1, false)
     // negative 1 is represented as (1, true)
     public struct I128 has copy, drop, store {
-        // sign of the i128, True if positive, false if negative
+        // sign of the i128, true if negative, false if positive
         negative: bool,
         // magnitude of the i128
         magnitude: u128,
