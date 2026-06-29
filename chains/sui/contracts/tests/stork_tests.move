@@ -44,20 +44,52 @@ module stork::stork_tests {
     #[test]
     fun test_admin_init() {
         let deployer = @0x26;
-        
+
         // Start the test scenario
         let mut scenario = test_scenario::begin(deployer);
         {
             // Initialize admin in the first transaction
             admin::test_init(test_scenario::ctx(&mut scenario));
         };
-        
+
         // Move to next transaction to check if AdminCap was properly transferred
         test_scenario::next_tx(&mut scenario, deployer);
         {
             // Try to retrieve AdminCap from sender's inventory
             let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
             // Return the AdminCap back to sender's inventory
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_transfer_admin_cap() {
+        let deployer = @0x26;
+        let new_admin = @0x27;
+
+        let mut scenario = test_scenario::begin(deployer);
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+
+        test_scenario::next_tx(&mut scenario, deployer);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            admin::transfer_admin_cap(admin_cap, new_admin);
+        };
+
+        // Original deployer must no longer hold the cap.
+        test_scenario::next_tx(&mut scenario, deployer);
+        {
+            assert!(!test_scenario::has_most_recent_for_sender<AdminCap>(&scenario), 0);
+        };
+
+        // New admin must now hold the cap.
+        test_scenario::next_tx(&mut scenario, new_admin);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
             test_scenario::return_to_sender(&scenario, admin_cap);
         };
 
