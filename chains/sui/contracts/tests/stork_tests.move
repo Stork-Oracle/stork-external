@@ -31,6 +31,16 @@ module stork::stork_tests {
     const VALID_S: vector<u8> = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
     const VALID_V: u8 = 28;
 
+    // Second valid update signed with STORK_EVM_PUBLIC_KEY — distinct feed id from VALID_*.
+    // Used to exercise batches with multiple distinct fresh updates.
+    const SECOND_ID: vector<u8> = x"59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160";
+    const SECOND_RECV_TIME: u64 = 1782760998091044836;
+    const SECOND_VALUE: u128 = 1622121730843749000000;
+    const SECOND_MERKLE_ROOT: vector<u8> = x"d01cd1e9214bf9cec434e82be8f995b9221864fcaab1012841407260049963da";
+    const SECOND_R: vector<u8> = x"58245f6c5536f47c7c95b29f88ff5ceecc871378aeb778cd2c53f69bdf70e383";
+    const SECOND_S: vector<u8> = x"14ae74028a55509bf8aa6631a8e1b171ecafdddddbcd5d3915c0d2bc1ac9287f";
+    const SECOND_V: u8 = 27;
+
     // Constants for verify.mov negative value test case
     const NEGATIVE_ID: vector<u8> = x"281a649a11eb25eca04f0025c15e99264a056229e722735c7d6c55fef649dfbf";
     const NEGATIVE_RECV_TIME: u64 = 1750794968021348308;
@@ -431,6 +441,269 @@ module stork::stork_tests {
             let feed_value = stork::get_temporal_numeric_value_unchecked(&state, VALID_ID);
             assert!(feed_value.get_timestamp_ns() == VALID_RECV_TIME, 0);
             
+            test_scenario::return_shared(state);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    // Exercises a batch with two distinct fresh updates. Both must end up applied
+    // and num_updates must equal 2 (verified indirectly via the exact fee coin size:
+    // an off-by-one would cause an EInsufficientFee abort).
+    //
+    // Note: this passes on the pre-fix loop too (the self-stale-skip on the next
+    // iteration still advances `i`), so it does not demonstrate a correctness bug —
+    // it's a regression guard for the multi-distinct-fresh-update path, which had
+    // no coverage before, and confirms the `i = i + 1` change preserves semantics.
+    #[test]
+    fun test_batch_multiple_distinct_fresh_updates() {
+        let mut scenario = test_scenario::begin(DEPLOYER);
+
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            stork::init_stork(
+                &admin_cap,
+                STORK_SUI_PUBLIC_KEY,
+                STORK_EVM_PUBLIC_KEY,
+                SINGLE_UPDATE_FEE,
+                VERSION,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+
+            let mut ids = vector::empty();
+            vector::push_back(&mut ids, VALID_ID);
+            vector::push_back(&mut ids, SECOND_ID);
+
+            let mut timestamps = vector::empty();
+            vector::push_back(&mut timestamps, VALID_RECV_TIME);
+            vector::push_back(&mut timestamps, SECOND_RECV_TIME);
+
+            let mut magnitudes = vector::empty();
+            vector::push_back(&mut magnitudes, 62507457175499998000000);
+            vector::push_back(&mut magnitudes, SECOND_VALUE);
+
+            let mut negatives = vector::empty();
+            vector::push_back(&mut negatives, false);
+            vector::push_back(&mut negatives, false);
+
+            let mut merkle_roots = vector::empty();
+            vector::push_back(&mut merkle_roots, VALID_MERKLE_ROOT);
+            vector::push_back(&mut merkle_roots, SECOND_MERKLE_ROOT);
+
+            let mut alg_hashes = vector::empty();
+            vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
+            vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
+
+            let mut rs = vector::empty();
+            vector::push_back(&mut rs, VALID_R);
+            vector::push_back(&mut rs, SECOND_R);
+
+            let mut ss = vector::empty();
+            vector::push_back(&mut ss, VALID_S);
+            vector::push_back(&mut ss, SECOND_S);
+
+            let mut vs = vector::empty();
+            vector::push_back(&mut vs, VALID_V);
+            vector::push_back(&mut vs, SECOND_V);
+
+            let updates = update_temporal_numeric_value_evm_input_vec::new(
+                ids, timestamps, magnitudes, negatives,
+                merkle_roots, alg_hashes, rs, ss, vs
+            );
+
+            // Exact required fee for 2 updates. If the loop miscounted num_updates,
+            // this call would abort with EInsufficientFee.
+            let fee = coin::mint_for_testing<SUI>(2 * SINGLE_UPDATE_FEE, test_scenario::ctx(&mut scenario));
+
+            stork::update_multiple_temporal_numeric_values_evm(
+                &mut state,
+                updates,
+                fee,
+                test_scenario::ctx(&mut scenario)
+            );
+
+            let first = stork::get_temporal_numeric_value_unchecked(&state, VALID_ID);
+            assert!(first.get_timestamp_ns() == VALID_RECV_TIME, 0);
+            assert!(first.get_quantized_value() == i128::from_u128(62507457175499998000000), 0);
+
+            let second = stork::get_temporal_numeric_value_unchecked(&state, SECOND_ID);
+            assert!(second.get_timestamp_ns() == SECOND_RECV_TIME, 0);
+            assert!(second.get_quantized_value() == i128::from_u128(SECOND_VALUE), 0);
+
+            test_scenario::return_shared(state);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = stork::ENoFreshUpdate)]
+    fun test_single_update_stale_aborts() {
+        let mut scenario = test_scenario::begin(DEPLOYER);
+
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            stork::init_stork(
+                &admin_cap,
+                STORK_SUI_PUBLIC_KEY,
+                STORK_EVM_PUBLIC_KEY,
+                SINGLE_UPDATE_FEE,
+                VERSION,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        // Seed the feed with a fresh update.
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+            let update = update_temporal_numeric_value_evm_input::new(
+                VALID_ID,
+                VALID_RECV_TIME,
+                62507457175499998000000,
+                false,
+                VALID_MERKLE_ROOT,
+                VALID_ALG_HASH,
+                VALID_R,
+                VALID_S,
+                VALID_V
+            );
+            let fee = coin::mint_for_testing<SUI>(SINGLE_UPDATE_FEE, test_scenario::ctx(&mut scenario));
+            stork::update_single_temporal_numeric_value_evm(
+                &mut state,
+                update,
+                fee,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_shared(state);
+        };
+
+        // Resubmit the same (now-stale) update — must abort, fee coin stays with caller.
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+            let dup = update_temporal_numeric_value_evm_input::new(
+                VALID_ID,
+                VALID_RECV_TIME,
+                62507457175499998000000,
+                false,
+                VALID_MERKLE_ROOT,
+                VALID_ALG_HASH,
+                VALID_R,
+                VALID_S,
+                VALID_V
+            );
+            let fee = coin::mint_for_testing<SUI>(SINGLE_UPDATE_FEE, test_scenario::ctx(&mut scenario));
+            stork::update_single_temporal_numeric_value_evm(
+                &mut state,
+                dup,
+                fee,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_shared(state);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = stork::ENoFreshUpdate)]
+    fun test_batch_all_stale_aborts() {
+        let mut scenario = test_scenario::begin(DEPLOYER);
+
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            stork::init_stork(
+                &admin_cap,
+                STORK_SUI_PUBLIC_KEY,
+                STORK_EVM_PUBLIC_KEY,
+                SINGLE_UPDATE_FEE,
+                VERSION,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        // Seed the feed.
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+            let update = update_temporal_numeric_value_evm_input::new(
+                VALID_ID,
+                VALID_RECV_TIME,
+                62507457175499998000000,
+                false,
+                VALID_MERKLE_ROOT,
+                VALID_ALG_HASH,
+                VALID_R,
+                VALID_S,
+                VALID_V
+            );
+            let fee = coin::mint_for_testing<SUI>(SINGLE_UPDATE_FEE, test_scenario::ctx(&mut scenario));
+            stork::update_single_temporal_numeric_value_evm(
+                &mut state,
+                update,
+                fee,
+                test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_shared(state);
+        };
+
+        // Submit a batch containing only the same (now-stale) update — must abort.
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+
+            let mut ids = vector::empty();
+            vector::push_back(&mut ids, VALID_ID);
+            let mut timestamps = vector::empty();
+            vector::push_back(&mut timestamps, VALID_RECV_TIME);
+            let mut magnitudes = vector::empty();
+            vector::push_back(&mut magnitudes, 62507457175499998000000);
+            let mut negatives = vector::empty();
+            vector::push_back(&mut negatives, false);
+            let mut merkle_roots = vector::empty();
+            vector::push_back(&mut merkle_roots, VALID_MERKLE_ROOT);
+            let mut alg_hashes = vector::empty();
+            vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
+            let mut rs = vector::empty();
+            vector::push_back(&mut rs, VALID_R);
+            let mut ss = vector::empty();
+            vector::push_back(&mut ss, VALID_S);
+            let mut vs = vector::empty();
+            vector::push_back(&mut vs, VALID_V);
+
+            let updates = update_temporal_numeric_value_evm_input_vec::new(
+                ids, timestamps, magnitudes, negatives,
+                merkle_roots, alg_hashes, rs, ss, vs
+            );
+            let fee = coin::mint_for_testing<SUI>(SINGLE_UPDATE_FEE, test_scenario::ctx(&mut scenario));
+            stork::update_multiple_temporal_numeric_values_evm(
+                &mut state,
+                updates,
+                fee,
+                test_scenario::ctx(&mut scenario)
+            );
+
             test_scenario::return_shared(state);
         };
 
