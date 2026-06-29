@@ -7,6 +7,15 @@ module stork::verify {
     use sui::hash;
     use sui::ecdsa_k1;
 
+    // === Constants ===
+
+    const EInvalidLength: u64 = 0;
+
+    // Length of bytes32 fields (publisher_merkle_root, value_compute_alg_hash)
+    // that the signature binds to. Enforced so field boundaries match the
+    // EVM-side payload and signatures cannot be reinterpreted across them.
+    const BYTES32_LENGTH: u64 = 32;
+
     // === Public Functions ===
 
     public fun verify_stork_evm_signature(
@@ -20,6 +29,9 @@ module stork::verify {
         s: vector<u8>,
         v: u8,
     ): bool {
+        assert!(publisher_merkle_root.length() == BYTES32_LENGTH, EInvalidLength);
+        assert!(value_compute_alg_hash.length() == BYTES32_LENGTH, EInvalidLength);
+
         let message = get_stork_message_hash(
             stork_evm_public_key,
             id,
@@ -248,6 +260,60 @@ module stork::verify {
         assert!(recoverable_message == x"19457468657265756d205369676e6564204d6573736167653a0a33323102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084");
     }
     
+    #[test]
+    #[expected_failure(abort_code = EInvalidLength)]
+    fun test_verify_stork_evm_signature_rejects_short_publisher_merkle_root() {
+        let stork_public_key = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
+        let id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let recv_time = 1722632569208762117;
+        let quantized_value = i128::from_u128(62507457175499998000000);
+        // 31 bytes instead of 32 — should abort
+        let publisher_merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc3";
+        let value_compute_alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        verify_stork_evm_signature(
+            &stork_public_key,
+            id,
+            recv_time,
+            quantized_value,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v,
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = EInvalidLength)]
+    fun test_verify_stork_evm_signature_rejects_short_value_compute_alg_hash() {
+        let stork_public_key = evm_pubkey::from_bytes(x"0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44");
+        let id = x"7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de";
+        let recv_time = 1722632569208762117;
+        let quantized_value = i128::from_u128(62507457175499998000000);
+        let publisher_merkle_root = x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318";
+        // 31 bytes instead of 32 — should abort
+        let value_compute_alg_hash = x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce17";
+        let r = x"b9b3c9f80a355bd0cd6f609fff4a4b15fa4e3b4632adabb74c020f5bcd240741";
+        let s = x"16fab526529ac795108d201832cff8c2d2b1c710da6711fe9f7ab288a7149758";
+        let v = 28;
+
+        verify_stork_evm_signature(
+            &stork_public_key,
+            id,
+            recv_time,
+            quantized_value,
+            publisher_merkle_root,
+            value_compute_alg_hash,
+            r,
+            s,
+            v,
+        );
+    }
+
     #[test]
     fun test_recover_secp256k1_pubkey() {
         let message = x"3102baf2e5ad5188e24d56f239915bed3a9a7b51754007dcbf3a65f81bae3084";
