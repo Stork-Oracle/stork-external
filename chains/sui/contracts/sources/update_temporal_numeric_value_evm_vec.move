@@ -116,17 +116,17 @@ module stork::update_temporal_numeric_value_evm_input_vec {
 
         let mut publisher_merkle_roots = vector::empty();
         // add 4 elements to the vector
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
         let mut value_compute_alg_hashes = vector::empty();
         // add 4 elements to the vector
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
         let mut rs = vector::empty();
         // add 4 elements to the vector
@@ -179,16 +179,16 @@ module stork::update_temporal_numeric_value_evm_input_vec {
         temporal_numeric_value_negatives.push_back(false);
 
         let mut publisher_merkle_roots = vector::empty();
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
         let mut value_compute_alg_hashes = vector::empty();
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
         let mut rs = vector::empty();
         rs.push_back(x"");
@@ -240,16 +240,16 @@ module stork::update_temporal_numeric_value_evm_input_vec {
         temporal_numeric_value_negatives.push_back(false);
 
         let mut publisher_merkle_roots = vector::empty();
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
         let mut value_compute_alg_hashes = vector::empty();
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
         let mut rs = vector::empty();
         rs.push_back(x"");
