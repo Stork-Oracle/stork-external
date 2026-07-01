@@ -76,7 +76,7 @@ module stork::i128 {
     
     /// Converts the I128 to a big-endian byte representation compatible with Ethereum's int256
     public fun to_bytes(value: I128): vector<u8> {
-        let mut bytes = vector::empty<u8>();
+        let mut bytes = vector<u8>[];
         let mut_value = if (value.negative) {
             // convert to twos complement
             (value.magnitude - 1) ^ 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF

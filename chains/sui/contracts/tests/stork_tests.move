@@ -11,7 +11,7 @@ module stork::stork_tests {
     use sui::sui::SUI;
     use stork::update_temporal_numeric_value_evm_input;
     use stork::update_temporal_numeric_value_evm_input_vec;
-    use sui::test_utils::Self;
+    use std::unit_test::Self;
     use stork::i128;
     
     // === Constants ===
@@ -389,31 +389,31 @@ module stork::stork_tests {
             let mut state = test_scenario::take_shared<StorkState>(&scenario);
             
             // Create vectors with single element each
-            let mut ids = vector::empty();
+            let mut ids = vector[];
             vector::push_back(&mut ids, VALID_ID);
             
-            let mut timestamps = vector::empty();
+            let mut timestamps = vector[];
             vector::push_back(&mut timestamps, VALID_RECV_TIME);
             
-            let mut magnitudes = vector::empty();
+            let mut magnitudes = vector[];
             vector::push_back(&mut magnitudes, 62507457175499998000000);
             
-            let mut negatives = vector::empty();
+            let mut negatives = vector[];
             vector::push_back(&mut negatives, false);
             
-            let mut merkle_roots = vector::empty();
+            let mut merkle_roots = vector[];
             vector::push_back(&mut merkle_roots, VALID_MERKLE_ROOT);
             
-            let mut alg_hashes = vector::empty();
+            let mut alg_hashes = vector[];
             vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
             
-            let mut rs = vector::empty();
+            let mut rs = vector[];
             vector::push_back(&mut rs, VALID_R);
             
-            let mut ss = vector::empty();
+            let mut ss = vector[];
             vector::push_back(&mut ss, VALID_S);
             
-            let mut vs = vector::empty();
+            let mut vs = vector[];
             vector::push_back(&mut vs, VALID_V);
 
             let updates = update_temporal_numeric_value_evm_input_vec::new(
@@ -480,39 +480,39 @@ module stork::stork_tests {
         {
             let mut state = test_scenario::take_shared<StorkState>(&scenario);
 
-            let mut ids = vector::empty();
+            let mut ids = vector[];
             vector::push_back(&mut ids, VALID_ID);
             vector::push_back(&mut ids, SECOND_ID);
 
-            let mut timestamps = vector::empty();
+            let mut timestamps = vector[];
             vector::push_back(&mut timestamps, VALID_RECV_TIME);
             vector::push_back(&mut timestamps, SECOND_RECV_TIME);
 
-            let mut magnitudes = vector::empty();
+            let mut magnitudes = vector[];
             vector::push_back(&mut magnitudes, 62507457175499998000000);
             vector::push_back(&mut magnitudes, SECOND_VALUE);
 
-            let mut negatives = vector::empty();
+            let mut negatives = vector[];
             vector::push_back(&mut negatives, false);
             vector::push_back(&mut negatives, false);
 
-            let mut merkle_roots = vector::empty();
+            let mut merkle_roots = vector[];
             vector::push_back(&mut merkle_roots, VALID_MERKLE_ROOT);
             vector::push_back(&mut merkle_roots, SECOND_MERKLE_ROOT);
 
-            let mut alg_hashes = vector::empty();
+            let mut alg_hashes = vector[];
             vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
             vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
 
-            let mut rs = vector::empty();
+            let mut rs = vector[];
             vector::push_back(&mut rs, VALID_R);
             vector::push_back(&mut rs, SECOND_R);
 
-            let mut ss = vector::empty();
+            let mut ss = vector[];
             vector::push_back(&mut ss, VALID_S);
             vector::push_back(&mut ss, SECOND_S);
 
-            let mut vs = vector::empty();
+            let mut vs = vector[];
             vector::push_back(&mut vs, VALID_V);
             vector::push_back(&mut vs, SECOND_V);
 
@@ -673,23 +673,23 @@ module stork::stork_tests {
         {
             let mut state = test_scenario::take_shared<StorkState>(&scenario);
 
-            let mut ids = vector::empty();
+            let mut ids = vector[];
             vector::push_back(&mut ids, VALID_ID);
-            let mut timestamps = vector::empty();
+            let mut timestamps = vector[];
             vector::push_back(&mut timestamps, VALID_RECV_TIME);
-            let mut magnitudes = vector::empty();
+            let mut magnitudes = vector[];
             vector::push_back(&mut magnitudes, 62507457175499998000000);
-            let mut negatives = vector::empty();
+            let mut negatives = vector[];
             vector::push_back(&mut negatives, false);
-            let mut merkle_roots = vector::empty();
+            let mut merkle_roots = vector[];
             vector::push_back(&mut merkle_roots, VALID_MERKLE_ROOT);
-            let mut alg_hashes = vector::empty();
+            let mut alg_hashes = vector[];
             vector::push_back(&mut alg_hashes, VALID_ALG_HASH);
-            let mut rs = vector::empty();
+            let mut rs = vector[];
             vector::push_back(&mut rs, VALID_R);
-            let mut ss = vector::empty();
+            let mut ss = vector[];
             vector::push_back(&mut ss, VALID_S);
-            let mut vs = vector::empty();
+            let mut vs = vector[];
             vector::push_back(&mut vs, VALID_V);
 
             let updates = update_temporal_numeric_value_evm_input_vec::new(
@@ -770,7 +770,7 @@ module stork::stork_tests {
                 assert!(coin::value(&withdrawn_coins) == expected_amount, 0);
                 
                 // Clean up the coin
-                test_utils::destroy(withdrawn_coins);
+                unit_test::destroy(withdrawn_coins);
                 
                 test_scenario::return_shared(state);
                 test_scenario::return_to_sender(&scenario, admin_cap);

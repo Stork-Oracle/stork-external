@@ -56,7 +56,7 @@ module stork::verify {
         publisher_merkle_root: vector<u8>,
         value_compute_alg_hash: vector<u8>,
     ): vector<u8> {
-        let mut data = vector::empty<u8>();
+        let mut data = vector<u8>[];
         vector::append(&mut data, evm_pubkey::get_bytes(stork_evm_public_key));
         vector::append(&mut data, id);
         
@@ -64,7 +64,7 @@ module stork::verify {
         vector::append(&mut data, vector[0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         
         
-        let mut recv_time_bytes = vector::empty<u8>();
+        let mut recv_time_bytes = vector<u8>[];
         let mut i = 8;
         while (i > 0) {
             i = i - 1;
@@ -101,14 +101,14 @@ module stork::verify {
         ];
         vector::append(&mut prefix, b"Ethereum Signed Message:\n32");
         
-        let mut data = vector::empty<u8>();
+        let mut data = vector<u8>[];
         vector::append(&mut data, prefix);
         vector::append(&mut data, *message);
         data
     }
 
     fun get_rsv_signature_from_parts(r: &vector<u8>, s: &vector<u8>, v: u8): vector<u8> {
-        let mut signature = vector::empty<u8>();
+        let mut signature = vector<u8>[];
         vector::append(&mut signature, *r);
         vector::append(&mut signature, *s);
         vector::push_back(&mut signature, v);
@@ -152,7 +152,7 @@ module stork::verify {
 
     fun get_eth_pubkey(pubkey: &vector<u8>): EvmPubkey {
         let hashed = hash::keccak256(pubkey);
-        let mut eth_address = vector::empty<u8>();
+        let mut eth_address = vector<u8>[];
         let mut i = 12;
         while (i < 32) {
             vector::push_back(&mut eth_address, *vector::borrow(&hashed, i));
