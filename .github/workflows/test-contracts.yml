@@ -219,6 +219,10 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          # Building the Sui CLI from the testnet-v1.74.0 tag pulls deps
+          # (e.g. roaring 0.11.4) that require rustc >= 1.90.0.
+          toolchain: "1.90.0"
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
