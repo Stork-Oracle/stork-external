@@ -244,7 +244,10 @@ jobs:
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
+            # Force the 1.90.0 toolchain for this build only. The repo-root
+            # rust-toolchain.toml pins 1.88.0 (used by the other Rust jobs),
+            # but Sui testnet-v1.74.0 needs rustc >= 1.90.0 to compile.
+            cargo +1.90.0 install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
           fi
           sui --version
 
