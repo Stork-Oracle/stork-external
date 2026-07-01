@@ -235,12 +235,12 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/sui
-          key: ${{ runner.os }}-sui-cli
+          key: ${{ runner.os }}-sui-cli-testnet-v1.74.0
 
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git --tag sui_v1.58.0_1759789242_release sui --features tracing
+            cargo install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
           fi
           sui --version
 
