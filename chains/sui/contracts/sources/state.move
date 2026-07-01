@@ -170,6 +170,17 @@ module stork::state {
         withdrawn_coins
     }
 
+    // === Test Helpers ===
+
+    // Directly overrides the stored version, bypassing the version guard in `new`.
+    // Needed to reach paths that are otherwise unreachable in tests: the `migrate`
+    // success case (which requires version == VERSION - 1) and the EIncorrectVersion
+    // aborts on version-guarded getters/setters/updates.
+    #[test_only]
+    public fun set_version_for_testing(state: &mut StorkState, version: u64) {
+        state.version = version;
+    }
+
     entry fun migrate(
         _: &AdminCap,
         state: &mut StorkState,
