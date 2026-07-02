@@ -20,6 +20,7 @@ module stork::stork {
     const EInvalidSignature: u64 = 0;
     const EInsufficientFee: u64 = 1;
     const EFeedNotFound: u64 = 2;
+    const ENoFreshUpdate: u64 = 3;
 
     // === Entry Functions ===
 
@@ -66,18 +67,6 @@ module stork::stork {
         let evm_pubkey = stork_state.get_stork_evm_public_key();
         let fee_in_mist = stork_state.get_single_update_fee_in_mist();
 
-        assert!(fee.value() >= fee_in_mist, EInsufficientFee);
-        stork_state.deposit_fee(fee);
-
-        let feed_registry = stork_state.borrow_tnv_feeds_registry_mut();
-
-        if (feed_registry.contains(feed_id)) {
-            let feed = feed_registry.borrow_mut(feed_id);
-            if (feed.get_latest_canonical_temporal_numeric_value_unchecked().get_timestamp_ns() >= update_data.get_temporal_numeric_value().get_timestamp_ns()) {
-                return
-            }
-        };
-
         assert!(verify_stork_evm_signature(
             &evm_pubkey,
             update_data.get_id().get_bytes(),
@@ -90,6 +79,22 @@ module stork::stork {
             update_data.get_v(),
         ), EInvalidSignature);
 
+        {
+            let feed_registry = stork_state.borrow_tnv_feeds_registry_mut();
+            if (feed_registry.contains(feed_id)) {
+                let feed = feed_registry.borrow_mut(feed_id);
+                assert!(
+                    feed.get_latest_canonical_temporal_numeric_value_unchecked().get_timestamp_ns()
+                        < update_data.get_temporal_numeric_value().get_timestamp_ns(),
+                    ENoFreshUpdate,
+                );
+            };
+        };
+
+        assert!(fee.value() >= fee_in_mist, EInsufficientFee);
+        stork_state.deposit_fee(fee);
+
+        let feed_registry = stork_state.borrow_tnv_feeds_registry_mut();
         create_or_update_temporal_numeric_value_feed(feed_registry, feed_id, update_data, ctx);
     }
 
@@ -134,7 +139,9 @@ module stork::stork {
 
             create_or_update_temporal_numeric_value_feed(feed_registry, feed_id, update, ctx);
             num_updates = num_updates + 1;
+            i = i + 1;
         };
+        assert!(num_updates > 0, ENoFreshUpdate);
         let required_fee = stork_state.get_total_fees_in_mist(num_updates);
         assert!(fee.value() >= required_fee, EInsufficientFee);
         stork_state.deposit_fee(fee);

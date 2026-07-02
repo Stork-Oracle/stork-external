@@ -16,7 +16,7 @@ module stork::i128 {
     // positive 1 is represented as (1, false)
     // negative 1 is represented as (1, true)
     public struct I128 has copy, drop, store {
-        // sign of the i128, True if positive, false if negative
+        // sign of the i128, true if negative, false if positive
         negative: bool,
         // magnitude of the i128
         magnitude: u128,
@@ -76,7 +76,7 @@ module stork::i128 {
     
     /// Converts the I128 to a big-endian byte representation compatible with Ethereum's int256
     public fun to_bytes(value: I128): vector<u8> {
-        let mut bytes = vector::empty<u8>();
+        let mut bytes = vector<u8>[];
         let mut_value = if (value.negative) {
             // convert to twos complement
             (value.magnitude - 1) ^ 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF

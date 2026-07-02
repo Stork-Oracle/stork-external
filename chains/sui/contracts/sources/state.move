@@ -19,7 +19,7 @@ module stork::state {
 
     // === Constants ===
 
-    const VERSION: u64 = 2;
+    const VERSION: u64 = 3;
     const TNV_FEEDS_REGISTRY_NAME: vector<u8> = b"temporal_numeric_value_feed_registry";
     const TREASURY_NAME: vector<u8> = b"treasury";
 
@@ -168,6 +168,17 @@ module stork::state {
         let withdrawn_coins = coin::split(treasury, treasury_value, ctx);
         event::emit_fee_withdrawal_event(treasury_value);
         withdrawn_coins
+    }
+
+    // === Test Helpers ===
+
+    // Directly overrides the stored version, bypassing the version guard in `new`.
+    // Needed to reach paths that are otherwise unreachable in tests: the `migrate`
+    // success case (which requires version == VERSION - 1) and the EIncorrectVersion
+    // aborts on version-guarded getters/setters/updates.
+    #[test_only]
+    public fun set_version_for_testing(state: &mut StorkState, version: u64) {
+        state.version = version;
     }
 
     entry fun migrate(

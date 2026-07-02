@@ -19,6 +19,12 @@ module stork::admin {
         AdminCap { id: object::new(ctx) }
     }
 
+    // === Admin Functions ===
+
+    public fun transfer_admin_cap(cap: AdminCap, new_admin: address) {
+        transfer::transfer(cap, new_admin);
+    }
+
     // === Test Helpers ===
 
     #[test_only]

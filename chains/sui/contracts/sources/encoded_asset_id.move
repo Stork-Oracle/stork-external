@@ -56,7 +56,7 @@ module stork::encoded_asset_id {
     fun create_zeroed_byte_vector(length: u64): vector<u8> {
         let zero = 0u8;
         let mut i = 0;
-        let mut bytes = vector::empty<u8>();
+        let mut bytes = vector<u8>[];
         while (i < length) {
             bytes.push_back(zero);
             i = i + 1;

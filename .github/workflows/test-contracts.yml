@@ -219,6 +219,10 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          # Building the Sui CLI from the testnet-v1.74.0 tag pulls deps
+          # (e.g. roaring 0.11.4) that require rustc >= 1.90.0.
+          toolchain: "1.90.0"
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -235,12 +239,15 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/sui
-          key: ${{ runner.os }}-sui-cli
+          key: ${{ runner.os }}-sui-cli-testnet-v1.74.0
 
       - name: Install Sui
         run: |
           if ! command -v sui &> /dev/null; then
-            cargo install --locked --git https://github.com/MystenLabs/sui.git --tag sui_v1.58.0_1759789242_release sui --features tracing
+            # Force the 1.90.0 toolchain for this build only. The repo-root
+            # rust-toolchain.toml pins 1.88.0 (used by the other Rust jobs),
+            # but Sui testnet-v1.74.0 needs rustc >= 1.90.0 to compile.
+            cargo +1.90.0 install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
           fi
           sui --version
 

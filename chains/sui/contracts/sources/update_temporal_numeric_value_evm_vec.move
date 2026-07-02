@@ -41,7 +41,7 @@ module stork::update_temporal_numeric_value_evm_input_vec {
         assert!(ids.length() == ss.length(), EInvalidLengths);
         assert!(ids.length() == vs.length(), EInvalidLengths);
 
-        let mut data: vector<UpdateTemporalNumericValueEvmInput> = vector::empty();
+        let mut data: vector<UpdateTemporalNumericValueEvmInput> = vector[];
         let mut i = 0;
         while (i < ids.length()) {
             let update_temporal_numeric_value_evm_input = update_temporal_numeric_value_evm_input::new(
@@ -81,68 +81,68 @@ module stork::update_temporal_numeric_value_evm_input_vec {
     #[test]
     #[expected_failure(abort_code = ENoUpdates)]
     fun test_new_no_updates() {
-        let _ = new(vector::empty(), vector::empty(), vector::empty(), vector::empty(), vector::empty(), vector::empty(), vector::empty(), vector::empty(), vector::empty());
+        let _ = new(vector[], vector[], vector[], vector[], vector[], vector[], vector[], vector[], vector[]);
     }
 
     #[test]
     #[expected_failure(abort_code = EInvalidLengths)]
     fun test_new_invalid_lengths() {
-        let mut ids = vector::empty();
+        let mut ids = vector[];
         // add 4 elements to the vector
         ids.push_back(b"00000000000000000000000000000000");
         ids.push_back(b"00000000000000000000000000000001");
         ids.push_back(b"00000000000000000000000000000002");
         ids.push_back(b"00000000000000000000000000000003");
 
-        let mut temporal_numeric_value_timestamp_nss = vector::empty();
+        let mut temporal_numeric_value_timestamp_nss = vector[];
         // add 3 elements to the vector
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
 
-        let mut temporal_numeric_value_magnitudes = vector::empty();    
+        let mut temporal_numeric_value_magnitudes = vector[];
         // add 4 elements to the vector
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
 
-        let mut temporal_numeric_value_negatives = vector::empty();
+        let mut temporal_numeric_value_negatives = vector[];
         // add 4 elements to the vector
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
 
-        let mut publisher_merkle_roots = vector::empty();
+        let mut publisher_merkle_roots = vector[];
         // add 4 elements to the vector
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
-        let mut value_compute_alg_hashes = vector::empty();
+        let mut value_compute_alg_hashes = vector[];
         // add 4 elements to the vector
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
-        let mut rs = vector::empty();
+        let mut rs = vector[];
         // add 4 elements to the vector
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
 
-        let mut ss = vector::empty();
+        let mut ss = vector[];
         // add 4 elements to the vector
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
 
-        let mut vs = vector::empty();
+        let mut vs = vector[];
         // add 4 elements to the vector
         vs.push_back(0);
         vs.push_back(0);
@@ -154,55 +154,55 @@ module stork::update_temporal_numeric_value_evm_input_vec {
 
     #[test]
     fun test_length() {
-        let mut ids = vector::empty();
+        let mut ids = vector[];
         ids.push_back(b"00000000000000000000000000000000");
         ids.push_back(b"00000000000000000000000000000001");
         ids.push_back(b"00000000000000000000000000000002");
         ids.push_back(b"00000000000000000000000000000003");
 
-        let mut temporal_numeric_value_timestamp_nss = vector::empty();
+        let mut temporal_numeric_value_timestamp_nss = vector[];
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
 
-        let mut temporal_numeric_value_magnitudes = vector::empty();
+        let mut temporal_numeric_value_magnitudes = vector[];
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
 
-        let mut temporal_numeric_value_negatives = vector::empty();
+        let mut temporal_numeric_value_negatives = vector[];
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
 
-        let mut publisher_merkle_roots = vector::empty();
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        let mut publisher_merkle_roots = vector[];
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
-        let mut value_compute_alg_hashes = vector::empty();
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        let mut value_compute_alg_hashes = vector[];
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
-        let mut rs = vector::empty();
+        let mut rs = vector[];
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
 
-        let mut ss = vector::empty();
+        let mut ss = vector[];
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
 
-        let mut vs = vector::empty();
+        let mut vs = vector[];
         vs.push_back(0);
         vs.push_back(0);
         vs.push_back(0);
@@ -215,55 +215,55 @@ module stork::update_temporal_numeric_value_evm_input_vec {
 
     #[test]
     fun test_get_data() {
-        let mut ids = vector::empty();
+        let mut ids = vector[];
         ids.push_back(b"00000000000000000000000000000000");
         ids.push_back(b"00000000000000000000000000000001");
         ids.push_back(b"00000000000000000000000000000002");
         ids.push_back(b"00000000000000000000000000000003");
 
-        let mut temporal_numeric_value_timestamp_nss = vector::empty();
+        let mut temporal_numeric_value_timestamp_nss = vector[];
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
         temporal_numeric_value_timestamp_nss.push_back(0);
 
-        let mut temporal_numeric_value_magnitudes = vector::empty();
+        let mut temporal_numeric_value_magnitudes = vector[];
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
         temporal_numeric_value_magnitudes.push_back(0);
 
-        let mut temporal_numeric_value_negatives = vector::empty();
+        let mut temporal_numeric_value_negatives = vector[];
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
         temporal_numeric_value_negatives.push_back(false);
 
-        let mut publisher_merkle_roots = vector::empty();
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
-        publisher_merkle_roots.push_back(x"");
+        let mut publisher_merkle_roots = vector[];
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
+        publisher_merkle_roots.push_back(x"e5ff773b0316059c04aa157898766731017610dcbeede7d7f169bfeaab7cc318");
 
-        let mut value_compute_alg_hashes = vector::empty();
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
-        value_compute_alg_hashes.push_back(x"");
+        let mut value_compute_alg_hashes = vector[];
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
+        value_compute_alg_hashes.push_back(x"9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba");
 
-        let mut rs = vector::empty();
+        let mut rs = vector[];
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
         rs.push_back(x"");
 
-        let mut ss = vector::empty();
+        let mut ss = vector[];
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
         ss.push_back(x"");
 
-        let mut vs = vector::empty();
+        let mut vs = vector[];
         vs.push_back(0);
         vs.push_back(0);
         vs.push_back(0);
