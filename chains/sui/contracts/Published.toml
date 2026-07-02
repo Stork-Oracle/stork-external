@@ -16,12 +16,16 @@ version = 1
 
 [published.mainnet]
 chain-id = "35834a8a"
-published-at = "0x664fcc7d42abf7583938e6e64f51aa1ede063a49f445a6a9c0206638af0a53d9"
+published-at = "0xfd9ed7297e1b737c22355e9bb6723c1def2909a9ebff78e4a15f7fa3cc8d57f8"
 original-id = "0xbc96aa8e79e0831131f00e7d9568fb40f283e6b96c2516dd99aa26b67459b60a"
-version = 2
+version = 3
+toolchain-version = "1.74.1"
+build-config = { flavor = "sui", edition = "2024" }
 
 [published.testnet]
 chain-id = "4c78adac"
-published-at = "0x90c263290f488de268c1cdb40ff4ea24dd29dfeb0abd69606e177806075c475a"
+published-at = "0x5ce98f432d76a32f472541196016bdeb8171c2330b70413d6ecc2a2e3e4e16f5"
 original-id = "0x360566061c9f0d29f796bebb773ac9b7159a67727d5ba26790c5b6777142889b"
-version = 2
+version = 3
+toolchain-version = "1.74.1"
+build-config = { flavor = "sui", edition = "2024" }

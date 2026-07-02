@@ -81,6 +81,12 @@ async function getOrigionalContractId(): Promise<string> {
 }
 
 async function getStorkStateId(): Promise<string> {
+    // Public fullnodes prune old transactions, so the init event lookup below
+    // fails once the init transaction ages out of the retention window.
+    if (process.env.STORK_STATE_ID) {
+        return process.env.STORK_STATE_ID;
+    }
+
     const originalContractId = await getOrigionalContractId();
     const eventFilter: SuiEventFilter = {
         MoveModule: {
@@ -215,6 +221,7 @@ cliProgram
         const [coin] = tx.splitCoins(tx.gas, [fee]);
         const storkState = await getStorkStateId();
         console.log(`Stork state: ${JSON.stringify(storkState)}`);
+        console.log(`Contract address: ${STORK_CONTRACT_ADDRESS}`);
         const [updateTemporalNumericValueEvmInputVec] = tx.moveCall({
             target: `${STORK_CONTRACT_ADDRESS}::update_temporal_numeric_value_evm_input_vec::new`,
             arguments: [
