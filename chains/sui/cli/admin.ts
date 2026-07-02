@@ -482,6 +482,32 @@ cliProgram
         });
         console.log("State migrated:", result);
     });
+
+cliProgram
+    .command("set-version")
+    .description("Set the Stork state version directly, bypassing migrate's sequential-upgrade guard")
+    .argument("<version>", "The version to set on the Stork state", (value) => value)
+    .action(async (version: string) => {
+        const keypair = loadKeypairFromKeystore();
+        const adminCap = await getAdminCap(keypair);
+        const storkState = await getStorkStateId();
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${STORK_CONTRACT_ADDRESS}::state::set_version`,
+            arguments: [
+                tx.object(adminCap.objectId),
+                tx.object(storkState),
+                tx.pure.u64(BigInt(version)),
+            ]
+        });
+
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log("State version set:", result);
+    });
+
 cliProgram.parse();
 
 
