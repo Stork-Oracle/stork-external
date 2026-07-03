@@ -153,6 +153,17 @@ module stork::state {
         state.stork_evm_public_key = evm_pubkey::from_bytes(new_stork_evm_public_key);  
     }
 
+    // Directly sets the stored version without the sequential-upgrade guard in
+    // `migrate`. Escape hatch for recovering a state whose version is out of
+    // sync with the package VERSION (e.g. a skipped or failed migration).
+    entry fun set_version(
+        _: &AdminCap,
+        state: &mut StorkState,
+        version: u64,
+    ) {
+        state.version = version;
+    }
+
     public fun withdraw_fees(
         _: &AdminCap,
         state: &mut StorkState,

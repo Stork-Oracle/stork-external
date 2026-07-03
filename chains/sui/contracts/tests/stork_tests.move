@@ -1111,6 +1111,46 @@ module stork::stork_tests {
         test_scenario::end(scenario);
     }
 
+    // set_version directly overrides the stored version with no sequential-upgrade
+    // guard, recovering a state stuck at an arbitrary version (unlike migrate,
+    // which requires exactly VERSION - 1).
+    #[test]
+    fun test_set_version_success() {
+        let mut scenario = test_scenario::begin(DEPLOYER);
+
+        {
+            admin::test_init(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            stork::init_stork(
+                &admin_cap, STORK_SUI_PUBLIC_KEY, STORK_EVM_PUBLIC_KEY,
+                SINGLE_UPDATE_FEE, VERSION, test_scenario::ctx(&mut scenario)
+            );
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        {
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(&scenario);
+            let mut state = test_scenario::take_shared<StorkState>(&scenario);
+
+            // Simulate a state stuck several versions behind — migrate would
+            // abort here since it requires exactly VERSION - 1.
+            state::set_version_for_testing(&mut state, VERSION - 2);
+
+            state::set_version(&admin_cap, &mut state, VERSION);
+
+            assert!(state.get_version() == VERSION, 0);
+
+            test_scenario::return_shared(state);
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+
+        test_scenario::end(scenario);
+    }
+
     // Functions guarded by the version check must abort when the stored version
     // does not match the package VERSION (e.g. after an upgrade, before migrate).
     #[test]
