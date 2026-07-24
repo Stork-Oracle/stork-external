@@ -93,6 +93,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	registryBrokers, err := r.registryClient.GetBrokersForPublisher(publicKey)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
+		return
 	}
 
 	newBrokerMap := r.mergeBrokers(registryBrokers, r.seededBrokers)
