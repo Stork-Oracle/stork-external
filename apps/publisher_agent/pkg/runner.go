@@ -93,6 +93,7 @@ func (r *PublisherAgentRunner[T]) UpdateBrokerConnections() {
 	registryBrokers, err := r.registryClient.GetBrokersForPublisher(publicKey)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get broker connections from Stork Registry")
+		return
 	}
 
 	newBrokerMap := r.mergeBrokers(registryBrokers, r.seededBrokers)
@@ -153,16 +154,7 @@ func (r *PublisherAgentRunner[T]) Run() {
 	)
 
 	// fan out the signed update to all subscriber websockets
-	go func(signedPriceBatchCh chan SignedPriceUpdateBatch[T]) {
-		for signedPriceUpdateBatch := range signedPriceBatchCh {
-			r.outgoingConnectionsLock.RLock()
-
-			for _, outgoingConnection := range r.outgoingConnectionsByBroker {
-				outgoingConnection.signedPriceUpdateBatchCh <- signedPriceUpdateBatch
-			}
-			r.outgoingConnectionsLock.RUnlock()
-		}
-	}(r.signedPriceBatchCh)
+	go r.FanOutSignedPriceBatches()
 
 	go r.RunBrokerConnectionUpdater()
 
@@ -171,6 +163,34 @@ func (r *PublisherAgentRunner[T]) Run() {
 	}
 
 	processor.Run()
+}
+
+// FanOutSignedPriceBatches sends each signed price update batch to every outgoing broker connection.
+func (r *PublisherAgentRunner[T]) FanOutSignedPriceBatches() {
+	var lastDropLogTime time.Time
+
+	for signedPriceUpdateBatch := range r.signedPriceBatchCh {
+		// copy the connections out so we never write to a connection's channel while holding the lock -
+		// a blocking write under the read lock deadlocks against onClose taking the write lock
+		r.outgoingConnectionsLock.RLock()
+		outgoingConnections := make([]*OutgoingWebsocketConnection[T], 0, len(r.outgoingConnectionsByBroker))
+		for _, outgoingConnection := range r.outgoingConnectionsByBroker {
+			outgoingConnections = append(outgoingConnections, outgoingConnection)
+		}
+		r.outgoingConnectionsLock.RUnlock()
+
+		// a slow or dead broker must not block the other brokers or back up the signing pipeline
+		for _, outgoingConnection := range outgoingConnections {
+			select {
+			case outgoingConnection.signedPriceUpdateBatchCh <- signedPriceUpdateBatch:
+			default:
+				if time.Since(lastDropLogTime) >= FullQueueLogFrequency {
+					r.logger.Error().Msg("dropped signed price update batch - outgoing websocket queue is full")
+					lastDropLogTime = time.Now()
+				}
+			}
+		}
+	}
 }
 
 func (r *PublisherAgentRunner[T]) RunOutgoingConnection(url BrokerPublishUrl, assetIds map[shared.AssetID]struct{}) {
