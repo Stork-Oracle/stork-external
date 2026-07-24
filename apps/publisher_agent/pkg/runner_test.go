@@ -233,3 +233,70 @@ func TestRemoveClosedConnection(t *testing.T) {
 
 	runner.UpdateBrokerConnections()
 }
+
+// A transient Stork Registry failure must leave the existing broker connections alone.
+// The registry client returns a nil broker map on error, which used to fall through to mergeBrokers and
+// look identical to "you have no brokers" - tearing down every connection and taking the publisher offline.
+func TestRegistryFailureKeepsExistingConnections(t *testing.T) {
+	brokerPublishUrl1 := BrokerPublishUrl("wss://broker1.example.com")
+	brokerPublishUrl2 := BrokerPublishUrl("wss://broker2.example.com")
+
+	registry := NewMockRegistryClientI(t)
+	evmSigner, err := signer.NewEvmSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+	evmAuthSigner, err := signer.NewEvmAuthSigner("0x8b558d5fc31eb64bb51d44b4b28658180e96764d5d5ac68e6d124f86f576d9de", zerolog.Logger{})
+	require.NoError(t, err)
+
+	// no Close expectation - a registry failure must not close the websocket
+	conn := NewMockConnI(t)
+
+	wsConnectFn := func(urlStr string, requestHeader http.Header) (connI, error) {
+		return conn, nil
+	}
+
+	runner := &PublisherAgentRunner[*shared.EvmSignature]{
+		registryClient:  registry,
+		signer:          evmSigner,
+		storkAuthSigner: evmAuthSigner,
+		// no seeded brokers, like a publisher that relies solely on the registry
+		seededBrokers:               make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		assetsByBroker:              make(map[BrokerPublishUrl]map[shared.AssetID]struct{}),
+		outgoingConnectionsByBroker: make(map[BrokerPublishUrl]*OutgoingWebsocketConnection[*shared.EvmSignature]),
+		outgoingConnectionsLock:     sync.RWMutex{},
+		wsConnectFn:                 wsConnectFn,
+		logger:                      zerolog.Nop(),
+	}
+
+	countConnections := func() int {
+		runner.outgoingConnectionsLock.RLock()
+		defer runner.outgoingConnectionsLock.RUnlock()
+
+		return len(runner.outgoingConnectionsByBroker)
+	}
+
+	registry.On("GetBrokersForPublisher", mock.Anything).Return(map[BrokerPublishUrl]map[shared.AssetID]struct{}{
+		brokerPublishUrl1: {"BTCUSD": {}},
+		brokerPublishUrl2: {"BTCUSD": {}},
+	}, nil).Once()
+	runner.UpdateBrokerConnections()
+
+	require.Eventually(t, func() bool {
+		return countConnections() == 2
+	}, time.Second, 10*time.Millisecond, "both broker connections should be established")
+
+	// transient registry failure, e.g. the request timing out
+	registry.On("GetBrokersForPublisher", mock.Anything).
+		Return(nil, errors.New("context deadline exceeded")).Once()
+	runner.UpdateBrokerConnections()
+
+	assert.Equal(t, 2, countConnections(), "connections must survive a registry failure")
+
+	runner.outgoingConnectionsLock.RLock()
+	defer runner.outgoingConnectionsLock.RUnlock()
+
+	assert.Len(t, runner.assetsByBroker, 2, "asset assignments must survive a registry failure")
+	for brokerUrl, outgoingConnection := range runner.outgoingConnectionsByBroker {
+		assert.False(t, outgoingConnection.removed, "connection to %s should not be marked removed", brokerUrl)
+		assert.False(t, outgoingConnection.IsClosed(), "connection to %s should not be closed", brokerUrl)
+	}
+}
