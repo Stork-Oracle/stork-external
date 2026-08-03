@@ -779,6 +779,17 @@ func (eci *ContractInteractor) submitTransaction(
 		}
 
 		if receipt.Status != 1 {
+			// The revert may be out-of-gas under a cached limit estimated from a cheaper
+			// batch; clear the cache so the next attempt re-estimates instead of
+			// failing until gasCalcResetInterval clears it.
+			clear(eci.gasLimits)
+
+			eci.logger.Warn().
+				Str("txHash", tx.Hash().Hex()).
+				Uint64("gasLimit", tx.Gas()).
+				Uint64("gasUsed", receipt.GasUsed).
+				Msg("transaction reverted on-chain, cleared cached gas limits")
+
 			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
 		}
 	} else {
