@@ -857,7 +857,6 @@ func (eci *ContractInteractor) retryTransaction(
 
 		eci.gasFeeCap = newGasFeeCap
 		eci.gasTipCap = newGasTipCap
-		eci.gasLimits[len(updatePayload)] = uint64(float64(gasPrice.Uint64()) * gasLimitMultiplier)
 
 		tx, err := eci.submitTransaction(ctx, updatePayload, fee)
 
