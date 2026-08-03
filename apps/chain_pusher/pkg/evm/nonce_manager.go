@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -69,16 +70,21 @@ func (n *ServerNonceManager) ResetNonce(ctx context.Context, ethClient *ethclien
 }
 
 type LocalNonceManager struct {
+	mu    sync.Mutex
 	nonce *big.Int
 }
 
 func NewLocalNonceManager() *LocalNonceManager {
 	return &LocalNonceManager{
+		mu:    sync.Mutex{},
 		nonce: nil,
 	}
 }
 
 func (n *LocalNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) (*big.Int, error) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	if n.nonce == nil {
 		nonce, err := ethClient.NonceAt(ctx, address, nil)
 		if err != nil {
@@ -86,15 +92,24 @@ func (n *LocalNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethcl
 		}
 		n.nonce = new(big.Int).SetUint64(nonce)
 	}
-	return n.nonce, nil
+	return new(big.Int).Set(n.nonce), nil
 }
 
 func (n *LocalNonceManager) IncrementNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	// a concurrent ResetNonce may have cleared the nonce; leave it nil so the
+	// next GetLatestNonce re-fetches from the chain
+	if n.nonce == nil {
+		return nil
+	}
 	n.nonce = new(big.Int).Add(n.nonce, big.NewInt(1))
 	return nil
 }
 
 func (n *LocalNonceManager) ResetNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.nonce = nil
 	return nil
 }
