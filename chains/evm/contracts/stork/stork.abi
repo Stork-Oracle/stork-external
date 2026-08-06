@@ -306,6 +306,10 @@
     "type": "event"
   },
   {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
     "inputs": [],
     "name": "UPGRADE_INTERFACE_VERSION",
     "outputs": [

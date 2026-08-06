@@ -3,6 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers, upgrades } from "hardhat";
 
 import { expect } from "chai";
+import { LibZip } from "solady";
 
 describe("UpgradeableStork", function() {
   async function deployUpgradeableStork() {
@@ -23,7 +24,7 @@ describe("UpgradeableStork", function() {
     it("Should return expected version", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
 
-      expect(await deployed.version()).to.equal("1.0.6");
+      expect(await deployed.version()).to.equal("1.0.7");
     });
 
     it("Should return owner", async function () {
@@ -63,7 +64,7 @@ describe("UpgradeableStork", function() {
 
       const upgraded = await upgrades.upgradeProxy(deployed, UpgradeableStorkV2);
 
-      expect(await upgraded.version()).to.equal("1.0.6");
+      expect(await upgraded.version()).to.equal("1.0.7");
     });
 
     it("Should revert if not owner", async function () {
@@ -585,6 +586,150 @@ describe("UpgradeableStork", function() {
       ]);
 
       await expect(deployed.updateTemporalNumericValuesV1Packed([...packed], { value: 1 })).to.be.revertedWithCustomError(deployed, "InvalidSignature");
+    });
+  });
+
+  describe("LibZip compressed calldata", function () {
+    const validUpdate = {
+      temporalNumericValue: {
+        timestampNs: "1720722087644999936",
+        quantizedValue: "60000000000000000000000",
+      },
+      id: ethers.keccak256(ethers.toUtf8Bytes("BTCUSD")),
+      publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+      valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+      r: "0x3e42e45aadf7da98780de810944ac90424493395c90bf0c21ede86b0d3c2cd7b",
+      s: "0x1d853d65ae5be6046dc4199de2a0ee2b7288f51fc4af6946746c425cb8649879",
+      v: "0x1c",
+    };
+
+    const negativeUpdate = {
+      temporalNumericValue: {
+        timestampNs: "1750794968021348308",
+        quantizedValue: "-3020199000000",
+      },
+      id: ethers.keccak256(ethers.toUtf8Bytes("HL_BTC_CURRENT_FUNDING")),
+      publisherMerkleRoot: "0x5ea4136e8064520a3311961f3f7030dfbc0b96652f46a473e79f2a019b3cd878",
+      valueComputeAlgHash: "0x9be7e9f9ed459417d96112a7467bd0b27575a2c7847195c68f805b70ce1795ba",
+      r: "0x14c36cf7272689cec0335efdc5f82dc2d4b1aceb8d2320d3245e4593df32e696",
+      s: "0x79ab437ecd56dc9fcf850f192328840f7f47d5df57cb939d99146b33014c39f0",
+      v: "0x1b",
+    };
+
+    const ethUpdate = {
+      temporalNumericValue: {
+        timestampNs: "1720722554872999936",
+        quantizedValue: "3000000000000000000000",
+      },
+      id: ethers.keccak256(ethers.toUtf8Bytes("ETHUSD")),
+      publisherMerkleRoot: ethers.encodeBytes32String("example data"),
+      valueComputeAlgHash: ethers.encodeBytes32String("example data"),
+      r: "0x67018d101bb11542b3b43048a4d171122e7eb25b8cebd2fe6cb7412cf3438620",
+      s: "0x788ca33b146165b588d5e704faf9e4a9fd036d7ae2d88b48e75ee71628ddd657",
+      v: "0x1b",
+    };
+
+    async function compressUpdate(deployed: any, updates: (typeof validUpdate)[]) {
+      const packed = await deployed.packTemporalNumericValueInputs(updates);
+      return LibZip.cdCompress(
+        deployed.interface.encodeFunctionData("updateTemporalNumericValuesV1Packed", [[...packed]]),
+      );
+    }
+
+    it("executes a compressed update through the proxy", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const data = await compressUpdate(deployed, [validUpdate]);
+
+      await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 }))
+        .to.emit(deployed, "ValueUpdate");
+
+      expect((await deployed.getTemporalNumericValueUnsafeV1(validUpdate.id)).quantizedValue)
+        .to.equal(validUpdate.temporalNumericValue.quantizedValue);
+    });
+
+    it("executes a compressed negative-value update", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
+
+      const data = await compressUpdate(deployed, [negativeUpdate]);
+      await owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 });
+
+      expect((await deployed.getTemporalNumericValueUnsafeV1(negativeUpdate.id)).quantizedValue)
+        .to.equal(negativeUpdate.temporalNumericValue.quantizedValue);
+    });
+
+    it("executes multiple compressed updates", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const data = await compressUpdate(deployed, [validUpdate, ethUpdate]);
+
+      await owner.sendTransaction({ to: await deployed.getAddress(), data, value: 2 });
+
+      expect((await deployed.getTemporalNumericValueUnsafeV1(validUpdate.id)).quantizedValue)
+        .to.equal(validUpdate.temporalNumericValue.quantizedValue);
+      expect((await deployed.getTemporalNumericValueUnsafeV1(ethUpdate.id)).quantizedValue)
+        .to.equal(ethUpdate.temporalNumericValue.quantizedValue);
+    });
+
+    it("bubbles delegated fee errors", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const data = await compressUpdate(deployed, [validUpdate]);
+
+      await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 0 }))
+        .to.be.revertedWithCustomError(deployed, "InsufficientFee");
+    });
+
+    it("bubbles delegated signature errors", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const invalidUpdate = {
+        ...validUpdate,
+        temporalNumericValue: {
+          ...validUpdate.temporalNumericValue,
+          quantizedValue: "70000000000000000000000",
+        },
+      };
+      const data = await compressUpdate(deployed, [invalidUpdate]);
+
+      await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 }))
+        .to.be.revertedWithCustomError(deployed, "InvalidSignature");
+    });
+
+    it("accepts empty calldata through the LibZip fallback", async function () {
+      const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const contractAddress = await deployed.getAddress();
+
+      await owner.sendTransaction({ to: contractAddress, value: 1 });
+
+      expect(await ethers.provider.getBalance(contractAddress)).to.equal(1);
+    });
+
+    it("LibZip-compresses compact calldata and saves at least 48% for two updates", async function () {
+      const { deployed } = await loadFixture(deployUpgradeableStork);
+      const original = deployed.interface.encodeFunctionData(
+        "updateTemporalNumericValuesV1",
+        [[validUpdate, ethUpdate]],
+      );
+      const packed = await deployed.packTemporalNumericValueInputs([validUpdate, ethUpdate]);
+      const legacyPacked = deployed.interface.encodeFunctionData(
+        "updateTemporalNumericValuesV1Packed",
+        [[...packed]],
+      );
+      const compressed = LibZip.cdCompress(legacyPacked);
+
+      const originalLength = ethers.dataLength(original);
+      const compactLength = ethers.dataLength(legacyPacked);
+      const compressedLength = ethers.dataLength(compressed);
+      const totalSavingsBps = Math.floor(
+        ((originalLength - compressedLength) * 10_000) / originalLength,
+      );
+      const libZipSavingsBps = Math.floor(
+        ((compactLength - compressedLength) * 10_000) / compactLength,
+      );
+
+      expect(originalLength).to.equal(580);
+      expect(compactLength).to.equal(452);
+      expect(compressedLength).to.equal(296);
+      expect(totalSavingsBps).to.be.greaterThanOrEqual(4_800);
+      expect(libZipSavingsBps).to.be.greaterThanOrEqual(3_400);
     });
   });
 
