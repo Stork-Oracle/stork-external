@@ -693,11 +693,13 @@ describe("UpgradeableStork", function() {
         .to.be.revertedWithCustomError(deployed, "InvalidSignature");
     });
 
-    it("rejects empty calldata with value", async function () {
+    it("accepts empty calldata through the LibZip fallback", async function () {
       const { deployed, owner } = await loadFixture(deployUpgradeableStork);
+      const contractAddress = await deployed.getAddress();
 
-      await expect(owner.sendTransaction({ to: await deployed.getAddress(), value: 1 }))
-        .to.be.reverted;
+      await owner.sendTransaction({ to: contractAddress, value: 1 });
+
+      expect(await ethers.provider.getBalance(contractAddress)).to.equal(1);
     });
 
     it("LibZip-compresses compact calldata and saves at least 48% for two updates", async function () {

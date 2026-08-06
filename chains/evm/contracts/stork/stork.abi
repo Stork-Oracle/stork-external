@@ -1060,9 +1060,5 @@
     ],
     "stateMutability": "pure",
     "type": "function"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
   }
 ]

@@ -179,10 +179,6 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         LibZip.cdFallback();
     }
 
-    receive() external payable {
-        revert();
-    }
-
     function version() public pure returns (string memory) {
         return "1.0.7";
     }
