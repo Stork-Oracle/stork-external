@@ -629,15 +629,16 @@ describe("UpgradeableStork", function() {
       v: "0x1b",
     };
 
-    function compressUpdate(deployed: any, updates: (typeof validUpdate)[]) {
+    async function compressUpdate(deployed: any, updates: (typeof validUpdate)[]) {
+      const packed = await deployed.packTemporalNumericValueInputs(updates);
       return LibZip.cdCompress(
-        deployed.interface.encodeFunctionData("updateTemporalNumericValuesV1", [updates]),
+        deployed.interface.encodeFunctionData("updateTemporalNumericValuesV1Packed", [[...packed]]),
       );
     }
 
     it("executes a compressed update through the proxy", async function () {
       const { deployed, owner } = await loadFixture(deployUpgradeableStork);
-      const data = compressUpdate(deployed, [validUpdate]);
+      const data = await compressUpdate(deployed, [validUpdate]);
 
       await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 }))
         .to.emit(deployed, "ValueUpdate");
@@ -650,7 +651,7 @@ describe("UpgradeableStork", function() {
       const { deployed, owner } = await loadFixture(deployUpgradeableStork);
       await deployed.updateStorkPublicKey("0x3db9E960ECfCcb11969509FAB000c0c96DC51830");
 
-      const data = compressUpdate(deployed, [negativeUpdate]);
+      const data = await compressUpdate(deployed, [negativeUpdate]);
       await owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 });
 
       expect((await deployed.getTemporalNumericValueUnsafeV1(negativeUpdate.id)).quantizedValue)
@@ -659,7 +660,7 @@ describe("UpgradeableStork", function() {
 
     it("executes multiple compressed updates", async function () {
       const { deployed, owner } = await loadFixture(deployUpgradeableStork);
-      const data = compressUpdate(deployed, [validUpdate, ethUpdate]);
+      const data = await compressUpdate(deployed, [validUpdate, ethUpdate]);
 
       await owner.sendTransaction({ to: await deployed.getAddress(), data, value: 2 });
 
@@ -671,7 +672,7 @@ describe("UpgradeableStork", function() {
 
     it("bubbles delegated fee errors", async function () {
       const { deployed, owner } = await loadFixture(deployUpgradeableStork);
-      const data = compressUpdate(deployed, [validUpdate]);
+      const data = await compressUpdate(deployed, [validUpdate]);
 
       await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 0 }))
         .to.be.revertedWithCustomError(deployed, "InsufficientFee");
@@ -686,7 +687,7 @@ describe("UpgradeableStork", function() {
           quantizedValue: "70000000000000000000000",
         },
       };
-      const data = compressUpdate(deployed, [invalidUpdate]);
+      const data = await compressUpdate(deployed, [invalidUpdate]);
 
       await expect(owner.sendTransaction({ to: await deployed.getAddress(), data, value: 1 }))
         .to.be.revertedWithCustomError(deployed, "InvalidSignature");
@@ -699,7 +700,7 @@ describe("UpgradeableStork", function() {
         .to.be.reverted;
     });
 
-    it("saves at least 47% of ABI calldata bytes for two updates", async function () {
+    it("LibZip-compresses compact calldata and saves at least 48% for two updates", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
       const original = deployed.interface.encodeFunctionData(
         "updateTemporalNumericValuesV1",
@@ -710,18 +711,23 @@ describe("UpgradeableStork", function() {
         "updateTemporalNumericValuesV1Packed",
         [[...packed]],
       );
-      const compressed = LibZip.cdCompress(original);
+      const compressed = LibZip.cdCompress(legacyPacked);
 
       const originalLength = ethers.dataLength(original);
+      const compactLength = ethers.dataLength(legacyPacked);
       const compressedLength = ethers.dataLength(compressed);
-      const libZipSavingsBps = Math.floor(
+      const totalSavingsBps = Math.floor(
         ((originalLength - compressedLength) * 10_000) / originalLength,
+      );
+      const libZipSavingsBps = Math.floor(
+        ((compactLength - compressedLength) * 10_000) / compactLength,
       );
 
       expect(originalLength).to.equal(580);
-      expect(compressedLength).to.equal(306);
-      expect(libZipSavingsBps).to.be.greaterThanOrEqual(4_700);
-      expect(ethers.dataLength(legacyPacked)).to.be.lessThan(ethers.dataLength(original));
+      expect(compactLength).to.equal(452);
+      expect(compressedLength).to.equal(296);
+      expect(totalSavingsBps).to.be.greaterThanOrEqual(4_800);
+      expect(libZipSavingsBps).to.be.greaterThanOrEqual(3_400);
     });
   });
 

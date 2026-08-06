@@ -399,11 +399,13 @@ func TestPackLibZipUpdatePayload(t *testing.T) {
 
 	contractABI, err := bindings.StorkContractMetaData.GetAbi()
 	require.NoError(t, err)
-	original, err := contractABI.Pack("updateTemporalNumericValuesV1", updates)
+	packed, err := packUpdatePayload(updates)
+	require.NoError(t, err)
+	expected, err := contractABI.Pack("updateTemporalNumericValuesV1Packed", packed)
 	require.NoError(t, err)
 
-	assert.NotEqual(t, original, compressed)
-	assert.Equal(t, original, decompressCalldataForTest(t, compressed))
+	assert.NotEqual(t, expected, compressed)
+	assert.Equal(t, expected, decompressCalldataForTest(t, compressed))
 }
 
 func TestTransactLibZipUpdate(t *testing.T) {
@@ -430,12 +432,14 @@ func TestTransactLibZipUpdate(t *testing.T) {
 
 	contractABI, err := bindings.StorkContractMetaData.GetAbi()
 	require.NoError(t, err)
-	original, err := contractABI.Pack("updateTemporalNumericValuesV1", testUpdatePayload())
+	packed, err := packUpdatePayload(testUpdatePayload())
+	require.NoError(t, err)
+	expected, err := contractABI.Pack("updateTemporalNumericValuesV1Packed", packed)
 	require.NoError(t, err)
 
 	assert.Equal(t, contractAddress, *tx.To())
 	assert.Equal(t, fee, tx.Value())
-	assert.Equal(t, original, decompressCalldataForTest(t, tx.Data()))
+	assert.Equal(t, expected, decompressCalldataForTest(t, tx.Data()))
 }
 
 func testUpdatePayload() []bindings.StorkStructsTemporalNumericValueInput {

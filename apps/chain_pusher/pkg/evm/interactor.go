@@ -403,12 +403,17 @@ func packUpdatePayload(
 func packLibZipUpdatePayload(
 	updates []bindings.StorkStructsTemporalNumericValueInput,
 ) ([]byte, error) {
+	packed, err := packUpdatePayload(updates)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compact update payload: %w", err)
+	}
+
 	contractABI, err := bindings.StorkContractMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load Stork contract ABI: %w", err)
 	}
 
-	calldata, err := contractABI.Pack("updateTemporalNumericValuesV1", updates)
+	calldata, err := contractABI.Pack("updateTemporalNumericValuesV1Packed", packed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode update payload: %w", err)
 	}
