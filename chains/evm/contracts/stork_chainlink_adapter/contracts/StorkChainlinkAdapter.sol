@@ -33,14 +33,13 @@ contract StorkChainlinkAdapter {
         return stork.getTemporalNumericValueUnsafeV1(priceId).quantizedValue;
     }
 
-    // in nanoseconds
     function latestTimestamp() public view returns (uint256) {
-        return stork.getTemporalNumericValueUnsafeV1(priceId).timestampNs;
+        return stork.getTemporalNumericValueUnsafeV1(priceId).timestampNs / 1000000000; // convert nanoseconds to seconds
     }
 
     function latestRound() public view returns (uint256) {
         // use timestamp in nanoseconds as the round id
-        return latestTimestamp();
+        return stork.getTemporalNumericValueUnsafeV1(priceId).timestampNs;
     }
 
     function getAnswer(uint256) public view returns (int256) {
@@ -74,8 +73,8 @@ contract StorkChainlinkAdapter {
         return (
             _roundId,
             value.quantizedValue,
-            value.timestampNs,
-            value.timestampNs,
+            value.timestampNs / 1000000000, // convert nanoseconds to seconds
+            value.timestampNs / 1000000000, // convert nanoseconds to seconds
             _roundId
         );
     }
@@ -97,8 +96,8 @@ contract StorkChainlinkAdapter {
         return (
             roundId,
             value.quantizedValue,
-            value.timestampNs,
-            value.timestampNs,
+            value.timestampNs / 1000000000, // convert nanoseconds to seconds
+            value.timestampNs / 1000000000, // convert nanoseconds to seconds
             roundId
         );
     }
