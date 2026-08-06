@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
       chainId: 421614,
     },
     arbitrumMainnet: {
-      url: "https://arbitrum-one.rpc.grove.city/v1/01fdb492",
+      url: "https://arb1.arbitrum.io/rpc",
       accounts: [PRIVATE_KEY],
       chainId: 42161,
     },
