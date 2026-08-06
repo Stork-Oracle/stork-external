@@ -1,8 +1,11 @@
 package evm
 
 const (
-	maxZeroRun = 128
-	maxFFRun   = 32
+	zeroByte   byte = 0x00
+	ffByte     byte = 0xff
+	ffRunMask  byte = 0x80
+	maxZeroRun      = 128
+	maxFFRun        = 32
 )
 
 // compressCalldata applies Solady LibZip's selective run-length encoding.
@@ -10,15 +13,18 @@ func compressCalldata(data []byte) []byte {
 	compressed := make([]byte, 0, len(data))
 	for i := 0; i < len(data); {
 		value := data[i]
-		limit := 0
-		control := byte(0)
+
+		var (
+			limit   int
+			control byte
+		)
 
 		switch value {
-		case 0x00:
+		case zeroByte:
 			limit = maxZeroRun
-		case 0xff:
+		case ffByte:
 			limit = maxFFRun
-			control = 0x80
+			control = ffRunMask
 		default:
 			compressed = append(compressed, value)
 			i++
@@ -31,7 +37,7 @@ func compressCalldata(data []byte) []byte {
 			runLength++
 		}
 
-		compressed = append(compressed, 0x00, control|byte(runLength-1))
+		compressed = append(compressed, zeroByte, control|byte(runLength-1))
 		i += runLength
 	}
 

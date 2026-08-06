@@ -64,7 +64,8 @@ const (
 	GasLimitDesc             = "Gas limit (0 to use estimate)"
 	NonceManagerTypeDesc     = "Nonce manager type (server|serverPending|local), defaults to noop"
 	UseSyncSendDesc          = "Use sync send for transactions, defaults to false"
-	UsePackedUpdateDesc      = "Use compressed calldata updates (LibZip for contract version >= 1.0.7, legacy packed encoding for 1.0.6), defaults to false"
+	UsePackedUpdateDesc      = "Use compressed calldata updates (LibZip for contract version >= 1.0.7, " +
+		"legacy packed encoding for 1.0.6), defaults to false"
 )
 
 // Cosmwasm descriptions.

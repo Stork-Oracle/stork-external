@@ -359,9 +359,24 @@ func TestSelectUpdateEncoding(t *testing.T) {
 		version  *semver.Version
 		expected updateEncoding
 	}{
-		{name: "disabled on 1.0.7", enabled: false, version: semver.MustParse("1.0.7"), expected: updateEncodingUncompressed},
-		{name: "unknown version", enabled: true, version: nil, expected: updateEncodingUncompressed},
-		{name: "pre-packed version", enabled: true, version: semver.MustParse("1.0.5"), expected: updateEncodingUncompressed},
+		{
+			name:     "disabled on 1.0.7",
+			enabled:  false,
+			version:  semver.MustParse("1.0.7"),
+			expected: updateEncodingUncompressed,
+		},
+		{
+			name:     "unknown version",
+			enabled:  true,
+			version:  nil,
+			expected: updateEncodingUncompressed,
+		},
+		{
+			name:     "pre-packed version",
+			enabled:  true,
+			version:  semver.MustParse("1.0.5"),
+			expected: updateEncodingUncompressed,
+		},
 		{name: "legacy packed", enabled: true, version: semver.MustParse("1.0.6"), expected: updateEncodingPacked},
 		{name: "LibZip", enabled: true, version: semver.MustParse("1.0.7"), expected: updateEncodingLibZip},
 		{name: "future LibZip", enabled: true, version: semver.MustParse("2.0.0"), expected: updateEncodingLibZip},
@@ -410,9 +425,7 @@ func TestTransactLibZipUpdate(t *testing.T) {
 			return tx, nil
 		},
 	}
-	interactor := &ContractInteractor{contract: contract}
-
-	tx, err := interactor.transactLibZipUpdate(auth, testUpdatePayload())
+	tx, err := transactLibZipUpdate(contract, auth, testUpdatePayload())
 	require.NoError(t, err)
 
 	contractABI, err := bindings.StorkContractMetaData.GetAbi()

@@ -76,9 +76,11 @@ func selectUpdateEncoding(enabled bool, version *semver.Version) updateEncoding 
 	if !enabled || version == nil {
 		return updateEncodingUncompressed
 	}
+
 	if version.Compare(semver.MustParse(libZipUpdateMinVersion)) >= 0 {
 		return updateEncodingLibZip
 	}
+
 	if version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
 		return updateEncodingPacked
 	}
@@ -414,7 +416,8 @@ func packLibZipUpdatePayload(
 	return compressCalldata(calldata), nil
 }
 
-func (eci *ContractInteractor) transactLibZipUpdate(
+func transactLibZipUpdate(
+	contract *bindings.StorkContract,
 	auth *bind.TransactOpts,
 	updates []bindings.StorkStructsTemporalNumericValueInput,
 ) (*ethtypes.Transaction, error) {
@@ -423,7 +426,12 @@ func (eci *ContractInteractor) transactLibZipUpdate(
 		return nil, fmt.Errorf("failed to compress update payload: %w", err)
 	}
 
-	return eci.contract.Fallback(auth, calldata)
+	tx, err := contract.Fallback(auth, calldata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create LibZip transaction: %w", err)
+	}
+
+	return tx, nil
 }
 
 type verifyPayload struct {
@@ -798,15 +806,17 @@ func (eci *ContractInteractor) submitTransaction(
 
 	switch selectUpdateEncoding(eci.usePackedUpdate, eci.version) {
 	case updateEncodingLibZip:
-		tx, err = eci.transactLibZipUpdate(auth, updatePayload)
+		tx, err = transactLibZipUpdate(eci.contract, auth, updatePayload)
 	case updateEncodingPacked:
 		var packed []*big.Int
+
 		packed, err = packUpdatePayload(updatePayload)
 		if err != nil {
 			return nil, fmt.Errorf("failed to pack update payload: %w", err)
 		}
+
 		tx, err = eci.contract.UpdateTemporalNumericValuesV1Packed(auth, packed)
-	default:
+	case updateEncodingUncompressed:
 		tx, err = eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
 	}
 

@@ -85,14 +85,17 @@ func decompressCalldataForTest(t *testing.T, compressed []byte) []byte {
 	for i := 0; i < len(encoded); {
 		value := encoded[i]
 		i++
+
 		if value != 0x00 {
 			decompressed = append(decompressed, value)
+
 			continue
 		}
 
 		require.Less(t, i, len(encoded), "run marker must have a control byte")
 		control := encoded[i]
 		i++
+
 		runLength := int(control&0x7f) + 1
 		if control&0x80 != 0 {
 			decompressed = append(decompressed, bytes.Repeat([]byte{0xff}, runLength)...)
