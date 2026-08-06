@@ -95,6 +95,31 @@ interactScope
     });
 
 interactScope
+    .task('updateTemporalNumericValuesV1Packed', 'Update the temporal numeric values using packed calldata')
+    .addPositionalParam<string>('assetIds', 'The asset ids to update')
+    .addPositionalParam<string>('endpoint', 'The endpoint to get the latest update data from')
+    .addPositionalParam<string>('authKey', 'The auth key to use to get the latest update data')
+    .addOptionalParam<string>('paymasterAddress', 'The paymaster to use to update the values')
+    .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
+        const contract = await initializeContract(hre);
+        const updates = await getLatestUpdateData(args.endpoint, args.authKey, args.assetIds);
+
+        const packedData = packTemporalNumericValueInputs(updates);
+
+        const customData = getCustomData(args.paymasterAddress);
+
+        const tx = await contract.updateTemporalNumericValuesV1Packed.send(packedData, {
+            value: Object.keys(customData).length === 0 ? updates.length : 0,
+            customData,
+        });
+        const receipt = await tx.wait();
+        console.log('tx.hash:', tx.hash);
+        console.log('tx.gasPrice:', tx.gasPrice);
+        console.log('tx.gasLimit:', tx.gasLimit);
+        console.log('receipt.gasUsed:', receipt.gasUsed);
+    });
+
+interactScope
     .task('getTemporalNumericValueV1', 'Get the temporal numeric value')
     .addPositionalParam<string>('assetId', 'The asset id to get the value for')
     .setAction(async ({ assetId }: { assetId: string }, hre: HardhatRuntimeEnvironment) => {
@@ -177,10 +202,14 @@ interactScope
 
 interactScope
     .task('addSigningAddress', 'Add a signing address to the allowed set')
+    .addOptionalParam<string>('paymasterAddress', 'The paymaster to use to update the values')
     .addPositionalParam<string>('address', 'The signing address to add')
-    .setAction(async ({ address }: { address: string }, hre: HardhatRuntimeEnvironment) => {
+    .setAction(async (args: any, hre: HardhatRuntimeEnvironment) => {
         const contract = await initializeContract(hre);
-        await contract.addSigningAddress(address);
+
+        const customData = getCustomData(args.paymasterAddress);
+
+        await contract.addSigningAddress(args.address, { customData });
     });
 
 interactScope
@@ -198,6 +227,21 @@ interactScope
         const returnVal = await contract.getSigningAddresses();
         console.log(returnVal);
     });
+
+// Mirrors LibCodec.encode from LibCodec.sol — 6 uint256 words per entry:
+//   word[0]: v_flag (bit 255) | timestampNs (bits 254:192) | quantizedValue (bits 191:0)
+//   word[1]: id, word[2]: publisherMerkleRoot, word[3]: valueComputeAlgHash, word[4]: r, word[5]: s
+const packTemporalNumericValueInputs = (updates: ReturnType<typeof getLatestUpdateData> extends Promise<infer T> ? T : never) => {
+    const MASK_192 = (1n << 192n) - 1n;
+    return updates.flatMap((u: any) => {
+        const v = BigInt(u.v);
+        if (v !== 27n && v !== 28n) throw new Error(`Invalid v: ${u.v}`);
+        const timestampNs = BigInt(u.temporalNumericValue.timestampNs);
+        const quantizedValue = BigInt(u.temporalNumericValue.quantizedValue) & MASK_192;
+        const w0 = ((v - 27n) << 255n) | (timestampNs << 192n) | quantizedValue;
+        return [w0, BigInt(u.id), BigInt(u.publisherMerkleRoot), BigInt(u.valueComputeAlgHash), BigInt(u.r), BigInt(u.s)];
+    });
+};
 
 const getLatestUpdateData = async (endpoint: string, authKey: string, assetIds: string) => {
     const response = await fetch(`${endpoint}/v1/prices/latest?assets=${assetIds}`, {
