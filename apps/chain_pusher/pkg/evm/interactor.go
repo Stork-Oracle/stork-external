@@ -55,9 +55,36 @@ const (
 	sigV28                   = 28
 )
 
-// packedUpdateMinVersion is the first contract version that supports
-// updateTemporalNumericValuesV1Packed.
-const packedUpdateMinVersion = "1.0.6"
+const (
+	// packedUpdateMinVersion is the first contract version that supports
+	// updateTemporalNumericValuesV1Packed.
+	packedUpdateMinVersion = "1.0.6"
+	// libZipUpdateMinVersion is the first contract version that supports
+	// Solady LibZip compressed calldata.
+	libZipUpdateMinVersion = "1.0.7"
+)
+
+type updateEncoding uint8
+
+const (
+	updateEncodingUncompressed updateEncoding = iota
+	updateEncodingPacked
+	updateEncodingLibZip
+)
+
+func selectUpdateEncoding(enabled bool, version *semver.Version) updateEncoding {
+	if !enabled || version == nil {
+		return updateEncodingUncompressed
+	}
+	if version.Compare(semver.MustParse(libZipUpdateMinVersion)) >= 0 {
+		return updateEncodingLibZip
+	}
+	if version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
+		return updateEncodingPacked
+	}
+
+	return updateEncodingUncompressed
+}
 
 type ContractInteractor struct {
 	logger zerolog.Logger
@@ -369,6 +396,34 @@ func packUpdatePayload(
 	}
 
 	return packed, nil
+}
+
+func packLibZipUpdatePayload(
+	updates []bindings.StorkStructsTemporalNumericValueInput,
+) ([]byte, error) {
+	contractABI, err := bindings.StorkContractMetaData.GetAbi()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load Stork contract ABI: %w", err)
+	}
+
+	calldata, err := contractABI.Pack("updateTemporalNumericValuesV1", updates)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode update payload: %w", err)
+	}
+
+	return compressCalldata(calldata), nil
+}
+
+func (eci *ContractInteractor) transactLibZipUpdate(
+	auth *bind.TransactOpts,
+	updates []bindings.StorkStructsTemporalNumericValueInput,
+) (*ethtypes.Transaction, error) {
+	calldata, err := packLibZipUpdatePayload(updates)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compress update payload: %w", err)
+	}
+
+	return eci.contract.Fallback(auth, calldata)
 }
 
 type verifyPayload struct {
@@ -741,14 +796,17 @@ func (eci *ContractInteractor) submitTransaction(
 
 	var tx *ethtypes.Transaction
 
-	if eci.usePackedUpdate && eci.version != nil && eci.version.Compare(semver.MustParse(packedUpdateMinVersion)) >= 0 {
-		packed, packErr := packUpdatePayload(updatePayload)
-		if packErr != nil {
-			return nil, fmt.Errorf("failed to pack update payload: %w", packErr)
+	switch selectUpdateEncoding(eci.usePackedUpdate, eci.version) {
+	case updateEncodingLibZip:
+		tx, err = eci.transactLibZipUpdate(auth, updatePayload)
+	case updateEncodingPacked:
+		var packed []*big.Int
+		packed, err = packUpdatePayload(updatePayload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to pack update payload: %w", err)
 		}
-
 		tx, err = eci.contract.UpdateTemporalNumericValuesV1Packed(auth, packed)
-	} else {
+	default:
 		tx, err = eci.contract.UpdateTemporalNumericValuesV1(auth, updatePayload)
 	}
 
