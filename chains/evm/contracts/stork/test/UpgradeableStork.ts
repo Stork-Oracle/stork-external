@@ -699,7 +699,7 @@ describe("UpgradeableStork", function() {
         .to.be.reverted;
     });
 
-    it("reduces the original ABI calldata size", async function () {
+    it("saves at least 47% of ABI calldata bytes for two updates", async function () {
       const { deployed } = await loadFixture(deployUpgradeableStork);
       const original = deployed.interface.encodeFunctionData(
         "updateTemporalNumericValuesV1",
@@ -712,7 +712,15 @@ describe("UpgradeableStork", function() {
       );
       const compressed = LibZip.cdCompress(original);
 
-      expect(ethers.dataLength(compressed)).to.be.lessThan(ethers.dataLength(original));
+      const originalLength = ethers.dataLength(original);
+      const compressedLength = ethers.dataLength(compressed);
+      const libZipSavingsBps = Math.floor(
+        ((originalLength - compressedLength) * 10_000) / originalLength,
+      );
+
+      expect(originalLength).to.equal(580);
+      expect(compressedLength).to.equal(306);
+      expect(libZipSavingsBps).to.be.greaterThanOrEqual(4_700);
       expect(ethers.dataLength(legacyPacked)).to.be.lessThan(ethers.dataLength(original));
     });
   });
