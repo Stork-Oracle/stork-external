@@ -52,9 +52,16 @@ npx hardhat --network hardhatLocal <method>
 ### Deploy on-chain
 
 1. Configure your `hardhat.config.ts` with the desired network.
-2. Update the `ignition/parameters.json` file with the desired signer addresses and verification fee in wei (keyed under `StorkFastProxyModule`).
-3. Run `npx hardhat ignition deploy ignition/modules/StorkFast.ts --network <network> --deployment-id chain-<chainId>-0 --parameters ignition/parameters.json --verify` to deploy the contract.
-4. Deployment will be saved in the `ignition/deployments/chain-<chainId>-0` directory.
+2. Store the required secrets in the Hardhat keystore: the network's deployer key (e.g. `npx hardhat keystore set DEPLOYER_PRIVATE_KEY`) and `npx hardhat keystore set ETHERSCAN_API_KEY` (needed for `--verify`).
+3. Update the `ignition/parameters.json` file with the desired signer addresses and verification fee in wei (keyed under `StorkFastProxyModule`).
+4. Run `npx hardhat ignition deploy ignition/modules/StorkFast.ts --network <network> --deployment-id chain-<chainId>-0 --parameters ignition/parameters.json --verify` to deploy the contract.
+5. Deployment will be saved in the `ignition/deployments/chain-<chainId>-0` directory.
+
+If Etherscan verification fails (or `--verify` was omitted), re-run it without redeploying:
+
+```bash
+npx hardhat ignition verify --network <network> chain-<chainId>-0
+```
 
 ### Upgrade
 

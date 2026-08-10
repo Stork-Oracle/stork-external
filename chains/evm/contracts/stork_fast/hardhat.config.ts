@@ -40,6 +40,11 @@ export default defineConfig({
       },
     },
   },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("ETHERSCAN_API_KEY"),
+    },
+  },
   networks: {
     hardhatLocal: {
       type: "http",
@@ -57,8 +62,8 @@ export default defineConfig({
     sepolia: {
       type: "http",
       chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: 'https://eth-sepolia-testnet.api.pocket.network',
+      accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
     },
   },
 });
