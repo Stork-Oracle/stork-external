@@ -5,13 +5,17 @@ import "./UpgradeableStorkFast.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastStructs.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastDeserialize.sol";
 import "@storknetwork/stork-fast-evm-sdk/StorkFastErrors.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 
 contract UpgradeableStorkFastTest is Test {
     UpgradeableStorkFast public implementation;
     UpgradeableStorkFast public storkFast;
-    TransparentUpgradeableProxy public proxy;
+    ERC1967Proxy public proxy;
+
+    // keccak256("eip1967.proxy.implementation") - 1
+    bytes32 internal constant IMPLEMENTATION_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     // ==== TEST ADDRESSES ====
 
@@ -64,11 +68,7 @@ contract UpgradeableStorkFastTest is Test {
             verificationFee
         );
 
-        proxy = new TransparentUpgradeableProxy(
-            address(implementation),
-            owner, // admin
-            initializeData
-        );
+        proxy = new ERC1967Proxy(address(implementation), initializeData);
 
         storkFast = UpgradeableStorkFast(payable(address(proxy)));
     }
@@ -113,11 +113,42 @@ contract UpgradeableStorkFastTest is Test {
         );
 
         vm.expectRevert("At least one signer address is required");
-        new TransparentUpgradeableProxy(
-            address(newImplementation),
-            owner,
-            initializeData
+        new ERC1967Proxy(address(newImplementation), initializeData);
+    }
+
+    // ===== UPGRADE TESTS =====
+
+    function test_Upgrade_Successful() public {
+        UpgradeableStorkFast newImplementation = new UpgradeableStorkFast();
+
+        vm.prank(owner);
+        storkFast.upgradeToAndCall(address(newImplementation), "");
+
+        address currentImplementation = address(
+            uint160(uint256(vm.load(address(proxy), IMPLEMENTATION_SLOT)))
         );
+        assertEq(currentImplementation, address(newImplementation));
+
+        // State is preserved across the upgrade
+        assertEq(storkFast.owner(), owner);
+        assertEq(storkFast.verificationFeeInWei(), verificationFee);
+        assertTrue(storkFast.isValidSignerAddress(signerAddress));
+    }
+
+    function test_Upgrade_RevertsIfNotOwner() public {
+        UpgradeableStorkFast newImplementation = new UpgradeableStorkFast();
+
+        vm.prank(otherAccount);
+        vm.expectRevert(); // OwnableUnauthorizedAccount
+        storkFast.upgradeToAndCall(address(newImplementation), "");
+    }
+
+    function test_Upgrade_RevertsIfCalledOnImplementationDirectly() public {
+        UpgradeableStorkFast newImplementation = new UpgradeableStorkFast();
+
+        vm.prank(owner);
+        vm.expectRevert(); // UUPSUnauthorizedCallContext
+        implementation.upgradeToAndCall(address(newImplementation), "");
     }
 
     // ===== ADD SIGNER ADDRESS TESTS =====

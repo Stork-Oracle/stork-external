@@ -5,13 +5,14 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 const StorkFastProxyModule = buildModule("StorkFastProxyModule", (m) => {
   const UpgradeableStorkFast = m.contract("UpgradeableStorkFast");
 
-  const proxyAdminOwner = m.getAccount(0);
+  const initialOwner = m.getAccount(0);
 
-  const initializeCalldata = m.encodeFunctionCall(UpgradeableStorkFast, "initialize", [proxyAdminOwner, m.getParameter("signerAddresses"), m.getParameter("verificationFeeInWei")]);
+  const initializeCalldata = m.encodeFunctionCall(UpgradeableStorkFast, "initialize", [initialOwner, m.getParameter("signerAddresses"), m.getParameter("verificationFeeInWei")]);
 
-  const proxy = m.contract("TransparentUpgradeableProxy", [
+  // UUPS pattern: upgrades are performed by calling upgradeToAndCall on the
+  // proxy itself, authorized by the contract owner via _authorizeUpgrade.
+  const proxy = m.contract("ERC1967Proxy", [
     UpgradeableStorkFast,
-    proxyAdminOwner,
     initializeCalldata,
   ]);
 
