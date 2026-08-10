@@ -32,8 +32,10 @@ npx hardhat node
 
 ```bash
 npx hardhat compile
-npx hardhat ignition deploy ignition/modules/StorkFast.ts --network hardhatLocal --verify
+npx hardhat ignition deploy ignition/modules/StorkFast.ts --network hardhatLocal --parameters ignition/parameters.json
 ```
+
+Note: the `--parameters` flag is required — the module has no defaults for `signerAddresses` and `verificationFeeInWei`, and Ignition does not auto-load `ignition/parameters.json`. Parameters must be keyed under `StorkFastProxyModule` (the module that reads them), as in the checked-in file. `--verify` is omitted here since Etherscan verification does not work against a local node.
 
 #### Interact
 
@@ -46,6 +48,6 @@ npx hardhat --network hardhatLocal <method>
 ### Deploy on-chain
 
 1. Configure your `hardhat.config.ts` with the desired network.
-2. Update the `ignition/parameters.json` file with the desired signer address and verification fee in wei.
-3. Run `npx hardhat --network <network> deploy` to deploy the contract.
-4. Deployment will be saved in the `deployments` directory.
+2. Update the `ignition/parameters.json` file with the desired signer addresses and verification fee in wei (keyed under `StorkFastProxyModule`).
+3. Run `npx hardhat ignition deploy ignition/modules/StorkFast.ts --network <network> --parameters ignition/parameters.json --verify` to deploy the contract.
+4. Deployment will be saved in the `ignition/deployments` directory.
