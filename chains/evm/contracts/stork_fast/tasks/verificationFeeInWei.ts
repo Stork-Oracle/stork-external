@@ -21,6 +21,7 @@ export default async function (
     address: contractAddress as Address,
     abi: contractArtifact.abi,
     functionName: "verificationFeeInWei",
+    args: [],
   });
 
   console.log(`Verification Fee: ${fee} wei (${formatEther(fee)} ETH)`);

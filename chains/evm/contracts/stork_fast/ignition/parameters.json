@@ -1,6 +1,6 @@
 {
     "StorkFastProxyModule": {
-        "signerAddress": "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44",
+        "signerAddresses": ["0xF61520450796abbE0015c203cc5B16AE4503939f"],
         "verificationFeeInWei": "1"
     }
 }

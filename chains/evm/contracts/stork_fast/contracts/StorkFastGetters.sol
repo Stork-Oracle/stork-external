@@ -9,7 +9,13 @@ contract StorkFastGetters is StorkFastState, IStorkFastGetters {
         return _state.verificationFeeInWei;
     }
 
-    function signerAddress() public view returns (address) {
-        return _state.signerAddress;
+    function getSignerAddresses() public view returns (address[] memory) {
+        return _state.signerAddressList;
+    }
+
+    function isValidSignerAddress(
+        address signerAddress
+    ) public view returns (bool) {
+        return _state.signerAddresses[signerAddress];
     }
 }

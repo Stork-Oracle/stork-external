@@ -2,25 +2,28 @@ import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 import {
   verificationFeeInWei,
-  signerAddress,
+  signerAddresses,
   updateVerificationFeeInWei,
-  updateSignerAddress,
+  addSignerAddress,
+  removeSignerAddress,
   version,
-} from "./tasks/admin";
+  verifyPayload,
+} from "./tasks/admin.js";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
   tasks: [
     verificationFeeInWei,
-    signerAddress,
+    signerAddresses,
     updateVerificationFeeInWei,
-    updateSignerAddress,
+    addSignerAddress,
+    removeSignerAddress,
     version,
+    verifyPayload,
   ],
   solidity: {
     npmFilesToBuild: [
-      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
-      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
+      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
     ],
     profiles: {
       default: {
@@ -35,6 +38,11 @@ export default defineConfig({
           },
         },
       },
+    },
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("ETHERSCAN_API_KEY"),
     },
   },
   networks: {
@@ -54,8 +62,8 @@ export default defineConfig({
     sepolia: {
       type: "http",
       chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: 'https://eth-sepolia-testnet.api.pocket.network',
+      accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
     },
   },
 });

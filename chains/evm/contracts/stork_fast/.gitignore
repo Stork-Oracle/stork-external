@@ -18,3 +18,5 @@
 
 # Hardhat coverage reports
 /coverage
+
+ignition/deployments/chain-31337-*/

@@ -1,12 +1,12 @@
 import type { HardhatRuntimeEnvironment } from "hardhat/types/hre";
 import type { Address } from "viem";
 
-interface SignerAddressArguments {
+interface SignerAddressesArguments {
   contractAddress: string;
 }
 
 export default async function (
-  { contractAddress }: SignerAddressArguments,
+  { contractAddress }: SignerAddressesArguments,
   hre: HardhatRuntimeEnvironment
 ) {
   const { viem } = await hre.network.connect();
@@ -16,11 +16,12 @@ export default async function (
 
   console.log(`Contract: ${contractAddress}`);
 
-  const address = await publicClient.readContract({
+  const addresses = await publicClient.readContract({
     address: contractAddress as Address,
     abi: contractArtifact.abi,
-    functionName: "signerAddress",
+    functionName: "getSignerAddresses",
+    args: [],
   });
 
-  console.log(`Signer Address: ${address}`);
+  console.log(`Signer Addresses: ${(addresses as Address[]).join(", ")}`);
 }

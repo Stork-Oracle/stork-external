@@ -11,15 +11,15 @@ export const verificationFeeInWei = task(
   .setAction(() => import("./verificationFeeInWei.js"))
   .build();
 
-export const signerAddress = task(
-  "signerAddress",
-  "Get the signer address"
+export const signerAddresses = task(
+  "signerAddresses",
+  "Get the list of valid signer addresses"
 )
   .addPositionalArgument({
     name: "contractAddress",
     description: "The UpgradeableStorkFast contract address",
   })
-  .setAction(() => import("./signerAddress.js"))
+  .setAction(() => import("./signerAddresses.js"))
   .build();
 
 export const updateVerificationFeeInWei = task(
@@ -45,9 +45,25 @@ export const version = task("version", "Get the contract version")
   .setAction(() => import("./version.js"))
   .build();
 
-export const updateSignerAddress = task(
-  "updateSignerAddress",
-  "Update the signer address"
+export const verifyPayload = task(
+  "verifyPayload",
+  "Verify and deserialize a signed Stork Fast payload on-chain (sends a transaction paying the verification fee)"
+)
+  .addPositionalArgument({
+    name: "contractAddress",
+    description: "The UpgradeableStorkFast contract address",
+  })
+  .addPositionalArgument({
+    name: "payload",
+    description:
+      "The signed ECDSA payload as a hex string (the 'p' field from the Fast WS/REST API)",
+  })
+  .setAction(() => import("./verifyPayload.js"))
+  .build();
+
+export const addSignerAddress = task(
+  "addSignerAddress",
+  "Add a valid signer address"
 )
   .addPositionalArgument({
     name: "contractAddress",
@@ -55,7 +71,22 @@ export const updateSignerAddress = task(
   })
   .addPositionalArgument({
     name: "address",
-    description: "The new signer address",
+    description: "The signer address to add",
   })
-  .setAction(() => import("./updateSignerAddress.js"))
+  .setAction(() => import("./addSignerAddress.js"))
+  .build();
+
+export const removeSignerAddress = task(
+  "removeSignerAddress",
+  "Remove a valid signer address"
+)
+  .addPositionalArgument({
+    name: "contractAddress",
+    description: "The UpgradeableStorkFast contract address",
+  })
+  .addPositionalArgument({
+    name: "address",
+    description: "The signer address to remove",
+  })
+  .setAction(() => import("./removeSignerAddress.js"))
   .build();

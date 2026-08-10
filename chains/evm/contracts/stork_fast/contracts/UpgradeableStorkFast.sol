@@ -18,19 +18,25 @@ contract UpgradeableStorkFast is
 
     function initialize(
         address initialOwner,
-        address signerAddress,
+        address[] memory signerAddresses,
         uint verificationFeeInWei
     ) public initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
 
-        _initialize(signerAddress, verificationFeeInWei);
+        _initialize(signerAddresses, verificationFeeInWei);
     }
 
-    function updateSignerAddress(
+    function addSignerAddress(
         address signerAddress
     ) public override onlyOwner {
-        setSignerAddress(signerAddress);
+        storeAddSignerAddress(signerAddress);
+    }
+
+    function removeSignerAddress(
+        address signerAddress
+    ) public override onlyOwner {
+        storeRemoveSignerAddress(signerAddress);
     }
 
     function updateVerificationFeeInWei(
