@@ -20,6 +20,7 @@ export default async function (
     address: contractAddress as Address,
     abi: contractArtifact.abi,
     functionName: "version",
+    args: [],
   });
 
   console.log(`Version: ${version}`);

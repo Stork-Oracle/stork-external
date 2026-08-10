@@ -21,6 +21,8 @@ contract UpgradeableStorkFastTest is Test {
     address public signerAddress =
         address(0xC4A02e7D370402F4afC36032076B05e74FF81786);
 
+    address public otherSignerAddress = address(0x3);
+
     // ==== VERIFICATION FEE ====
 
     uint256 public verificationFee = 1;
@@ -52,10 +54,13 @@ contract UpgradeableStorkFastTest is Test {
     function setUp() public {
         implementation = new UpgradeableStorkFast();
 
+        address[] memory signerAddresses = new address[](1);
+        signerAddresses[0] = signerAddress;
+
         bytes memory initializeData = abi.encodeWithSelector(
             UpgradeableStorkFast.initialize.selector,
             owner,
-            signerAddress,
+            signerAddresses,
             verificationFee
         );
 
@@ -72,8 +77,12 @@ contract UpgradeableStorkFastTest is Test {
         assertEq(storkFast.owner(), owner);
     }
 
-    function test_ShouldReturnSignerAddress() public view {
-        assertEq(storkFast.signerAddress(), signerAddress);
+    function test_ShouldReturnSignerAddresses() public view {
+        address[] memory addresses = storkFast.getSignerAddresses();
+        assertEq(addresses.length, 1);
+        assertEq(addresses[0], signerAddress);
+        assertTrue(storkFast.isValidSignerAddress(signerAddress));
+        assertFalse(storkFast.isValidSignerAddress(otherSignerAddress));
     }
 
     function test_ShouldReturnVerificationFee() public view {
@@ -91,29 +100,97 @@ contract UpgradeableStorkFastTest is Test {
         assertEq(version, "1.0.0");
     }
 
-    // ===== UPDATE SIGNER ADDRESS TESTS =====
+    // ===== INITIALIZE TESTS =====
 
-    function test_UpdateSignerAddress_Successful() public {
-        address newAddress = address(0x123);
+    function test_Initialize_RevertsIfNoSignerAddresses() public {
+        UpgradeableStorkFast newImplementation = new UpgradeableStorkFast();
 
-        vm.prank(owner);
-        storkFast.updateSignerAddress(newAddress);
+        bytes memory initializeData = abi.encodeWithSelector(
+            UpgradeableStorkFast.initialize.selector,
+            owner,
+            new address[](0),
+            verificationFee
+        );
 
-        assertEq(storkFast.signerAddress(), newAddress);
+        vm.expectRevert("At least one signer address is required");
+        new TransparentUpgradeableProxy(
+            address(newImplementation),
+            owner,
+            initializeData
+        );
     }
 
-    function test_UpdateSignerAddress_RevertsIfNotOwner() public {
-        address newAddress = address(0x123);
+    // ===== ADD SIGNER ADDRESS TESTS =====
 
+    function test_AddSignerAddress_Successful() public {
+        vm.prank(owner);
+        storkFast.addSignerAddress(otherSignerAddress);
+
+        address[] memory addresses = storkFast.getSignerAddresses();
+        assertEq(addresses.length, 2);
+        assertEq(addresses[0], signerAddress);
+        assertEq(addresses[1], otherSignerAddress);
+        assertTrue(storkFast.isValidSignerAddress(otherSignerAddress));
+    }
+
+    function test_AddSignerAddress_RevertsIfNotOwner() public {
         vm.prank(otherAccount);
         vm.expectRevert(); // OwnableUnauthorizedAccount
-        storkFast.updateSignerAddress(newAddress);
+        storkFast.addSignerAddress(otherSignerAddress);
     }
 
-    function test_UpdateSignerAddress_RevertsIfZeroAddress() public {
+    function test_AddSignerAddress_RevertsIfZeroAddress() public {
         vm.prank(owner);
         vm.expectRevert("Signer address cannot be 0 address");
-        storkFast.updateSignerAddress(address(0));
+        storkFast.addSignerAddress(address(0));
+    }
+
+    function test_AddSignerAddress_RevertsIfAlreadyExists() public {
+        vm.prank(owner);
+        vm.expectRevert("Signer address already exists");
+        storkFast.addSignerAddress(signerAddress);
+    }
+
+    function test_AddSignerAddress_RevertsIfLimitReached() public {
+        vm.startPrank(owner);
+        for (uint160 i = 0; i < 7; i++) {
+            storkFast.addSignerAddress(address(0x1000 + i));
+        }
+        vm.expectRevert("Signer address limit reached");
+        storkFast.addSignerAddress(address(0x2000));
+        vm.stopPrank();
+    }
+
+    // ===== REMOVE SIGNER ADDRESS TESTS =====
+
+    function test_RemoveSignerAddress_Successful() public {
+        vm.startPrank(owner);
+        storkFast.addSignerAddress(otherSignerAddress);
+        storkFast.removeSignerAddress(signerAddress);
+        vm.stopPrank();
+
+        address[] memory addresses = storkFast.getSignerAddresses();
+        assertEq(addresses.length, 1);
+        assertEq(addresses[0], otherSignerAddress);
+        assertFalse(storkFast.isValidSignerAddress(signerAddress));
+    }
+
+    function test_RemoveSignerAddress_RevertsIfNotOwner() public {
+        vm.prank(otherAccount);
+        vm.expectRevert(); // OwnableUnauthorizedAccount
+        storkFast.removeSignerAddress(signerAddress);
+    }
+
+    function test_RemoveSignerAddress_RevertsIfDoesNotExist() public {
+        vm.prank(owner);
+        vm.expectRevert("Signer address does not exist");
+        storkFast.removeSignerAddress(otherSignerAddress);
+    }
+
+    function test_RemoveSignerAddress_RevertsIfLastSigner() public {
+        vm.prank(owner);
+        vm.expectRevert("Cannot remove last signer address");
+        storkFast.removeSignerAddress(signerAddress);
     }
 
     // ===== UPDATE VERIFICATION FEE TESTS =====
@@ -191,6 +268,30 @@ contract UpgradeableStorkFastTest is Test {
         bool result = storkFast.verifySignedECDSAPayload{
             value: verificationFee
         }(invalidSignaturePayloadHex);
+        assertFalse(result);
+    }
+
+    function test_VerifySignedECDSAPayload_SuccessfulWithMultipleSigners()
+        public
+    {
+        vm.prank(owner);
+        storkFast.addSignerAddress(otherSignerAddress);
+
+        bool result = storkFast.verifySignedECDSAPayload{
+            value: verificationFee
+        }(validPayloadHex_1);
+        assertTrue(result);
+    }
+
+    function test_VerifySignedECDSAPayload_FailsAfterSignerRemoved() public {
+        vm.startPrank(owner);
+        storkFast.addSignerAddress(otherSignerAddress);
+        storkFast.removeSignerAddress(signerAddress);
+        vm.stopPrank();
+
+        bool result = storkFast.verifySignedECDSAPayload{
+            value: verificationFee
+        }(validPayloadHex_1);
         assertFalse(result);
     }
 

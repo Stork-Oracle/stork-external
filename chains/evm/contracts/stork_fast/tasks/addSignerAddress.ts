@@ -1,13 +1,13 @@
 import type { HardhatRuntimeEnvironment } from "hardhat/types/hre";
 import type { Address } from "viem";
 
-interface UpdateSignerAddressArguments {
+interface AddSignerAddressArguments {
   contractAddress: string;
   address: string;
 }
 
 export default async function (
-  { contractAddress, address }: UpdateSignerAddressArguments,
+  { contractAddress, address }: AddSignerAddressArguments,
   hre: HardhatRuntimeEnvironment
 ) {
   const { viem } = await hre.network.connect();
@@ -18,12 +18,12 @@ export default async function (
 
   console.log(`Contract: ${contractAddress}`);
 
-  console.log(`Setting signer address to ${address}...`);
+  console.log(`Adding signer address ${address}...`);
 
   const hash = await walletClient.writeContract({
     address: contractAddress as Address,
     abi: contractArtifact.abi,
-    functionName: "updateSignerAddress",
+    functionName: "addSignerAddress",
     args: [address as Address],
   });
 
@@ -33,7 +33,7 @@ export default async function (
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
   if (receipt.status === "success") {
-    console.log("✓ Signer address updated successfully");
+    console.log("✓ Signer address added successfully");
   } else {
     console.error("✗ Transaction failed");
     throw new Error("Transaction failed");

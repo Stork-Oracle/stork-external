@@ -2,19 +2,21 @@ import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 import {
   verificationFeeInWei,
-  signerAddress,
+  signerAddresses,
   updateVerificationFeeInWei,
-  updateSignerAddress,
+  addSignerAddress,
+  removeSignerAddress,
   version,
-} from "./tasks/admin";
+} from "./tasks/admin.js";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
   tasks: [
     verificationFeeInWei,
-    signerAddress,
+    signerAddresses,
     updateVerificationFeeInWei,
-    updateSignerAddress,
+    addSignerAddress,
+    removeSignerAddress,
     version,
   ],
   solidity: {
