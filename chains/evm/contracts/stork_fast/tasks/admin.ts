@@ -45,6 +45,22 @@ export const version = task("version", "Get the contract version")
   .setAction(() => import("./version.js"))
   .build();
 
+export const verifyPayload = task(
+  "verifyPayload",
+  "Verify and deserialize a signed Stork Fast payload on-chain (sends a transaction paying the verification fee)"
+)
+  .addPositionalArgument({
+    name: "contractAddress",
+    description: "The UpgradeableStorkFast contract address",
+  })
+  .addPositionalArgument({
+    name: "payload",
+    description:
+      "The signed ECDSA payload as a hex string (the 'p' field from the Fast WS/REST API)",
+  })
+  .setAction(() => import("./verifyPayload.js"))
+  .build();
+
 export const addSignerAddress = task(
   "addSignerAddress",
   "Add a valid signer address"

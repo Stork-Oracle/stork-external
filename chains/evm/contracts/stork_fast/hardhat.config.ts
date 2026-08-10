@@ -7,6 +7,7 @@ import {
   addSignerAddress,
   removeSignerAddress,
   version,
+  verifyPayload,
 } from "./tasks/admin.js";
 
 export default defineConfig({
@@ -18,6 +19,7 @@ export default defineConfig({
     addSignerAddress,
     removeSignerAddress,
     version,
+    verifyPayload,
   ],
   solidity: {
     npmFilesToBuild: [
