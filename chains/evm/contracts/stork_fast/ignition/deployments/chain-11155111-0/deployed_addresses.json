@@ -1,0 +1,5 @@
+{
+  "StorkFastProxyModule#Implementation": "0x9A137Fdbe8BbB6065626098818dC82D26c20659b",
+  "StorkFastProxyModule#ERC1967Proxy": "0x6e498b02C0036235c8164A502b0eECC7660BD889",
+  "StorkFastModule#UpgradeableStorkFast": "0x6e498b02C0036235c8164A502b0eECC7660BD889"
+}

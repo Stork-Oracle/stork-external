@@ -44,6 +44,9 @@ export default defineConfig({
     etherscan: {
       apiKey: configVariable("ETHERSCAN_API_KEY"),
     },
+    sourcify: {
+      enabled: false,
+    },
   },
   networks: {
     hardhatLocal: {
@@ -64,6 +67,26 @@ export default defineConfig({
       chainType: "l1",
       url: 'https://eth-sepolia-testnet.api.pocket.network',
       accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
+    },
+    relay: {
+      type: "http",
+      chainType: "generic",
+      chainId: 537713,
+      url: "https://rpc.chain.relay.link",
+      accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
+    }
+  },
+  chainDescriptors: {
+    537713: {
+      name: "Relay",
+      chainType: "generic",
+      blockExplorers: {
+        blockscout: {
+          name: "Relay Explorer",
+          url: "https://explorer.chain.relay.link",
+          apiUrl: "https://explorer.chain.relay.link/api",
+        },
+      },
     },
   },
 });
