@@ -93,3 +93,9 @@ lint-go:
 format-go:
 	@echo "Formatting Go code..."
 	@golangci-lint fmt
+
+.PHONY: starknet-e2e
+## Verify the Starknet push path end to end against a local devnet
+starknet-e2e: signer_ffi fuel_ffi
+	@CGO_ENABLED=1 CGO_LDFLAGS=$(CGO_LDFLAGS) LD_LIBRARY_PATH=$(RUST_LIB_DIR):$(LD_LIBRARY_PATH) \
+	    ./chains/starknet/scripts/e2e.sh

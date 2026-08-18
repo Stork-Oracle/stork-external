@@ -204,6 +204,52 @@ The Fuel pusher relies on [rust bindings](pkg/fuel/bindings/fuel_ffi/src/lib.rs)
 
 To update the rust bindings used by the pusher, run `make rust` in the root of this repo.
 
+## Starknet Chain Setup
+
+### Wallet Setup
+Starknet accounts are contracts, so the pusher needs two things: the address of a deployed account
+contract, and the Stark private key that controls it. Create a `private-key.secret` file containing
+the hex encoded private key.
+
+Deploy and fund an account with your wallet of choice. The account must exist on chain before the
+pusher can send from it.
+
+### Running the Starknet Pusher
+For full explanation of the flags, run:
+```bash
+go run ./main.go starknet --help
+```
+
+Basic usage:
+```bash
+go run ./main.go starknet \
+    -w wss://api.jp.stork-oracle.network \
+    -a <stork-api-key> \
+    -r <chain-rpc-url> \
+    -c <chain-ws-url> \
+    -x <contract-address> \
+    -n <account-address> \
+    -f <asset-config-file> \
+    -k <private-key-file>
+```
+
+`--chain-ws-url` is optional. When set, the pusher subscribes to the contract's `ValueUpdate`
+events instead of relying on polling alone.
+
+Providers serve different JSON-RPC spec versions on the same network, and the pinned client needs
+**0.10.2 or newer** to submit transactions. `preflight` reports the version of whichever endpoint
+you point at.
+
+### Starknet Development Setup
+There is no abigen equivalent for Starknet, so the bindings in `pkg/starknet/bindings` are written
+by hand rather than generated. `bindings/invoke.go` also builds and submits the invoke transaction
+itself; see that package's README for why.
+
+The Cairo contract lives in [chains/starknet/contracts](../../chains/starknet/contracts), with a
+consumer [SDK](../../chains/starknet/sdks/stork_starknet_sdk) and
+[examples](../../chains/starknet/examples).
+
+
 ## Deployment
 ### Running with Docker
 The pusher runs on a per chain basis.

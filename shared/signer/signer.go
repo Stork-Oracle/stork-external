@@ -229,8 +229,8 @@ func (s *StarkAuthSigner) GetAuthHeaders() (http.Header, error) {
 }
 
 func bytesToFieldElement(b []byte) (*felt.Felt, error) {
-	element := new(fp.Element).SetBytes(b)
-	return felt.NewFelt(element), nil
+	// juno v0.15 dropped felt.NewFelt; Felt.SetBytes forwards to the same fp.Element call.
+	return new(felt.Felt).SetBytes(b), nil
 }
 
 func trimLeadingZeros(str string) string {

@@ -377,7 +377,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24.3"
+          go-version: "1.25.0"
           cache: false
 
       - name: Cache Minitiad
@@ -404,3 +404,44 @@ jobs:
         run: |
           minitiad move test --language-version 2.1 --dev
         working-directory: ./chains/initia_minimove/contracts
+
+  test-starknet:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.15.0"
+
+      - name: Set up Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v6
+        with:
+          starknet-foundry-version: "0.54.0"
+
+      - name: Check formatting
+        run: scarb fmt --check
+        working-directory: ./chains/starknet/contracts
+
+      - name: Build SDK
+        run: scarb build
+        working-directory: ./chains/starknet/sdks/stork_starknet_sdk
+
+      - name: Build
+        run: scarb build
+        working-directory: ./chains/starknet/contracts
+
+      - name: Run tests
+        run: snforge test
+        working-directory: ./chains/starknet/contracts
+
+      - name: Check example formatting
+        run: scarb fmt --check
+        working-directory: ./chains/starknet/examples
+
+      - name: Run example tests
+        run: snforge test
+        working-directory: ./chains/starknet/examples

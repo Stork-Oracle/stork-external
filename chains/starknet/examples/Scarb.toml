@@ -1,0 +1,27 @@
+[package]
+name = "stork_example"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.15.0"
+stork_starknet_sdk = { path = "../sdks/stork_starknet_sdk" }
+# Only so the tests can deploy a real Stork contract to read from; the example contract itself
+# depends on nothing but the SDK.
+stork = { path = "../contracts" }
+
+[dev-dependencies]
+snforge_std = "0.54.0"
+assert_macros = "2.15.0"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+# Build the Stork contract too, so the tests can deploy a real one to read from.
+build-external-contracts = ["stork::stork::Stork"]
+
+[scripts]
+test = "snforge test"
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]

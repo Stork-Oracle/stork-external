@@ -19,6 +19,13 @@ const (
 	PrivateKeyFileFlag       = "private-key-file"
 )
 
+// Starknet flags.
+const (
+	AccountAddressFlag  = "account-address"
+	FeeTokenAddressFlag = "fee-token-address"
+	TipFlag             = "tip"
+)
+
 const (
 	VerifyPublishersFlag  = "verify-publishers"
 	BatchingWindowFlag    = "batching-window"
@@ -65,6 +72,13 @@ const (
 	NonceManagerTypeDesc     = "Nonce manager type (server|serverPending|local), defaults to noop"
 	UseSyncSendDesc          = "Use sync send for transactions, defaults to false"
 	UsePackedUpdateDesc      = "Use packed calldata update (requires contract version >= 1.0.6), defaults to false"
+)
+
+// Starknet descriptions.
+const (
+	AccountAddressDesc  = "Address of the account contract the private key controls"
+	FeeTokenAddressDesc = "ERC20 fee token address, used to report wallet balance (optional)"
+	TipDesc             = "Explicit transaction tip in FRI (hex). Defaults to asking the node to estimate one"
 )
 
 // Cosmwasm descriptions.

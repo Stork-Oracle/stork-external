@@ -11,6 +11,7 @@ import (
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/fuel"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/initia_minimove"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana"
+	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/starknet"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
@@ -55,6 +56,7 @@ func main() {
 	rootCmd.AddCommand(aptos.NewPushCmd())
 	rootCmd.AddCommand(fuel.NewPushCmd())
 	rootCmd.AddCommand(initia_minimove.NewPushCmd())
+	rootCmd.AddCommand(starknet.NewPushCmd())
 
 	err := rootCmd.Execute()
 	if err != nil {

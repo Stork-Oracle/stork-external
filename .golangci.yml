@@ -48,6 +48,9 @@ linters:
         - ^github.com/ethereum/go-ethereum/accounts/abi/bind.WatchOpts$
         - ^github.com/cosmos/cosmos-sdk/client.Context$
         - ^github.com/aptos-labs/aptos-go-sdk/crypto.Ed25519PrivateKey$
+        - ^github.com/NethermindEth/starknet.go/account.TxnOptions$
+        - ^github.com/NethermindEth/starknet.go/rpc.EventSubscriptionInput$
+        - ^github.com/NethermindEth/starknet.go/rpc.InvokeTxnV3$
         # generated internal libs
         - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/solana/bindings.+$
         - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/initia_minimove/bindings.+$

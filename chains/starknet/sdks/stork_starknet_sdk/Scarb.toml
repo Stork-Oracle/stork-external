@@ -1,0 +1,11 @@
+[package]
+name = "stork_starknet_sdk"
+version = "1.0.0"
+edition = "2024_07"
+description = "Types and interface for consuming Stork price feeds on Starknet"
+license = "Apache-2.0"
+
+[dependencies]
+starknet = "2.15.0"
+
+[lib]
