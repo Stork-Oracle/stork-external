@@ -526,6 +526,17 @@ async fn test_update_temporal_numeric_value_v1_valid() {
         .value;
     assert_eq!(temporal_numeric_value.timestamp_ns, recv_time);
     assert_eq!(temporal_numeric_value.quantized_value, quantized_value);
+
+    // get the temporal numeric values
+    let temporal_numeric_values = stork_instance
+        .methods()
+        .get_temporal_numeric_values_unchecked_v1(vec![id])
+        .call()
+        .await
+        .unwrap()
+        .value;
+    assert_eq!(temporal_numeric_values[0].timestamp_ns, recv_time);
+    assert_eq!(temporal_numeric_values[0].quantized_value, quantized_value);
 }
 
 #[tokio::test]
@@ -624,6 +635,17 @@ async fn test_update_temporal_numeric_value_v1_negative() {
         .value;
     assert_eq!(temporal_numeric_value.timestamp_ns, recv_time);
     assert_eq!(temporal_numeric_value.quantized_value, quantized_value);
+
+    // get the temporal numeric values
+    let temporal_numeric_values = stork_instance
+        .methods()
+        .get_temporal_numeric_values_unchecked_v1(vec![id])
+        .call()
+        .await
+        .unwrap()
+        .value;
+    assert_eq!(temporal_numeric_values[0].timestamp_ns, recv_time);
+    assert_eq!(temporal_numeric_values[0].quantized_value, quantized_value);
 }
 
 #[tokio::test]

@@ -50,6 +50,9 @@ abi Stork {
     #[storage(read)]
     fn get_temporal_numeric_value_unchecked_v1(id: b256) -> TemporalNumericValue;
 
+    #[storage(read)]
+    fn get_temporal_numeric_values_unchecked_v1(ids: Vec<b256>) -> Vec<TemporalNumericValue>;
+
     fn version() -> String;
 
     #[storage(read, write)]
