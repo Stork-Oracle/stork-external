@@ -15,7 +15,10 @@ async function main({ paymasterAddress }: { paymasterAddress: string }) {
     throw new Error("Contract address not found. Please deploy the contract first.");
   }
 
-  let deployParams = {};
+  let deployParams: any = {
+    pollingInterval: 1000,
+    timeout: 60000,
+  };
   if (paymasterAddress) {
     // @ts-expect-error zksyncEthers is loaded in hardhat/config
     const params = zksyncEthers.utils.getPaymasterParams(
@@ -26,9 +29,7 @@ async function main({ paymasterAddress }: { paymasterAddress: string }) {
         },
     );
 
-    deployParams = {
-        paymasterParams: params,
-    };
+    deployParams.paymasterParams = params;
   }
 
 //   @ts-expect-error zkUpgrades is loaded in hardhat/config
