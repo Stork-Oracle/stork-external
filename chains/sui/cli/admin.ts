@@ -6,8 +6,11 @@ import * as fs from 'fs';
 import { fromBase64 } from "@mysten/sui/utils";
 
 const DEFAULT_RPC_URL = getFullnodeUrl(process.env.RPC_ALIAS as 'mainnet' | 'testnet' | 'devnet' | 'localnet');
+// The official public fullnodes (fullnode.<network>.sui.io) no longer serve
+// JSON-RPC, so a JSON-RPC-capable endpoint must be supplied via RPC_URL.
+const RPC_URL = process.env.RPC_URL || DEFAULT_RPC_URL;
 
-const client = new SuiClient({ url: DEFAULT_RPC_URL });
+const client = new SuiClient({ url: RPC_URL });
 
 const STORK_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const DEFAULT_KEYSTORE_PATH = `${process.env.HOME}/.sui/sui_config/sui.keystore`;
