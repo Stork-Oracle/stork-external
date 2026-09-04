@@ -15,7 +15,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var ErrPrivateKeyEmpty = errors.New("private key is empty")
+var (
+	ErrPrivateKeyEmpty = errors.New("private key is empty")
+	ErrNotConnected    = errors.New("contract interactor is not connected")
+)
 
 type ContractInteractor struct {
 	logger zerolog.Logger
@@ -139,12 +142,19 @@ func (sci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-// GetWalletBalance is a placeholder function to get the balance of the wallet being used to push to the contract.
-// todo: implement
-//
-//nolint:godox // This function has unmet criteria to be implemented.
+// GetWalletBalance returns the pusher wallet's total SUI balance in MIST (the
+// smallest denomination), matching the other chain interactors.
 func (sci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
-	return -1, nil
+	if sci.contract == nil {
+		return -1, ErrNotConnected
+	}
+
+	balance, err := sci.contract.GetWalletBalance(ctx)
+	if err != nil {
+		return -1, fmt.Errorf("failed to get wallet balance: %w", err)
+	}
+
+	return balance, nil
 }
 
 func temporalNumericValueToInternal(value bindings.TemporalNumericValue) types.InternalTemporalNumericValue {

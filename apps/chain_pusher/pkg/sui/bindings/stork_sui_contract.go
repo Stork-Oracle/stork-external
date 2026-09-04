@@ -38,7 +38,11 @@ var (
 )
 
 const (
-	suiCoinType         = "0x2::coin::Coin<0x2::sui::SUI>"
+	// suiCoinObjectType is the on-chain object type of owned SUI coins (coins are
+	// Coin<T> wrapper objects); used to filter ListOwnedObjects for gas selection.
+	suiCoinObjectType = "0x2::coin::Coin<0x2::sui::SUI>"
+	// suiCoinType is the bare currency type parameter T; used by GetBalance.
+	suiCoinType         = "0x2::sui::SUI"
 	dynamicFieldsPage   = 1000
 	maxGasCoinCandidate = 100
 	uleb128MaxShiftBits = 28
@@ -484,6 +488,20 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 	return txResponse.GetTransaction().GetDigest(), nil
 }
 
+// GetWalletBalance returns the account's total SUI balance in MIST (the smallest
+// denomination), matching the other chain interactors which report raw base units.
+func (sc *StorkContract) GetWalletBalance(ctx context.Context) (float64, error) {
+	response, err := sc.Client.State.GetBalance(ctx, &rpcv2.GetBalanceRequest{
+		Owner:    proto.String(sc.Account.Address),
+		CoinType: proto.String(suiCoinType),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to get balance: %w", err)
+	}
+
+	return float64(response.GetBalance().GetBalance()), nil
+}
+
 //nolint:cyclop,funlen // This is a long and complex function due to interface destructuring
 func getStorkState(
 	ctx context.Context,
@@ -742,7 +760,7 @@ func (sc *StorkContract) pickGasCoins(
 ) ([]*sui_types.ObjectRef, error) {
 	response, err := sc.Client.State.ListOwnedObjects(ctx, &rpcv2.ListOwnedObjectsRequest{
 		Owner:      proto.String(owner.String()),
-		ObjectType: proto.String(suiCoinType),
+		ObjectType: proto.String(suiCoinObjectType),
 		PageSize:   proto.Uint32(maxGasCoinCandidate),
 		ReadMask:   &fieldmaskpb.FieldMask{Paths: []string{"object_id", "version", "digest", "balance"}},
 	})
