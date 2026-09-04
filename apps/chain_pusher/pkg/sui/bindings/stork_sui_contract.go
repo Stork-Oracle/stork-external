@@ -46,7 +46,6 @@ const (
 	dynamicFieldsPage   = 1000
 	maxGasCoinCandidate = 100
 	uleb128MaxShiftBits = 28
-	mistPerSui          = 1e9
 )
 
 type StorkContract struct {
@@ -489,7 +488,8 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 	return txResponse.GetTransaction().GetDigest(), nil
 }
 
-// GetWalletBalance returns the account's total SUI balance, denominated in SUI.
+// GetWalletBalance returns the account's total SUI balance in MIST (the smallest
+// denomination), matching the other chain interactors which report raw base units.
 func (sc *StorkContract) GetWalletBalance(ctx context.Context) (float64, error) {
 	response, err := sc.Client.State.GetBalance(ctx, &rpcv2.GetBalanceRequest{
 		Owner:    proto.String(sc.Account.Address),
@@ -499,7 +499,7 @@ func (sc *StorkContract) GetWalletBalance(ctx context.Context) (float64, error) 
 		return 0, fmt.Errorf("failed to get balance: %w", err)
 	}
 
-	return float64(response.GetBalance().GetBalance()) / mistPerSui, nil
+	return float64(response.GetBalance().GetBalance()), nil
 }
 
 //nolint:cyclop,funlen // This is a long and complex function due to interface destructuring

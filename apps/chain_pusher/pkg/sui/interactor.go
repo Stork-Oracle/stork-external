@@ -142,7 +142,8 @@ func (sci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-// GetWalletBalance returns the pusher wallet's total SUI balance, denominated in SUI.
+// GetWalletBalance returns the pusher wallet's total SUI balance in MIST (the
+// smallest denomination), matching the other chain interactors.
 func (sci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	if sci.contract == nil {
 		return -1, ErrNotConnected
