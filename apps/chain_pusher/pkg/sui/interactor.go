@@ -22,12 +22,17 @@ type ContractInteractor struct {
 
 	account      *account.Account
 	contractAddr string
+	storkStateID string
 
 	contract *bindings.StorkContract
 }
 
+// NewContractInteractor creates a Sui contract interactor backed by the Sui fullnode
+// gRPC v2 API. storkStateID is the object ID of the shared StorkState created when the
+// contract was initialized.
 func NewContractInteractor(
 	contractAddr string,
+	storkStateID string,
 	keyFileContent []byte,
 	logger zerolog.Logger,
 ) (*ContractInteractor, error) {
@@ -42,12 +47,15 @@ func NewContractInteractor(
 		logger:       logger,
 		account:      account,
 		contractAddr: contractAddr,
+		storkStateID: storkStateID,
 		contract:     nil,
 	}, nil
 }
 
+// ConnectHTTP connects to a Sui fullnode gRPC endpoint (e.g. "fullnode.mainnet.sui.io:443"
+// or "https://host"). The name is kept for ContractInteractor interface compatibility.
 func (sci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) error {
-	contract, err := bindings.NewStorkContract(ctx, url, sci.contractAddr, sci.account)
+	contract, err := bindings.NewStorkContract(ctx, url, sci.contractAddr, sci.account, sci.storkStateID)
 	if err != nil {
 		return fmt.Errorf("failed to create stork contract client: %w", err)
 	}
@@ -77,7 +85,7 @@ func (sci *ContractInteractor) PullValues(
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetID
-	bindingsEncodedAssetIDs := []bindings.EncodedAssetID{}
+	bindingsEncodedAssetIDs := make([]bindings.EncodedAssetID, 0, len(encodedAssetIDs))
 	for _, encodedAssetID := range encodedAssetIDs {
 		bindingsEncodedAssetIDs = append(bindingsEncodedAssetIDs, bindings.EncodedAssetID(encodedAssetID))
 	}

@@ -1,34 +1,51 @@
 // These binding are not generated.
-// Instead, this file contains utility functions for interacting with the Sui Stork contract.
+// Instead, this file contains utility functions for interacting with the Sui Stork contract
+// over the Sui fullnode gRPC v2 API.
 
 package bindings
 
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"maps"
 	"math/big"
+	"sort"
 	"strconv"
 
 	"github.com/Stork-Oracle/go-sui-sdk/v2/account"
-	sui_client "github.com/Stork-Oracle/go-sui-sdk/v2/client"
 	"github.com/Stork-Oracle/go-sui-sdk/v2/lib"
 	"github.com/Stork-Oracle/go-sui-sdk/v2/sui_types"
-	"github.com/Stork-Oracle/go-sui-sdk/v2/types"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/pusher"
+	rpcv2 "github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/rpc/v2"
 	"github.com/fardream/go-bcs/bcs"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 var (
-	ErrFeedRegistryNotFound = errors.New("feed registry not found")
-	ErrFieldNotFound        = errors.New("field not found")
-	ErrWrongType            = errors.New("wrong type")
+	ErrFeedRegistryNotFound       = errors.New("feed registry not found")
+	ErrFieldNotFound              = errors.New("field not found")
+	ErrWrongType                  = errors.New("wrong type")
+	ErrStorkStateIDRequired       = errors.New("stork state ID is required")
+	ErrStateNotShared             = errors.New("stork state object is not a shared object")
+	ErrInsufficientGasCoins       = errors.New("insufficient gas coin balance")
+	ErrUnsupportedSignatureScheme = errors.New("unsupported signature scheme")
+	ErrEmptyResponse              = errors.New("empty response")
+)
+
+const (
+	suiCoinType         = "0x2::coin::Coin<0x2::sui::SUI>"
+	dynamicFieldsPage   = 1000
+	maxGasCoinCandidate = 100
+	uleb128MaxShiftBits = 28
 )
 
 type StorkContract struct {
-	Client          *sui_client.Client
+	Client          *Client
 	Account         *account.Account
 	ContractAddress sui_types.SuiAddress
 	State           StorkState
@@ -89,15 +106,24 @@ type U128 struct {
 	Value []byte
 }
 
+// NewStorkContract creates a StorkContract client backed by the Sui fullnode gRPC v2 API.
+// rpcUrl is a gRPC endpoint (e.g. "fullnode.mainnet.sui.io:443" or "https://host").
+// storkStateID is the object ID of the shared StorkState created when the contract was
+// initialized.
 func NewStorkContract(
 	ctx context.Context,
 	rpcUrl string,
 	contractAddress string,
 	account *account.Account,
+	storkStateID string,
 ) (*StorkContract, error) {
-	client, err := sui_client.Dial(rpcUrl)
+	if storkStateID == "" {
+		return nil, ErrStorkStateIDRequired
+	}
+
+	client, err := DialGrpc(rpcUrl)
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial Sui client: %w", err)
+		return nil, err
 	}
 
 	contractAddr, err := sui_types.NewAddressFromHex(contractAddress)
@@ -105,7 +131,7 @@ func NewStorkContract(
 		return nil, fmt.Errorf("failed to convert contract address to Sui address: %w", err)
 	}
 
-	state, err := getStorkState(ctx, *contractAddr, client)
+	state, err := getStorkState(ctx, client, storkStateID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +140,6 @@ func NewStorkContract(
 }
 
 // GetMultipleTemporalNumericValuesUnchecked gets multiple temporal numeric values at a time for efficiency.
-//
-
 func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 	ctx context.Context, feedIDs []EncodedAssetID,
 ) (map[EncodedAssetID]TemporalNumericValue, error) {
@@ -134,20 +158,19 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 		return nil, err
 	}
 
-	for feedID, feedObjectID := range resolvedFeedIDs {
-		feedIDsMap[feedID] = feedObjectID
+	maps.Copy(feedIDsMap, resolvedFeedIDs)
+
+	requests := []*rpcv2.GetObjectRequest{}
+	for _, feedObjectID := range feedIDsMap {
+		requests = append(requests, &rpcv2.GetObjectRequest{
+			ObjectId: proto.String(feedObjectID.String()),
+		})
 	}
 
-	feedAddresses := []sui_types.SuiAddress{}
-	for _, feedID := range feedIDsMap {
-		feedAddresses = append(feedAddresses, feedID)
-	}
-
-	options := &types.SuiObjectDataOptions{
-		ShowContent: true,
-	}
-
-	feeds, err := sc.Client.MultiGetObjects(ctx, feedAddresses, options)
+	response, err := sc.Client.Ledger.BatchGetObjects(ctx, &rpcv2.BatchGetObjectsRequest{
+		Requests: requests,
+		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{"object_id", "json"}},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get feed objects: %w", err)
 	}
@@ -159,8 +182,15 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 		value TemporalNumericValue
 	)
 
-	for _, feed := range feeds {
-		id, value, err = parseFeedToTemporalNumericValue(feed)
+	for _, objectResult := range response.GetObjects() {
+		object := objectResult.GetObject()
+		if object == nil {
+			return nil, fmt.Errorf(
+				"failed to get feed object: %w: %s", ErrEmptyResponse, objectResult.GetError().GetMessage(),
+			)
+		}
+
+		id, value, err = parseFeedToTemporalNumericValue(object)
 		if err != nil {
 			return nil, err
 		}
@@ -171,146 +201,67 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 	return result, nil
 }
 
-//nolint:cyclop,funlen // This is a long and complex function but does clearly related work.
-func parseFeedToTemporalNumericValue(feed types.SuiObjectResponse) (EncodedAssetID, TemporalNumericValue, error) {
+func parseFeedToTemporalNumericValue(feed *rpcv2.Object) (EncodedAssetID, TemporalNumericValue, error) {
 	var id EncodedAssetID
 
-	// Extract asset_id
-	fields, ok := feed.Data.Content.Data.MoveObject.Fields.(map[string]interface{})
-	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("failed to get fields: %w", ErrFieldNotFound)
-	}
-
-	assetID, exists := fields["asset_id"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("asset_id field not found: %w", ErrFieldNotFound)
-	}
-
-	assetIDMap, ok := assetID.(map[string]interface{})
-	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("asset_id is not a map: %w", ErrFieldNotFound)
-	}
-
-	assetIDFields, exists := assetIDMap["fields"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("fields not found in asset_id: %w", ErrFieldNotFound)
-	}
-
-	assetIDFieldsMap, ok := assetIDFields.(map[string]interface{})
-	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("asset_id fields is not a map: %w", ErrFieldNotFound)
-	}
-
-	bytesField, exists := assetIDFieldsMap["bytes"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("bytes not found in asset_id fields: %w", ErrFieldNotFound)
-	}
-
-	idBytes, err := interfaceSliceToBytes(bytesField)
+	fields, err := objectFields(feed)
 	if err != nil {
 		return id, TemporalNumericValue{}, err
 	}
 
-	copy(id[:], idBytes)
-
-	// Extract latest_value
-	latestValue, exists := fields["latest_value"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("latest_value field not found: %w", ErrFieldNotFound)
+	assetIDBytes, err := nestedBase64Bytes(fields, "asset_id")
+	if err != nil {
+		return id, TemporalNumericValue{}, err
 	}
 
-	latestValueMap, ok := latestValue.(map[string]interface{})
+	copy(id[:], assetIDBytes)
+
+	latestValue, ok := fields["latest_value"].(map[string]any)
 	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("latest_value is not a map: %w", ErrFieldNotFound)
+		return id, TemporalNumericValue{}, fmt.Errorf("latest_value is not a map: %w", ErrWrongType)
 	}
 
-	latestValueFields, exists := latestValueMap["fields"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("fields not found in latest_value: %w", ErrFieldNotFound)
-	}
-
-	latestValueFieldsMap, ok := latestValueFields.(map[string]interface{})
+	timestampNsStr, ok := latestValue["timestamp_ns"].(string)
 	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("latest_value fields is not a map: %w", ErrFieldNotFound)
-	}
-
-	// Extract timestamp_ns
-	timestampNsField, exists := latestValueFieldsMap["timestamp_ns"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("timestamp_ns not found: %w", ErrFieldNotFound)
-	}
-
-	timestampNsStr, ok := timestampNsField.(string)
-	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("timestamp_ns is not a string: %w", ErrFieldNotFound)
+		return id, TemporalNumericValue{}, fmt.Errorf("timestamp_ns is not a string: %w", ErrWrongType)
 	}
 
 	timestampNs, err := strconv.ParseUint(timestampNsStr, 10, 64)
 	if err != nil {
-		return id, TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp ns: %w", err)
+		return id, TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp_ns: %w", err)
 	}
 
-	// Extract quantized_value
-	quantizedValueField, exists := latestValueFieldsMap["quantized_value"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("quantized_value not found: %w", ErrFieldNotFound)
-	}
-
-	quantizedValueMap, ok := quantizedValueField.(map[string]interface{})
+	quantizedValue, ok := latestValue["quantized_value"].(map[string]any)
 	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("quantized_value is not a map: %w", ErrFieldNotFound)
+		return id, TemporalNumericValue{}, fmt.Errorf("quantized_value is not a map: %w", ErrWrongType)
 	}
 
-	quantizedValueFields, exists := quantizedValueMap["fields"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("fields not found in quantized_value: %w", ErrFieldNotFound)
-	}
-
-	quantizedValueFieldsMap, ok := quantizedValueFields.(map[string]interface{})
+	magnitudeStr, ok := quantizedValue["magnitude"].(string)
 	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("quantized_value fields is not a map: %w", ErrFieldNotFound)
+		return id, TemporalNumericValue{}, fmt.Errorf("magnitude is not a string: %w", ErrWrongType)
 	}
 
-	// Extract magnitude
-	magnitudeField, exists := quantizedValueFieldsMap["magnitude"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("magnitude not found: %w", ErrFieldNotFound)
-	}
-
-	magnitudeStr, ok := magnitudeField.(string)
-	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("magnitude is not a string: %w", ErrFieldNotFound)
-	}
-
-	magnitude := big.Int{}
 	//nolint:mnd // Base number
-	magnitude.SetString(magnitudeStr, 10)
-
-	// Extract negative
-	negativeField, exists := quantizedValueFieldsMap["negative"]
-	if !exists {
-		return id, TemporalNumericValue{}, fmt.Errorf("negative not found: %w", ErrFieldNotFound)
-	}
-
-	negative, ok := negativeField.(bool)
+	magnitude, ok := new(big.Int).SetString(magnitudeStr, 10)
 	if !ok {
-		return id, TemporalNumericValue{}, fmt.Errorf("negative is not a bool: %w", ErrFieldNotFound)
+		return id, TemporalNumericValue{}, fmt.Errorf("failed to parse magnitude: %w", ErrWrongType)
 	}
 
-	quantizedValue := I128{
-		Magnitude: &magnitude,
-		Negative:  negative,
+	negative, ok := quantizedValue["negative"].(bool)
+	if !ok {
+		return id, TemporalNumericValue{}, fmt.Errorf("negative is not a bool: %w", ErrWrongType)
 	}
 
-	value := TemporalNumericValue{
-		TimestampNs:    timestampNs,
-		QuantizedValue: quantizedValue,
-	}
-
-	return id, value, nil
+	return id, TemporalNumericValue{
+		TimestampNs: timestampNs,
+		QuantizedValue: I128{
+			Magnitude: magnitude,
+			Negative:  negative,
+		},
+	}, nil
 }
 
-//nolint:cyclop,funlen,maintidx // This is a long and complex function but does related work.
+//nolint:funlen,cyclop,maintidx // This function assembles a multi-command programmable transaction.
 func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 	ctx context.Context,
 	updateData []UpdateData,
@@ -488,36 +439,19 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 
 	pt := ptb.Finish()
 
-	//nolint:mnd // 100 is being used as a arbitrarily large limit and thus a permissible magic number
-	coins, err := sc.Client.GetCoins(ctx, *address, nil, nil, 100)
-	if err != nil {
-		return "", fmt.Errorf("failed to get coins: %w", err)
-	}
-
 	gasBudget, err := sc.getGasBudgetFromDryRun(ctx, &pt, referenceGasPrice)
 	if err != nil {
 		return "", err
 	}
 
-	totalFeeAmountInt64, err := pusher.SafeUint64ToInt64(totalFeeAmount)
+	gasCoins, err := sc.pickGasCoins(ctx, *address, totalFeeAmount+gasBudget)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert total fee amount to int64: %w", err)
-	}
-
-	pickedCoins, err := types.PickupCoins(
-		coins,
-		*big.NewInt(totalFeeAmountInt64),
-		gasBudget,
-		0,
-		0,
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to pick up coins: %w", err)
+		return "", err
 	}
 
 	tx := sui_types.NewProgrammable(
 		*address,
-		pickedCoins.CoinRefs(),
+		gasCoins,
 		pt,
 		gasBudget,
 		referenceGasPrice,
@@ -528,173 +462,63 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 		return "", fmt.Errorf("failed to marshal transaction: %w", err)
 	}
 
-	signatures, err := sc.Account.SignSecureWithoutEncode(txBytes, sui_types.DefaultIntent())
+	signature, err := sc.Account.SignSecureWithoutEncode(txBytes, sui_types.DefaultIntent())
 	if err != nil {
 		return "", fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	txResponse, err := sc.Client.ExecuteTransactionBlock(
-		ctx,
-		txBytes,
-		[]any{signatures},
-		nil,
-		types.TxnRequestTypeWaitForEffectsCert,
-	)
+	sigBytes, err := signatureBytes(signature)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute transaction block: %w", err)
+		return "", err
 	}
 
-	digest := txResponse.Digest.String()
+	txResponse, err := sc.Client.Execution.ExecuteTransaction(ctx, &rpcv2.ExecuteTransactionRequest{
+		Transaction: &rpcv2.Transaction{Bcs: &rpcv2.Bcs{Value: txBytes}},
+		Signatures:  []*rpcv2.UserSignature{{Bcs: &rpcv2.Bcs{Value: sigBytes}}},
+		ReadMask:    &fieldmaskpb.FieldMask{Paths: []string{"transaction.digest"}},
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to execute transaction: %w", err)
+	}
 
-	return digest, nil
+	return txResponse.GetTransaction().GetDigest(), nil
 }
 
-func getOriginalContractAddress(
-	ctx context.Context,
-	contractAddress sui_types.SuiAddress,
-	client *sui_client.Client,
-) (sui_types.SuiAddress, error) {
-	method := sui_client.SuiMethod("getNormalizedMoveModulesByPackage")
-
-	var result interface{}
-
-	err := client.CallContext(
-		ctx,
-		&result,
-		method, // This is the constant defined in method.go
-		contractAddress,
-	)
-	if err != nil {
-		return sui_types.SuiAddress{}, fmt.Errorf("failed to get address from hex: %w", err)
-	}
-
-	resultMap, ok := result.(map[string]interface{})
-	if !ok {
-		return sui_types.SuiAddress{}, fmt.Errorf("result is not a map: %w", ErrFieldNotFound)
-	}
-
-	adminField, exists := resultMap["admin"]
-	if !exists {
-		return sui_types.SuiAddress{}, fmt.Errorf("admin field not found: %w", ErrFieldNotFound)
-	}
-
-	adminMap, ok := adminField.(map[string]interface{})
-	if !ok {
-		return sui_types.SuiAddress{}, fmt.Errorf("admin is not a map: %w", ErrFieldNotFound)
-	}
-
-	addressField, exists := adminMap["address"]
-	if !exists {
-		return sui_types.SuiAddress{}, fmt.Errorf("address field not found: %w", ErrFieldNotFound)
-	}
-
-	addressString, ok := addressField.(string)
-	if !ok {
-		return sui_types.SuiAddress{}, fmt.Errorf("address is not a string: %w", ErrFieldNotFound)
-	}
-
-	address, err := sui_types.NewAddressFromHex(addressString)
-	if err != nil {
-		return sui_types.SuiAddress{}, fmt.Errorf("failed to get address from hex: %w", err)
-	}
-
-	return *address, nil
-}
-
-//
 //nolint:cyclop,funlen // This is a long and complex function due to interface destructuring
 func getStorkState(
 	ctx context.Context,
-	contractAddress sui_types.SuiAddress,
-	client *sui_client.Client,
+	client *Client,
+	configuredStateID string,
 ) (StorkState, error) {
-	originalContractAddress, err := getOriginalContractAddress(ctx, contractAddress, client)
+	storkStateID, err := sui_types.NewAddressFromHex(configuredStateID)
 	if err != nil {
-		return StorkState{}, err
+		return StorkState{}, fmt.Errorf("failed to parse configured stork state ID: %w", err)
 	}
 
-	eventFilter := types.EventFilter{
-		MoveModule: &struct {
-			Package sui_types.ObjectID `json:"package"`
-			Module  string             `json:"module"`
-		}{
-			Package: originalContractAddress,
-			Module:  "stork",
-		},
-	}
-	limit := uint(1)
-
-	event, err := client.QueryEvents(ctx, eventFilter, nil, &limit, false)
-	if err != nil {
-		return StorkState{}, fmt.Errorf("failed to query events: %w", err)
-	}
-
-	parsedJSON, ok := event.Data[0].ParsedJson.(map[string]interface{})
-	if !ok {
-		return StorkState{}, fmt.Errorf("parsed json is not a map: %w", ErrWrongType)
-	}
-
-	storkStateIDField, exists := parsedJSON["stork_state_id"]
-	if !exists {
-		return StorkState{}, fmt.Errorf("stork_state_id field not found: %w", ErrFieldNotFound)
-	}
-
-	storkStateIDHex, ok := storkStateIDField.(string)
-	if !ok {
-		return StorkState{}, fmt.Errorf("stork_state_id is not a string: %w", ErrWrongType)
-	}
-
-	storkStateID, err := sui_types.NewAddressFromHex(storkStateIDHex)
-	if err != nil {
-		return StorkState{}, fmt.Errorf("failed to get address from hex: %w", err)
-	}
-
-	options := &types.SuiObjectDataOptions{
-		ShowContent: true,
-		ShowOwner:   true,
-	}
-
-	object, err := client.GetObject(ctx, *storkStateID, options)
+	response, err := client.Ledger.GetObject(ctx, &rpcv2.GetObjectRequest{
+		ObjectId: proto.String(storkStateID.String()),
+		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{"object_id", "version", "owner", "json"}},
+	})
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to get object: %w", err)
 	}
 
-	fields, ok := object.Data.Content.Data.MoveObject.Fields.(map[string]interface{})
-	if !ok {
-		return StorkState{}, fmt.Errorf("fields is not a map: %w", ErrWrongType)
+	object := response.GetObject()
+	if object == nil {
+		return StorkState{}, fmt.Errorf("failed to get stork state object: %w", ErrEmptyResponse)
 	}
 
-	storkEvmPublicKeyField, exists := fields["stork_evm_public_key"]
-	if !exists {
-		return StorkState{}, fmt.Errorf("stork evm public key field not found: %w", ErrFieldNotFound)
-	}
-
-	storkEvmPublicKeyMap, ok := storkEvmPublicKeyField.(map[string]interface{})
-	if !ok {
-		return StorkState{}, fmt.Errorf("stork evm public key is not a map: %w", ErrWrongType)
-	}
-
-	storkEvmPublicKeyFields, exists := storkEvmPublicKeyMap["fields"]
-	if !exists {
-		return StorkState{}, fmt.Errorf("stork evm public key fields field not found: %w", ErrFieldNotFound)
-	}
-
-	fieldsMap, ok := storkEvmPublicKeyFields.(map[string]interface{})
-	if !ok {
-		return StorkState{}, fmt.Errorf("stork evm public key fields is not a map: %w", ErrWrongType)
-	}
-
-	fieldsMapBytesField, exists := fieldsMap["bytes"]
-	if !exists {
-		return StorkState{}, fmt.Errorf("stork evm public key fields map bytes field not found: %w", ErrFieldNotFound)
-	}
-
-	byteSlice, err := interfaceSliceToBytes(fieldsMapBytesField)
+	fields, err := objectFields(object)
 	if err != nil {
-		return StorkState{}, fmt.Errorf("failed to convert public key bytes: %w", err)
+		return StorkState{}, err
 	}
 
-	storkEvmPublicKey := hex.EncodeToString(byteSlice)
+	evmPublicKeyBytes, err := nestedBase64Bytes(fields, "stork_evm_public_key")
+	if err != nil {
+		return StorkState{}, err
+	}
+
+	storkEvmPublicKey := hex.EncodeToString(evmPublicKeyBytes)
 
 	storkSuiPublicKeyString, ok := fields["stork_sui_address"].(string)
 	if !ok {
@@ -706,12 +530,7 @@ func getStorkState(
 		return StorkState{}, fmt.Errorf("failed to get address from hex: %w", err)
 	}
 
-	singleUpdateFeeInMistField, exists := fields["single_update_fee_in_mist"]
-	if !exists {
-		return StorkState{}, fmt.Errorf("single update fee in mist field not found: %w", ErrFieldNotFound)
-	}
-
-	singleUpdateFeeInMistString, ok := singleUpdateFeeInMistField.(string)
+	singleUpdateFeeInMistString, ok := fields["single_update_fee_in_mist"].(string)
 	if !ok {
 		return StorkState{}, fmt.Errorf("single update fee in mist is not a string: %w", ErrWrongType)
 	}
@@ -721,26 +540,40 @@ func getStorkState(
 		return StorkState{}, fmt.Errorf("failed to parse single update fee in mist: %w", err)
 	}
 
-	version := object.Data.Version.Uint64()
-	initialSharedVersion := *object.Data.Owner.Shared.InitialSharedVersion
+	owner := object.GetOwner()
+	if owner.GetKind() != rpcv2.Owner_SHARED {
+		return StorkState{}, fmt.Errorf("%w: owner kind is %s", ErrStateNotShared, owner.GetKind())
+	}
+
+	version := object.GetVersion()
+	initialSharedVersion := owner.GetVersion()
+
 	// registry
-	stateDynamicFields, err := client.GetDynamicFields(ctx, *storkStateID, nil, nil)
+	stateDynamicFields, err := listAllDynamicFields(ctx, client, storkStateID.String())
 	if err != nil {
-		return StorkState{}, fmt.Errorf("failed to get dynamic fields: %w", err)
+		return StorkState{}, err
 	}
 
 	registryID := sui_types.SuiAddress{}
 
-	for _, dynamicField := range stateDynamicFields.Data {
-		var nameBytes []byte
+	var (
+		nameBytes       []byte
+		registryAddress *sui_types.SuiAddress
+	)
 
-		nameBytes, err = interfaceSliceToBytes(dynamicField.Name.Value)
+	for _, dynamicField := range stateDynamicFields {
+		nameBytes, err = decodeBcsBytes(dynamicField.GetName().GetValue())
 		if err != nil {
-			return StorkState{}, fmt.Errorf("failed to convert name bytes: %w", err)
+			return StorkState{}, fmt.Errorf("failed to decode dynamic field name: %w", err)
 		}
 
 		if bytes.Equal(nameBytes, []byte("temporal_numeric_value_feed_registry")) {
-			registryID = dynamicField.ObjectId
+			registryAddress, err = sui_types.NewAddressFromHex(dynamicFieldObjectID(dynamicField))
+			if err != nil {
+				return StorkState{}, fmt.Errorf("failed to parse registry object ID: %w", err)
+			}
+
+			registryID = *registryAddress
 
 			break
 		}
@@ -789,33 +622,63 @@ func (sc *StorkContract) getGasBudgetFromDryRun(
 		return 0, fmt.Errorf("failed to marshal transaction: %w", err)
 	}
 
-	dryRunResult, err := sc.Client.DryRunTransaction(ctx, txBytes)
+	// Checks are disabled so the empty gas payment and placeholder budget are not
+	// validated against the sender's balance, matching JSON-RPC dry-run semantics.
+	simulateResponse, err := sc.Client.Execution.SimulateTransaction(ctx, &rpcv2.SimulateTransactionRequest{
+		Transaction: &rpcv2.Transaction{Bcs: &rpcv2.Bcs{Value: txBytes}},
+		ReadMask: &fieldmaskpb.FieldMask{
+			Paths: []string{"transaction.effects.status", "transaction.effects.gas_used"},
+		},
+		Checks: rpcv2.SimulateTransactionRequest_DISABLED.Enum(),
+	})
 	if err != nil {
 		return 0, fmt.Errorf("dry run failed: %w", err)
 	}
 
-	if !dryRunResult.Effects.Data.IsSuccess() {
+	effects := simulateResponse.GetTransaction().GetEffects()
+	if effects == nil {
+		return 0, fmt.Errorf("dry run returned no effects: %w", ErrEmptyResponse)
+	}
+
+	if !effects.GetStatus().GetSuccess() {
 		//nolint:err113 // This is essentially wrapping an error
-		return 0, fmt.Errorf("dry run failed: %s", dryRunResult.Effects.Data.V1.Status.Error)
+		return 0, fmt.Errorf("dry run failed: %s", effects.GetStatus().GetError().GetDescription())
 	}
 
-	gasUsed := dryRunResult.Effects.Data.GasFee()
+	gasUsed := effects.GetGasUsed()
 
-	gasUsedUint64, err := pusher.SafeInt64ToUint64(gasUsed)
+	computationCost, err := pusher.SafeUint64ToInt64(gasUsed.GetComputationCost())
 	if err != nil {
-		return 0, fmt.Errorf("failed to convert gas used to uint64: %w", err)
+		return 0, fmt.Errorf("failed to convert computation cost to int64: %w", err)
 	}
 
-	return gasUsedUint64, nil
+	storageCost, err := pusher.SafeUint64ToInt64(gasUsed.GetStorageCost())
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert storage cost to int64: %w", err)
+	}
+
+	storageRebate, err := pusher.SafeUint64ToInt64(gasUsed.GetStorageRebate())
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert storage rebate to int64: %w", err)
+	}
+
+	gasFeeUint64, err := pusher.SafeInt64ToUint64(computationCost + storageCost - storageRebate)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert gas fee to uint64: %w", err)
+	}
+
+	return gasFeeUint64, nil
 }
 
 func (sc *StorkContract) getReferenceGasPrice(ctx context.Context) (uint64, error) {
-	referenceGasPriceResult, err := sc.Client.GetReferenceGasPrice(ctx)
+	response, err := sc.Client.Ledger.GetEpoch(ctx, &rpcv2.GetEpochRequest{
+		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{"epoch", "reference_gas_price"}},
+	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to get reference gas price: %w", err)
 	}
 
-	return referenceGasPriceResult.Uint64(), nil
+	return response.GetEpoch().GetReferenceGasPrice(), nil
 }
 
 func (sc *StorkContract) getFeedIDs(
@@ -824,64 +687,228 @@ func (sc *StorkContract) getFeedIDs(
 ) (map[EncodedAssetID]sui_types.SuiAddress, error) {
 	feedIDsMap := make(map[EncodedAssetID]sui_types.SuiAddress)
 
-	registryID := sc.State.FeedRegistry.ID
-
-	registryEntries, err := sc.Client.GetDynamicFields(ctx, registryID, nil, nil)
-	if err != nil {
-		return feedIDsMap, fmt.Errorf("failed to get dynamic fields: %w", err)
+	if len(feedIDs) == 0 {
+		return feedIDsMap, nil
 	}
 
-	registryEntriesData := registryEntries.Data
+	registryEntries, err := listAllDynamicFields(ctx, sc.Client, sc.State.FeedRegistry.ID.String())
+	if err != nil {
+		return nil, err
+	}
 
-	var nameBytes []byte
+	entriesByAssetID := make(map[EncodedAssetID]sui_types.SuiAddress)
+
+	var (
+		nameBytes    []byte
+		feedObjectID *sui_types.SuiAddress
+	)
+
+	for _, entry := range registryEntries {
+		nameBytes, err = decodeBcsBytes(entry.GetName().GetValue())
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode registry entry name: %w", err)
+		}
+
+		if len(nameBytes) != len(EncodedAssetID{}) {
+			continue
+		}
+
+		feedObjectID, err = sui_types.NewAddressFromHex(dynamicFieldObjectID(entry))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse feed object ID: %w", err)
+		}
+
+		var assetID EncodedAssetID
+
+		copy(assetID[:], nameBytes)
+
+		entriesByAssetID[assetID] = *feedObjectID
+	}
 
 	for _, feedID := range feedIDs {
-		for _, entry := range registryEntriesData {
-			valueMap, exists := entry.Name.Value.(map[string]interface{})
-			if !exists {
-				return nil, fmt.Errorf("value is not a map: %w", ErrWrongType)
-			}
-
-			bytesField, exists := valueMap["bytes"]
-			if !exists {
-				return nil, fmt.Errorf("name field bytes not found: %w", ErrFieldNotFound)
-			}
-
-			nameBytes, err = interfaceSliceToBytes(bytesField)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert name bytes: %w", err)
-			}
-
-			if bytes.Equal(nameBytes, feedID[:]) {
-				feedObjectID := entry.ObjectId
-				feedIDsMap[feedID] = feedObjectID
-
-				break
-			}
+		if feedObjectID, ok := entriesByAssetID[feedID]; ok {
+			feedIDsMap[feedID] = feedObjectID
 		}
 	}
 
 	return feedIDsMap, nil
 }
 
-func interfaceSliceToBytes(slice interface{}) ([]byte, error) {
-	interfaceSlice, ok := slice.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("input is not a slice of interfaces, but a %T: %w", slice, ErrWrongType)
+// pickGasCoins selects SUI gas coins owned by the sender totaling at least requiredAmount.
+func (sc *StorkContract) pickGasCoins(
+	ctx context.Context,
+	owner sui_types.SuiAddress,
+	requiredAmount uint64,
+) ([]*sui_types.ObjectRef, error) {
+	response, err := sc.Client.State.ListOwnedObjects(ctx, &rpcv2.ListOwnedObjectsRequest{
+		Owner:      proto.String(owner.String()),
+		ObjectType: proto.String(suiCoinType),
+		PageSize:   proto.Uint32(maxGasCoinCandidate),
+		ReadMask:   &fieldmaskpb.FieldMask{Paths: []string{"object_id", "version", "digest", "balance"}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list owned coins: %w", err)
 	}
 
-	byteSlice := make([]byte, len(interfaceSlice))
+	coins := response.GetObjects()
 
-	var floatVal float64
+	// largest balances first so the gas payment stays small
+	sort.Slice(coins, func(i, j int) bool {
+		return coins[i].GetBalance() > coins[j].GetBalance()
+	})
 
-	for i, v := range interfaceSlice {
-		floatVal, ok = v.(float64)
-		if !ok {
-			return nil, fmt.Errorf("element at index %d is not a float64: %w", i, ErrWrongType)
+	coinRefs := []*sui_types.ObjectRef{}
+	total := uint64(0)
+
+	var (
+		objectID *sui_types.SuiAddress
+		digest   *sui_types.Digest
+	)
+
+	for _, coin := range coins {
+		objectID, err = sui_types.NewAddressFromHex(coin.GetObjectId())
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse coin object ID: %w", err)
 		}
 
-		byteSlice[i] = byte(floatVal)
+		digest, err = sui_types.NewDigest(coin.GetDigest())
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse coin digest: %w", err)
+		}
+
+		coinRefs = append(coinRefs, &sui_types.ObjectRef{
+			ObjectId: *objectID,
+			Version:  coin.GetVersion(),
+			Digest:   *digest,
+		})
+
+		total += coin.GetBalance()
+		if total >= requiredAmount {
+			return coinRefs, nil
+		}
 	}
 
-	return byteSlice, nil
+	return nil, fmt.Errorf("%w: have %d, need %d", ErrInsufficientGasCoins, total, requiredAmount)
+}
+
+// listAllDynamicFields pages through every dynamic field of parent.
+func listAllDynamicFields(ctx context.Context, client *Client, parent string) ([]*rpcv2.DynamicField, error) {
+	dynamicFields := []*rpcv2.DynamicField{}
+
+	var pageToken []byte
+
+	for {
+		response, err := client.State.ListDynamicFields(ctx, &rpcv2.ListDynamicFieldsRequest{
+			Parent:    proto.String(parent),
+			PageSize:  proto.Uint32(dynamicFieldsPage),
+			PageToken: pageToken,
+			ReadMask:  &fieldmaskpb.FieldMask{Paths: []string{"kind", "field_id", "name", "child_id"}},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list dynamic fields: %w", err)
+		}
+
+		dynamicFields = append(dynamicFields, response.GetDynamicFields()...)
+
+		pageToken = response.GetNextPageToken()
+		if len(pageToken) == 0 {
+			return dynamicFields, nil
+		}
+	}
+}
+
+// dynamicFieldObjectID returns the object ID a dynamic field points at: the child object
+// for dynamic object fields, otherwise the field object itself.
+func dynamicFieldObjectID(dynamicField *rpcv2.DynamicField) string {
+	if childID := dynamicField.GetChildId(); childID != "" {
+		return childID
+	}
+
+	return dynamicField.GetFieldId()
+}
+
+// objectFields returns the Move struct fields of an object from its JSON rendering.
+func objectFields(object *rpcv2.Object) (map[string]any, error) {
+	jsonValue := object.GetJson()
+	if jsonValue == nil {
+		return nil, fmt.Errorf("object has no json content: %w", ErrFieldNotFound)
+	}
+
+	fields, ok := jsonValue.AsInterface().(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("object json is not a map: %w", ErrWrongType)
+	}
+
+	return fields, nil
+}
+
+// nestedBase64Bytes extracts fields[key]["bytes"] (a base64 string in the gRPC JSON
+// rendering of Move byte vectors) and decodes it.
+func nestedBase64Bytes(fields map[string]any, key string) ([]byte, error) {
+	inner, ok := fields[key].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s is not a map: %w", key, ErrWrongType)
+	}
+
+	encoded, ok := inner["bytes"].(string)
+	if !ok {
+		return nil, fmt.Errorf("%s bytes is not a string: %w", key, ErrWrongType)
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode %s bytes: %w", key, err)
+	}
+
+	return decoded, nil
+}
+
+// decodeBcsBytes decodes a BCS byte vector: a ULEB128 length prefix followed by that many
+// bytes. Structs wrapping a single vector<u8> (e.g. EncodedAssetId) serialize identically.
+func decodeBcsBytes(data []byte) ([]byte, error) {
+	length := 0
+	shift := 0
+	offset := 0
+
+	for {
+		if offset >= len(data) {
+			return nil, fmt.Errorf("truncated ULEB128 length prefix: %w", ErrWrongType)
+		}
+
+		b := data[offset]
+		offset++
+
+		//nolint:mnd // ULEB128 uses 7 value bits per byte
+		length |= int(b&0x7f) << shift
+
+		if b&0x80 == 0 {
+			break
+		}
+
+		shift += 7
+		if shift > uleb128MaxShiftBits {
+			return nil, fmt.Errorf("ULEB128 length prefix too large: %w", ErrWrongType)
+		}
+	}
+
+	if len(data)-offset != length {
+		return nil, fmt.Errorf("BCS byte vector length mismatch: %w", ErrWrongType)
+	}
+
+	return data[offset:], nil
+}
+
+// signatureBytes returns the serialized (flag || signature || public key) bytes of a
+// signature, as expected by the gRPC UserSignature bcs field.
+func signatureBytes(signature sui_types.Signature) ([]byte, error) {
+	switch {
+	case signature.Ed25519SuiSignature != nil:
+		return signature.Ed25519SuiSignature.Signature[:], nil
+	case signature.Secp256k1SuiSignature != nil:
+		return signature.Secp256k1SuiSignature.Signature, nil
+	case signature.Secp256r1SuiSignature != nil:
+		return signature.Secp256r1SuiSignature.Signature, nil
+	default:
+		return nil, ErrUnsupportedSignatureScheme
+	}
 }

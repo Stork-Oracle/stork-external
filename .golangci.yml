@@ -17,6 +17,10 @@ linters:
       check-type-assertions: true
     exhaustruct:
       exclude:
+        # generated Sui gRPC protobuf types
+        - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/rpc/v2\..+$
+        - ^google.golang.org/protobuf/types/known/fieldmaskpb.FieldMask$
+        - ^crypto/tls.Config$
         # std libs
         - ^net/http.Client$
         - ^net/http.Cookie$
