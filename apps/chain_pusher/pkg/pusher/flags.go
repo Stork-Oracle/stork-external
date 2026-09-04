@@ -42,6 +42,11 @@ const (
 	ChainPrefixFlag   = "chain-prefix"
 )
 
+// Sui flags.
+const (
+	StorkStateIDFlag = "stork-state-id"
+)
+
 // Descriptions for the flags.
 const (
 	StorkWebsocketEndpointDesc = "Stork WebSocket endpoint"
@@ -74,4 +79,9 @@ const (
 	DenomDesc         = "Denom"
 	ChainIDDesc       = "Chain ID"
 	ChainPrefixDesc   = "Chain prefix"
+)
+
+// Sui descriptions.
+const (
+	StorkStateIDDesc = "Object ID of the shared StorkState created when the contract was initialized"
 )

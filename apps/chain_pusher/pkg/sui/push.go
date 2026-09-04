@@ -19,6 +19,7 @@ func NewPushCmd() *cobra.Command {
 	pushCmd.Flags().StringP(pusher.StorkAuthCredentialsFlag, "a", "", pusher.StorkAuthCredentialsDesc)
 	pushCmd.Flags().StringP(pusher.ChainRpcUrlFlag, "c", "", pusher.ChainRpcUrlDesc)
 	pushCmd.Flags().StringP(pusher.ContractAddressFlag, "x", "", pusher.ContractAddressDesc)
+	pushCmd.Flags().String(pusher.StorkStateIDFlag, "", pusher.StorkStateIDDesc)
 	pushCmd.Flags().StringP(pusher.AssetConfigFileFlag, "f", "", pusher.AssetConfigFileDesc)
 	pushCmd.Flags().StringP(pusher.PrivateKeyFileFlag, "k", "", pusher.PrivateKeyFileDesc)
 	pushCmd.Flags().IntP(pusher.BatchingWindowFlag, "b", pusher.DefaultBatchingWindow, pusher.BatchingWindowDesc)
@@ -31,6 +32,7 @@ func NewPushCmd() *cobra.Command {
 	_ = pushCmd.MarkFlagRequired(pusher.StorkAuthCredentialsFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.ChainRpcUrlFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.ContractAddressFlag)
+	_ = pushCmd.MarkFlagRequired(pusher.StorkStateIDFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.AssetConfigFileFlag)
 	_ = pushCmd.MarkFlagRequired(pusher.PrivateKeyFileFlag)
 
@@ -42,6 +44,7 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 	storkAuth, _ := cmd.Flags().GetString(pusher.StorkAuthCredentialsFlag)
 	chainRpcUrl, _ := cmd.Flags().GetString(pusher.ChainRpcUrlFlag)
 	contractAddress, _ := cmd.Flags().GetString(pusher.ContractAddressFlag)
+	storkStateID, _ := cmd.Flags().GetString(pusher.StorkStateIDFlag)
 	assetConfigFile, _ := cmd.Flags().GetString(pusher.AssetConfigFileFlag)
 	privateKeyFile, _ := cmd.Flags().GetString(pusher.PrivateKeyFileFlag)
 	batchingWindow, _ := cmd.Flags().GetInt(pusher.BatchingWindowFlag)
@@ -57,6 +60,7 @@ func runSuiPush(cmd *cobra.Command, args []string) {
 
 	interactor, err := NewContractInteractor(
 		contractAddress,
+		storkStateID,
 		keyFileContent,
 		logger,
 	)
