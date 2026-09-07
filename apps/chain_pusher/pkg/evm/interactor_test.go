@@ -5,9 +5,13 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/Masterminds/semver"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/internal/testutil"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/evm/bindings"
 	"github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -343,6 +347,115 @@ func TestPackUpdatePayloadErrors(t *testing.T) {
 			_, err := packUpdatePayload([]bindings.StorkStructsTemporalNumericValueInput{tt.update})
 			require.ErrorIs(t, err, tt.wantErr)
 		})
+	}
+}
+
+func TestSelectUpdateEncoding(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		enabled  bool
+		version  *semver.Version
+		expected updateEncoding
+	}{
+		{
+			name:     "disabled on 1.0.7",
+			enabled:  false,
+			version:  semver.MustParse("1.0.7"),
+			expected: updateEncodingUncompressed,
+		},
+		{
+			name:     "unknown version",
+			enabled:  true,
+			version:  nil,
+			expected: updateEncodingUncompressed,
+		},
+		{
+			name:     "pre-packed version",
+			enabled:  true,
+			version:  semver.MustParse("1.0.5"),
+			expected: updateEncodingUncompressed,
+		},
+		{name: "legacy packed", enabled: true, version: semver.MustParse("1.0.6"), expected: updateEncodingPacked},
+		{name: "LibZip", enabled: true, version: semver.MustParse("1.0.7"), expected: updateEncodingLibZip},
+		{name: "future LibZip", enabled: true, version: semver.MustParse("2.0.0"), expected: updateEncodingLibZip},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.expected, selectUpdateEncoding(tt.enabled, tt.version))
+		})
+	}
+}
+
+func TestPackLibZipUpdatePayload(t *testing.T) {
+	t.Parallel()
+
+	updates := testUpdatePayload()
+	compressed, err := packLibZipUpdatePayload(updates)
+	require.NoError(t, err)
+
+	contractABI, err := bindings.StorkContractMetaData.GetAbi()
+	require.NoError(t, err)
+	packed, err := packUpdatePayload(updates)
+	require.NoError(t, err)
+	expected, err := contractABI.Pack("updateTemporalNumericValuesV1Packed", packed)
+	require.NoError(t, err)
+
+	assert.NotEqual(t, expected, compressed)
+	assert.Equal(t, expected, decompressCalldataForTest(t, compressed))
+}
+
+func TestTransactLibZipUpdate(t *testing.T) {
+	t.Parallel()
+
+	contractAddress := common.HexToAddress("0x1234567890123456789012345678901234567890")
+	contract, err := bindings.NewStorkContract(contractAddress, nil)
+	require.NoError(t, err)
+
+	fee := big.NewInt(2)
+	auth := &bind.TransactOpts{
+		From:     common.HexToAddress("0x9876543210987654321098765432109876543210"),
+		Nonce:    big.NewInt(7),
+		Value:    fee,
+		GasPrice: big.NewInt(3),
+		GasLimit: 500_000,
+		NoSend:   true,
+		Signer: func(_ common.Address, tx *ethtypes.Transaction) (*ethtypes.Transaction, error) {
+			return tx, nil
+		},
+	}
+	tx, err := transactLibZipUpdate(contract, auth, testUpdatePayload())
+	require.NoError(t, err)
+
+	contractABI, err := bindings.StorkContractMetaData.GetAbi()
+	require.NoError(t, err)
+	packed, err := packUpdatePayload(testUpdatePayload())
+	require.NoError(t, err)
+	expected, err := contractABI.Pack("updateTemporalNumericValuesV1Packed", packed)
+	require.NoError(t, err)
+
+	assert.Equal(t, contractAddress, *tx.To())
+	assert.Equal(t, fee, tx.Value())
+	assert.Equal(t, expected, decompressCalldataForTest(t, tx.Data()))
+}
+
+func testUpdatePayload() []bindings.StorkStructsTemporalNumericValueInput {
+	return []bindings.StorkStructsTemporalNumericValueInput{
+		{
+			TemporalNumericValue: bindings.StorkStructsTemporalNumericValue{
+				TimestampNs:    1_700_000_000_000_000_000,
+				QuantizedValue: big.NewInt(123456789),
+			},
+			Id:                  [32]byte{0xaa},
+			PublisherMerkleRoot: [32]byte{0xbb},
+			ValueComputeAlgHash: [32]byte{0xcc},
+			R:                   [32]byte{0xdd},
+			S:                   [32]byte{0xee},
+			V:                   27,
+		},
 	}
 }
 
