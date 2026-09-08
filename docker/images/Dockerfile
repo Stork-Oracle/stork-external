@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     make rust
 
 # Go builder stage
-FROM golang:1.26.8-bookworm AS builder
+FROM golang:1.27.1-bookworm AS builder
 ARG TARGETPLATFORM
 WORKDIR /app
 
