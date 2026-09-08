@@ -105,7 +105,10 @@ func (ici *ContractInteractor) PullValues(
 			if errors.Is(err, bindings.ErrFeedNotFound) {
 				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
-				ici.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+				ici.logger.Warn().
+					Err(err).
+					Str("assetID", hex.EncodeToString(encodedAssetID[:])).
+					Msg("Failed to get latest value")
 				failedToGetLatestValueErr = err
 			}
 

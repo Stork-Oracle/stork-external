@@ -12,6 +12,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// pushChannelBufferSize bounds the buffered push channel between the main
+// loop and the push goroutine.
+const pushChannelBufferSize = 128
+
 const (
 	defaultNetworkTimeout       = 5 * time.Second
 	storkWsChannelBufferSize    = 128
@@ -94,7 +98,10 @@ func (p *Pusher) Run(ctx context.Context) {
 	}
 
 	storkWsCh := make(chan types.AggregatedSignedPrice, storkWsChannelBufferSize)
-	contractCh := make(chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, contractChChannelBufferSize)
+	contractCh := make(
+		chan map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
+		contractChChannelBufferSize,
+	)
 
 	storkWs := NewStorkAggregatorWebsocketClient(p.storkWsEndpoint, p.storkAuth, assetIDs, p.logger)
 	go storkWs.Run(storkWsCh)
@@ -107,9 +114,7 @@ func (p *Pusher) Run(ctx context.Context) {
 		p.logger.Warn().Err(err).Msg("Failed to pull initial values from contract")
 	}
 
-	for encodedAssetID, value := range initialValues {
-		latestContractValueMap[encodedAssetID] = value
-	}
+	maps.Copy(latestContractValueMap, initialValues)
 
 	p.logger.Info().Msgf("Pulled initial values for %d assets", len(initialValues))
 
@@ -119,7 +124,7 @@ func (p *Pusher) Run(ctx context.Context) {
 	ticker := time.NewTicker(p.batchingWindowDuration)
 	defer ticker.Stop()
 
-	pushCh := make(chan updateBatch, 128)
+	pushCh := make(chan updateBatch, pushChannelBufferSize)
 
 	// use separate goroutine to handle push updates to avoid blocking the main loop
 	go func() {
@@ -384,7 +389,5 @@ func (p *Pusher) handleContractUpdate(
 	chainUpdate map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 	latestContractValueMap map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue,
 ) {
-	for encodedAssetID, storkStructsTemporalNumericValue := range chainUpdate {
-		latestContractValueMap[encodedAssetID] = storkStructsTemporalNumericValue
-	}
+	maps.Copy(latestContractValueMap, chainUpdate)
 }

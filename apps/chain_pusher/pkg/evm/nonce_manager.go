@@ -2,6 +2,7 @@ package evm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -22,11 +23,20 @@ func NewNoopNonceManager() *NoopNonceManager {
 	return &NoopNonceManager{}
 }
 
-func (n *NoopNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) (*big.Int, error) {
+func (n *NoopNonceManager) GetLatestNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) (*big.Int, error) {
+	//nolint:nilnil // a noop manager has no nonce to report and no error to raise
 	return nil, nil
 }
 
-func (n *NoopNonceManager) IncrementNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+func (n *NoopNonceManager) IncrementNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) error {
 	return nil
 }
 
@@ -44,28 +54,43 @@ func NewServerNonceManager(usePendingNonce bool) *ServerNonceManager {
 	}
 }
 
-func (n *ServerNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) (*big.Int, error) {
+func (n *ServerNonceManager) GetLatestNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) (*big.Int, error) {
 	if n.usePendingNonce {
 		nonce, err := ethClient.PendingNonceAt(ctx, address)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest nonce: %w", err)
 		}
+
 		return new(big.Int).SetUint64(nonce), nil
 	}
+
 	nonce, err := ethClient.NonceAt(ctx, address, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest nonce: %w", err)
 	}
+
 	return new(big.Int).SetUint64(nonce), nil
 }
 
-// noop since the nonce is managed by the server
-func (n *ServerNonceManager) IncrementNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+// IncrementNonce is a noop since the nonce is managed by the server.
+func (n *ServerNonceManager) IncrementNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) error {
 	return nil
 }
 
-// noop since the nonce is managed by the server
-func (n *ServerNonceManager) ResetNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+// ResetNonce is a noop since the nonce is managed by the server.
+func (n *ServerNonceManager) ResetNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) error {
 	return nil
 }
 
@@ -81,7 +106,11 @@ func NewLocalNonceManager() *LocalNonceManager {
 	}
 }
 
-func (n *LocalNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) (*big.Int, error) {
+func (n *LocalNonceManager) GetLatestNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) (*big.Int, error) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
@@ -90,12 +119,18 @@ func (n *LocalNonceManager) GetLatestNonce(ctx context.Context, ethClient *ethcl
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest nonce: %w", err)
 		}
+
 		n.nonce = new(big.Int).SetUint64(nonce)
 	}
+
 	return new(big.Int).Set(n.nonce), nil
 }
 
-func (n *LocalNonceManager) IncrementNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
+func (n *LocalNonceManager) IncrementNonce(
+	ctx context.Context,
+	ethClient *ethclient.Client,
+	address common.Address,
+) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	// a concurrent ResetNonce may have cleared the nonce; leave it nil so the
@@ -103,14 +138,18 @@ func (n *LocalNonceManager) IncrementNonce(ctx context.Context, ethClient *ethcl
 	if n.nonce == nil {
 		return nil
 	}
+
 	n.nonce = new(big.Int).Add(n.nonce, big.NewInt(1))
+
 	return nil
 }
 
 func (n *LocalNonceManager) ResetNonce(ctx context.Context, ethClient *ethclient.Client, address common.Address) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
+
 	n.nonce = nil
+
 	return nil
 }
 
@@ -123,6 +162,8 @@ const (
 	NonceManagerTypeLocal         NonceManagerType = "local"
 )
 
+var ErrUnknownNonceManagerType = errors.New("unknown nonce manager type")
+
 func NewNonceManagerFromType(t NonceManagerType) (NonceManagerI, error) {
 	switch t {
 	case NonceManagerTypeNoop, "":
@@ -134,6 +175,6 @@ func NewNonceManagerFromType(t NonceManagerType) (NonceManagerI, error) {
 	case NonceManagerTypeLocal:
 		return NewLocalNonceManager(), nil
 	default:
-		return nil, fmt.Errorf("unknown nonce manager type: %s", string(t))
+		return nil, fmt.Errorf("%w: %s", ErrUnknownNonceManagerType, string(t))
 	}
 }

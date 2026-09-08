@@ -124,7 +124,9 @@ func (c *StorkAggregatorWebsocketClient) connect() {
 		if c.reconnAttempts < ReconnectionAttemptErrorThreshold {
 			c.logger.Warn().Err(err).Msg("failed to connect to websocket")
 		} else {
-			c.logger.Error().Err(err).Msgf("failed to connect to websocket after %d attempts", ReconnectionAttemptErrorThreshold)
+			c.logger.Error().
+				Err(err).
+				Msgf("failed to connect to websocket after %d attempts", ReconnectionAttemptErrorThreshold)
 		}
 
 		return

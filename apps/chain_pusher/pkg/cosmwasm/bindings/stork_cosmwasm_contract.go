@@ -163,7 +163,7 @@ func NewStorkContract(
 
 	privKey := secp256k1.PrivKey{Key: derivedPrivKey[:32]}
 
-	//nolint:exhaustruct // all fields are set in the constructor.
+	//nolint:exhaustruct_v5 // all fields are set in the constructor.
 	storkContract := &StorkContract{ContractAddress: contractAddress, ChainPrefix: chainPrefix}
 
 	// set up execution context and factory
@@ -298,43 +298,6 @@ func (s *StorkContract) GetSingleUpdateFee(ctx context.Context) (*GetSingleUpdat
 	return &response, nil
 }
 
-func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) ([]byte, error) {
-	query := &wasmtypes.QuerySmartContractStateRequest{
-		Address:   s.ContractAddress,
-		QueryData: rawQueryData,
-	}
-
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-
-	bz, err := marshaler.Marshal(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal query: %w", err)
-	}
-
-	result, err := s.clientCtx.Client.ABCIQuery(
-		ctx,
-		"/cosmwasm.wasm.v1.Query/SmartContractState",
-		bz,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query contract: %w", err)
-	}
-
-	if result.Response.Code != 0 {
-		return nil, ErrQueryFailed
-	}
-
-	var resp wasmtypes.QuerySmartContractStateResponse
-
-	err = marshaler.Unmarshal(result.Response.Value, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	return resp.Data, nil
-}
-
 func (s *StorkContract) GetWalletBalance(ctx context.Context, denom string) (float64, error) {
 	addr, err := sdktypes.Bech32ifyAddressBytes(s.ChainPrefix, s.clientCtx.FromAddress)
 	if err != nil {
@@ -378,6 +341,43 @@ func (s *StorkContract) GetWalletBalance(ctx context.Context, denom string) (flo
 	balanceFloat, _ := resp.Balance.Amount.BigInt().Float64()
 
 	return balanceFloat, nil
+}
+
+func (s *StorkContract) queryContract(ctx context.Context, rawQueryData []byte) ([]byte, error) {
+	query := &wasmtypes.QuerySmartContractStateRequest{
+		Address:   s.ContractAddress,
+		QueryData: rawQueryData,
+	}
+
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+
+	bz, err := marshaler.Marshal(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query: %w", err)
+	}
+
+	result, err := s.clientCtx.Client.ABCIQuery(
+		ctx,
+		"/cosmwasm.wasm.v1.Query/SmartContractState",
+		bz,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query contract: %w", err)
+	}
+
+	if result.Response.Code != 0 {
+		return nil, ErrQueryFailed
+	}
+
+	var resp wasmtypes.QuerySmartContractStateResponse
+
+	err = marshaler.Unmarshal(result.Response.Value, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return resp.Data, nil
 }
 
 //nolint:cyclop,funlen // permissible complexity and funlen for this function due to lack of nesting.

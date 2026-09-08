@@ -42,12 +42,12 @@ func TestHexStringToBytes(t *testing.T) {
 		wantError bool
 	}{
 		{"valid hex with prefix", "0x1234", []byte{0x12, 0x34}, false},
-		{"valid hex without prefix", "1234", []byte{0x12, 0x34}, false},
-		{"empty string", "", []byte{}, false},
+		{msgValidHexWithoutPrefix, "1234", []byte{0x12, 0x34}, false},
+		{emptyString, "", []byte{}, false},
 		{"empty with prefix", "0x", []byte{}, false},
 		{"single byte", "0xFF", []byte{0xFF}, false},
-		{"invalid hex", "0xZZ", nil, true},
-		{"odd length", "0x123", nil, true},
+		{invalidHex, n0xZZ, nil, true},
+		{oddLength, "0x123", nil, true},
 		{"long valid hex", "0x123456789ABCDEF0", []byte{0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0}, false},
 	}
 
@@ -80,10 +80,10 @@ func TestHexStringToFixedBytes(t *testing.T) {
 		wantError bool
 	}{
 		{"exact length", "0x1234", 2, []byte{0x12, 0x34}, false},
-		{"shorter input padded", "0x12", 4, []byte{0x00, 0x00, 0x00, 0x12}, false},
-		{"empty input", "0x", 4, []byte{0x00, 0x00, 0x00, 0x00}, false},
-		{"input too long", "0x123456", 2, nil, true},
-		{"invalid hex", "0xZZ", 2, nil, true},
+		{msgShorterInputPadded, "0x12", 4, []byte{0x00, 0x00, 0x00, 0x12}, false},
+		{emptyInput, "0x", 4, []byte{0x00, 0x00, 0x00, 0x00}, false},
+		{inputTooLong, "0x123456", 2, nil, true},
+		{invalidHex, n0xZZ, 2, nil, true},
 		{"zero length", "", 0, []byte{}, false},
 	}
 
@@ -124,7 +124,7 @@ func TestHexStringToByte20(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:  "shorter input padded",
+			name:  msgShorterInputPadded,
 			input: "0x1234",
 			expected: [20]byte{
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -132,9 +132,9 @@ func TestHexStringToByte20(t *testing.T) {
 			},
 			wantError: false,
 		},
-		{"input too long", "0x123456789012345678901234567890123456789012", [20]byte{}, true},
-		{"invalid hex", "0xZZ", [20]byte{}, true},
-		{"empty input", "", [20]byte{}, false},
+		{inputTooLong, "0x123456789012345678901234567890123456789012", [20]byte{}, true},
+		{invalidHex, n0xZZ, [20]byte{}, true},
+		{emptyInput, "", [20]byte{}, false},
 	}
 
 	for _, tt := range tests {
@@ -175,7 +175,7 @@ func TestHexStringToByte32(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:  "shorter input padded",
+			name:  msgShorterInputPadded,
 			input: "0x1234",
 			expected: [32]byte{
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -184,9 +184,9 @@ func TestHexStringToByte32(t *testing.T) {
 			},
 			wantError: false,
 		},
-		{"input too long", "0x123456789012345678901234567890123456789012345678901234567890123456", [32]byte{}, true},
-		{"invalid hex", "0xZZ", [32]byte{}, true},
-		{"empty input", "", [32]byte{}, false},
+		{inputTooLong, "0x123456789012345678901234567890123456789012345678901234567890123456", [32]byte{}, true},
+		{invalidHex, n0xZZ, [32]byte{}, true},
+		{emptyInput, "", [32]byte{}, false},
 	}
 
 	for _, tt := range tests {
@@ -217,12 +217,12 @@ func TestHexStringToByteArray(t *testing.T) {
 		wantError bool
 	}{
 		{"valid hex with prefix", "0x1234", []byte{0x12, 0x34}, false},
-		{"valid hex without prefix", "1234", []byte{0x12, 0x34}, false},
-		{"empty string", "", []byte{}, false},
+		{msgValidHexWithoutPrefix, "1234", []byte{0x12, 0x34}, false},
+		{emptyString, "", []byte{}, false},
 		{"empty with prefix", "0x", []byte{}, false},
 		{"single byte", "0xFF", []byte{0xFF}, false},
-		{"invalid hex", "0xZZ", nil, true},
-		{"odd length", "0x123", nil, true},
+		{invalidHex, n0xZZ, nil, true},
+		{oddLength, "0x123", nil, true},
 		{"all zeros", "0x0000", []byte{0x00, 0x00}, false},
 		{"all ones", "0xFFFF", []byte{0xFF, 0xFF}, false},
 	}
@@ -294,7 +294,7 @@ func TestHexStringToInt32(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:  "valid hex without prefix",
+			name:  msgValidHexWithoutPrefix,
 			input: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 			expected: [32]int{
 				0x01,
@@ -456,19 +456,19 @@ func TestHexStringToInt32(t *testing.T) {
 			wantError: true,
 		},
 		{
-			name:      "invalid hex",
-			input:     "0xZZ",
+			name:      invalidHex,
+			input:     n0xZZ,
 			expected:  [32]int{},
 			wantError: true,
 		},
 		{
-			name:      "odd length",
+			name:      oddLength,
 			input:     "0x123",
 			expected:  [32]int{},
 			wantError: true,
 		},
 		{
-			name:  "empty string",
+			name:  emptyString,
 			input: "",
 			expected: [32]int{
 				0,

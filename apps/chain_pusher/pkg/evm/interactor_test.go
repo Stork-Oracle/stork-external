@@ -25,19 +25,19 @@ func TestLoadPrivateKey(t *testing.T) {
 		{
 			name:           "valid private key",
 			keyFileContent: []byte("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
-			expectedPubKey: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // Known address for this private key
+			expectedPubKey: n0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, // Known address for this private key
 			wantError:      false,
 		},
 		{
 			name:           "valid private key with newline",
 			keyFileContent: []byte("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80\n"),
-			expectedPubKey: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+			expectedPubKey: n0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
 			wantError:      false,
 		},
 		{
 			name:           "valid private key with spaces and newlines",
 			keyFileContent: []byte("  ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80  \n"),
-			expectedPubKey: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+			expectedPubKey: n0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
 			wantError:      false,
 		},
 		{
@@ -299,6 +299,7 @@ func TestPackUpdatePayload(t *testing.T) {
 	twoPow192 := new(big.Int).Lsh(big.NewInt(1), packedQuantizedValueBits)
 	expectedWord6 := new(big.Int).SetUint64(updates[1].TemporalNumericValue.TimestampNs)
 	expectedWord6.Lsh(expectedWord6, packedShiftTimestampNs)
+
 	qv := new(big.Int).Add(big.NewInt(-987654321), twoPow192)
 	expectedWord6.Or(expectedWord6, qv)
 	assert.Equal(t, 0, expectedWord6.Cmp(packed[packedWordsPerEntry]), "entry 1 word[0] mismatch")

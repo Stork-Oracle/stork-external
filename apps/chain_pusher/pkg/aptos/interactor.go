@@ -76,7 +76,7 @@ func (aci *ContractInteractor) PullValues(
 	encodedAssetIDs []types.InternalEncodedAssetID,
 ) (map[types.InternalEncodedAssetID]types.InternalTemporalNumericValue, error) {
 	// convert to bindings EncodedAssetID
-	bindingsEncodedAssetIDs := []bindings.EncodedAssetID{}
+	bindingsEncodedAssetIDs := make([]bindings.EncodedAssetID, 0, len(encodedAssetIDs))
 	for _, encodedAssetID := range encodedAssetIDs {
 		bindingsEncodedAssetIDs = append(bindingsEncodedAssetIDs, bindings.EncodedAssetID(encodedAssetID))
 	}

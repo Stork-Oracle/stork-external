@@ -277,7 +277,7 @@ func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetID) (Te
 		return TemporalNumericValue{}, ErrEmptyResponse
 	}
 
-	responseMap, ok := value[0].(map[string]interface{})
+	responseMap, ok := value[0].(map[string]any)
 	if !ok {
 		return TemporalNumericValue{}, ErrWrongType
 	}
@@ -292,7 +292,7 @@ func (sc *StorkContract) getTemporalNumericValueUnchecked(id EncodedAssetID) (Te
 		return TemporalNumericValue{}, fmt.Errorf("failed to parse timestamp: %w", err)
 	}
 
-	quantizedValue, ok := responseMap["quantized_value"].(map[string]interface{})
+	quantizedValue, ok := responseMap["quantized_value"].(map[string]any)
 	if !ok {
 		return TemporalNumericValue{}, ErrWrongType
 	}
