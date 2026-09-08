@@ -1,6 +1,6 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.26.0
+go 1.27.0
 
 // Pin the pre-1.25 GOMAXPROCS behavior through the toolchain upgrade.
 // Since 1.25 Go otherwise derives GOMAXPROCS from the cgroup CPU limit and refreshes
