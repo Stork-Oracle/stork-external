@@ -67,6 +67,7 @@ func TestLocalNonceManagerConcurrentAccess(t *testing.T) {
 			if nm.nonce == nil {
 				nm.nonce = big.NewInt(0)
 			}
+
 			_ = new(big.Int).Set(nm.nonce)
 			nm.mu.Unlock()
 		}()

@@ -3,10 +3,16 @@ linters:
   default: all
   disable:
     - testpackage
+    # replaced by new major versions, which `default: all` enables
+    - exhaustruct
+    - gomodguard
     - wsl
   settings:
     cyclop:
-      max-complexity: 15
+      # golangci-lint 2.13 tightened the complexity linters against unchanged
+      # code. Raised just enough for pusher.Run (16); the genuinely complex
+      # functions carry //nolint directives, as they already did here.
+      max-complexity: 16
     depguard:
       rules:
         blacklist:
@@ -15,8 +21,8 @@ linters:
               desc: use github.com/stretchr/testify
     errcheck:
       check-type-assertions: true
-    exhaustruct:
-      exclude:
+    exhaustruct_v5:
+      ignore-patterns:
         # generated Sui gRPC protobuf types
         - ^github.com/Stork-Oracle/stork-external/apps/chain_pusher/pkg/sui/rpc/v2\..+$
         - ^google.golang.org/protobuf/types/known/fieldmaskpb.FieldMask$
@@ -153,12 +159,18 @@ linters:
       - common-false-positives
       - std-error-handling
     rules:
+      # ireturn reports this factory at the preceding const block rather than
+      # the function, so an inline //nolint cannot match. Returning the
+      # interface is the whole point of a factory.
+      - linters:
+          - ireturn
+        path: apps/chain_pusher/pkg/evm/nonce_manager\.go
       - linters:
           - funlen
           - maintidx
         source: ^func Test
       - linters:
-          - exhaustruct
+          - exhaustruct_v5
           - lll
         path: _test.go
       - linters:
@@ -169,7 +181,7 @@ linters:
       - linters:
           - mnd
           - funlen
-          - exhaustruct
+          - exhaustruct_v5
         path: testutil/*
     paths:
       - mock_*.go
@@ -190,6 +202,10 @@ formatters:
   exclusions:
     generated: lax
     paths:
+      # gci and gofumpt disagree about the indentation of the struct literal
+      # in this file and each undoes the other. gofmt accepts the gofumpt
+      # form, so gci is skipped here.
+      - apps/chain_pusher/internal/testutil/interactor_price_case.go
       - mock_*.go
       - third_party$
       - builtin$

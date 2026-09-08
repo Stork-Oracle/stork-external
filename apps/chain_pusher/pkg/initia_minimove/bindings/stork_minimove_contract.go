@@ -430,7 +430,7 @@ func (s *StorkContract) viewFunction(
 	functionName string,
 	typeArgs []string,
 	args [][]byte,
-) ([]interface{}, error) {
+) ([]any, error) {
 	request := &QueryViewRequest{
 		Address:      s.ContractAddress,
 		ModuleName:   moduleName,
@@ -467,16 +467,16 @@ func (s *StorkContract) viewFunction(
 
 	// Parse JSON response
 	// The response is wrapped in an array by the Move VM
-	var jsonResult []interface{}
+	var jsonResult []any
 
 	err = json.Unmarshal([]byte(resp.Data), &jsonResult)
 	if err != nil {
 		// If it's not an array, try parsing as a single value and wrap it
-		var singleResult interface{}
+		var singleResult any
 
 		err2 := json.Unmarshal([]byte(resp.Data), &singleResult)
 		if err2 == nil {
-			return []interface{}{singleResult}, nil
+			return []any{singleResult}, nil
 		}
 
 		return nil, fmt.Errorf("failed to unmarshal JSON response: %w (data: %s)", err, resp.Data)

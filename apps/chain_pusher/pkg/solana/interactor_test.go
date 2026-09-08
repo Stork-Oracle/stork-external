@@ -33,6 +33,7 @@ func TestBatchPriceUpdates(t *testing.T) {
 
 			// Create test price updates map
 			priceUpdates := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
+
 			for i := range tt.numUpdates {
 				var assetID types.InternalEncodedAssetID
 

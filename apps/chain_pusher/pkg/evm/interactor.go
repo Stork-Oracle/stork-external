@@ -31,6 +31,7 @@ var (
 	ErrEventChannelClosed      = errors.New("event channel is closed")
 	ErrInvalidSignatureV       = errors.New("invalid signature v value, expected 27 or 28")
 	ErrTimestampOverflow       = errors.New("timestampNs exceeds 63-bit limit")
+	ErrSyncSendFailed          = errors.New("eth_sendRawTransactionSync transaction failed")
 )
 
 const (
@@ -151,10 +152,11 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 	if err != nil {
 		eci.logger.Error().Err(err).Msg("Failed to get contract version")
 	} else {
-		version, err := semver.NewVersion(versionStr)
-		if err != nil {
-			eci.logger.Error().Err(err).Msg("Failed to parse contract version")
+		version, verErr := semver.NewVersion(versionStr)
+		if verErr != nil {
+			eci.logger.Error().Err(verErr).Msg("Failed to parse contract version")
 		}
+
 		eci.version = version
 		eci.logger.Info().Interface("version", eci.version).Msg("contract version")
 	}
@@ -164,9 +166,11 @@ func (eci *ContractInteractor) ConnectHTTP(ctx context.Context, url string) erro
 	if err != nil {
 		return fmt.Errorf("failed to get single update fee: %w", err)
 	}
+
 	eci.singleUpdateFee = singleUpdateFee
 
-	if err = eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey)); err != nil {
+	err = eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+	if err != nil {
 		eci.logger.Error().Err(err).Msg("Failed to reset nonce")
 	}
 
@@ -259,7 +263,7 @@ func (eci *ContractInteractor) PullValues(
 }
 
 func makeCallOpts(ctx context.Context) *bind.CallOpts {
-	return &bind.CallOpts{Context: ctx} //nolint:exhaustruct
+	return &bind.CallOpts{Context: ctx} //nolint:exhaustruct_v5
 }
 
 func makeWatchOpts(ctx context.Context) *bind.WatchOpts {
@@ -511,11 +515,6 @@ func (eci *ContractInteractor) BatchPushToContract(
 	return nil
 }
 
-func (eci *ContractInteractor) getUpdateFee(updatePayload []bindings.StorkStructsTemporalNumericValueInput) *big.Int {
-	fee := new(big.Int).Mul(eci.singleUpdateFee, big.NewInt(int64(len(updatePayload))))
-	return fee
-}
-
 func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, error) {
 	publicKey := eci.privateKey.Public()
 
@@ -534,6 +533,12 @@ func (eci *ContractInteractor) GetWalletBalance(ctx context.Context) (float64, e
 	balanceFloat, _ := balance.Float64()
 
 	return balanceFloat, nil
+}
+
+func (eci *ContractInteractor) getUpdateFee(updatePayload []bindings.StorkStructsTemporalNumericValueInput) *big.Int {
+	fee := new(big.Int).Mul(eci.singleUpdateFee, big.NewInt(int64(len(updatePayload))))
+
+	return fee
 }
 
 func (eci *ContractInteractor) batchPullValues(
@@ -583,7 +588,10 @@ func (eci *ContractInteractor) individuallyPullValues(
 			if strings.Contains(err.Error(), "NotFound()") || strings.Contains(err.Error(), "0xc5723b51") {
 				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("No value found")
 			} else {
-				eci.logger.Warn().Err(err).Str("assetID", hex.EncodeToString(encodedAssetID[:])).Msg("Failed to get latest value")
+				eci.logger.Warn().
+					Err(err).
+					Str("assetID", hex.EncodeToString(encodedAssetID[:])).
+					Msg("Failed to get latest value")
 				failedToGetLatestValueErr = err
 			}
 
@@ -690,6 +698,10 @@ func (eci *ContractInteractor) reconnect(
 	return nil, nil, ErrMaxRetryAttemptsReached
 }
 
+// send path (sync vs async, gas estimation, nonce handling and retries);
+// splitting it would spread that sequence across several call sites.
+//
+//nolint:cyclop,funlen,gocognit,nestif // this function sequences the full
 func (eci *ContractInteractor) submitTransaction(
 	ctx context.Context,
 	updatePayload []bindings.StorkStructsTemporalNumericValueInput,
@@ -705,14 +717,16 @@ func (eci *ContractInteractor) submitTransaction(
 		eci.gasTipCap = nil
 		clear(eci.gasLimits)
 
-		singleUpdateFee, err := eci.getSingleUpdateFee(ctx)
-		if err != nil {
-			eci.logger.Error().Err(err).Msg("failed to get single update fee")
+		singleUpdateFee, feeErr := eci.getSingleUpdateFee(ctx)
+		if feeErr != nil {
+			eci.logger.Error().Err(feeErr).Msg("failed to get single update fee")
 		} else {
 			eci.singleUpdateFee = singleUpdateFee
 		}
+
 		eci.lastSetGasCaps = time.Now()
 	}
+
 	nonce, err := eci.nonceManager.GetLatestNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest nonce: %w", err)
@@ -762,19 +776,26 @@ func (eci *ContractInteractor) submitTransaction(
 
 	if eci.useSyncSend {
 		receipt, txErr := eci.client.SendTransactionSync(ctx, tx, nil)
-		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-		if err != nil {
-			return nil, fmt.Errorf("failed to increment nonce: %w", err)
+
+		incErr := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+		if incErr != nil {
+			return nil, fmt.Errorf("failed to increment nonce: %w", incErr)
 		}
 
 		if txErr != nil {
 			if strings.Contains(txErr.Error(), "nonce") {
 				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
-				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-				if err != nil {
-					return nil, fmt.Errorf("failed to reset nonce: %w", err)
+
+				resetErr := eci.nonceManager.ResetNonce(
+					ctx,
+					eci.client,
+					crypto.PubkeyToAddress(eci.privateKey.PublicKey),
+				)
+				if resetErr != nil {
+					return nil, fmt.Errorf("failed to reset nonce: %w", resetErr)
 				}
 			}
+
 			return nil, fmt.Errorf("failed to send transaction: %w", txErr)
 		}
 
@@ -790,30 +811,40 @@ func (eci *ContractInteractor) submitTransaction(
 				Uint64("gasUsed", receipt.GasUsed).
 				Msg("transaction reverted on-chain, cleared cached gas limits")
 
-			return nil, fmt.Errorf("eth_sendRawTransactionSync transaction failed")
+			return nil, ErrSyncSendFailed
 		}
 	} else {
 		txErr := eci.client.SendTransaction(ctx, tx)
-		err := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-		if err != nil {
-			return nil, fmt.Errorf("failed to increment nonce: %w", err)
+
+		incErr := eci.nonceManager.IncrementNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
+		if incErr != nil {
+			return nil, fmt.Errorf("failed to increment nonce: %w", incErr)
 		}
 
 		if txErr != nil {
 			if revertData, ok := ethclient.RevertErrorData(txErr); ok {
-				eci.logger.Error().Str("revertData", hex.EncodeToString(revertData)).Msg("transaction reverted with data")
+				eci.logger.Error().
+					Str("revertData", hex.EncodeToString(revertData)).
+					Msg("transaction reverted with data")
 			} else if strings.Contains(txErr.Error(), "nonce") {
 				eci.logger.Warn().Err(txErr).Msg("Nonce mismatch, resetting nonce")
-				err := eci.nonceManager.ResetNonce(ctx, eci.client, crypto.PubkeyToAddress(eci.privateKey.PublicKey))
-				if err != nil {
-					return nil, fmt.Errorf("failed to reset nonce: %w", err)
+
+				resetErr := eci.nonceManager.ResetNonce(
+					ctx,
+					eci.client,
+					crypto.PubkeyToAddress(eci.privateKey.PublicKey),
+				)
+				if resetErr != nil {
+					return nil, fmt.Errorf("failed to reset nonce: %w", resetErr)
 				}
 			}
+
 			return nil, fmt.Errorf("failed to send transaction: %w", txErr)
 		}
 	}
 
 	eci.gasFeeCap = tx.GasFeeCap()
+
 	eci.gasTipCap = tx.GasTipCap()
 	if _, ok := eci.gasLimits[len(updatePayload)]; !ok {
 		eci.gasLimits[len(updatePayload)] = uint64(float64(tx.Gas()) * gasLimitMultiplier)
@@ -827,6 +858,7 @@ func (eci *ContractInteractor) getSingleUpdateFee(ctx context.Context) (*big.Int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get single update fee: %w", err)
 	}
+
 	return singleUpdateFee, nil
 }
 

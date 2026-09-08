@@ -229,7 +229,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160"
     percent_change_threshold: 2.0
     fallback_period_sec: 600`,
-			expectedAssets: []shared.AssetID{"BTCUSD", "ETHUSD"},
+			expectedAssets: []shared.AssetID{btcusd, ethusd},
 			expectedEncoded: []types.InternalEncodedAssetID{
 				{
 					0x74,
@@ -310,7 +310,7 @@ func TestInitializeAssets(t *testing.T) {
     encoded_asset_id: "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837"
     percent_change_threshold: 0.5
     fallback_period_sec: 120`,
-			expectedAssets: []shared.AssetID{"SOLUSD"},
+			expectedAssets: []shared.AssetID{solusd},
 			expectedEncoded: []types.InternalEncodedAssetID{
 				{
 					0x1d,
@@ -492,7 +492,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 		{
 			name: "successful update with valid hex",
 			valueUpdate: types.AggregatedSignedPrice{
-				AssetID:       "BTCUSD",
+				AssetID:       btcusd,
 				TimestampNano: 1234567890,
 				StorkSignedPrice: &types.StorkSignedPrice{
 					EncodedAssetID: "0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de",
@@ -502,12 +502,12 @@ func TestHandleStorkUpdate(t *testing.T) {
 			initialMap:      make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice),
 			expectedMapSize: 1,
 			wantError:       false,
-			expectedAssetID: "BTCUSD",
+			expectedAssetID: btcusd,
 		},
 		{
 			name: "update existing asset",
 			valueUpdate: types.AggregatedSignedPrice{
-				AssetID:       "ETHUSD",
+				AssetID:       ethusd,
 				TimestampNano: 9876543210,
 				StorkSignedPrice: &types.StorkSignedPrice{
 					EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
@@ -516,7 +516,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 			},
 			initialMap: map[types.InternalEncodedAssetID]types.AggregatedSignedPrice{
 				{0x59, 0x10, 0x2b, 0x37, 0xde, 0x83, 0xbd, 0xda, 0x9f, 0x38, 0xac, 0x82, 0x54, 0xe5, 0x96, 0xf0, 0xd9, 0xac, 0x61, 0xd2, 0x03, 0x5c, 0x07, 0x93, 0x66, 0x75, 0xe8, 0x73, 0x42, 0x81, 0x71, 0x60}: {
-					AssetID:       "ETHUSD",
+					AssetID:       ethusd,
 					TimestampNano: 1111111111,
 					StorkSignedPrice: &types.StorkSignedPrice{
 						EncodedAssetID: "0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160",
@@ -526,7 +526,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 			},
 			expectedMapSize: 1, // Same size because we're updating existing
 			wantError:       false,
-			expectedAssetID: "ETHUSD",
+			expectedAssetID: ethusd,
 		},
 		{
 			name: "invalid hex encoded asset id",
@@ -545,7 +545,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 		{
 			name: "hex without 0x prefix",
 			valueUpdate: types.AggregatedSignedPrice{
-				AssetID:       "SOLUSD",
+				AssetID:       solusd,
 				TimestampNano: 5555555555,
 				StorkSignedPrice: &types.StorkSignedPrice{
 					EncodedAssetID: "0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837",
@@ -555,7 +555,7 @@ func TestHandleStorkUpdate(t *testing.T) {
 			initialMap:      make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice),
 			expectedMapSize: 1,
 			wantError:       false,
-			expectedAssetID: "SOLUSD",
+			expectedAssetID: solusd,
 		},
 	}
 
@@ -708,8 +708,7 @@ func TestHandleContractUpdate(t *testing.T) {
 					}
 
 					latestContractValueMap[key] = types.InternalTemporalNumericValue{
-						//nolint:gosec // "i" being a valid uint64 is controlled by the test definitions.
-						TimestampNs:    1000000000 + (uint64(i)),
+						TimestampNs:    1000000000 + uint64(i),
 						QuantizedValue: big.NewInt(int64(1000000000000000000 + i)),
 					}
 				}

@@ -167,13 +167,13 @@ func (sc *StorkContract) GetMultipleTemporalNumericValuesUnchecked(
 	requests := []*rpcv2.GetObjectRequest{}
 	for _, feedObjectID := range feedIDsMap {
 		requests = append(requests, &rpcv2.GetObjectRequest{
-			ObjectId: proto.String(feedObjectID.String()),
+			ObjectId: new(feedObjectID.String()),
 		})
 	}
 
 	response, err := sc.Client.Ledger.BatchGetObjects(ctx, &rpcv2.BatchGetObjectsRequest{
 		Requests: requests,
-		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{"object_id", "json"}},
+		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{objectID, "json"}},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get feed objects: %w", err)
@@ -492,8 +492,8 @@ func (sc *StorkContract) UpdateMultipleTemporalNumericValuesEvm(
 // denomination), matching the other chain interactors which report raw base units.
 func (sc *StorkContract) GetWalletBalance(ctx context.Context) (float64, error) {
 	response, err := sc.Client.State.GetBalance(ctx, &rpcv2.GetBalanceRequest{
-		Owner:    proto.String(sc.Account.Address),
-		CoinType: proto.String(suiCoinType),
+		Owner:    new(sc.Account.Address),
+		CoinType: new(suiCoinType),
 	})
 	if err != nil {
 		return 0, fmt.Errorf("failed to get balance: %w", err)
@@ -514,8 +514,8 @@ func getStorkState(
 	}
 
 	response, err := client.Ledger.GetObject(ctx, &rpcv2.GetObjectRequest{
-		ObjectId: proto.String(storkStateID.String()),
-		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{"object_id", "version", "owner", "json"}},
+		ObjectId: new(storkStateID.String()),
+		ReadMask: &fieldmaskpb.FieldMask{Paths: []string{objectID, "version", "owner", "json"}},
 	})
 	if err != nil {
 		return StorkState{}, fmt.Errorf("failed to get object: %w", err)
@@ -759,10 +759,10 @@ func (sc *StorkContract) pickGasCoins(
 	requiredAmount uint64,
 ) ([]*sui_types.ObjectRef, error) {
 	response, err := sc.Client.State.ListOwnedObjects(ctx, &rpcv2.ListOwnedObjectsRequest{
-		Owner:      proto.String(owner.String()),
-		ObjectType: proto.String(suiCoinObjectType),
+		Owner:      new(owner.String()),
+		ObjectType: new(suiCoinObjectType),
 		PageSize:   proto.Uint32(maxGasCoinCandidate),
-		ReadMask:   &fieldmaskpb.FieldMask{Paths: []string{"object_id", "version", "digest", "balance"}},
+		ReadMask:   &fieldmaskpb.FieldMask{Paths: []string{objectID, "version", "digest", "balance"}},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list owned coins: %w", err)
@@ -817,7 +817,7 @@ func listAllDynamicFields(ctx context.Context, client *Client, parent string) ([
 
 	for {
 		response, err := client.State.ListDynamicFields(ctx, &rpcv2.ListDynamicFieldsRequest{
-			Parent:    proto.String(parent),
+			Parent:    new(parent),
 			PageSize:  proto.Uint32(dynamicFieldsPage),
 			PageToken: pageToken,
 			ReadMask:  &fieldmaskpb.FieldMask{Paths: []string{"kind", "field_id", "name", "child_id"}},

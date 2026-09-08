@@ -1,8 +1,9 @@
 // Package testutil provides utilities for testing.
+//
+// This file contains standard price cases for testing the interactor. Most
+// interactors have functions that convert the types.AggregatedSignedPrice to a
+// custom bindings format.
 package testutil
-
-// This file contains standard price cases for testing the interactor.
-// Most interactors have functions that convert the types.AggregatedSignedPrice to a custom bindings format.
 
 import (
 	"math/big"

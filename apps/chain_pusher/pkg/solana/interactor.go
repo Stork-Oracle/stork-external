@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"maps"
 	"math/big"
 	"sync"
 	"time"
@@ -340,7 +341,6 @@ func getTreasuryAccounts(
 	treasuryAccounts := make(map[uint8]solana.PublicKey)
 
 	for i := range NumTreasuryAccounts {
-		//nolint:gosec // "i" is clearly constrained to uint8 range
 		uint8i := uint8(i)
 
 		var (
@@ -465,9 +465,7 @@ func (sci *ContractInteractor) batchPriceUpdates(
 		i++
 		if len(priceUpdatesBatch) == sci.batchSize || i == len(priceUpdates) {
 			batchCopy := make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice, len(priceUpdatesBatch))
-			for k, v := range priceUpdatesBatch {
-				batchCopy[k] = v
-			}
+			maps.Copy(batchCopy, priceUpdatesBatch)
 
 			priceUpdatesBatches = append(priceUpdatesBatches, batchCopy)
 			priceUpdatesBatch = make(map[types.InternalEncodedAssetID]types.AggregatedSignedPrice)
