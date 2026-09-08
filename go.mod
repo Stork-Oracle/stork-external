@@ -1,6 +1,15 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.24.3
+go 1.25.0
+
+// Pin the Go 1.24 GOMAXPROCS behavior through the 1.25 toolchain upgrade.
+// Go 1.25 otherwise derives GOMAXPROCS from the cgroup CPU limit and refreshes
+// it periodically, which changes scheduling for every containerized binary here.
+// Drop these two lines to deliberately opt into the new behavior.
+godebug (
+	containermaxprocs=0
+	updatemaxprocs=0
+)
 
 require (
 	cosmossdk.io/math v1.5.3
