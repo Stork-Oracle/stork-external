@@ -53,12 +53,16 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Run Docker Compose Integration Profile
-        run: docker compose --profile integration up -d --build --quiet-pull
+        run: docker compose --profile integration up -d --build --quiet-pull --wait
 
       - name: Run tests
         run: make integration-test
         env:
           TARGETPLATFORM: linux/amd64
+
+      - name: Show Docker Compose logs
+        if: failure()
+        run: docker compose --profile integration logs --no-color
 
   first-party-test:
     runs-on: ubuntu-latest
