@@ -1,6 +1,15 @@
 module github.com/Stork-Oracle/stork-external
 
-go 1.24.3
+go 1.26.0
+
+// Pin the pre-1.25 GOMAXPROCS behavior through the toolchain upgrade.
+// Since 1.25 Go otherwise derives GOMAXPROCS from the cgroup CPU limit and refreshes
+// it periodically, which changes scheduling for every containerized binary here.
+// Drop these two lines to deliberately opt into the new behavior.
+godebug (
+	containermaxprocs=0
+	updatemaxprocs=0
+)
 
 require (
 	cosmossdk.io/math v1.5.3
@@ -70,8 +79,8 @@ require (
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
-	github.com/bytedance/sonic v1.14.2 // indirect
-	github.com/bytedance/sonic/loader v0.4.0 // indirect
+	github.com/bytedance/sonic v1.15.3 // indirect
+	github.com/bytedance/sonic/loader v0.5.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
