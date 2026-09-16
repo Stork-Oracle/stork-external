@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { Account, Aptos, AptosConfig, Network, Ed25519PrivateKey, PrivateKey, PrivateKeyVariants} from "@aptos-labs/ts-sdk";
 
 const DEFAULT_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
-const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
+const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0bb53E0d5E89778DCD13C2720667D292368dD053";
 const DEFAULT_UPDATE_FEE_IN_OCTAS = 1;
 const PRIVATE_KEY: string | undefined = process.env.PRIVATE_KEY;
 
