@@ -16,7 +16,7 @@ if (!STORK_CONTRACT_ADDRESS) {
 
 const PRIVATE_KEY: string | undefined = process.env.PRIVATE_KEY;
 const PROVIDER_URL: string | undefined = process.env.PROVIDER_URL;
-const STORK_EVM_PUBLIC_KEY: string = process.env.STORK_EVM_PUBLIC_KEY || "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
+const STORK_EVM_PUBLIC_KEY: string = process.env.STORK_EVM_PUBLIC_KEY || "0x0bb53E0d5E89778DCD13C2720667D292368dD053";
 const UPDATE_FEE_IN_WEI: number = parseInt(process.env.UPDATE_FEE_IN_WEI || "1");
 
 function getEvmPubKey(evmPubKey: string): EvmAddress {

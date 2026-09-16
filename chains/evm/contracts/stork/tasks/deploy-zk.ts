@@ -4,7 +4,7 @@ import { CONTRACT_DEPLOYMENT, createFileIfNotExists, getDeployedAddressesPath } 
 // before calling this, make sure you compile the contracts using `npx hardhat --network sophonTestnet compile --force`
 // sophon paymaster address - 0x98546B226dbbA8230cf620635a1e4ab01F6A99B2
 
-const STORK_PUBLIC_KEY = '0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44';
+const STORK_PUBLIC_KEY = '0x0bb53E0d5E89778DCD13C2720667D292368dD053';
 const VALID_TIMEOUT_SECONDS = 3600;
 const UPDATE_FEE_IN_WEI = 1;
 

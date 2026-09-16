@@ -16,7 +16,7 @@ const STORK_CONTRACT_ADDRESS = process.env.STORK_CONTRACT_ADDRESS;
 const DEFAULT_KEYSTORE_PATH = `${process.env.HOME}/.sui/sui_config/sui.keystore`;
 const DEFAULT_ALIASES_PATH = `${process.env.HOME}/.sui/sui_config/sui.aliases`;
 const SUI_KEY_ALIAS = process.env.SUI_KEY_ALIAS || 'main';
-const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0a803F9b1CCe32e2773e0d2e98b37E0775cA5d44";
+const DEFAULT_STORK_EVM_PUBLIC_KEY = "0x0bb53E0d5E89778DCD13C2720667D292368dD053";
 const DEFAULT_UPDATE_FEE_IN_MIST = 1;
 
 type UpdateTemporalNumericValueEvmInputRaw = {
