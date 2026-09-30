@@ -7,6 +7,7 @@ import "@storknetwork/stork-evm-sdk/StorkStructs.sol";
 import "@storknetwork/stork-evm-sdk/StorkErrors.sol";
 import "@storknetwork/stork-evm-sdk/IStork.sol";
 import "@storknetwork/stork-evm-sdk/LibCodec.sol";
+import "solady/src/utils/LibZip.sol";
 
 import "./StorkGetters.sol";
 import "./StorkSetters.sol";
@@ -174,8 +175,12 @@ abstract contract Stork is StorkGetters, StorkSetters, StorkVerify, IStork {
         return LibCodec.encode(inputs);
     }
 
+    fallback() external payable {
+        LibZip.cdFallback();
+    }
+
     function version() public pure returns (string memory) {
-        return "1.0.6";
+        return "1.0.7";
     }
 
     function getTotalFee(
