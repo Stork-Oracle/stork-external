@@ -1,6 +1,6 @@
 [package]
 name = "stork-solana-sdk"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 description = "A Solana SDK for Stork Protocol"
 license = "Apache-2.0"
@@ -12,4 +12,6 @@ crate-type = ["lib"]
 name = "stork_solana_sdk"
 
 [dependencies]
-anchor-lang = "0.31.1"
+anchor-lang = "1.2.1"
+# Direct dependency so `BorshSchema` can resolve the `borsh` crate.
+borsh = { version = "1.5.7", features = ["derive"] }
