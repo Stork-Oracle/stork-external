@@ -1,7 +1,5 @@
-use anchor_lang::solana_program::keccak::{hash, Hash};
-use anchor_lang::solana_program::{
-    secp256k1_recover::secp256k1_recover, secp256k1_recover::Secp256k1Pubkey,
-};
+use solana_keccak_hasher::{hash, Hash};
+use solana_secp256k1_recover::{secp256k1_recover, Secp256k1Pubkey};
 
 pub type EvmPubkey = [u8; 20];
 
