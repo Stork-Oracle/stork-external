@@ -207,7 +207,7 @@ jobs:
 
       - name: Run anchor tests
         run: |
-          anchor test
+          anchor test --validator legacy
         working-directory: ./chains/solana/contracts/
 
   test-sui:
