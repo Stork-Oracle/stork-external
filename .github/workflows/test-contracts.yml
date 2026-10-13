@@ -149,7 +149,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-          toolchain: 1.88.0
+          toolchain: 1.95.0
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -170,11 +170,11 @@ jobs:
           path: |
             ~/.local/share/solana/install
             ~/.config/solana/id.json
-          key: ${{ runner.os }}-solana-2.1.2
+          key: ${{ runner.os }}-solana-4.1.2
 
       - name: Install Solana CLI
         run: |
-          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.2/install)"
+          [ -f ~/.local/share/solana/install/active_release/bin/solana ] || sh -c "$(curl -sSfL https://release.anza.xyz/v4.1.2/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Solana
@@ -187,7 +187,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/anchor
-          key: ${{ runner.os }}-anchor-0.31.1
+          key: ${{ runner.os }}-anchor-1.2.1
 
       - name: Install system dependencies for Anchor CLI
         run: |
@@ -197,7 +197,7 @@ jobs:
       - name: Install Anchor CLI
         run: |
           if ! command -v anchor &> /dev/null; then
-            cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
+            cargo install --git https://github.com/otter-sec/anchor --tag v1.2.1 anchor-cli --locked
           fi
 
       - name: Run rust tests
@@ -207,7 +207,7 @@ jobs:
 
       - name: Run anchor tests
         run: |
-          anchor test
+          anchor test --validator legacy
         working-directory: ./chains/solana/contracts/
 
   test-sui:
@@ -245,7 +245,7 @@ jobs:
         run: |
           if ! command -v sui &> /dev/null; then
             # Force the 1.90.0 toolchain for this build only. The repo-root
-            # rust-toolchain.toml pins 1.88.0 (used by the other Rust jobs),
+            # rust-toolchain.toml pins 1.95.0 (used by the other Rust jobs),
             # but Sui testnet-v1.74.0 needs rustc >= 1.90.0 to compile.
             cargo +1.90.0 install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
           fi

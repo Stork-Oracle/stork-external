@@ -146,7 +146,7 @@ pub struct UpdateTemporalNumericValue<'info> {
         bump,
         rent_exempt = enforce
     )]
-    pub treasury: AccountInfo<'info>,
+    pub treasury: UncheckedAccount<'info>,
     #[account(
         init_if_needed,
         payer = payer,

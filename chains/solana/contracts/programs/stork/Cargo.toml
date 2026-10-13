@@ -15,9 +15,17 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-solana-system-interface = "1.0.0"
-# stork-solana-sdk = { path = "../../../sdks/stork-solana-sdk/" }
-stork-solana-sdk = "0.0.7"
+anchor-lang = { version = "1.2.1", features = ["init-if-needed"] }
+solana-keccak-hasher = "3.1.0"
+solana-secp256k1-recover = "3.1.0"
+solana-system-interface = "2.0.0"
+stork-solana-sdk = { path = "../../../sdks/stork-solana-sdk" }
+
+[dev-dependencies]
+# Host unit tests cannot use the Keccak syscall. On-chain builds keep the syscall path.
+solana-keccak-hasher = { version = "3.1.0", features = ["sha3"] }
