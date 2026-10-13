@@ -149,7 +149,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-          toolchain: 1.91.0
+          toolchain: 1.95.0
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -245,7 +245,7 @@ jobs:
         run: |
           if ! command -v sui &> /dev/null; then
             # Force the 1.90.0 toolchain for this build only. The repo-root
-            # rust-toolchain.toml pins 1.91.0 (used by the other Rust jobs),
+            # rust-toolchain.toml pins 1.95.0 (used by the other Rust jobs),
             # but Sui testnet-v1.74.0 needs rustc >= 1.90.0 to compile.
             cargo +1.90.0 install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.74.0 sui --features tracing
           fi
